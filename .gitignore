@@ -1,0 +1,39 @@
+# Python / Django
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.sqlite3
+backend/media/
+backend/staticfiles/
+.coverage
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+
+# Node / React / Expo
+node_modules/
+dist/
+build/
+.expo/
+.expo-shared/
+web/.env
+web/.env.local
+mobile/.env
+*.log
+npm-debug.log*
+
+# IDE / OS
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Docker / secrets
+.env
+.env.*
+!.env.example

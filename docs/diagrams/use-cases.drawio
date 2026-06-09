@@ -1,0 +1,84 @@
+<mxfile host="app.diagrams.net" agent="PhysioCare" version="24.0.0">
+  <diagram id="uc-physiocare" name="Use Cases">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="title" value="PhysioCare — Diagram przypadków użycia" style="text;html=1;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="400" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- System boundary -->
+        <mxCell id="system" value="System PhysioCare" style="swimlane;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;startSize=30;" vertex="1" parent="1">
+          <mxGeometry x="280" y="70" width="900" height="780" as="geometry"/>
+        </mxCell>
+
+        <!-- Auth cluster -->
+        <mxCell id="uc_auth" value="UC-01 Logowanie&#xa;UC-02 Rejestracja pacjenta&#xa;UC-03 Rejestracja terapeuty&#xa;UC-04 Reset hasła" style="ellipse;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="system">
+          <mxGeometry x="40" y="50" width="200" height="100" as="geometry"/>
+        </mxCell>
+
+        <!-- Patient cluster -->
+        <mxCell id="uc_patient" value="UC-05 Pulpit pacjenta&#xa;UC-06 Compliance ćwiczeń&#xa;UC-07 Zarządzanie wizytami&#xa;UC-08 Dokumentacja PDF&#xa;UC-09 Zgody RODO&#xa;UC-17 Profil terapeuty&#xa;UC-18 Powiadomienia" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="system">
+          <mxGeometry x="40" y="200" width="220" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- Therapist cluster -->
+        <mxCell id="uc_therapist" value="UC-10 Pulpit terapeuty&#xa;UC-11 Harmonogram&#xa;UC-12 Karta pacjenta / epizody&#xa;UC-13 Mapa ciała (VAS)&#xa;UC-14 Zarządzanie wizytą&#xa;UC-15 Baza ćwiczeń&#xa;UC-16 Profil terapeuty" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="system">
+          <mxGeometry x="320" y="50" width="240" height="150" as="geometry"/>
+        </mxCell>
+
+        <!-- Shared -->
+        <mxCell id="uc_shared" value="Wspólne API&#xa;(wizyty, pliki, auth)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="system">
+          <mxGeometry x="320" y="250" width="180" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Include relationships inside system -->
+        <mxCell id="inc1" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;" edge="1" parent="system" source="uc_patient" target="uc_auth">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="inc2" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;" edge="1" parent="system" source="uc_therapist" target="uc_auth">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="inc3" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;" edge="1" parent="system" source="uc_patient" target="uc_shared">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="inc4" value="&amp;lt;&amp;lt;include&amp;gt;&amp;gt;" style="endArrow=open;dashed=1;html=1;" edge="1" parent="system" source="uc_therapist" target="uc_shared">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Actors -->
+        <mxCell id="actor_patient" value="Pacjent" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="80" y="320" width="40" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_therapist" value="Fizjoterapeuta" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="200" width="40" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="actor_system" value="System&#xa;(powiadomienia)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#f5f5f5;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="1240" y="500" width="40" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Actor associations -->
+        <mxCell id="a1" style="endArrow=none;html=1;" edge="1" parent="1" source="actor_patient" target="uc_patient">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a2" style="endArrow=none;html=1;" edge="1" parent="1" source="actor_therapist" target="uc_therapist">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="a3" style="endArrow=open;dashed=1;html=1;" edge="1" parent="1" source="actor_system" target="uc_shared">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Client apps note -->
+        <mxCell id="clients_note" value="Pacjent → Mobile (Expo)&#xa;Fizjoterapeuta → Web (React)" style="text;html=1;align=left;fillColor=#ffffcc;strokeColor=#36393d;" vertex="1" parent="1">
+          <mxGeometry x="40" y="720" width="220" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="doc_ref" value="Szczegóły: docs/use-cases.md" style="text;html=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="40" y="780" width="250" height="30" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
