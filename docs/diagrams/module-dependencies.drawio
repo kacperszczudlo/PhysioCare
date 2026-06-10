@@ -1,139 +1,197 @@
-<mxfile host="app.diagrams.net" agent="PhysioCare" version="24.0.0">
-  <diagram id="mod-deps" name="Zależności modułów Django">
-    <mxGraphModel dx="1600" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
-      <root>
-        <mxCell id="0"/>
-        <mxCell id="1" parent="0"/>
-
-        <mxCell id="title" value="PhysioCare — Zależności modułów backendu (Django apps)" style="text;html=1;fontSize=18;fontStyle=1;align=left;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="60" y="30" width="600" height="32" as="geometry"/>
-        </mxCell>
-
-        <mxCell id="legend" value="&lt;b&gt;Legenda&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size:11px&quot;&gt;━━  zależność import / FK&lt;br&gt;╌╌  użycie adaptera (storage)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fillColor=#f5f5f5;strokeColor=#666666;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="1280" y="50" width="260" height="80" as="geometry"/>
-        </mxCell>
-
-        <!-- LAYER 1 -->
-        <mxCell id="l1" value="Warstwa 1 — Fundament" style="swimlane;startSize=32;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="60" y="90" width="1100" height="130" as="geometry"/>
-        </mxCell>
-        <mxCell id="core" value="&lt;b&gt;core/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;config, urls&lt;br&gt;middleware, errors&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#6c8ebf;fontFamily=Helvetica;" vertex="1" parent="l1">
-          <mxGeometry x="120" y="50" width="180" height="70" as="geometry"/>
-        </mxCell>
-        <mxCell id="accounts" value="&lt;b&gt;accounts/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;User, JWT&lt;br&gt;login, register&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#6c8ebf;fontFamily=Helvetica;" vertex="1" parent="l1">
-          <mxGeometry x="460" y="50" width="180" height="70" as="geometry"/>
-        </mxCell>
-
-        <!-- LAYER 2 -->
-        <mxCell id="l2" value="Warstwa 2 — Profile i RODO" style="swimlane;startSize=32;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="60" y="260" width="1100" height="140" as="geometry"/>
-        </mxCell>
-        <mxCell id="patients" value="&lt;b&gt;patients/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;PatientProfile&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#82b366;fontFamily=Helvetica;" vertex="1" parent="l2">
-          <mxGeometry x="80" y="55" width="180" height="70" as="geometry"/>
-        </mxCell>
-        <mxCell id="therapists" value="&lt;b&gt;therapists/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;TherapistProfile&lt;br&gt;PWZFz, kursy&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#82b366;fontFamily=Helvetica;" vertex="1" parent="l2">
-          <mxGeometry x="360" y="55" width="180" height="70" as="geometry"/>
-        </mxCell>
-        <mxCell id="privacy" value="&lt;b&gt;privacy/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Consents&lt;br&gt;eksport, usunięcie&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#82b366;fontFamily=Helvetica;" vertex="1" parent="l2">
-          <mxGeometry x="640" y="55" width="180" height="70" as="geometry"/>
-        </mxCell>
-
-        <!-- LAYER 3 -->
-        <mxCell id="l3" value="Warstwa 3 — Leczenie i harmonogram" style="swimlane;startSize=32;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="60" y="440" width="1100" height="150" as="geometry"/>
-        </mxCell>
-        <mxCell id="treatment" value="&lt;b&gt;treatment/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;TreatmentEpisode&lt;br&gt;BodyAreaPain&lt;br&gt;VisitNote&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#d6b656;fontFamily=Helvetica;" vertex="1" parent="l3">
-          <mxGeometry x="80" y="55" width="200" height="80" as="geometry"/>
-        </mxCell>
-        <mxCell id="scheduling" value="&lt;b&gt;scheduling/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Visit, TherapyType&lt;br&gt;sloty kalendarza&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#d6b656;fontFamily=Helvetica;" vertex="1" parent="l3">
-          <mxGeometry x="380" y="55" width="200" height="80" as="geometry"/>
-        </mxCell>
-        <mxCell id="documents" value="&lt;b&gt;documents/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;MedicalDocument&lt;br&gt;upload / download&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#d6b656;fontFamily=Helvetica;" vertex="1" parent="l3">
-          <mxGeometry x="680" y="55" width="200" height="80" as="geometry"/>
-        </mxCell>
-
-        <!-- LAYER 4 -->
-        <mxCell id="l4" value="Warstwa 4 — Ćwiczenia" style="swimlane;startSize=32;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=13;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="60" y="630" width="1100" height="130" as="geometry"/>
-        </mxCell>
-        <mxCell id="exercises" value="&lt;b&gt;exercises/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Exercise, Category&lt;br&gt;Assignment, Completion&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#b85450;fontFamily=Helvetica;" vertex="1" parent="l4">
-          <mxGeometry x="360" y="50" width="220" height="70" as="geometry"/>
-        </mxCell>
-
-        <!-- LAYER 5 -->
-        <mxCell id="l5" value="Warstwa 5 — Dodatki" style="swimlane;startSize=32;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="60" y="800" width="1100" height="140" as="geometry"/>
-        </mxCell>
-        <mxCell id="notifications" value="&lt;b&gt;notifications/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Preferences&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#9673a6;fontFamily=Helvetica;" vertex="1" parent="l5">
-          <mxGeometry x="120" y="55" width="180" height="70" as="geometry"/>
-        </mxCell>
-        <mxCell id="analytics" value="&lt;b&gt;analytics/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Dashboard stats&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#9673a6;fontFamily=Helvetica;" vertex="1" parent="l5">
-          <mxGeometry x="400" y="55" width="180" height="70" as="geometry"/>
-        </mxCell>
-        <mxCell id="files" value="&lt;b&gt;files/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Storage adapter&lt;br&gt;local / S3&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#9673a6;fontFamily=Helvetica;" vertex="1" parent="l5">
-          <mxGeometry x="680" y="55" width="180" height="70" as="geometry"/>
-        </mxCell>
-
-        <!-- MAIN VERTICAL FLOW (center) -->
-        <mxCell id="d_core_acc" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="core" target="accounts">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="610" y="240"/><mxPoint x="610" y="240"/></Array></mxGeometry>
-        </mxCell>
-
-        <mxCell id="d_acc_pat" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.25;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="accounts" target="patients">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-        <mxCell id="d_acc_thr" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="accounts" target="therapists">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-        <mxCell id="d_acc_priv" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.75;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="accounts" target="privacy">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-
-        <mxCell id="d_pat_treat" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="patients" target="treatment">
-          <mxGeometry relative="1" as="geometry"/>
-        </mxCell>
-        <mxCell id="d_pat_sched" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="patients" target="scheduling">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="230" y="420"/><mxPoint x="550" y="420"/></Array></mxGeometry>
-        </mxCell>
-        <mxCell id="d_thr_sched" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="therapists" target="scheduling">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="510" y="420"/><mxPoint x="550" y="420"/></Array></mxGeometry>
-        </mxCell>
-        <mxCell id="d_treat_doc" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="treatment" target="documents">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="230" y="420"/><mxPoint x="850" y="420"/></Array></mxGeometry>
-        </mxCell>
-
-        <mxCell id="d_pat_ex" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.3;entryY=0;" edge="1" parent="1" source="patients" target="exercises">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="230" y="610"/><mxPoint x="426" y="610"/></Array></mxGeometry>
-        </mxCell>
-        <mxCell id="d_thr_ex" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.7;entryY=0;" edge="1" parent="1" source="therapists" target="exercises">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="510" y="610"/><mxPoint x="514" y="610"/></Array></mxGeometry>
-        </mxCell>
-
-        <mxCell id="d_acc_notif" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.15;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="accounts" target="notifications">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="520" y="780"/><mxPoint x="270" y="780"/></Array></mxGeometry>
-        </mxCell>
-        <mxCell id="d_sched_an" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="scheduling" target="analytics">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="550" y="780"/><mxPoint x="550" y="780"/></Array></mxGeometry>
-        </mxCell>
-
-        <!-- Dashed storage deps -->
-        <mxCell id="d_doc_files" style="endArrow=block;dashed=1;html=1;rounded=1;strokeWidth=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="documents" target="files">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="850" y="780"/><mxPoint x="850" y="780"/></Array></mxGeometry>
-        </mxCell>
-        <mxCell id="d_ex_files" style="endArrow=block;dashed=1;html=1;rounded=1;strokeWidth=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="exercises" target="files">
-          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="550" y="780"/><mxPoint x="850" y="780"/></Array></mxGeometry>
-        </mxCell>
-
-        <!-- Side panel: dependency list -->
-        <mxCell id="deps_list" value="&lt;b&gt;Kluczowe zależności&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size:11px&quot; align=&quot;left&quot;&gt;&lt;div style=&quot;text-align:left&quot;&gt;accounts → patients, therapists, privacy&lt;br&gt;patients → treatment, scheduling, exercises&lt;br&gt;therapists → scheduling, exercises&lt;br&gt;treatment → documents&lt;br&gt;scheduling → analytics&lt;br&gt;documents, exercises ⇢ files (storage)&lt;br&gt;accounts → notifications&lt;/div&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=14;spacingTop=10;fillColor=#ffffcc;strokeColor=#36393d;fontFamily=Helvetica;" vertex="1" parent="1">
-          <mxGeometry x="1220" y="180" width="320" height="200" as="geometry"/>
-        </mxCell>
-
-        <mxCell id="flow_note" value="Strzałki pokazują kierunek zależności (góra → dół).&lt;br&gt;Moduły w jednej warstwie są niezależne od siebie." style="text;html=1;fontSize=11;align=left;fontFamily=Helvetica;fontColor=#666666;" vertex="1" parent="1">
-          <mxGeometry x="60" y="980" width="500" height="40" as="geometry"/>
-        </mxCell>
-
-      </root>
-    </mxGraphModel>
-  </diagram>
+<mxfile host="65bd71144e">
+    <diagram id="mod-deps" name="Zależności modułów Django">
+        <mxGraphModel dx="629" dy="474" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="PhysioCare — Zależności modułów backendu (Django apps)" style="text;html=1;fontSize=18;fontStyle=1;align=left;fontFamily=Helvetica;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="30" width="600" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend" value="&lt;b&gt;Legenda&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size:11px&quot;&gt;━━  zależność import / FK&lt;br&gt;╌╌  użycie adaptera (storage)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fillColor=#f5f5f5;strokeColor=#666666;fontFamily=Helvetica;" parent="1" vertex="1">
+                    <mxGeometry x="1280" y="50" width="260" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="l1" value="Warstwa 1 — Fundament" style="swimlane;startSize=32;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="90" width="1100" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="core" value="&lt;b&gt;core/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;config, urls&lt;br&gt;middleware, errors&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#6c8ebf;fontFamily=Helvetica;" parent="l1" vertex="1">
+                    <mxGeometry x="120" y="50" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="accounts" value="&lt;b&gt;accounts/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;User, JWT&lt;br&gt;login, register&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#6c8ebf;fontFamily=Helvetica;" parent="l1" vertex="1">
+                    <mxGeometry x="460" y="50" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="l2" value="Warstwa 2 — Profile i RODO" style="swimlane;startSize=32;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="260" width="1100" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="patients" value="&lt;b&gt;patients/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;PatientProfile&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#82b366;fontFamily=Helvetica;" parent="l2" vertex="1">
+                    <mxGeometry x="80" y="55" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="therapists" value="&lt;b&gt;therapists/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;TherapistProfile&lt;br&gt;PWZFz, kursy&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#82b366;fontFamily=Helvetica;" parent="l2" vertex="1">
+                    <mxGeometry x="360" y="55" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="privacy" value="&lt;b&gt;privacy/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Consents&lt;br&gt;eksport, usunięcie&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#82b366;fontFamily=Helvetica;" parent="l2" vertex="1">
+                    <mxGeometry x="640" y="55" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="l3" value="Warstwa 3 — Leczenie i harmonogram" style="swimlane;startSize=32;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="440" width="1100" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="treatment" value="&lt;b&gt;treatment/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;TreatmentEpisode&lt;br&gt;BodyAreaPain&lt;br&gt;VisitNote&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#d6b656;fontFamily=Helvetica;" parent="l3" vertex="1">
+                    <mxGeometry x="80" y="55" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="scheduling" value="&lt;b&gt;scheduling/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Visit, TherapyType&lt;br&gt;sloty kalendarza&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#d6b656;fontFamily=Helvetica;" parent="l3" vertex="1">
+                    <mxGeometry x="380" y="55" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="documents" value="&lt;b&gt;documents/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;MedicalDocument&lt;br&gt;upload / download&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#d6b656;fontFamily=Helvetica;" parent="l3" vertex="1">
+                    <mxGeometry x="680" y="55" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="l4" value="Warstwa 4 — Ćwiczenia" style="swimlane;startSize=32;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="630" width="1100" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="exercises" value="&lt;b&gt;exercises/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Exercise, Category&lt;br&gt;Assignment, Completion&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#b85450;fontFamily=Helvetica;" parent="l4" vertex="1">
+                    <mxGeometry x="360" y="50" width="220" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="l5" value="Warstwa 5 — Dodatki" style="swimlane;startSize=32;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="800" width="1100" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="notifications" value="&lt;b&gt;notifications/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Preferences&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#9673a6;fontFamily=Helvetica;" parent="l5" vertex="1">
+                    <mxGeometry x="120" y="55" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="analytics" value="&lt;b&gt;analytics/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Dashboard stats&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#9673a6;fontFamily=Helvetica;" parent="l5" vertex="1">
+                    <mxGeometry x="400" y="55" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="files" value="&lt;b&gt;files/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Storage adapter&lt;br&gt;local / S3&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#9673a6;fontFamily=Helvetica;" parent="l5" vertex="1">
+                    <mxGeometry x="680" y="55" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="d_core_acc" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.612;entryY=0.994;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" target="accounts" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="290" y="240"/>
+                            <mxPoint x="630" y="240"/>
+                            <mxPoint x="630" y="240"/>
+                        </Array>
+                        <mxPoint x="290" y="210" as="sourcePoint"/>
+                        <mxPoint x="637.5600000000001" y="212.02999999999997" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d_acc_pat" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0;exitY=0.5;entryX=0.5;entryY=0;exitDx=0;exitDy=0;" parent="1" source="accounts" target="patients" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="390" y="175"/>
+                            <mxPoint x="390" y="280"/>
+                            <mxPoint x="230" y="280"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d_acc_thr" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="accounts" target="therapists" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="610" y="220"/>
+                            <mxPoint x="510" y="220"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d_acc_priv" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=1;exitY=0.5;entryX=0.5;entryY=0;exitDx=0;exitDy=0;" parent="1" source="accounts" target="privacy" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="790" y="175"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d_pat_treat" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.545;exitY=1.018;entryX=0.5;entryY=0;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="patients" target="treatment" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="d_pat_sched" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="patients" target="scheduling" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="275" y="480"/>
+                            <mxPoint x="540" y="480"/>
+                        </Array>
+                        <mxPoint x="540" y="490" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d_thr_sched" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.75;exitY=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitDx=0;exitDy=0;" parent="1" source="therapists" target="scheduling" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="555" y="410"/>
+                            <mxPoint x="680" y="410"/>
+                            <mxPoint x="680" y="535"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d_treat_doc" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=1;exitY=0.5;entryX=0.5;entryY=0;exitDx=0;exitDy=0;" parent="1" source="treatment" target="documents" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="350" y="530"/>
+                            <mxPoint x="350" y="430"/>
+                            <mxPoint x="840" y="430"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d_pat_ex" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0;exitY=0.5;entryX=0.3;entryY=0;exitDx=0;exitDy=0;" parent="1" source="patients" target="exercises" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="100" y="350"/>
+                            <mxPoint x="100" y="610"/>
+                            <mxPoint x="486" y="610"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d_thr_ex" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.25;exitY=1;entryX=0.426;entryY=-0.036;entryDx=0;entryDy=0;entryPerimeter=0;exitDx=0;exitDy=0;" parent="1" source="therapists" target="exercises" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="465" y="410"/>
+                            <mxPoint x="410" y="410"/>
+                            <mxPoint x="410" y="580"/>
+                            <mxPoint x="514" y="580"/>
+                            <mxPoint x="514" y="650"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d_acc_notif" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=-0.001;exitY=0.858;entryX=0.5;entryY=0;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="accounts" target="notifications" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="420" y="200"/>
+                            <mxPoint x="420" y="300"/>
+                            <mxPoint x="370" y="300"/>
+                            <mxPoint x="370" y="540"/>
+                            <mxPoint x="370" y="780"/>
+                            <mxPoint x="270" y="780"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d_sched_an" style="endArrow=block;html=1;rounded=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="scheduling" target="analytics" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="540" y="610"/>
+                            <mxPoint x="690" y="610"/>
+                            <mxPoint x="690" y="840"/>
+                            <mxPoint x="550" y="840"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d_doc_files" style="endArrow=block;dashed=1;html=1;rounded=1;strokeWidth=1;exitX=0.674;exitY=0.985;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;exitPerimeter=0;" parent="1" source="documents" target="files" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="875" y="600"/>
+                            <mxPoint x="875" y="780"/>
+                        </Array>
+                        <mxPoint x="850" y="850" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="d_ex_files" style="endArrow=block;dashed=1;html=1;rounded=1;strokeWidth=1;exitX=0.5;exitY=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" parent="1" source="exercises" target="files" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="530" y="780"/>
+                            <mxPoint x="785" y="780"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="deps_list" value="&lt;b&gt;Kluczowe zależności&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size:11px&quot; align=&quot;left&quot;&gt;&lt;div style=&quot;text-align:left&quot;&gt;accounts → patients, therapists, privacy&lt;br&gt;patients → treatment, scheduling, exercises&lt;br&gt;therapists → scheduling, exercises&lt;br&gt;treatment → documents&lt;br&gt;scheduling → analytics&lt;br&gt;documents, exercises ⇢ files (storage)&lt;br&gt;accounts → notifications&lt;/div&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=14;spacingTop=10;fillColor=#ffffcc;strokeColor=#36393d;fontFamily=Helvetica;" parent="1" vertex="1">
+                    <mxGeometry x="1220" y="180" width="320" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow_note" value="Strzałki pokazują kierunek zależności (góra → dół).&lt;br&gt;Moduły w jednej warstwie są niezależne od siebie." style="text;html=1;fontSize=11;align=left;fontFamily=Helvetica;fontColor=#666666;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="980" width="500" height="40" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
 </mxfile>
