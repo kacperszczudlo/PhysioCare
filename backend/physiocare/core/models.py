@@ -1,3 +1,24 @@
+import uuid
+
 from django.db import models
 
-# Create your models here.
+
+class UUIDModel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    class Meta:
+        abstract = True
+
+
+class TimestampedModel(UUIDModel):
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        abstract = True
+
+
+class TimestampedUpdatedModel(TimestampedModel):
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
