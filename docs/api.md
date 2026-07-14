@@ -1,6 +1,6 @@
 # REST API — PhysioCare (szkic kontraktu)
 
-> Wersja dokumentu: **0.1 (pre-implementacja)**. Pełna kolekcja Postman powstanie w Fazie 2.
+> Wersja dokumentu: **0.2 (Faza 2 — implementacja)**. Kolekcja Postman: `docs/postman/PhysioCare.json`.
 
 **Base URL:** `http://localhost:8000/api/v1`  
 **Format:** JSON (`Content-Type: application/json`)  
@@ -222,6 +222,6 @@ Dozwolone MIME: `application/pdf`, `video/mp4`.
 
 ## Kolejne kroki
 
-1. Implementacja serializers + permissions w DRF
+1. ~~Implementacja serializers + permissions w DRF~~ (Faza 2)
 2. Eksport kolekcji Postman do `docs/postman/PhysioCare.json`
 3. Walidacja kontraktu testami integracyjnymi (Faza 3)
