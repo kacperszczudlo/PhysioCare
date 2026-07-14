@@ -16,13 +16,14 @@ def _is_deadlock(exc: OperationalError) -> bool:
     return getattr(cause, 'pgcode', None) == '40P01'
 
 
-def _book_visit(therapist_id, patient_id, start_at, end_at):
+def _book_visit(therapist_id, patient_id, therapy_type_id, start_at, end_at):
     connections.close_all()
     try:
         with transaction.atomic():
             Visit.objects.create(
                 therapist_id=therapist_id,
                 patient_id=patient_id,
+                therapy_type_id=therapy_type_id,
                 start_at=start_at,
                 end_at=end_at,
                 location_address='Gabinet 1',
@@ -36,7 +37,9 @@ def _book_visit(therapist_id, patient_id, start_at, end_at):
         raise
 
 
-def test_concurrent_bookings_reject_overlapping_slot(therapist, patient_profiles):
+def test_concurrent_bookings_reject_overlapping_slot(
+    therapist, patient_profiles, therapy_type,
+):
     start_at = timezone.now() + timedelta(days=1)
     end_at = start_at + timedelta(hours=1)
     workers = 10
@@ -47,6 +50,7 @@ def test_concurrent_bookings_reject_overlapping_slot(therapist, patient_profiles
                 _book_visit,
                 therapist.id,
                 patient_profiles[index].id,
+                therapy_type.id,
                 start_at,
                 end_at,
             )
@@ -60,13 +64,16 @@ def test_concurrent_bookings_reject_overlapping_slot(therapist, patient_profiles
     assert Visit.objects.filter(therapist=therapist, status='SCHEDULED').count() == 1
 
 
-def test_cancelled_visit_does_not_block_slot(therapist, patient_profiles):
+def test_cancelled_visit_does_not_block_slot(
+    therapist, patient_profiles, therapy_type,
+):
     start_at = timezone.now() + timedelta(days=2)
     end_at = start_at + timedelta(hours=1)
 
     Visit.objects.create(
         therapist=therapist,
         patient=patient_profiles[0],
+        therapy_type=therapy_type,
         start_at=start_at,
         end_at=end_at,
         status='CANCELLED',
@@ -76,6 +83,7 @@ def test_cancelled_visit_does_not_block_slot(therapist, patient_profiles):
     Visit.objects.create(
         therapist=therapist,
         patient=patient_profiles[1],
+        therapy_type=therapy_type,
         start_at=start_at,
         end_at=end_at,
         location_address='Gabinet 1',
