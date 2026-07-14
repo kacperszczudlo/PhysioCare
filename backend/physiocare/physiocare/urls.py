@@ -1,8 +1,33 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+
+from documents.urls import me_urlpatterns as documents_me_urls
+from exercises.urls import me_urlpatterns as exercises_me_urls
+from notifications.urls import me_urlpatterns as notifications_me_urls
+from patients.urls import me_urlpatterns as patients_me_urls
+from scheduling.urls import me_urlpatterns as scheduling_me_urls
+
+me_urlpatterns = (
+    patients_me_urls
+    + scheduling_me_urls
+    + exercises_me_urls
+    + documents_me_urls
+    + notifications_me_urls
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/auth/', include('accounts.urls')),
     path('api/v1/patients/', include('patients.urls')),
+    path('api/v1/me/', include((me_urlpatterns, 'me'))),
+    path('api/v1/', include('treatment.urls')),
+    path('api/v1/', include('scheduling.urls')),
+    path('api/v1/', include('exercises.urls')),
+    path('api/v1/', include('documents.urls')),
+    path('api/v1/', include('therapists.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
