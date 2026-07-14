@@ -5,6 +5,8 @@ __pycache__/
 venv/
 .env
 *.sqlite3
+*.sqlite3-journal
+local_settings.py
 backend/media/
 backend/staticfiles/
 .coverage
