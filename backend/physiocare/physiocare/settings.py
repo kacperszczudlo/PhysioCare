@@ -76,15 +76,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'physiocare.wsgi.application'
 
-DATABASES = {
-    'default': {
+
+def postgres_database(*, db_name=None, test_db_name=None):
+    config = {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': require_env('POSTGRES_DB'),
+        'NAME': db_name or require_env('POSTGRES_DB'),
         'USER': require_env('POSTGRES_USER'),
         'PASSWORD': require_env('POSTGRES_PASSWORD'),
         'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
+    if test_db_name:
+        config['TEST'] = {'NAME': test_db_name}
+    return config
+
+
+DATABASES = {
+    'default': postgres_database(),
 }
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
