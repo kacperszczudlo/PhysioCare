@@ -4,14 +4,25 @@ __pycache__/
 .venv/
 venv/
 .env
-*.sqlite3
-*.sqlite3-journal
 local_settings.py
 backend/media/
 backend/staticfiles/
+
+# Test / coverage reports (generowane lokalnie)
+backend/reports/
 .coverage
+.coverage.*
 htmlcov/
 .pytest_cache/
+pytest-cache-files-*/
+**/reports/coverage/
+**/reports/pytest-report.html
+
+# Legacy SQLite (projekt używa PostgreSQL)
+*.sqlite3
+*.sqlite3-journal
+backend/physiocare/db.sqlite3
+
 .ruff_cache/
 
 # Node / React / Expo
@@ -39,3 +50,7 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Coverage config is committed; generated data is not
+backend/.coverage
+backend/.pytest_cache/
