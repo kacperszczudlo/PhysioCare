@@ -17,6 +17,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunSQL(
+            sql='CREATE EXTENSION IF NOT EXISTS btree_gist;',
+            reverse_sql='DROP EXTENSION IF EXISTS btree_gist;',
+        ),
         migrations.CreateModel(
             name='Visit',
             fields=[
