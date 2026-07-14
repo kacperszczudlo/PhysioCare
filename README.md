@@ -55,33 +55,50 @@ Otwórz pliki `.drawio` w [diagrams.net](https://app.diagrams.net) lub rozszerze
 - `docs/diagrams/module-dependencies.drawio` — moduły Django
 - `docs/diagrams/use-cases.drawio` — przypadki użycia
 
-## Uruchomienie lokalne (po Fazie 1)
-
-> Backend i frontendy zostaną dodane w kolejnych fazach. Poniżej docelowy sposób uruchomienia.
+## Uruchomienie lokalne
 
 ### Wymagania
 
 - Python 3.12+
-- Node.js 20 LTS
-- PostgreSQL 16
+- PostgreSQL 16 (+ rozszerzenie `btree_gist` / pakiet `postgresql-contrib`)
+- Node.js 20 LTS (web/mobile — Faza 4+)
 - (Mobile) Expo CLI
 
 ### Konfiguracja
 
 ```bash
 cp .env.example .env
-# Uzupełnij wartości w .env
+# Uzupełnij wartości w .env (POSTGRES_*, DJANGO_SECRET_KEY)
+```
+
+**Pierwsza konfiguracja PostgreSQL (Fedora/Linux):**
+
+```bash
+sudo bash scripts/setup-postgres-auth.sh
 ```
 
 ### Backend
 
 ```bash
 cd backend
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+python -m venv venv
+source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt
+cd physiocare
 python manage.py migrate
 python manage.py runserver
+```
+
+**Reset bazy dev (po zmianie migracji):**
+
+```bash
+bash scripts/reset-db.sh
+```
+
+**Synchronizacja `database/schema.sql` po migrate:**
+
+```bash
+bash scripts/sync-schema-sql.sh
 ```
 
 ### Web

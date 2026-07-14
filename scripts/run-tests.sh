@@ -6,13 +6,20 @@ BACKEND_DIR="${ROOT_DIR}/backend"
 
 cd "${BACKEND_DIR}"
 
-if [[ ! -f venv/bin/activate ]]; then
-  echo "Brak venv. Utwórz: python -m venv venv && pip install -r requirements.txt"
+VENV_ACTIVATE=""
+if [[ -f venv/bin/activate ]]; then
+  VENV_ACTIVATE="venv/bin/activate"
+elif [[ -f .venv/bin/activate ]]; then
+  VENV_ACTIVATE=".venv/bin/activate"
+else
+  echo "Brak venv. Utwórz: cd backend && python -m venv venv && pip install -r requirements.txt"
   exit 1
 fi
 
 # shellcheck source=/dev/null
-source venv/bin/activate
+source "${VENV_ACTIVATE}"
+
+pip install -q -r requirements.txt
 
 mkdir -p reports
 
