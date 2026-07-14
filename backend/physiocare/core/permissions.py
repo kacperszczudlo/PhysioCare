@@ -25,11 +25,17 @@ class IsTherapist(permissions.BasePermission):
 
 class IsOwnerPatientProfile(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        if request.user.role == 'PATIENT':
-            return hasattr(request.user, 'patient_profile') and obj.user_id == request.user.id
-        if request.user.role == 'THERAPIST':
-            return (
-                hasattr(request.user, 'therapist_profile')
-                and obj.therapist_id == request.user.therapist_profile.id
-            )
-        return request.user.is_staff
+        from core.mixins import user_can_access_patient
+        return user_can_access_patient(request.user, obj)
+
+
+class IsVisitParticipant(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        from core.mixins import user_can_access_visit
+        return user_can_access_visit(request.user, obj)
+
+
+class IsEpisodeParticipant(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        from core.mixins import user_can_access_episode
+        return user_can_access_episode(request.user, obj)

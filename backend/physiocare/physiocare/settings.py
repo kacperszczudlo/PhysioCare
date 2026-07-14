@@ -124,6 +124,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+_media_path = os.environ.get('MEDIA_ROOT', 'backend/media')
+MEDIA_ROOT = ROOT_DIR / _media_path if not os.path.isabs(_media_path) else Path(_media_path)
+MEDIA_URL = '/media/'
+
 MAX_UPLOAD_MB = int(os.environ.get('MAX_UPLOAD_MB', '50'))
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_MB * 1024 * 1024
 
