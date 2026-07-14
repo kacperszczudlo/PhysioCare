@@ -5,10 +5,9 @@ import pytest
 from django.db import IntegrityError, connections, transaction
 from django.utils import timezone
 
-from conftest import requires_postgres
 from scheduling.models import Visit
 
-pytestmark = [pytest.mark.django_db(transaction=True), requires_postgres]
+pytestmark = pytest.mark.django_db(transaction=True)
 
 
 def _book_visit(therapist_id, patient_id, start_at, end_at):
@@ -28,10 +27,6 @@ def _book_visit(therapist_id, patient_id, start_at, end_at):
 
 
 def test_concurrent_bookings_reject_overlapping_slot(therapist, patient_profiles):
-    """
-    Symuluje wyścig TOCTOU: wiele równoległych rezerwacji tego samego slotu.
-    Baza musi przepuścić dokładnie jedną wizytę i odrzucić resztę IntegrityError.
-    """
     start_at = timezone.now() + timedelta(days=1)
     end_at = start_at + timedelta(hours=1)
     workers = 10

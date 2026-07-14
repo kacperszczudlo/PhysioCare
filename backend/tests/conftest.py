@@ -1,29 +1,32 @@
-import os
-import socket
-
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 
 from patients.models import PatientProfile
+from scheduling.models import Visit
 from therapists.models import TherapistProfile
 
 User = get_user_model()
 
 
-def postgres_available() -> bool:
-    host = os.environ.get('POSTGRES_HOST', 'localhost')
-    port = int(os.environ.get('POSTGRES_PORT', '5432'))
-    try:
-        with socket.create_connection((host, port), timeout=1):
-            return True
-    except OSError:
-        return False
+@pytest.fixture(scope='session')
+def django_db_setup(django_db_blocker, django_db_use_migrations):
+    """
+    Używa istniejącej bazy physiocare z .env.
+    Nie wymaga CREATEDB (brak tworzenia test_physiocare).
+    """
+    with django_db_blocker.unblock():
+        if django_db_use_migrations:
+            call_command('migrate', verbosity=0)
 
 
-requires_postgres = pytest.mark.skipif(
-    not postgres_available(),
-    reason='PostgreSQL is required for ExclusionConstraint tests',
-)
+@pytest.fixture(autouse=True)
+def cleanup_test_data(db):
+    yield
+    Visit.objects.filter(patient__user__email__endswith='@physiocare.test').delete()
+    PatientProfile.objects.filter(user__email__endswith='@physiocare.test').delete()
+    TherapistProfile.objects.filter(user__email__endswith='@physiocare.test').delete()
+    User.objects.filter(email__endswith='@physiocare.test').delete()
 
 
 @pytest.fixture
