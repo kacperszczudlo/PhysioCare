@@ -134,3 +134,41 @@ export interface VisitNote {
   content: string
   created_at: string
 }
+
+export type MediaType = 'VIDEO' | 'PDF'
+
+export interface ExerciseCategory {
+  id: string
+  name: string
+}
+
+export interface Exercise {
+  id: string
+  title: string
+  media_type: MediaType
+  file_url: string
+  instruction: string
+  created_at: string
+  categories: ExerciseCategory[]
+}
+
+export interface ExerciseAssignment {
+  id: string
+  exercise: string
+  exercise_title: string
+  patient: string
+  episode: string | null
+  dosage: string
+  start_date: string
+  end_date: string
+  assigned_at: string
+}
+
+export interface ExerciseAssignmentPayload {
+  exercise_id: string
+  patient_id: string
+  episode_id?: string | null
+  dosage: string
+  start_date: string
+  end_date: string
+}
