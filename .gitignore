@@ -1,56 +1,91 @@
-# Python / Django
+# =============================================================================
+# PhysioCare — .gitignore
+# =============================================================================
+
+# --- Secrets / env ---
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Personal Postman environments (tokens / prawdziwe hasla)
+*.local.postman_environment.json
+postman/environments.local/
+.postman/local/
+
+# --- Python / Django ---
 __pycache__/
 *.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+*.egg
 .venv/
 venv/
-.env
+env/
 local_settings.py
 backend/media/
 backend/staticfiles/
-
-# Test / coverage reports (generowane lokalnie)
-backend/reports/
-.coverage
-.coverage.*
-htmlcov/
-.pytest_cache/
-pytest-cache-files-*/
-**/reports/coverage/
-**/reports/pytest-report.html
-
-# Legacy SQLite (projekt używa PostgreSQL)
 *.sqlite3
 *.sqlite3-journal
 backend/physiocare/db.sqlite3
 
+# --- Test / coverage (generowane lokalnie) ---
+backend/reports/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+.mypy_cache/
 .ruff_cache/
+.hypothesis/
+pytest-cache-files-*/
+**/reports/coverage/
+**/reports/pytest-report.html
+backend/.coverage
+backend/.pytest_cache/
 
-# Node / React / Expo
+# --- Node / React / Expo ---
 node_modules/
 dist/
 build/
 .expo/
 .expo-shared/
-web/.env
-web/.env.local
-mobile/.env
+web-build/
+.turbo/
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# IDE / OS
+# --- IDE / OS / Windows ---
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea/
 *.swp
+*~
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
 
-# Docker / secrets
-.env
-.env.*
-!.env.example
+# --- Certs / keys (nie commituj) ---
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+*.keystore
 
-# Coverage config is committed; generated data is not
-backend/.coverage
-backend/.pytest_cache/
+# --- Misc tooling ---
+*.bak
+*.tmp
+.direnv/
+.python-version.local

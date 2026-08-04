@@ -58,7 +58,7 @@ Współpraca komponentów: **web** i **mobile** korzystają z tego samego **REST
 | 2.3 | CRUD pacjenci, epizody, wizyty | REST z kodami HTTP |
 | 2.4 | CRUD ćwiczenia, przypisania, compliance | REST |
 | 2.5 | Upload/pobieranie plików (PDF, mp4) | Storage + limity |
-| 2.6 | Dokumentacja API | `docs/api.md` + kolekcja Postman |
+| 2.6 | Dokumentacja API | `docs/api.md` + `docs/postman/` + `docs/postman-testing.md` |
 
 ---
 

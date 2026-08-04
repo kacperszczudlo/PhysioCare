@@ -16,10 +16,13 @@ class TreatmentEpisodeSerializer(serializers.ModelSerializer):
 class TreatmentEpisodeCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TreatmentEpisode
-        fields = ['icd10_code', 'status', 'summary_note', 'started_at']
+        fields = ['id', 'icd10_code', 'status', 'summary_note', 'started_at']
+        read_only_fields = ['id']
 
 
 class BodyAreaPainSerializer(serializers.ModelSerializer):
+    vas_score = serializers.IntegerField(min_value=0, max_value=10)
+
     class Meta:
         model = BodyAreaPain
         fields = [

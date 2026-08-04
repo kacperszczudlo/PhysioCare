@@ -42,7 +42,9 @@ PhysioCare/
 | [docs/development-plan.md](docs/development-plan.md) | Plan realizacji krok po kroku |
 | [docs/architecture.md](docs/architecture.md) | Architektura systemu |
 | [docs/use-cases.md](docs/use-cases.md) | Przypadki użycia |
-| [docs/api.md](docs/api.md) | Kontrakt REST API (szkic) |
+| [docs/api.md](docs/api.md) | Kontrakt REST API |
+| [docs/postman-testing.md](docs/postman-testing.md) | Kolekcja Postman, macierz UC, checklista |
+| [docs/postman/PhysioCare.json](docs/postman/PhysioCare.json) | Importowalna kolekcja Postman |
 | [docs/diagrams/](docs/diagrams/) | ERD, architektura, moduły, use case (draw.io) |
 | [database/schema.sql](database/schema.sql) | Schemat PostgreSQL |
 
@@ -60,29 +62,31 @@ Otwórz pliki `.drawio` w [diagrams.net](https://app.diagrams.net) lub rozszerze
 ### Wymagania
 
 - Python 3.12+
-- PostgreSQL 16 (+ rozszerzenie `btree_gist` / pakiet `postgresql-contrib`)
+- PostgreSQL 16+ (+ rozszerzenie `btree_gist` / Stack Builder → *PostgreSQL Database Server Contrib*)
 - Node.js 20 LTS (web/mobile — Faza 4+)
 - (Mobile) Expo CLI
+- (Windows) PowerShell 5.1+; binaria `psql` / `pg_dump` w PATH lub w `C:\Program Files\PostgreSQL\<wersja>\bin`
 
 ### Konfiguracja
 
-```bash
-cp .env.example .env
-# Uzupełnij wartości w .env (POSTGRES_*, DJANGO_SECRET_KEY)
+```powershell
+Copy-Item .env.example .env
+# Uzupelnij wartosci w .env (POSTGRES_*, DJANGO_SECRET_KEY)
 ```
 
-**Pierwsza konfiguracja PostgreSQL (Fedora/Linux):**
+**Pierwsza konfiguracja PostgreSQL:**
 
-```bash
-sudo bash scripts/setup-postgres-auth.sh
+```powershell
+# W .env: POSTGRES_ADMIN_USER=postgres + POSTGRES_ADMIN_PASSWORD=haslo-z-instalatora
+python scripts/setup_postgres_auth.py
 ```
 
 ### Backend
 
-```bash
+```powershell
 cd backend
 python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
+.\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 cd physiocare
 python manage.py migrate
@@ -91,19 +95,46 @@ python manage.py runserver
 
 **Reset bazy dev (po zmianie migracji):**
 
-```bash
-bash scripts/reset-db.sh
+```powershell
+python scripts/reset_db.py
 ```
 
 **Synchronizacja `database/schema.sql` po migrate:**
 
-```bash
-bash scripts/sync-schema-sql.sh
+```powershell
+python scripts/sync_schema_sql.py
 ```
+
+### Testy
+
+Wszystkie komendy z katalogu głównego repo (`PhysioCare/`), przy działającym PostgreSQL i venv w `backend/venv`.
+
+**1) Testy jednostkowe / integracyjne (pytest + coverage)**
+
+```powershell
+python scripts/run_tests.py
+```
+
+Raporty:
+- `backend/reports/pytest-report.html`
+- `backend/reports/coverage/index.html`
+
+**2) Smoke use-case API (wymaga `runserver` na :8000)**
+
+```powershell
+# terminal 1
+cd backend\physiocare
+..\venv\Scripts\python.exe manage.py runserver
+
+# terminal 2 — z root repo
+.\backend\venv\Scripts\python.exe scripts\run_api_usecases.py
+```
+
+**3) Kolekcja Postman** — import `docs/postman/PhysioCare.json`, `baseUrl=http://localhost:8000/api/v1`, Cookie Jar ON. URL-e ze slashami na końcu.
 
 ### Web
 
-```bash
+```powershell
 cd web
 npm install
 npm run dev
@@ -111,12 +142,31 @@ npm run dev
 
 ### Mobile
 
-```bash
+```powershell
 cd mobile
 npm install
 npx expo start
 ```
 
+### Skrypty (`scripts/`) — Python
+
+| Skrypt | Opis |
+|--------|------|
+| `setup_postgres_auth.py` | User, baza, `btree_gist` |
+| `reset_db.py` | Drop/create DB + migrate |
+| `sync_schema_sql.py` | Dump schematu → `database/schema.sql` |
+| `run_tests.py` | pytest + coverage HTML |
+| `run_api_usecases.py` | Smoke UC-01–18 przeciwko lokalnemu API |
+| `grant_test_db_privileges.py` | Opcjonalnie `CREATEDB` |
+| `generate_postman_collection.py` | Regeneracja kolekcji Postman |
+
+Uruchamianie (zawsze z roota repo):
+
+```powershell
+python scripts/<nazwa>.py
+```
+
+Na Windows nie odpalaj dwuklikiem — użyj PowerShell / terminala Cursor.
 ## Mockup UI
 
 Referencja wizualna ekranów: plik `mockup_systemu_fizjoterapii.tsx` (poza repo — lokalny prototyp).

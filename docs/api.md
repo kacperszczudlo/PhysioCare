@@ -1,10 +1,11 @@
 # REST API — PhysioCare (szkic kontraktu)
 
-> Wersja dokumentu: **0.2 (Faza 2 — implementacja)**. Kolekcja Postman: `docs/postman/PhysioCare.json`.
+> Wersja dokumentu: **0.3 (Faza 2 — implementacja)**.  
+> Kolekcja Postman: [`postman/PhysioCare.json`](postman/PhysioCare.json) · przewodnik testów: [`postman-testing.md`](postman-testing.md).
 
 **Base URL:** `http://localhost:8000/api/v1`  
 **Format:** JSON (`Content-Type: application/json`)  
-**Auth:** `Authorization: Bearer <access_token>`
+**Auth:** cookies `access_token` / `refresh_token` (httpOnly) **lub** `Authorization: Bearer <access_token>`
 
 ## Konwencje
 
@@ -42,6 +43,7 @@
   "password": "SecurePass123!",
   "first_name": "Jan",
   "last_name": "Kowalski",
+  "therapist_id": "uuid-profilu-terapeuty",
   "consents": {
     "terms": true,
     "medical_data": true
@@ -49,7 +51,8 @@
 }
 ```
 
-**201** — `{ "user": { "id", "email", "role" }, "tokens": { "access", "refresh" } }`
+**201** — `{ "user": { "id", "email", "role", "first_name", "last_name" } }` + cookies JWT.  
+`therapist_id` = UUID `TherapistProfile` (nie User).
 
 ### POST `/auth/register/therapist`
 
@@ -187,8 +190,8 @@
 | Metoda | Endpoint | Opis |
 |--------|----------|------|
 | GET | `/me/documents` | Lista PDF pacjenta |
-| GET | `/documents/{id}/download` | Pobranie (auth) |
-| POST | `/therapist/documents` | Upload przez terapeutę |
+| GET | `/{id}/download` | Pobranie (auth) — ścieżka faktyczna w URLconf |
+| POST | `/therapist/documents` | Upload przez terapeutę (`multipart`) |
 
 ---
 
@@ -223,5 +226,6 @@ Dozwolone MIME: `application/pdf`, `video/mp4`.
 ## Kolejne kroki
 
 1. ~~Implementacja serializers + permissions w DRF~~ (Faza 2)
-2. Eksport kolekcji Postman do `docs/postman/PhysioCare.json`
-3. Walidacja kontraktu testami integracyjnymi (Faza 3)
+2. ~~Eksport kolekcji Postman~~ → [`postman/PhysioCare.json`](postman/PhysioCare.json), przewodnik [`postman-testing.md`](postman-testing.md)
+3. Przejście checklisty Postman (wszystkie UC + wyjątki)
+4. Walidacja kontraktu testami integracyjnymi (Faza 3)

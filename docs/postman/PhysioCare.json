@@ -1,0 +1,3644 @@
+{
+  "info": {
+    "name": "PhysioCare API",
+    "description": "Pełna kolekcja kontraktu REST PhysioCare (`/api/v1`).\n\nPokrywa UC-01–UC-18: happy path + wyjątki (400/401/403/409).\n\n**Auth:** JWT w cookies `access_token` / `refresh_token` (httpOnly). Kolekcja dodatkowo ustawia `{{access_token}}` z jar cookies (gdy dostępne) i wysyła `Authorization: Bearer`.\n\n**Kolejność Collection Runner:** folder `00 Setup`, potem pozostałe foldery.\n\nDokumentacja: `docs/postman-testing.md`, kontrakt: `docs/api.md`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
+    },
+    {
+      "key": "therapist_access_token",
+      "value": ""
+    },
+    {
+      "key": "patient_access_token",
+      "value": ""
+    },
+    {
+      "key": "therapist_email",
+      "value": "terapeuta@example.com"
+    },
+    {
+      "key": "patient_email",
+      "value": "pacjent@example.com"
+    },
+    {
+      "key": "password",
+      "value": "SecurePass123!"
+    },
+    {
+      "key": "pwzf_number",
+      "value": "71239"
+    },
+    {
+      "key": "therapist_profile_id",
+      "value": ""
+    },
+    {
+      "key": "patient_profile_id",
+      "value": ""
+    },
+    {
+      "key": "episode_id",
+      "value": ""
+    },
+    {
+      "key": "body_pain_id",
+      "value": ""
+    },
+    {
+      "key": "therapy_type_id",
+      "value": ""
+    },
+    {
+      "key": "visit_id",
+      "value": ""
+    },
+    {
+      "key": "exercise_id",
+      "value": ""
+    },
+    {
+      "key": "assignment_id",
+      "value": ""
+    },
+    {
+      "key": "document_id",
+      "value": ""
+    },
+    {
+      "key": "schedule_date",
+      "value": "2026-08-10"
+    },
+    {
+      "key": "visit_start",
+      "value": "2026-08-10T11:00:00+02:00"
+    },
+    {
+      "key": "visit_end",
+      "value": "2026-08-10T11:45:00+02:00"
+    },
+    {
+      "key": "visit_start_alt",
+      "value": "2026-08-10T14:00:00+02:00"
+    },
+    {
+      "key": "visit_end_alt",
+      "value": "2026-08-10T14:45:00+02:00"
+    },
+    {
+      "key": "visit_start_patient",
+      "value": "2026-08-11T10:00:00+02:00"
+    },
+    {
+      "key": "visit_end_patient",
+      "value": "2026-08-11T10:45:00+02:00"
+    },
+    {
+      "key": "assignment_start",
+      "value": "2026-08-03"
+    },
+    {
+      "key": "assignment_end",
+      "value": "2026-08-17"
+    },
+    {
+      "key": "today",
+      "value": "2026-08-03"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 Setup - Auth & seed",
+      "description": "Kolejnosc: rejestracja terapeuty -> login -> zapis therapist_profile_id -> rejestracja pacjenta.",
+      "item": [
+        {
+          "name": "UC-03 Register therapist (happy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register/therapist/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register",
+                "therapist"
+              ]
+            },
+            "description": "UC-03 — tworzy User(THERAPIST) + TherapistProfile. Tokeny w cookies httpOnly.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{therapist_email}}\",\n  \"password\": \"{{password}}\",\n  \"first_name\": \"Anna\",\n  \"last_name\": \"Nowak\",\n  \"pwzf_number\": \"{{pwzf_number}}\",\n  \"pwzf_declaration\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "if (j.user && j.user.id) {",
+                  "  pm.collectionVariables.set('therapist_user_id', j.user.id);",
+                  "}",
+                  "if (pm.cookies.has('access_token')) {",
+                  "  pm.collectionVariables.set('therapist_access_token', pm.cookies.get('access_token'));",
+                  "  pm.collectionVariables.set('access_token', pm.cookies.get('access_token'));",
+                  "}",
+                  "if (pm.cookies.has('refresh_token')) {",
+                  "  pm.collectionVariables.set('refresh_token', pm.cookies.get('refresh_token'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-03 Register therapist — missing PWZF declaration (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register/therapist/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register",
+                "therapist"
+              ]
+            },
+            "description": "E: brak oświadczenia PWZFz.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"therapist-bad@example.com\",\n  \"password\": \"{{password}}\",\n  \"first_name\": \"Bad\",\n  \"last_name\": \"Doc\",\n  \"pwzf_number\": \"99999\",\n  \"pwzf_declaration\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Error envelope', function () {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('error');",
+                  "  pm.expect(j.error).to.have.property('code');",
+                  "  pm.expect(j.error).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-03 Register therapist — duplicate PWZF / email (400/409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register/therapist/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register",
+                "therapist"
+              ]
+            },
+            "description": "Powtórna rejestracja tym samym e-mailem / PWZFz.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{therapist_email}}\",\n  \"password\": \"{{password}}\",\n  \"first_name\": \"Anna\",\n  \"last_name\": \"Nowak\",\n  \"pwzf_number\": \"{{pwzf_number}}\",\n  \"pwzf_declaration\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Conflict or validation', () => pm.expect([400,409]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-01 Login therapist (happy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "UC-01 — JWT w cookies access_token / refresh_token.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{therapist_email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "if (j.user && j.user.id) {",
+                  "  pm.collectionVariables.set('therapist_user_id', j.user.id);",
+                  "}",
+                  "if (pm.cookies.has('access_token')) {",
+                  "  pm.collectionVariables.set('therapist_access_token', pm.cookies.get('access_token'));",
+                  "  pm.collectionVariables.set('access_token', pm.cookies.get('access_token'));",
+                  "}",
+                  "if (pm.cookies.has('refresh_token')) {",
+                  "  pm.collectionVariables.set('refresh_token', pm.cookies.get('refresh_token'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET therapist profile → save therapist_profile_id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/profile/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "profile"
+              ]
+            },
+            "description": "Zapisuje therapist_profile_id potrzebne do rejestracji pacjenta.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('therapist_profile_id', j.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-02 Register patient (happy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register/patient/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register",
+                "patient"
+              ]
+            },
+            "description": "UC-02 — wymaga therapist_id + zgód terms/medical_data.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{password}}\",\n  \"first_name\": \"Jan\",\n  \"last_name\": \"Kowalski\",\n  \"therapist_id\": \"{{therapist_profile_id}}\",\n  \"consents\": {\n    \"terms\": true,\n    \"medical_data\": true\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "if (j.user && j.user.id) {",
+                  "  pm.collectionVariables.set('patient_user_id', j.user.id);",
+                  "}",
+                  "if (pm.cookies.has('access_token')) {",
+                  "  pm.collectionVariables.set('patient_access_token', pm.cookies.get('access_token'));",
+                  "  pm.collectionVariables.set('access_token', pm.cookies.get('access_token'));",
+                  "}",
+                  "if (pm.cookies.has('refresh_token')) {",
+                  "  pm.collectionVariables.set('refresh_token', pm.cookies.get('refresh_token'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-02 Register patient — missing consents (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register/patient/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register",
+                "patient"
+              ]
+            },
+            "description": "E2: brak wymaganych zgód RODO.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"patient-noconsent@example.com\",\n  \"password\": \"{{password}}\",\n  \"first_name\": \"Jan\",\n  \"last_name\": \"Brak\",\n  \"therapist_id\": \"{{therapist_profile_id}}\",\n  \"consents\": {\n    \"terms\": false,\n    \"medical_data\": true\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Error envelope', function () {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('error');",
+                  "  pm.expect(j.error).to.have.property('code');",
+                  "  pm.expect(j.error).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-02 Register patient — email taken (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register/patient/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register",
+                "patient"
+              ]
+            },
+            "description": "E1: e-mail zajęty.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{password}}\",\n  \"first_name\": \"Jan\",\n  \"last_name\": \"Kowalski\",\n  \"therapist_id\": \"{{therapist_profile_id}}\",\n  \"consents\": {\n    \"terms\": true,\n    \"medical_data\": true\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Duplicate rejected', () => pm.expect([400,409]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-01 Login patient (happy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "if (j.user && j.user.id) {",
+                  "  pm.collectionVariables.set('patient_user_id', j.user.id);",
+                  "}",
+                  "if (pm.cookies.has('access_token')) {",
+                  "  pm.collectionVariables.set('patient_access_token', pm.cookies.get('access_token'));",
+                  "  pm.collectionVariables.set('access_token', pm.cookies.get('access_token'));",
+                  "}",
+                  "if (pm.cookies.has('refresh_token')) {",
+                  "  pm.collectionVariables.set('refresh_token', pm.cookies.get('refresh_token'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-01 Login — wrong password (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "E1: błędne dane → AUTH_001.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"WrongPass999!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Error envelope', function () {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('error');",
+                  "  pm.expect(j.error).to.have.property('code');",
+                  "  pm.expect(j.error).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-01 Refresh token (cookie or body)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Odświeża cookies. Body.refresh opcjonalne gdy cookie refresh_token jest ustawione.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "if (pm.cookies.has('access_token')) {",
+                  "  pm.collectionVariables.set('access_token', pm.cookies.get('access_token'));",
+                  "}",
+                  "if (pm.cookies.has('refresh_token')) {",
+                  "  pm.collectionVariables.set('refresh_token', pm.cookies.get('refresh_token'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-04 Password reset request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/password-reset/request/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "password-reset",
+                "request"
+              ]
+            },
+            "description": "Zawsze 200 (anti-enumeration).",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patient_email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-04 Password reset confirm — invalid token (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/password-reset/confirm/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "password-reset",
+                "confirm"
+              ]
+            },
+            "description": "AUTH_002 — token nieprawidłowy/wygasły.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"invalid-token\",\n  \"new_password\": \"NewSecurePass123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Error envelope', function () {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('error');",
+                  "  pm.expect(j.error).to.have.property('code');",
+                  "  pm.expect(j.error).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Switch role → therapist token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Przywraca sesję terapeuty przed folderami web.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{therapist_email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "if (j.user && j.user.id) {",
+                  "  pm.collectionVariables.set('therapist_user_id', j.user.id);",
+                  "}",
+                  "if (pm.cookies.has('access_token')) {",
+                  "  pm.collectionVariables.set('therapist_access_token', pm.cookies.get('access_token'));",
+                  "  pm.collectionVariables.set('access_token', pm.cookies.get('access_token'));",
+                  "}",
+                  "if (pm.cookies.has('refresh_token')) {",
+                  "  pm.collectionVariables.set('refresh_token', pm.cookies.get('refresh_token'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "UC-10 Therapist dashboard",
+      "description": "Pulpit terapeuty — widgety.",
+      "item": [
+        {
+          "name": "GET dashboard stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/dashboard/stats/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "dashboard",
+                "stats"
+              ]
+            },
+            "description": "visits_today, patients_total.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Has widgets', () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('visits_today');",
+                  "  pm.expect(j).to.have.property('patients_total');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET dashboard as patient (403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/dashboard/stats/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "dashboard",
+                "stats"
+              ]
+            },
+            "description": "Po przełączeniu na token pacjenta — zła rola.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "// Użyj patient_access_token ręcznie lub uruchom po login patient",
+                  "pm.test('Forbidden or unauthorized for wrong role', () => {",
+                  "  pm.expect([401,403]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "UC-12 Patients & episodes",
+      "description": "Lista pacjentów, karta, epizody leczenia, notatki.",
+      "item": [
+        {
+          "name": "List patients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/patients/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "patients"
+              ]
+            },
+            "description": "Tylko pacjenci przypisani do zalogowanego terapeuty.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "const list = Array.isArray(j) ? j : (j.results || []);",
+                  "if (list.length) {",
+                  "  pm.collectionVariables.set('patient_profile_id', list[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Patient detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/patients/{{patient_profile_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "patients",
+                "{{patient_profile_id}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create episode (happy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/patients/{{patient_profile_id}}/episodes/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "patients",
+                "{{patient_profile_id}}",
+                "episodes"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"icd10_code\": \"M54.5\",\n  \"status\": \"IN_PROGRESS\",\n  \"summary_note\": \"Ból lędźwiowy — epizod start\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "pm.collectionVariables.set('episode_id', j.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List episodes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/patients/{{patient_profile_id}}/episodes/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "patients",
+                "{{patient_profile_id}}",
+                "episodes"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Patch episode status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/episodes/{{episode_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "episodes",
+                "{{episode_id}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_PROGRESS\",\n  \"summary_note\": \"Aktualizacja po pierwszej wizycie\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add visit note",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/episodes/{{episode_id}}/notes/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "episodes",
+                "{{episode_id}}",
+                "notes"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Pacjent zgłasza poprawę mobilności.\",\n  \"visit\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "UC-13 Body map (Diagnostic Mapper)",
+      "description": "VAS + charakter bólu na regionach ciała.",
+      "item": [
+        {
+          "name": "Create body-pain entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/episodes/{{episode_id}}/body-pain/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "episodes",
+                "{{episode_id}}",
+                "body-pain"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body_region\": \"LUMBAR\",\n  \"view_side\": \"BACK\",\n  \"vas_score\": 7,\n  \"pain_character\": [\n    \"SHARP\",\n    \"RADIATING\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.collectionVariables.set('body_pain_id', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List body-pain",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/episodes/{{episode_id}}/body-pain/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "episodes",
+                "{{episode_id}}",
+                "body-pain"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update body-pain (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/episodes/{{episode_id}}/body-pain/{{body_pain_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "episodes",
+                "{{episode_id}}",
+                "body-pain",
+                "{{body_pain_id}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body_region\": \"LUMBAR\",\n  \"view_side\": \"BACK\",\n  \"vas_score\": 4,\n  \"pain_character\": [\n    \"DULL\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create body-pain — VAS out of range (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/episodes/{{episode_id}}/body-pain/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "episodes",
+                "{{episode_id}}",
+                "body-pain"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body_region\": \"THIGH_RIGHT\",\n  \"view_side\": \"FRONT\",\n  \"vas_score\": 15,\n  \"pain_character\": [\n    \"SHARP\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Error envelope', function () {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('error');",
+                  "  pm.expect(j.error).to.have.property('code');",
+                  "  pm.expect(j.error).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "UC-07 / UC-11 / UC-14 Visits & schedule",
+      "description": "Harmonogram terapeuty + wizyty pacjenta (reschedule/cancel).",
+      "item": [
+        {
+          "name": "Create therapy type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/therapy-types/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "therapy-types"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Terapia manualna\",\n  \"color_hex\": \"#3B82F6\",\n  \"duration_min\": 45\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.collectionVariables.set('therapy_type_id', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List therapy types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/therapy-types/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "therapy-types"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create visit (happy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/visits/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "visits"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient_id\": \"{{patient_profile_id}}\",\n  \"episode_id\": \"{{episode_id}}\",\n  \"therapy_type_id\": \"{{therapy_type_id}}\",\n  \"start_at\": \"{{visit_start}}\",\n  \"end_at\": \"{{visit_end}}\",\n  \"location_address\": \"ul. Przykładowa 1, Tarnów\",\n  \"prep_instructions\": \"Proszę zabrać aktualne wyniki badań.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.collectionVariables.set('visit_id', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create visit — overlap (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/visits/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "visits"
+              ]
+            },
+            "description": "E1: kolizja terminów (ExclusionConstraint).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patient_id\": \"{{patient_profile_id}}\",\n  \"episode_id\": \"{{episode_id}}\",\n  \"therapy_type_id\": \"{{therapy_type_id}}\",\n  \"start_at\": \"{{visit_start}}\",\n  \"end_at\": \"{{visit_end}}\",\n  \"location_address\": \"ul. Przykładowa 1, Tarnów\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Error envelope', function () {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('error');",
+                  "  pm.expect(j.error).to.have.property('code');",
+                  "  pm.expect(j.error).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Therapist day schedule",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/visits/?date={{schedule_date}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "visits"
+              ],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "{{schedule_date}}"
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Patch visit (drag slot)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/visits/{{visit_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "visits",
+                "{{visit_id}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_at\": \"{{visit_start_alt}}\",\n  \"end_at\": \"{{visit_end_alt}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Visit detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visit_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visit_id}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as patient (for me/visits)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "if (j.user && j.user.id) {",
+                  "  pm.collectionVariables.set('patient_user_id', j.user.id);",
+                  "}",
+                  "if (pm.cookies.has('access_token')) {",
+                  "  pm.collectionVariables.set('patient_access_token', pm.cookies.get('access_token'));",
+                  "  pm.collectionVariables.set('access_token', pm.cookies.get('access_token'));",
+                  "}",
+                  "if (pm.cookies.has('refresh_token')) {",
+                  "  pm.collectionVariables.set('refresh_token', pm.cookies.get('refresh_token'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Patient upcoming visits",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/visits/?status=upcoming",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "visits"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "upcoming"
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Patient past visits",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/visits/?status=past",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "visits"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "past"
+                }
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Patient reschedule visit",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visit_id}}/reschedule/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visit_id}}",
+                "reschedule"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"start_at\": \"{{visit_start_patient}}\",\n  \"end_at\": \"{{visit_end_patient}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancel visit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visit_id}}/cancel/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visit_id}}",
+                "cancel"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancel_reason\": \"Konflikt godzinowy pacjenta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Re-login therapist",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{therapist_email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "if (j.user && j.user.id) {",
+                  "  pm.collectionVariables.set('therapist_user_id', j.user.id);",
+                  "}",
+                  "if (pm.cookies.has('access_token')) {",
+                  "  pm.collectionVariables.set('therapist_access_token', pm.cookies.get('access_token'));",
+                  "  pm.collectionVariables.set('access_token', pm.cookies.get('access_token'));",
+                  "}",
+                  "if (pm.cookies.has('refresh_token')) {",
+                  "  pm.collectionVariables.set('refresh_token', pm.cookies.get('refresh_token'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "UC-06 / UC-15 Exercises & compliance",
+      "description": "Katalog ćwiczeń, przypisanie, oznaczenie wykonania.",
+      "item": [
+        {
+          "name": "Create exercise (multipart)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/exercises/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "exercises"
+              ]
+            },
+            "description": "Wymaga pliku (mp4/pdf). Ustaw src w UI Postmana.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Mostek biodrowy",
+                  "type": "text"
+                },
+                {
+                  "key": "media_type",
+                  "value": "VIDEO",
+                  "type": "text"
+                },
+                {
+                  "key": "instruction",
+                  "value": "3 serie × 10 powtórzeń",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "Wybierz lokalny plik .mp4 lub .pdf w Postmanie"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "pm.test('Created or file required', () => {",
+                  "  pm.expect([201,400]).to.include(pm.response.code);",
+                  "  if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('exercise_id', pm.response.json().id);",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List exercises",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/exercises/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "exercises"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "const list = Array.isArray(j) ? j : (j.results || []);",
+                  "if (list.length && !pm.collectionVariables.get('exercise_id')) {",
+                  "  pm.collectionVariables.set('exercise_id', list[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Assign exercise to patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/exercise-assignments/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "exercise-assignments"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"exercise_id\": \"{{exercise_id}}\",\n  \"patient_id\": \"{{patient_profile_id}}\",\n  \"episode_id\": \"{{episode_id}}\",\n  \"dosage\": \"3 serie x 10 powt.\",\n  \"start_date\": \"{{assignment_start}}\",\n  \"end_date\": \"{{assignment_end}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});",
+                  "pm.collectionVariables.set('assignment_id', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "if (j.user && j.user.id) {",
+                  "  pm.collectionVariables.set('patient_user_id', j.user.id);",
+                  "}",
+                  "if (pm.cookies.has('access_token')) {",
+                  "  pm.collectionVariables.set('patient_access_token', pm.cookies.get('access_token'));",
+                  "  pm.collectionVariables.set('access_token', pm.cookies.get('access_token'));",
+                  "}",
+                  "if (pm.cookies.has('refresh_token')) {",
+                  "  pm.collectionVariables.set('refresh_token', pm.cookies.get('refresh_token'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-05/06 Exercises today",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/exercises/today/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "exercises",
+                "today"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mark exercise completion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/exercise-completions/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "exercise-completions"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignment_id\": \"{{assignment_id}}\",\n  \"completed_on\": \"{{today}}\",\n  \"done\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Completion — foreign assignment (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/exercise-completions/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "exercise-completions"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignment_id\": \"00000000-0000-0000-0000-000000000099\",\n  \"completed_on\": \"{{today}}\",\n  \"done\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Error envelope', function () {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('error');",
+                  "  pm.expect(j.error).to.have.property('code');",
+                  "  pm.expect(j.error).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Re-login therapist",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{therapist_email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "if (j.user && j.user.id) {",
+                  "  pm.collectionVariables.set('therapist_user_id', j.user.id);",
+                  "}",
+                  "if (pm.cookies.has('access_token')) {",
+                  "  pm.collectionVariables.set('therapist_access_token', pm.cookies.get('access_token'));",
+                  "  pm.collectionVariables.set('access_token', pm.cookies.get('access_token'));",
+                  "}",
+                  "if (pm.cookies.has('refresh_token')) {",
+                  "  pm.collectionVariables.set('refresh_token', pm.cookies.get('refresh_token'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "UC-08 Documents",
+      "description": "Upload PDF przez terapeutę, lista i download przez pacjenta.",
+      "item": [
+        {
+          "name": "Therapist upload document",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/documents/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "documents"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "patient_id",
+                  "value": "{{patient_profile_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "title",
+                  "value": "Wyniki RTG",
+                  "type": "text"
+                },
+                {
+                  "key": "episode_id",
+                  "value": "{{episode_id}}",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "PDF medyczny"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "pm.test('Created or file required', () => {",
+                  "  pm.expect([201,400,404]).to.include(pm.response.code);",
+                  "  if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('document_id', pm.response.json().id);",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "if (j.user && j.user.id) {",
+                  "  pm.collectionVariables.set('patient_user_id', j.user.id);",
+                  "}",
+                  "if (pm.cookies.has('access_token')) {",
+                  "  pm.collectionVariables.set('patient_access_token', pm.cookies.get('access_token'));",
+                  "  pm.collectionVariables.set('access_token', pm.cookies.get('access_token'));",
+                  "}",
+                  "if (pm.cookies.has('refresh_token')) {",
+                  "  pm.collectionVariables.set('refresh_token', pm.cookies.get('refresh_token'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List my documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/documents/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "documents"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "const list = Array.isArray(j) ? j : (j.results || []);",
+                  "if (list.length) pm.collectionVariables.set('document_id', list[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Download document",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/{{document_id}}/download/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{document_id}}",
+                "download"
+              ]
+            },
+            "description": "Ścieżka zgodna z backendem: GET /api/v1/{id}/download/",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('OK or 404', () => pm.expect([200,404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Re-login therapist",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{therapist_email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "if (j.user && j.user.id) {",
+                  "  pm.collectionVariables.set('therapist_user_id', j.user.id);",
+                  "}",
+                  "if (pm.cookies.has('access_token')) {",
+                  "  pm.collectionVariables.set('therapist_access_token', pm.cookies.get('access_token'));",
+                  "  pm.collectionVariables.set('access_token', pm.cookies.get('access_token'));",
+                  "}",
+                  "if (pm.cookies.has('refresh_token')) {",
+                  "  pm.collectionVariables.set('refresh_token', pm.cookies.get('refresh_token'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "UC-16 / UC-17 Therapist profile",
+      "description": "Profil własny + wizytówka publiczna.",
+      "item": [
+        {
+          "name": "GET own profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/profile/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "profile"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH profile (bio, courses)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/profile/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "profile"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+48123123123\",\n  \"bio\": \"Specjalista terapii manualnej i sportowej.\",\n  \"courses\": [\n    \"PNF\",\n    \"Terapia tkanek miękkich\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login patient → public profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "if (j.user && j.user.id) {",
+                  "  pm.collectionVariables.set('patient_user_id', j.user.id);",
+                  "}",
+                  "if (pm.cookies.has('access_token')) {",
+                  "  pm.collectionVariables.set('patient_access_token', pm.cookies.get('access_token'));",
+                  "  pm.collectionVariables.set('access_token', pm.cookies.get('access_token'));",
+                  "}",
+                  "if (pm.cookies.has('refresh_token')) {",
+                  "  pm.collectionVariables.set('refresh_token', pm.cookies.get('refresh_token'));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET public therapist profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapists/{{therapist_profile_id}}/public/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapists",
+                "{{therapist_profile_id}}",
+                "public"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "UC-05 / UC-09 / UC-18 Patient me & privacy",
+      "description": "Profil, zgody, eksport, usunięcie, preferencje powiadomień.",
+      "item": [
+        {
+          "name": "GET me/profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/profile/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "profile"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH me/profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/profile/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "profile"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+48987654321\",\n  \"pesel\": \"90010112345\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET consents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/consents/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "consents"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH optional consents",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/consents/optional/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "consents",
+                "optional"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"marketing\": false,\n  \"research\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST data-export (RODO)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/data-export/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "data-export"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST account-deletion-request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/account-deletion-request/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "account-deletion-request"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 202', function () {",
+                  "  pm.response.to.have.status(202);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET notification preferences",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/notification-preferences/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "notification-preferences"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH notification preferences",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/notification-preferences/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "notification-preferences"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"visit_reminders\": true,\n  \"visit_changes\": true,\n  \"waitlist\": false,\n  \"exercise_reminders\": true,\n  \"new_documents\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unauthenticated me/profile (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/me/profile/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "profile"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Error envelope', function () {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('error');",
+                  "  pm.expect(j.error).to.have.property('code');",
+                  "  pm.expect(j.error).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Security & role guards",
+      "description": "Przypadki cross-role i brak tokena.",
+      "item": [
+        {
+          "name": "Patient cannot list therapist patients",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/patients/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "patients"
+              ]
+            },
+            "description": "Uruchom z patient_access_token (Bearer).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403/401', () => pm.expect([401,403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "No token → 401 on protected",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/profile/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "profile"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Error envelope', function () {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('error');",
+                  "  pm.expect(j.error).to.have.property('code');",
+                  "  pm.expect(j.error).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
