@@ -10,6 +10,8 @@ from rest_framework.views import APIView
 from core.mixins import PatientSelfMixin, user_can_access_patient
 from core.permissions import IsPatient, IsTherapist
 from core.storage import save_upload
+from scheduling.models import Visit
+from treatment.models import TreatmentEpisode
 
 from .models import MedicalDocument
 from .serializers import MedicalDocumentSerializer
@@ -43,14 +45,43 @@ class TherapistDocumentUploadView(generics.CreateAPIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         file_url = save_upload(uploaded, subdir='documents')
+        visit_id = request.data.get('visit_id') or None
+        episode_id = request.data.get('episode_id') or None
+
+        if visit_id:
+            if not Visit.objects.filter(pk=visit_id, patient=patient).exists():
+                return Response(
+                    {
+                        'error': {
+                            'code': 'VALIDATION',
+                            'message': 'Wizyta nie należy do wskazanego pacjenta.',
+                            'details': {'visit_id': visit_id},
+                        }
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        if episode_id:
+            if not TreatmentEpisode.objects.filter(pk=episode_id, patient=patient).exists():
+                return Response(
+                    {
+                        'error': {
+                            'code': 'VALIDATION',
+                            'message': 'Epizod nie należy do wskazanego pacjenta.',
+                            'details': {'episode_id': episode_id},
+                        }
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
         document = MedicalDocument.objects.create(
             patient=patient,
             uploaded_by=request.user,
             title=request.data.get('title', uploaded.name),
             file_url=file_url,
             mime_type=getattr(uploaded, 'content_type', 'application/pdf'),
-            visit_id=request.data.get('visit_id') or None,
-            episode_id=request.data.get('episode_id') or None,
+            visit_id=visit_id,
+            episode_id=episode_id,
         )
         return Response(MedicalDocumentSerializer(document).data, status=status.HTTP_201_CREATED)
 

@@ -20,6 +20,15 @@ from .serializers import (
 )
 
 
+def _visit_integrity_error(exc, *, overlap_message='Termin koliduje z inną wizytą tego terapeuty.'):
+    message = str(exc).lower()
+    if 'exclude_overlapping_visits' in message:
+        return ValidationError({'start_at': overlap_message})
+    if 'chk_visits_end_after_start' in message:
+        return ValidationError({'end_at': 'Koniec wizyty musi być po rozpoczęciu.'})
+    return ValidationError({'detail': 'Nie udało się zapisać wizyty.'})
+
+
 class TherapistVisitListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsTherapist]
 
@@ -46,10 +55,8 @@ class TherapistVisitListCreateView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         try:
             visit = serializer.save()
-        except IntegrityError:
-            raise ValidationError(
-                {'start_at': 'Termin koliduje z inną wizytą tego terapeuty.'}
-            ) from None
+        except IntegrityError as exc:
+            raise _visit_integrity_error(exc) from None
         return Response(VisitSerializer(visit).data, status=status.HTTP_201_CREATED)
 
 
@@ -109,10 +116,8 @@ class VisitRescheduleView(APIView):
         serializer.is_valid(raise_exception=True)
         try:
             serializer.save()
-        except IntegrityError:
-            raise ValidationError(
-                {'start_at': 'Termin koliduje z inną wizytą.'}
-            ) from None
+        except IntegrityError as exc:
+            raise _visit_integrity_error(exc, overlap_message='Termin koliduje z inną wizytą.') from None
         return Response(VisitSerializer(visit).data)
 
 

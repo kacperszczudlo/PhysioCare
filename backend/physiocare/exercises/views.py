@@ -1,5 +1,7 @@
+from django.db import IntegrityError
 from django.utils import timezone
 from rest_framework import generics, parsers, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -55,6 +57,11 @@ class TherapistExerciseAssignmentCreateView(generics.CreateAPIView):
     serializer_class = ExerciseAssignmentCreateSerializer
     permission_classes = [IsAuthenticated, IsTherapist]
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['therapist'] = self.request.user.therapist_profile
+        return context
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -96,11 +103,16 @@ class MeExerciseCompletionCreateView(PatientSelfMixin, APIView):
 
         serializer = ExerciseCompletionCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        completion = ExerciseCompletion.objects.create(
-            assignment=assignment,
-            completed_on=serializer.validated_data.get('completed_on') or timezone.localdate(),
-            done=serializer.validated_data.get('done', True),
-        )
+        try:
+            completion = ExerciseCompletion.objects.create(
+                assignment=assignment,
+                completed_on=serializer.validated_data.get('completed_on') or timezone.localdate(),
+                done=serializer.validated_data.get('done', True),
+            )
+        except IntegrityError:
+            raise ValidationError(
+                {'completed_on': 'Ćwiczenie zostało już odhaczone w tym dniu.'}
+            ) from None
         return Response(
             ExerciseCompletionSerializer(completion).data,
             status=status.HTTP_201_CREATED,

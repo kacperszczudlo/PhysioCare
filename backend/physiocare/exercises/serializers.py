@@ -1,6 +1,9 @@
 from rest_framework import serializers
 
-from .models import Exercise, ExerciseAssignment, ExerciseCompletion, MediaType
+from patients.models import PatientProfile
+from treatment.models import TreatmentEpisode
+
+from .models import Exercise, ExerciseAssignment, ExerciseCompletion
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
@@ -53,6 +56,34 @@ class ExerciseAssignmentCreateSerializer(serializers.ModelSerializer):
             'exercise_id', 'patient_id', 'episode_id',
             'dosage', 'start_date', 'end_date',
         ]
+
+    def validate(self, attrs):
+        therapist = self.context['therapist']
+        exercise_id = attrs['exercise_id']
+        patient_id = attrs['patient_id']
+        episode_id = attrs.get('episode_id')
+
+        if not Exercise.objects.filter(pk=exercise_id, therapist=therapist).exists():
+            raise serializers.ValidationError(
+                {'exercise_id': 'Ćwiczenie nie należy do tego terapeuty.'}
+            )
+
+        if not PatientProfile.objects.filter(pk=patient_id, therapist=therapist).exists():
+            raise serializers.ValidationError(
+                {'patient_id': 'Pacjent nie należy do tego terapeuty.'}
+            )
+
+        if episode_id is not None:
+            if not TreatmentEpisode.objects.filter(
+                pk=episode_id,
+                patient_id=patient_id,
+                patient__therapist=therapist,
+            ).exists():
+                raise serializers.ValidationError(
+                    {'episode_id': 'Epizod nie należy do wskazanego pacjenta.'}
+                )
+
+        return attrs
 
     def create(self, validated_data):
         return ExerciseAssignment.objects.create(

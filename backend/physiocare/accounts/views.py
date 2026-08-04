@@ -164,7 +164,7 @@ class PasswordResetRequestView(APIView):
                 token_hash=_hash_token(raw_token),
                 expires_at=timezone.now() + timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT),
             )
-            reset_url = f'{request.build_absolute_uri("/")}reset?token={raw_token}'
+            reset_url = f'{settings.FRONTEND_URL}/reset?token={raw_token}'
             from django.core.mail import send_mail
             send_mail(
                 subject='PhysioCare — reset hasła',

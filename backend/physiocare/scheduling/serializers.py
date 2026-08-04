@@ -1,5 +1,8 @@
 from rest_framework import serializers
 
+from patients.models import PatientProfile
+from treatment.models import TreatmentEpisode
+
 from .models import TherapyType, Visit
 
 
@@ -18,7 +21,9 @@ class VisitSerializer(serializers.ModelSerializer):
             'start_at', 'end_at', 'status', 'location_address',
             'prep_instructions', 'cancel_reason', 'created_at',
         ]
-        read_only_fields = ['id', 'therapist', 'created_at']
+        read_only_fields = [
+            'id', 'patient', 'therapist', 'episode', 'therapy_type', 'created_at',
+        ]
 
 
 class VisitCreateSerializer(serializers.ModelSerializer):
@@ -32,6 +37,34 @@ class VisitCreateSerializer(serializers.ModelSerializer):
             'patient_id', 'episode_id', 'therapy_type_id',
             'start_at', 'end_at', 'location_address', 'prep_instructions',
         ]
+
+    def validate(self, attrs):
+        therapist = self.context['therapist']
+        patient_id = attrs['patient_id']
+        therapy_type_id = attrs['therapy_type_id']
+        episode_id = attrs.get('episode_id')
+
+        if not PatientProfile.objects.filter(pk=patient_id, therapist=therapist).exists():
+            raise serializers.ValidationError(
+                {'patient_id': 'Pacjent nie należy do tego terapeuty.'}
+            )
+
+        if not TherapyType.objects.filter(pk=therapy_type_id, therapist=therapist).exists():
+            raise serializers.ValidationError(
+                {'therapy_type_id': 'Typ terapii nie należy do tego terapeuty.'}
+            )
+
+        if episode_id is not None:
+            if not TreatmentEpisode.objects.filter(
+                pk=episode_id,
+                patient_id=patient_id,
+                patient__therapist=therapist,
+            ).exists():
+                raise serializers.ValidationError(
+                    {'episode_id': 'Epizod nie należy do wskazanego pacjenta.'}
+                )
+
+        return attrs
 
     def create(self, validated_data):
         patient_id = validated_data.pop('patient_id')

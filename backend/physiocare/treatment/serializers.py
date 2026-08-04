@@ -37,3 +37,19 @@ class VisitNoteSerializer(serializers.ModelSerializer):
         model = VisitNote
         fields = ['id', 'episode', 'visit', 'content', 'created_at']
         read_only_fields = ['id', 'episode', 'created_at']
+
+    def validate_visit(self, visit):
+        if visit is None:
+            return visit
+        episode = self.context.get('episode')
+        if episode is None:
+            return visit
+        if visit.patient_id != episode.patient_id:
+            raise serializers.ValidationError(
+                'Wizyta nie należy do pacjenta tego epizodu.'
+            )
+        if visit.episode_id is not None and visit.episode_id != episode.id:
+            raise serializers.ValidationError(
+                'Wizyta nie należy do tego epizodu.'
+            )
+        return visit

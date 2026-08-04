@@ -1,9 +1,10 @@
 from rest_framework import generics, status
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.mixins import TherapistPatientQuerysetMixin, user_can_access_episode
+from core.mixins import TherapistPatientQuerysetMixin
 from core.permissions import IsEpisodeParticipant, IsTherapist
 from patients.models import PatientProfile
 
@@ -20,10 +21,13 @@ class PatientEpisodeListCreateView(TherapistPatientQuerysetMixin, generics.ListC
     permission_classes = [IsAuthenticated, IsTherapist]
 
     def get_patient(self):
-        return PatientProfile.objects.get(
-            pk=self.kwargs['patient_id'],
-            therapist=self.get_therapist_profile(),
-        )
+        try:
+            return PatientProfile.objects.get(
+                pk=self.kwargs['patient_id'],
+                therapist=self.get_therapist_profile(),
+            )
+        except PatientProfile.DoesNotExist as exc:
+            raise NotFound() from exc
 
     def get_queryset(self):
         return TreatmentEpisode.objects.filter(
@@ -58,7 +62,6 @@ class EpisodeBodyPainListCreateView(generics.ListCreateAPIView):
             pk=self.kwargs['episode_id'],
         )
         if episode.patient.therapist_id != self.request.user.therapist_profile.id:
-            from rest_framework.exceptions import NotFound
             raise NotFound()
         return episode
 
@@ -92,7 +95,10 @@ class EpisodeNoteCreateView(APIView):
         if episode is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        serializer = VisitNoteSerializer(data=request.data)
+        serializer = VisitNoteSerializer(
+            data=request.data,
+            context={'episode': episode},
+        )
         serializer.is_valid(raise_exception=True)
         note = serializer.save(episode=episode)
         return Response(VisitNoteSerializer(note).data, status=status.HTTP_201_CREATED)
