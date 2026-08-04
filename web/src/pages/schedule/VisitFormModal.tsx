@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 
-import { patientsApi, schedulingApi } from '@/api/scheduling'
+import { schedulingApi } from '@/api/scheduling'
+import { patientsApi } from '@/api/treatment'
 import { ApiError } from '@/api/client'
 import type { PatientSummary, TherapyType, VisitCreatePayload } from '@/api/types'
 import { Button } from '@/components/ui/Button'

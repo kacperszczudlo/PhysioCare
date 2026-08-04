@@ -91,3 +91,46 @@ export interface VisitCreatePayload {
   location_address?: string
   prep_instructions?: string
 }
+
+export type EpisodeStatus =
+  | 'IN_PROGRESS'
+  | 'COMPLETED_SUCCESS'
+  | 'REFERRED'
+  | 'INTERRUPTED'
+
+export type BodyViewSide = 'FRONT' | 'BACK'
+
+export interface PatientDetail extends PatientSummary {
+  pesel: string | null
+  therapist: string
+  created_at: string
+}
+
+export interface TreatmentEpisode {
+  id: string
+  patient: string
+  icd10_code: string
+  status: EpisodeStatus
+  summary_note: string
+  started_at: string
+  ended_at: string | null
+  created_at: string
+}
+
+export interface BodyAreaPain {
+  id: string
+  episode: string
+  body_region: string
+  view_side: BodyViewSide
+  vas_score: number
+  pain_character: string[]
+  recorded_at: string
+}
+
+export interface VisitNote {
+  id: string
+  episode: string
+  visit: string | null
+  content: string
+  created_at: string
+}

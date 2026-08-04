@@ -1,7 +1,6 @@
 import { api } from './client'
 import type {
   Paginated,
-  PatientSummary,
   TherapyType,
   Visit,
   VisitCreatePayload,
@@ -39,11 +38,5 @@ export const schedulingApi = {
     duration_min?: number
   }) {
     return api.post<TherapyType>('/therapist/therapy-types/', payload)
-  },
-}
-
-export const patientsApi = {
-  list() {
-    return listResults<PatientSummary>('/patients/')
   },
 }
