@@ -3,10 +3,18 @@ from rest_framework import serializers
 from patients.models import PatientProfile
 from treatment.models import TreatmentEpisode
 
-from .models import Exercise, ExerciseAssignment, ExerciseCompletion
+from .models import Exercise, ExerciseAssignment, ExerciseCategory, ExerciseCompletion
+
+
+class ExerciseCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExerciseCategory
+        fields = ['id', 'name']
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
+    categories = ExerciseCategorySerializer(many=True, read_only=True)
+
     class Meta:
         model = Exercise
         fields = [
@@ -17,6 +25,12 @@ class ExerciseSerializer(serializers.ModelSerializer):
 
 
 class ExerciseCreateSerializer(serializers.ModelSerializer):
+    categories = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=ExerciseCategory.objects.all(),
+        required=False,
+    )
+
     class Meta:
         model = Exercise
         fields = ['title', 'media_type', 'instruction', 'categories']

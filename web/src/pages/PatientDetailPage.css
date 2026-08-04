@@ -1,0 +1,178 @@
+.patient-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.patient-back a {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.patient-layout {
+  display: grid;
+  grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.patient-episodes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.patient-episodes h2,
+.patient-episode-form h2,
+.patient-notes h2 {
+  font-size: var(--text-lg);
+}
+
+.patient-episodes h3 {
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.patient-episodes__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.patient-episodes__item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  padding: var(--space-3);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.patient-episodes__item--active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-subtle);
+}
+
+.patient-episodes__code {
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+
+.patient-episodes__status {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.patient-episodes__create {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.patient-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.patient-episode-form,
+.patient-notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+}
+
+.patient-episode-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.patient-textarea,
+.patient-select {
+  width: 100%;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  padding: var(--space-3);
+  font: inherit;
+}
+
+.patient-textarea {
+  resize: vertical;
+  min-height: 2.75rem;
+}
+
+.patient-notes__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.patient-notes__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.patient-notes__item {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.patient-notes__item time {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  margin-bottom: var(--space-2);
+}
+
+.patient-banner {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+
+.patient-banner--error {
+  background: var(--color-danger-subtle);
+  color: var(--color-danger);
+}
+
+.patient-muted {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 900px) {
+  .patient-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-episode-form__row {
+    grid-template-columns: 1fr;
+  }
+}

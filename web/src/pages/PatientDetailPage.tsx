@@ -1,0 +1,353 @@
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { Link, useParams } from 'react-router-dom'
+
+import { patientsApi, treatmentApi } from '@/api/treatment'
+import { getErrorMessage } from '@/api/client'
+import type { EpisodeStatus, PatientDetail, TreatmentEpisode, VisitNote } from '@/api/types'
+import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { PageHeader } from '@/components/PageHeader'
+import { Button } from '@/components/ui/Button'
+import { Field } from '@/components/ui/Field'
+import { EPISODE_STATUS_LABELS } from '@/lib/bodyMap'
+import { DiagnosticMapper } from '@/pages/patients/DiagnosticMapper'
+import './PatientDetailPage.css'
+
+const STATUS_OPTIONS: EpisodeStatus[] = [
+  'IN_PROGRESS',
+  'COMPLETED_SUCCESS',
+  'REFERRED',
+  'INTERRUPTED',
+]
+
+export function PatientDetailPage() {
+  const { patientId = '' } = useParams()
+  const [patient, setPatient] = useState<PatientDetail | null>(null)
+  const [episodes, setEpisodes] = useState<TreatmentEpisode[]>([])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [notes, setNotes] = useState<VisitNote[]>([])
+  const [loading, setLoading] = useState(true)
+  const [notesLoading, setNotesLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const [icd10, setIcd10] = useState('')
+  const [summary, setSummary] = useState('')
+  const [status, setStatus] = useState<EpisodeStatus>('IN_PROGRESS')
+  const [noteContent, setNoteContent] = useState('')
+  const [newIcd10, setNewIcd10] = useState('')
+  const [newSummary, setNewSummary] = useState('')
+
+  const selected = episodes.find((episode) => episode.id === selectedId) ?? null
+
+  const loadPatient = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const [profile, episodeList] = await Promise.all([
+        patientsApi.get(patientId),
+        treatmentApi.listEpisodes(patientId),
+      ])
+      setPatient(profile)
+      setEpisodes(episodeList)
+      setSelectedId((prev) => {
+        if (prev && episodeList.some((item) => item.id === prev)) {
+          return prev
+        }
+        return episodeList[0]?.id ?? null
+      })
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nie udało się otworzyć karty pacjenta.'))
+      setPatient(null)
+      setEpisodes([])
+    } finally {
+      setLoading(false)
+    }
+  }, [patientId])
+
+  useEffect(() => {
+    void loadPatient()
+  }, [loadPatient])
+
+  useEffect(() => {
+    if (!selected) {
+      setIcd10('')
+      setSummary('')
+      setStatus('IN_PROGRESS')
+      setNotes([])
+      return
+    }
+    setIcd10(selected.icd10_code ?? '')
+    setSummary(selected.summary_note ?? '')
+    setStatus(selected.status)
+
+    let cancelled = false
+    async function loadNotes() {
+      setNotesLoading(true)
+      try {
+        const data = await treatmentApi.listNotes(selected!.id)
+        if (!cancelled) {
+          setNotes(data)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(getErrorMessage(err, 'Nie udało się pobrać notatek.'))
+        }
+      } finally {
+        if (!cancelled) {
+          setNotesLoading(false)
+        }
+      }
+    }
+    void loadNotes()
+    return () => {
+      cancelled = true
+    }
+  }, [selected])
+
+  async function createEpisode(event: FormEvent) {
+    event.preventDefault()
+    setBusy(true)
+    setError(null)
+    try {
+      const created = await treatmentApi.createEpisode(patientId, {
+        icd10_code: newIcd10.trim(),
+        summary_note: newSummary.trim(),
+        status: 'IN_PROGRESS',
+      })
+      setEpisodes((prev) => [created, ...prev])
+      setSelectedId(created.id)
+      setNewIcd10('')
+      setNewSummary('')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nie udało się utworzyć epizodu.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function saveEpisode(event: FormEvent) {
+    event.preventDefault()
+    if (!selected) {
+      return
+    }
+    setBusy(true)
+    setError(null)
+    try {
+      const updated = await treatmentApi.updateEpisode(selected.id, {
+        icd10_code: icd10.trim(),
+        summary_note: summary.trim(),
+        status,
+        ended_at:
+          status === 'IN_PROGRESS'
+            ? null
+            : selected.ended_at ?? new Date().toISOString().slice(0, 10),
+      })
+      setEpisodes((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nie udało się zapisać epizodu.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function addNote(event: FormEvent) {
+    event.preventDefault()
+    if (!selected || !noteContent.trim()) {
+      return
+    }
+    setBusy(true)
+    setError(null)
+    try {
+      const created = await treatmentApi.createNote(selected.id, noteContent.trim())
+      setNotes((prev) => [created, ...prev])
+      setNoteContent('')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nie udało się dodać notatki.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <section>
+        <LoadingBlock label="Ładowanie karty…" variant="panel" />
+      </section>
+    )
+  }
+
+  if (!patient) {
+    return (
+      <section>
+        <PageHeader title="Pacjent" description="Nie znaleziono karty." />
+        {error ? <ErrorBanner message={error} onRetry={() => void loadPatient()} /> : null}
+        <Link to="/patients">Wróć do listy</Link>
+      </section>
+    )
+  }
+
+  return (
+    <section className="patient-detail">
+      <PageHeader
+        title={`${patient.first_name} ${patient.last_name}`}
+        description={`${patient.email}${patient.phone ? ` · ${patient.phone}` : ''}`}
+        actions={
+          <Button type="button" variant="secondary" onClick={() => void loadPatient()}>
+            Odśwież
+          </Button>
+        }
+      />
+
+      <p className="patient-back">
+        <Link to="/patients">← Pacjenci</Link>
+      </p>
+
+      {error ? <ErrorBanner message={error} /> : null}
+
+      <div className="patient-layout">
+        <aside className="patient-episodes" aria-label="Epizody leczenia">
+          <h2>Epizody</h2>
+          <ul className="patient-episodes__list">
+            {episodes.map((episode) => (
+              <li key={episode.id}>
+                <button
+                  type="button"
+                  className={
+                    episode.id === selectedId
+                      ? 'patient-episodes__item patient-episodes__item--active'
+                      : 'patient-episodes__item'
+                  }
+                  onClick={() => setSelectedId(episode.id)}
+                >
+                  <span className="patient-episodes__code">
+                    {episode.icd10_code || 'Bez ICD-10'}
+                  </span>
+                  <span className="patient-episodes__status">
+                    {EPISODE_STATUS_LABELS[episode.status] ?? episode.status}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          {episodes.length === 0 ? (
+            <EmptyState
+              title="Brak epizodów"
+              description="Utwórz pierwszy epizod leczenia, aby prowadzić dokumentację i mapę ciała."
+            />
+          ) : null}
+
+          <form className="patient-episodes__create" onSubmit={(e) => void createEpisode(e)}>
+            <h3>Nowy epizod</h3>
+            <Field
+              label="ICD-10"
+              name="new_icd10"
+              value={newIcd10}
+              onChange={(e) => setNewIcd10(e.target.value)}
+              placeholder="np. M54.5"
+            />
+            <label className="ui-field">
+              <span className="ui-field__label">Opis wstępny</span>
+              <textarea
+                className="patient-textarea"
+                value={newSummary}
+                onChange={(e) => setNewSummary(e.target.value)}
+                rows={3}
+              />
+            </label>
+            <Button type="submit" size="sm" loading={busy}>
+              + Nowy epizod
+            </Button>
+          </form>
+        </aside>
+
+        <div className="patient-main">
+          {!selected ? (
+            <p className="patient-muted">Wybierz lub utwórz epizod, aby prowadzić dokumentację.</p>
+          ) : (
+            <>
+              <form className="patient-episode-form" onSubmit={(e) => void saveEpisode(e)}>
+                <h2>Dokumentacja epizodu</h2>
+                <div className="patient-episode-form__row">
+                  <Field
+                    label="ICD-10"
+                    name="icd10"
+                    value={icd10}
+                    onChange={(e) => setIcd10(e.target.value)}
+                  />
+                  <label className="ui-field">
+                    <span className="ui-field__label">Status</span>
+                    <select
+                      className="patient-select"
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value as EpisodeStatus)}
+                    >
+                      {STATUS_OPTIONS.map((value) => (
+                        <option key={value} value={value}>
+                          {EPISODE_STATUS_LABELS[value]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <label className="ui-field">
+                  <span className="ui-field__label">Notatka zbiorcza</span>
+                  <textarea
+                    className="patient-textarea"
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                    rows={4}
+                  />
+                </label>
+                <Button type="submit" loading={busy}>
+                  Zapisz epizod
+                </Button>
+              </form>
+
+              <DiagnosticMapper episodeId={selected.id} />
+
+              <section className="patient-notes" aria-label="Notatki z wizyt">
+                <h2>Notatki z wizyt</h2>
+                <form className="patient-notes__form" onSubmit={(e) => void addNote(e)}>
+                  <label className="ui-field">
+                    <span className="ui-field__label">Nowa notatka</span>
+                    <textarea
+                      className="patient-textarea"
+                      value={noteContent}
+                      onChange={(e) => setNoteContent(e.target.value)}
+                      rows={3}
+                      required
+                    />
+                  </label>
+                  <Button type="submit" size="sm" loading={busy}>
+                    Dodaj notatkę
+                  </Button>
+                </form>
+
+                {notesLoading ? <p className="patient-muted">Ładowanie notatek…</p> : null}
+
+                {!notesLoading && notes.length === 0 ? (
+                  <p className="patient-muted">Brak notatek w tym epizodzie.</p>
+                ) : null}
+
+                <ul className="patient-notes__list">
+                  {notes.map((note) => (
+                    <li key={note.id} className="patient-notes__item">
+                      <time dateTime={note.created_at}>
+                        {new Intl.DateTimeFormat('pl-PL', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        }).format(new Date(note.created_at))}
+                      </time>
+                      <p>{note.content}</p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}

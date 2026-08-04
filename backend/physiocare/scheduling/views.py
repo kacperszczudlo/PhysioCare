@@ -35,7 +35,10 @@ class TherapistVisitListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         therapist = self.request.user.therapist_profile
         qs = Visit.objects.filter(therapist=therapist).select_related(
-            'patient', 'patient__user', 'therapy_type', 'episode',
+            'patient',
+            'patient__user',
+            'therapy_type',
+            'episode',
         )
         date_param = self.request.query_params.get('date')
         if date_param:
@@ -57,6 +60,7 @@ class TherapistVisitListCreateView(generics.ListCreateAPIView):
             visit = serializer.save()
         except IntegrityError as exc:
             raise _visit_integrity_error(exc) from None
+        visit = self.get_queryset().get(pk=visit.pk)
         return Response(VisitSerializer(visit).data, status=status.HTTP_201_CREATED)
 
 
@@ -67,7 +71,19 @@ class TherapistVisitDetailView(generics.RetrieveUpdateAPIView):
     def get_queryset(self):
         return Visit.objects.filter(
             therapist=self.request.user.therapist_profile,
-        ).select_related('patient', 'therapy_type', 'episode')
+        ).select_related('patient', 'patient__user', 'therapy_type', 'episode')
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        try:
+            self.perform_update(serializer)
+        except IntegrityError as exc:
+            raise _visit_integrity_error(exc) from None
+        visit = self.get_queryset().get(pk=instance.pk)
+        return Response(VisitSerializer(visit).data)
 
 
 class MeVisitListView(PatientSelfMixin, generics.ListAPIView):

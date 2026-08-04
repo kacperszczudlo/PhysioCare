@@ -2,13 +2,12 @@ from rest_framework import generics, status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from core.mixins import TherapistPatientQuerysetMixin
 from core.permissions import IsEpisodeParticipant, IsTherapist
 from patients.models import PatientProfile
 
-from .models import BodyAreaPain, TreatmentEpisode, VisitNote
+from .models import TreatmentEpisode, VisitNote
 from .serializers import (
     BodyAreaPainSerializer,
     TreatmentEpisodeCreateSerializer,
@@ -39,8 +38,14 @@ class PatientEpisodeListCreateView(TherapistPatientQuerysetMixin, generics.ListC
             return TreatmentEpisodeCreateSerializer
         return TreatmentEpisodeSerializer
 
-    def perform_create(self, serializer):
-        serializer.save(patient=self.get_patient())
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        episode = serializer.save(patient=self.get_patient())
+        return Response(
+            TreatmentEpisodeSerializer(episode).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class EpisodeDetailView(generics.RetrieveUpdateAPIView):
@@ -84,21 +89,27 @@ class EpisodeBodyPainDetailView(generics.UpdateAPIView):
         )
 
 
-class EpisodeNoteCreateView(APIView):
+class EpisodeNoteListCreateView(generics.ListCreateAPIView):
+    serializer_class = VisitNoteSerializer
     permission_classes = [IsAuthenticated, IsTherapist]
 
-    def post(self, request, episode_id):
+    def get_episode(self):
         episode = TreatmentEpisode.objects.select_related('patient').filter(
-            pk=episode_id,
-            patient__therapist=request.user.therapist_profile,
+            pk=self.kwargs['episode_id'],
+            patient__therapist=self.request.user.therapist_profile,
         ).first()
         if episode is None:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            raise NotFound()
+        return episode
 
-        serializer = VisitNoteSerializer(
-            data=request.data,
-            context={'episode': episode},
-        )
-        serializer.is_valid(raise_exception=True)
-        note = serializer.save(episode=episode)
-        return Response(VisitNoteSerializer(note).data, status=status.HTTP_201_CREATED)
+    def get_queryset(self):
+        return VisitNote.objects.filter(episode=self.get_episode()).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(episode=self.get_episode())
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['episode'] = self.get_episode()
+        return context
+

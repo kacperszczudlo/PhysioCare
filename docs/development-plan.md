@@ -83,7 +83,9 @@ Współpraca komponentów: **web** i **mobile** korzystają z tego samego **REST
 | 4.4 | Karta pacjenta + Diagnostic Mapper | Widoki |
 | 4.5 | Baza ćwiczeń + przypisywanie | Widoki |
 | 4.6 | Profil terapeuty | Widoki |
-| 4.7 | Integracja z API (loading / error / empty) | Wszystkie moduły |
+| 4.7 | Integracja z API (loading / error / empty) | Wszystkie moduły ✓ |
+
+> **Status Faza 4:** zamknięta na branchu `feat/web` (web panel terapeuty).
 
 ---
 

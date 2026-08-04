@@ -73,12 +73,17 @@
 { "email": "...", "password": "..." }
 ```
 
+### POST `/auth/logout`
+
+Czyści cookies `access_token` / `refresh_token`. **200** — `{ "detail": "Wylogowano." }`.
+
 ### POST `/auth/refresh`
 
 ```json
 { "refresh": "<refresh_token>" }
 ```
 
+Cookie `refresh_token` też jest akceptowane (body opcjonalne).
 ### POST `/auth/password-reset/request`
 
 ```json
@@ -90,6 +95,10 @@
 ```json
 { "token": "...", "new_password": "..." }
 ```
+
+### POST `/auth/password-change`
+
+Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło zmienione.
 
 ---
 
@@ -146,6 +155,7 @@
 | POST | `/episodes/{id}/body-pain` | THERAPIST | Nowy wpis VAS |
 | PUT | `/episodes/{id}/body-pain/{entry_id}` | THERAPIST | Aktualizacja |
 | POST | `/episodes/{id}/notes` | THERAPIST | Notatka z wizyty |
+| GET | `/episodes/{id}/notes` | THERAPIST | Lista notatek epizodu |
 
 **Body pain:**
 
@@ -164,7 +174,8 @@
 
 | Metoda | Endpoint | Rola | Opis |
 |--------|----------|------|------|
-| GET | `/therapist/exercises` | THERAPIST | Katalog + filtry |
+| GET | `/therapist/exercises` | THERAPIST | Katalog (`?category=`, `?media_type=`, `?q=`) |
+| GET | `/therapist/exercise-categories` | THERAPIST | Lista kategorii |
 | POST | `/therapist/exercises` | THERAPIST | Upload metadanych + plik |
 | POST | `/therapist/exercise-assignments` | THERAPIST | Przypisanie |
 | GET | `/me/exercises/today` | PATIENT | Zalecenia na dziś |

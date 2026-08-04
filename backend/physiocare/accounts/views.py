@@ -20,6 +20,7 @@ from core.throttling import (
 
 from .models import PasswordResetToken
 from .serializers import (
+    ChangePasswordSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
     PatientRegistrationSerializer,
@@ -54,6 +55,21 @@ def _set_auth_cookies(response, refresh):
     return response
 
 
+def _clear_auth_cookies(response):
+    secure = settings.SECURE_COOKIES
+    response.delete_cookie(
+        key=settings.SIMPLE_JWT.get('AUTH_COOKIE_ACCESS', 'access_token'),
+        samesite='Lax',
+        secure=secure,
+    )
+    response.delete_cookie(
+        key=settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token'),
+        samesite='Lax',
+        secure=secure,
+    )
+    return response
+
+
 def _user_payload(user):
     return {
         'id': str(user.id),
@@ -84,6 +100,14 @@ class LoginView(APIView):
             {'error': {'code': 'AUTH_001', 'message': 'Błędny e-mail lub hasło.', 'details': {}}},
             status=status.HTTP_401_UNAUTHORIZED,
         )
+
+
+class LogoutView(APIView):
+    permission_classes = []
+
+    def post(self, request, *args, **kwargs):
+        response = Response({'detail': 'Wylogowano.'}, status=status.HTTP_200_OK)
+        return _clear_auth_cookies(response)
 
 
 class PatientRegisterView(APIView):
@@ -218,3 +242,39 @@ class PasswordResetConfirmView(APIView):
         ).update(used_at=timezone.now())
 
         return Response({'detail': 'Hasło zostało zmienione.'}, status=status.HTTP_200_OK)
+
+
+class ChangePasswordView(APIView):
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_001',
+                        'message': 'Wymagane logowanie.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        serializer = ChangePasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        if not user.check_password(serializer.validated_data['current_password']):
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_004',
+                        'message': 'Obecne hasło jest nieprawidłowe.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(serializer.validated_data['new_password'])
+        user.save(update_fields=['password'])
+        return Response({'detail': 'Hasło zostało zmienione.'}, status=status.HTTP_200_OK)
+
