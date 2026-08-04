@@ -73,12 +73,17 @@
 { "email": "...", "password": "..." }
 ```
 
+### POST `/auth/logout`
+
+Czyści cookies `access_token` / `refresh_token`. **200** — `{ "detail": "Wylogowano." }`.
+
 ### POST `/auth/refresh`
 
 ```json
 { "refresh": "<refresh_token>" }
 ```
 
+Cookie `refresh_token` też jest akceptowane (body opcjonalne).
 ### POST `/auth/password-reset/request`
 
 ```json
