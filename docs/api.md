@@ -96,6 +96,10 @@ Cookie `refresh_token` też jest akceptowane (body opcjonalne).
 { "token": "...", "new_password": "..." }
 ```
 
+### POST `/auth/password-change`
+
+Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło zmienione.
+
 ---
 
 ## Pacjent — profil (`/me/`)
