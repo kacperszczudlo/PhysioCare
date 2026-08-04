@@ -4,7 +4,7 @@ from .views import (
     EpisodeBodyPainDetailView,
     EpisodeBodyPainListCreateView,
     EpisodeDetailView,
-    EpisodeNoteCreateView,
+    EpisodeNoteListCreateView,
     PatientEpisodeListCreateView,
 )
 
@@ -27,7 +27,7 @@ urlpatterns = [
     ),
     path(
         'episodes/<uuid:episode_id>/notes/',
-        EpisodeNoteCreateView.as_view(),
+        EpisodeNoteListCreateView.as_view(),
         name='episode-notes',
     ),
 ]

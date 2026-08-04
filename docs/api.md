@@ -151,6 +151,7 @@ Cookie `refresh_token` też jest akceptowane (body opcjonalne).
 | POST | `/episodes/{id}/body-pain` | THERAPIST | Nowy wpis VAS |
 | PUT | `/episodes/{id}/body-pain/{entry_id}` | THERAPIST | Aktualizacja |
 | POST | `/episodes/{id}/notes` | THERAPIST | Notatka z wizyty |
+| GET | `/episodes/{id}/notes` | THERAPIST | Lista notatek epizodu |
 
 **Body pain:**
 
