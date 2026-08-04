@@ -1,0 +1,131 @@
+.day-cal {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: var(--space-2);
+  min-height: var(--day-cal-height);
+  user-select: none;
+}
+
+.day-cal__hours {
+  position: relative;
+  height: var(--day-cal-height);
+}
+
+.day-cal__hour {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.day-cal__track {
+  position: relative;
+  height: var(--day-cal-height);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, oklch(0.985 0.008 113), var(--color-bg));
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.day-cal__lane {
+  position: relative;
+  height: 100%;
+}
+
+.day-cal__line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px solid var(--color-border);
+  pointer-events: none;
+}
+
+.day-cal__event {
+  position: absolute;
+  left: var(--space-2);
+  right: var(--space-2);
+  z-index: 1;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--color-on-primary);
+  box-shadow: var(--shadow-sm);
+  cursor: grab;
+  overflow: hidden;
+  touch-action: none;
+  transition: box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.day-cal__event:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.day-cal__event--dragging {
+  cursor: grabbing;
+  z-index: 2;
+  opacity: 0.92;
+  box-shadow: var(--shadow-md);
+}
+
+.day-cal__event--saving {
+  opacity: 0.7;
+}
+
+.day-cal__event-time {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  opacity: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+
+.day-cal__event-title {
+  margin-top: 0.15rem;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.day-cal__event-meta {
+  font-size: var(--text-xs);
+  opacity: 0.85;
+}
+
+.day-cal__event-cancel {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: oklch(1 0 0 / 0.2);
+  color: inherit;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  cursor: pointer;
+}
+
+.day-cal__event-cancel:hover {
+  background: oklch(1 0 0 / 0.35);
+}
+
+@media (max-width: 640px) {
+  .day-cal {
+    grid-template-columns: 3.25rem 1fr;
+  }
+
+  .day-cal__event-cancel {
+    position: static;
+    margin-top: var(--space-1);
+    display: inline-block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day-cal__event {
+    transition: none;
+  }
+}

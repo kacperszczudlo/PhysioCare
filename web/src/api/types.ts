@@ -1,5 +1,7 @@
 export type UserRole = 'PATIENT' | 'THERAPIST'
 
+export type VisitStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
+
 export interface User {
   id: string
   email: string
@@ -18,6 +20,13 @@ export interface ApiErrorBody {
   [key: string]: unknown
 }
 
+export interface Paginated<T> {
+  count: number
+  next: string | null
+  previous: string | null
+  results: T[]
+}
+
 export interface TherapistProfile {
   id: string
   email: string
@@ -34,4 +43,51 @@ export interface TherapistProfile {
 export interface DashboardStats {
   visits_today: number
   patients_total: number
+}
+
+export interface PatientSummary {
+  id: string
+  email: string
+  first_name: string
+  last_name: string
+  phone: string | null
+  avatar_url: string | null
+}
+
+export interface TherapyType {
+  id: string
+  name: string
+  color_hex: string
+  duration_min: number
+  created_at: string
+}
+
+export interface Visit {
+  id: string
+  patient: string
+  therapist: string
+  episode: string | null
+  therapy_type: string
+  patient_first_name: string
+  patient_last_name: string
+  therapy_type_name: string
+  therapy_type_color: string
+  therapy_type_duration_min: number
+  start_at: string
+  end_at: string
+  status: VisitStatus
+  location_address: string
+  prep_instructions: string
+  cancel_reason: string
+  created_at: string
+}
+
+export interface VisitCreatePayload {
+  patient_id: string
+  therapy_type_id: string
+  episode_id?: string | null
+  start_at: string
+  end_at: string
+  location_address?: string
+  prep_instructions?: string
 }

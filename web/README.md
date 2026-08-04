@@ -39,5 +39,6 @@ src/
 ## Status (Faza 4)
 
 - **4.1** Szkielet + routing + apiClient — gotowe
-- **4.2** Auth (login / rejestracja PWZFz / reset) — widoki podłączone do API
-- **4.3–4.6** Harmonogram, karta pacjenta, ćwiczenia, profil — placeholdery
+- **4.2** Auth (login / rejestracja PWZFz / reset) — gotowe
+- **4.3** Harmonogram dzienny + drag & drop — gotowe
+- **4.4–4.6** Karta pacjenta, ćwiczenia, profil — placeholdery

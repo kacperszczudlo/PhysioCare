@@ -66,12 +66,41 @@ async function tryRefreshSession(): Promise<boolean> {
   return refreshPromise
 }
 
-function parseErrorMessage(status: number, body: ApiErrorBody | null): string {
-  if (body?.error?.message) {
+function firstValidationMessage(body: ApiErrorBody | null): string | null {
+  if (!body) {
+    return null
+  }
+  if (body.error?.message) {
     return body.error.message
   }
-  if (typeof body?.detail === 'string') {
+  if (typeof body.detail === 'string') {
     return body.detail
+  }
+
+  for (const [key, value] of Object.entries(body)) {
+    if (key === 'error' || key === 'detail') {
+      continue
+    }
+    if (typeof value === 'string') {
+      return value
+    }
+    if (Array.isArray(value) && typeof value[0] === 'string') {
+      return value[0]
+    }
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const nested = firstValidationMessage(value as ApiErrorBody)
+      if (nested) {
+        return nested
+      }
+    }
+  }
+  return null
+}
+
+function parseErrorMessage(status: number, body: ApiErrorBody | null): string {
+  const fromBody = firstValidationMessage(body)
+  if (fromBody) {
+    return fromBody
   }
   if (status === 401) {
     return 'Sesja wygasła. Zaloguj się ponownie.'
@@ -81,6 +110,9 @@ function parseErrorMessage(status: number, body: ApiErrorBody | null): string {
   }
   if (status === 404) {
     return 'Nie znaleziono zasobu.'
+  }
+  if (status === 409) {
+    return 'Konflikt danych (np. kolizja terminu).'
   }
   if (status >= 500) {
     return 'Błąd serwera. Spróbuj ponownie później.'

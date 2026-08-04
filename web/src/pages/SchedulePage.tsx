@@ -1,11 +1,175 @@
-import { PlaceholderPage } from '@/components/PlaceholderPage'
+import { useCallback, useEffect, useState } from 'react'
+
+import { schedulingApi } from '@/api/scheduling'
+import { ApiError } from '@/api/client'
+import type { Visit } from '@/api/types'
+import { PageHeader } from '@/components/PageHeader'
+import { Button } from '@/components/ui/Button'
+import { CancelVisitModal } from '@/components/ui/Modal'
+import {
+  addDays,
+  formatDayLabel,
+  parseDateInput,
+  startOfDay,
+  toDateInputValue,
+} from '@/lib/scheduleTime'
+import { DayCalendar } from '@/pages/schedule/DayCalendar'
+import { VisitFormModal } from '@/pages/schedule/VisitFormModal'
+import './SchedulePage.css'
 
 export function SchedulePage() {
+  const [day, setDay] = useState(() => startOfDay(new Date()))
+  const [visits, setVisits] = useState<Visit[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [formOpen, setFormOpen] = useState(false)
+  const [slotMinutes, setSlotMinutes] = useState(0)
+  const [cancelTarget, setCancelTarget] = useState<Visit | null>(null)
+  const [cancelBusy, setCancelBusy] = useState(false)
+  const [reloadToken, setReloadToken] = useState(0)
+
+  const dateIso = toDateInputValue(day)
+
+  const reload = useCallback(() => {
+    setReloadToken((value) => value + 1)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await schedulingApi.listVisitsForDate(dateIso)
+        if (!cancelled) {
+          setVisits(data)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setVisits([])
+          setError(err instanceof ApiError ? err.message : 'Nie udało się pobrać wizyt.')
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [dateIso, reloadToken])
+
+  function openCreate(minutesFromStart: number) {
+    setSlotMinutes(minutesFromStart)
+    setFormOpen(true)
+  }
+
+  async function confirmCancel(reason: string) {
+    if (!cancelTarget) {
+      return
+    }
+    setCancelBusy(true)
+    setError(null)
+    try {
+      const updated = await schedulingApi.cancelVisit(cancelTarget.id, reason)
+      setVisits((prev) => prev.map((visit) => (visit.id === updated.id ? updated : visit)))
+      setCancelTarget(null)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Nie udało się odwołać wizyty.')
+    } finally {
+      setCancelBusy(false)
+    }
+  }
+
   return (
-    <PlaceholderPage
-      title="Harmonogram"
-      description="Kalendarz dzienny wizyt z tworzeniem, edycją i przeciąganiem slotów."
-      phaseTask="4.3"
-    />
+    <section className="schedule-page">
+      <PageHeader
+        title="Harmonogram"
+        description="Widok dzienny — kliknij wolny slot, aby dodać wizytę, przeciągnij blok, aby zmienić godzinę."
+        actions={
+          <Button type="button" onClick={() => openCreate(60)}>
+            + Nowa wizyta
+          </Button>
+        }
+      />
+
+      <div className="schedule-toolbar">
+        <div className="schedule-toolbar__nav">
+          <Button type="button" variant="secondary" size="sm" onClick={() => setDay((d) => addDays(d, -1))}>
+            Poprzedni
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setDay(startOfDay(new Date()))}
+          >
+            Dziś
+          </Button>
+          <Button type="button" variant="secondary" size="sm" onClick={() => setDay((d) => addDays(d, 1))}>
+            Następny
+          </Button>
+        </div>
+
+        <label className="schedule-toolbar__date">
+          <span className="sr-only">Data</span>
+          <input
+            type="date"
+            value={dateIso}
+            onChange={(event) => setDay(parseDateInput(event.target.value))}
+          />
+        </label>
+
+        <p className="schedule-toolbar__label">{formatDayLabel(day)}</p>
+      </div>
+
+      {error ? (
+        <p className="schedule-banner schedule-banner--error" role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      {loading ? (
+        <div className="schedule-skeleton" aria-busy="true" aria-live="polite">
+          Ładowanie harmonogramu…
+        </div>
+      ) : null}
+
+      {!loading && visits.filter((v) => v.status !== 'CANCELLED').length === 0 ? (
+        <p className="schedule-empty" role="status">
+          Brak wizyt tego dnia. Kliknij w siatkę godzin albo „+ Nowa wizyta”.
+        </p>
+      ) : null}
+
+      {!loading ? (
+        <DayCalendar
+          day={day}
+          visits={visits}
+          onVisitsChange={setVisits}
+          onSlotClick={openCreate}
+          onCancelVisit={setCancelTarget}
+          onError={setError}
+        />
+      ) : null}
+
+      <VisitFormModal
+        open={formOpen}
+        day={day}
+        initialMinutes={slotMinutes}
+        onClose={() => setFormOpen(false)}
+        onCreated={reload}
+      />
+
+      <CancelVisitModal
+        open={cancelTarget !== null}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={confirmCancel}
+        busy={cancelBusy}
+      />
+    </section>
   )
 }
