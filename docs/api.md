@@ -170,7 +170,8 @@ Cookie `refresh_token` też jest akceptowane (body opcjonalne).
 
 | Metoda | Endpoint | Rola | Opis |
 |--------|----------|------|------|
-| GET | `/therapist/exercises` | THERAPIST | Katalog + filtry |
+| GET | `/therapist/exercises` | THERAPIST | Katalog (`?category=`, `?media_type=`, `?q=`) |
+| GET | `/therapist/exercise-categories` | THERAPIST | Lista kategorii |
 | POST | `/therapist/exercises` | THERAPIST | Upload metadanych + plik |
 | POST | `/therapist/exercise-assignments` | THERAPIST | Przypisanie |
 | GET | `/me/exercises/today` | PATIENT | Zalecenia na dziś |

@@ -10,10 +10,11 @@ from core.mixins import PatientSelfMixin
 from core.permissions import IsPatient, IsTherapist
 from core.storage import save_upload
 
-from .models import Exercise, ExerciseAssignment, ExerciseCompletion, MediaType
+from .models import Exercise, ExerciseAssignment, ExerciseCompletion
 from .serializers import (
     ExerciseAssignmentCreateSerializer,
     ExerciseAssignmentSerializer,
+    ExerciseCategorySerializer,
     ExerciseCompletionCreateSerializer,
     ExerciseCompletionSerializer,
     ExerciseCreateSerializer,
@@ -26,9 +27,19 @@ class TherapistExerciseListCreateView(generics.ListCreateAPIView):
     parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
 
     def get_queryset(self):
-        return Exercise.objects.filter(
+        qs = Exercise.objects.filter(
             therapist=self.request.user.therapist_profile,
         ).prefetch_related('categories')
+        category = self.request.query_params.get('category')
+        if category:
+            qs = qs.filter(categories__id=category).distinct()
+        media_type = self.request.query_params.get('media_type')
+        if media_type:
+            qs = qs.filter(media_type=media_type)
+        search = self.request.query_params.get('q')
+        if search:
+            qs = qs.filter(title__icontains=search)
+        return qs.order_by('-created_at')
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -43,14 +54,24 @@ class TherapistExerciseListCreateView(generics.ListCreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         file_url = save_upload(uploaded, subdir='exercises')
-        media_type = request.data.get('media_type', MediaType.VIDEO)
         serializer = ExerciseCreateSerializer(
             data=request.data,
             context={'therapist': request.user.therapist_profile, 'file_url': file_url},
         )
         serializer.is_valid(raise_exception=True)
         exercise = serializer.save()
+        exercise = Exercise.objects.prefetch_related('categories').get(pk=exercise.pk)
         return Response(ExerciseSerializer(exercise).data, status=status.HTTP_201_CREATED)
+
+
+class TherapistExerciseCategoryListView(generics.ListAPIView):
+    serializer_class = ExerciseCategorySerializer
+    permission_classes = [IsAuthenticated, IsTherapist]
+    pagination_class = None
+
+    def get_queryset(self):
+        return ExerciseCategory.objects.all().order_by('name')
+
 
 
 class TherapistExerciseAssignmentCreateView(generics.CreateAPIView):
