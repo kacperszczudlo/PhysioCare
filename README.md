@@ -173,8 +173,8 @@ Referencja wizualna ekranów: plik `mockup_systemu_fizjoterapii.tsx` (poza repo 
 
 ## Status projektu
 
-**Faza 0–2** — dokumentacja, modele, REST API + Postman.  
-**Faza 3** — testy backendu (pytest, min. 5; CI: `.github/workflows/backend-tests.yml`).
+**Faza 0–3** — dokumentacja, modele, REST API, Postman, testy backendu.  
+**Faza 4 (w toku, branch `feat/web`)** — panel webowy: szkielet Vite/React, auth, pulpit; kolejne moduły wg `docs/development-plan.md`.
 
 ## Licencja
 
