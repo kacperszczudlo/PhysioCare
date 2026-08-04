@@ -1,0 +1,10 @@
+django>=6.0
+djangorestframework>=3.17
+djangorestframework-simplejwt>=5.5
+django-cors-headers>=4.0
+psycopg2-binary>=2.9
+python-dotenv>=1.0
+pytest>=8.0
+pytest-cov>=7.0
+pytest-django>=4.9
+pytest-html>=4.0

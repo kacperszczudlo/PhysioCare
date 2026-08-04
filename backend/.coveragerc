@@ -1,0 +1,15 @@
+[run]
+source = physiocare
+omit =
+    **/__init__.py
+    */migrations/*
+    */tests/*
+    */venv/*
+    manage.py
+
+[report]
+omit =
+    **/__init__.py
+    */migrations/*
+show_missing = True
+skip_covered = False
