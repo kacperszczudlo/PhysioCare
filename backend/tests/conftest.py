@@ -1,10 +1,13 @@
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
+from rest_framework.test import APIClient
 
+from exercises.models import Exercise, ExerciseAssignment, ExerciseCompletion
 from patients.models import PatientProfile
 from scheduling.models import TherapyType, Visit
 from therapists.models import TherapistProfile
+from treatment.models import TreatmentEpisode
 
 User = get_user_model()
 
@@ -19,11 +22,26 @@ def django_db_setup(django_db_blocker, django_db_use_migrations):
 @pytest.fixture(autouse=True)
 def cleanup_test_data(db):
     yield
+    ExerciseCompletion.objects.filter(
+        assignment__patient__user__email__endswith='@physiocare.test',
+    ).delete()
+    ExerciseAssignment.objects.filter(
+        patient__user__email__endswith='@physiocare.test',
+    ).delete()
+    Exercise.objects.filter(therapist__user__email__endswith='@physiocare.test').delete()
+    TreatmentEpisode.objects.filter(
+        patient__user__email__endswith='@physiocare.test',
+    ).delete()
     Visit.objects.filter(patient__user__email__endswith='@physiocare.test').delete()
     TherapyType.objects.filter(therapist__user__email__endswith='@physiocare.test').delete()
     PatientProfile.objects.filter(user__email__endswith='@physiocare.test').delete()
     TherapistProfile.objects.filter(user__email__endswith='@physiocare.test').delete()
     User.objects.filter(email__endswith='@physiocare.test').delete()
+
+
+@pytest.fixture
+def api_client():
+    return APIClient()
 
 
 @pytest.fixture
@@ -61,6 +79,21 @@ def therapy_type(therapist):
     return TherapyType.objects.create(
         therapist=therapist,
         name='Fizjoterapia',
+    )
+
+
+@pytest.fixture
+def patient(db, therapist):
+    user = User.objects.create_user(
+        email='patient@physiocare.test',
+        password='test-pass',
+        role='PATIENT',
+        first_name='Pacjent',
+        last_name='Testowy',
+    )
+    return PatientProfile.objects.create(
+        user=user,
+        therapist=therapist,
     )
 
 

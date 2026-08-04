@@ -173,7 +173,8 @@ Referencja wizualna ekranów: plik `mockup_systemu_fizjoterapii.tsx` (poza repo 
 
 ## Status projektu
 
-**Faza 0** — dokumentacja i struktura monorepo (commit inicjalizacyjny).
+**Faza 0–2** — dokumentacja, modele, REST API + Postman.  
+**Faza 3** — testy backendu (pytest, min. 5; CI: `.github/workflows/backend-tests.yml`).
 
 ## Licencja
 

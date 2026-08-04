@@ -1,4 +1,4 @@
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 from rest_framework import generics, parsers, status
 from rest_framework.exceptions import ValidationError
@@ -83,7 +83,7 @@ class MeExercisesTodayView(PatientSelfMixin, generics.ListAPIView):
             patient=self.get_patient_profile(),
             start_date__lte=today,
             end_date__gte=today,
-        ).select_related('exercise')
+        ).select_related('exercise').order_by('assigned_at')
 
 
 class MeExerciseCompletionCreateView(PatientSelfMixin, APIView):
@@ -104,11 +104,12 @@ class MeExerciseCompletionCreateView(PatientSelfMixin, APIView):
         serializer = ExerciseCompletionCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            completion = ExerciseCompletion.objects.create(
-                assignment=assignment,
-                completed_on=serializer.validated_data.get('completed_on') or timezone.localdate(),
-                done=serializer.validated_data.get('done', True),
-            )
+            with transaction.atomic():
+                completion = ExerciseCompletion.objects.create(
+                    assignment=assignment,
+                    completed_on=serializer.validated_data.get('completed_on') or timezone.localdate(),
+                    done=serializer.validated_data.get('done', True),
+                )
         except IntegrityError:
             raise ValidationError(
                 {'completed_on': 'Ćwiczenie zostało już odhaczone w tym dniu.'}

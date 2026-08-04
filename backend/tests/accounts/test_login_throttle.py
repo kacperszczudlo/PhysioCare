@@ -2,12 +2,6 @@ import pytest
 from django.core.cache import cache
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIClient
-
-
-@pytest.fixture
-def api_client():
-    return APIClient()
 
 
 @pytest.mark.django_db
