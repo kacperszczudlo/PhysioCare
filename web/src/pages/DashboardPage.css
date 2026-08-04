@@ -1,8 +1,13 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
 .dash-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
   gap: var(--space-4);
-  margin-bottom: var(--space-8);
 }
 
 .dash-stat {
@@ -37,14 +42,6 @@
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--color-ink);
-}
-
-.dash-error {
-  margin-bottom: var(--space-6);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  background: var(--color-danger-subtle);
-  color: var(--color-danger);
 }
 
 .dash-actions {

@@ -52,7 +52,7 @@ export function DashboardPage() {
   const greeting = user?.first_name ? `Dzień dobry, ${user.first_name}` : 'Pulpit'
 
   return (
-    <section>
+    <section className="dashboard">
       <PageHeader
         title={greeting}
         description="Szybki przegląd dnia i skróty do najważniejszych czynności."
@@ -79,25 +79,22 @@ export function DashboardPage() {
         <EmptyState
           title="Brak wizyt na dziś"
           description="Dodaj termin w harmonogramie albo wróć tu jutro."
-          action={
-            <Link className="dash-action" to="/schedule">
-              Przejdź do harmonogramu
-            </Link>
-          }
         />
       ) : null}
 
-      <div className="dash-actions">
-        <Link className="dash-action" to="/schedule">
-          Otwórz harmonogram
-        </Link>
-        <Link className="dash-action" to="/patients">
-          Lista pacjentów
-        </Link>
-        <Link className="dash-action" to="/exercises">
-          Baza ćwiczeń
-        </Link>
-      </div>
+      {!loading ? (
+        <div className="dash-actions">
+          <Link className="dash-action" to="/schedule">
+            Otwórz harmonogram
+          </Link>
+          <Link className="dash-action" to="/patients">
+            Lista pacjentów
+          </Link>
+          <Link className="dash-action" to="/exercises">
+            Baza ćwiczeń
+          </Link>
+        </div>
+      ) : null}
     </section>
   )
 }
