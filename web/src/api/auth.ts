@@ -47,11 +47,29 @@ export const authApi = {
   logout() {
     return api.post<{ detail: string }>('/auth/logout/', {}, { skipAuthRefresh: true })
   },
+
+  changePassword(current_password: string, new_password: string) {
+    return api.post<{ detail: string }>('/auth/password-change/', {
+      current_password,
+      new_password,
+    })
+  },
+}
+
+export interface TherapistProfileUpdatePayload {
+  phone?: string
+  bio?: string
+  courses?: string[]
+  avatar_url?: string
 }
 
 export const therapistApi = {
   getProfile() {
     return api.get<TherapistProfile>('/therapist/profile/')
+  },
+
+  updateProfile(payload: TherapistProfileUpdatePayload) {
+    return api.patch<TherapistProfile>('/therapist/profile/', payload)
   },
 
   getDashboardStats() {

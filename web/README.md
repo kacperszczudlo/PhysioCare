@@ -43,4 +43,4 @@ src/
 - **4.3** Harmonogram dzienny + drag & drop — gotowe
 - **4.4** Karta pacjenta + Diagnostic Mapper — gotowe
 - **4.5** Baza ćwiczeń + przypisywanie — gotowe
-- **4.6** Profil terapeuty — placeholder
+- **4.6** Profil terapeuty — gotowe
