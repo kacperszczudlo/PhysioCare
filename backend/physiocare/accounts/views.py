@@ -54,6 +54,21 @@ def _set_auth_cookies(response, refresh):
     return response
 
 
+def _clear_auth_cookies(response):
+    secure = settings.SECURE_COOKIES
+    response.delete_cookie(
+        key=settings.SIMPLE_JWT.get('AUTH_COOKIE_ACCESS', 'access_token'),
+        samesite='Lax',
+        secure=secure,
+    )
+    response.delete_cookie(
+        key=settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token'),
+        samesite='Lax',
+        secure=secure,
+    )
+    return response
+
+
 def _user_payload(user):
     return {
         'id': str(user.id),
@@ -84,6 +99,14 @@ class LoginView(APIView):
             {'error': {'code': 'AUTH_001', 'message': 'Błędny e-mail lub hasło.', 'details': {}}},
             status=status.HTTP_401_UNAUTHORIZED,
         )
+
+
+class LogoutView(APIView):
+    permission_classes = []
+
+    def post(self, request, *args, **kwargs):
+        response = Response({'detail': 'Wylogowano.'}, status=status.HTTP_200_OK)
+        return _clear_auth_cookies(response)
 
 
 class PatientRegisterView(APIView):
