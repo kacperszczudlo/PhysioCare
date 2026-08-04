@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import { patientsApi, treatmentApi } from '@/api/treatment'
-import { ApiError } from '@/api/client'
+import { getErrorMessage } from '@/api/client'
 import type { EpisodeStatus, PatientDetail, TreatmentEpisode, VisitNote } from '@/api/types'
+import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
@@ -55,7 +56,7 @@ export function PatientDetailPage() {
         return episodeList[0]?.id ?? null
       })
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się otworzyć karty pacjenta.')
+      setError(getErrorMessage(err, 'Nie udało się otworzyć karty pacjenta.'))
       setPatient(null)
       setEpisodes([])
     } finally {
@@ -89,7 +90,7 @@ export function PatientDetailPage() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof ApiError ? err.message : 'Nie udało się pobrać notatek.')
+          setError(getErrorMessage(err, 'Nie udało się pobrać notatek.'))
         }
       } finally {
         if (!cancelled) {
@@ -118,7 +119,7 @@ export function PatientDetailPage() {
       setNewIcd10('')
       setNewSummary('')
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się utworzyć epizodu.')
+      setError(getErrorMessage(err, 'Nie udało się utworzyć epizodu.'))
     } finally {
       setBusy(false)
     }
@@ -143,7 +144,7 @@ export function PatientDetailPage() {
       })
       setEpisodes((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się zapisać epizodu.')
+      setError(getErrorMessage(err, 'Nie udało się zapisać epizodu.'))
     } finally {
       setBusy(false)
     }
@@ -161,7 +162,7 @@ export function PatientDetailPage() {
       setNotes((prev) => [created, ...prev])
       setNoteContent('')
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się dodać notatki.')
+      setError(getErrorMessage(err, 'Nie udało się dodać notatki.'))
     } finally {
       setBusy(false)
     }
@@ -170,9 +171,7 @@ export function PatientDetailPage() {
   if (loading) {
     return (
       <section>
-        <p className="patient-muted" aria-busy="true">
-          Ładowanie karty…
-        </p>
+        <LoadingBlock label="Ładowanie karty…" variant="panel" />
       </section>
     )
   }
@@ -181,11 +180,7 @@ export function PatientDetailPage() {
     return (
       <section>
         <PageHeader title="Pacjent" description="Nie znaleziono karty." />
-        {error ? (
-          <p className="patient-banner patient-banner--error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {error ? <ErrorBanner message={error} onRetry={() => void loadPatient()} /> : null}
         <Link to="/patients">Wróć do listy</Link>
       </section>
     )
@@ -207,11 +202,7 @@ export function PatientDetailPage() {
         <Link to="/patients">← Pacjenci</Link>
       </p>
 
-      {error ? (
-        <p className="patient-banner patient-banner--error" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <ErrorBanner message={error} /> : null}
 
       <div className="patient-layout">
         <aside className="patient-episodes" aria-label="Epizody leczenia">
@@ -240,7 +231,10 @@ export function PatientDetailPage() {
           </ul>
 
           {episodes.length === 0 ? (
-            <p className="patient-muted">Brak epizodów — utwórz pierwszy poniżej.</p>
+            <EmptyState
+              title="Brak epizodów"
+              description="Utwórz pierwszy epizod leczenia, aby prowadzić dokumentację i mapę ciała."
+            />
           ) : null}
 
           <form className="patient-episodes__create" onSubmit={(e) => void createEpisode(e)}>

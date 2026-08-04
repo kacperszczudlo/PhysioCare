@@ -1,8 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 
 import { authApi, therapistApi } from '@/api/auth'
-import { ApiError } from '@/api/client'
+import { getErrorMessage } from '@/api/client'
 import type { TherapistProfile } from '@/api/types'
+import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
@@ -27,6 +28,7 @@ export function ProfilePage() {
   const [passwordBusy, setPasswordBusy] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null)
+  const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -46,7 +48,8 @@ export function ProfilePage() {
         setCourses(Array.isArray(data.courses) ? data.courses : [])
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof ApiError ? err.message : 'Nie udało się pobrać profilu.')
+          setProfile(null)
+          setError(getErrorMessage(err, 'Nie udało się pobrać profilu.'))
         }
       } finally {
         if (!cancelled) {
@@ -59,7 +62,7 @@ export function ProfilePage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [reloadToken])
 
   function addCourse() {
     const value = newCourse.trim()
@@ -89,7 +92,7 @@ export function ProfilePage() {
       setProfile(updated)
       setProfileMessage('Profil zapisany.')
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się zapisać profilu.')
+      setError(getErrorMessage(err, 'Nie udało się zapisać profilu.'))
     } finally {
       setProfileBusy(false)
     }
@@ -117,7 +120,7 @@ export function ProfilePage() {
       setNewPassword('')
       setConfirmPassword('')
     } catch (err) {
-      setPasswordError(err instanceof ApiError ? err.message : 'Nie udało się zmienić hasła.')
+      setPasswordError(getErrorMessage(err, 'Nie udało się zmienić hasła.'))
     } finally {
       setPasswordBusy(false)
     }
@@ -126,9 +129,7 @@ export function ProfilePage() {
   if (loading) {
     return (
       <section>
-        <p className="profile-muted" aria-busy="true">
-          Ładowanie profilu…
-        </p>
+        <LoadingBlock label="Ładowanie profilu…" variant="panel" />
       </section>
     )
   }
@@ -138,9 +139,10 @@ export function ProfilePage() {
       <section>
         <PageHeader title="Profil" description="Nie udało się wczytać danych." />
         {error ? (
-          <p className="profile-banner profile-banner--error" role="alert">
-            {error}
-          </p>
+          <ErrorBanner
+            message={error}
+            onRetry={() => setReloadToken((value) => value + 1)}
+          />
         ) : null}
       </section>
     )
@@ -153,11 +155,7 @@ export function ProfilePage() {
         description={`PWZFz ${profile.pwzf_number} · ${profile.email}`}
       />
 
-      {error ? (
-        <p className="profile-banner profile-banner--error" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <ErrorBanner message={error} /> : null}
 
       <div className="profile-layout">
         <form className="profile-panel" onSubmit={(e) => void onSaveProfile(e)}>

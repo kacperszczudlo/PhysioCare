@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { patientsApi } from '@/api/treatment'
-import { ApiError } from '@/api/client'
+import { getErrorMessage } from '@/api/client'
 import type { PatientSummary } from '@/api/types'
+import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Field } from '@/components/ui/Field'
 import './PatientsPage.css'
@@ -13,6 +14,11 @@ export function PatientsPage() {
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [reloadToken, setReloadToken] = useState(0)
+
+  const reload = useCallback(() => {
+    setReloadToken((value) => value + 1)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -27,7 +33,7 @@ export function PatientsPage() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof ApiError ? err.message : 'Nie udało się pobrać pacjentów.')
+          setError(getErrorMessage(err, 'Nie udało się pobrać pacjentów.'))
         }
       } finally {
         if (!cancelled) {
@@ -40,7 +46,7 @@ export function PatientsPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [reloadToken])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -70,27 +76,22 @@ export function PatientsPage() {
         />
       </div>
 
-      {error ? (
-        <p className="patients-banner patients-banner--error" role="alert">
-          {error}
-        </p>
+      {error ? <ErrorBanner message={error} onRetry={reload} /> : null}
+
+      {loading ? <LoadingBlock label="Ładowanie listy…" /> : null}
+
+      {!loading && !error && filtered.length === 0 ? (
+        <EmptyState
+          title={patients.length === 0 ? 'Brak pacjentów w gabinecie' : 'Brak wyników'}
+          description={
+            patients.length === 0
+              ? 'Pojawią się po rejestracji w aplikacji mobilnej z Twoim therapist_id.'
+              : 'Zmień frazę wyszukiwania albo wyczyść filtr.'
+          }
+        />
       ) : null}
 
-      {loading ? (
-        <p className="patients-muted" aria-busy="true">
-          Ładowanie listy…
-        </p>
-      ) : null}
-
-      {!loading && filtered.length === 0 ? (
-        <p className="patients-empty" role="status">
-          {patients.length === 0
-            ? 'Brak pacjentów w gabinecie. Pojawią się po rejestracji w aplikacji mobilnej z Twoim therapist_id.'
-            : 'Brak wyników dla podanego filtra.'}
-        </p>
-      ) : null}
-
-      {!loading && filtered.length > 0 ? (
+      {!loading && !error && filtered.length > 0 ? (
         <ul className="patients-list">
           {filtered.map((patient) => (
             <li key={patient.id}>

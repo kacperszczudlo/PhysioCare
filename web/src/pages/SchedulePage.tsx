@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { schedulingApi } from '@/api/scheduling'
-import { ApiError } from '@/api/client'
+import { getErrorMessage } from '@/api/client'
 import type { Visit } from '@/api/types'
+import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { CancelVisitModal } from '@/components/ui/Modal'
@@ -48,7 +49,7 @@ export function SchedulePage() {
       } catch (err) {
         if (!cancelled) {
           setVisits([])
-          setError(err instanceof ApiError ? err.message : 'Nie udało się pobrać wizyt.')
+          setError(getErrorMessage(err, 'Nie udało się pobrać wizyt.'))
         }
       } finally {
         if (!cancelled) {
@@ -79,7 +80,7 @@ export function SchedulePage() {
       setVisits((prev) => prev.map((visit) => (visit.id === updated.id ? updated : visit)))
       setCancelTarget(null)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się odwołać wizyty.')
+      setError(getErrorMessage(err, 'Nie udało się odwołać wizyty.'))
     } finally {
       setCancelBusy(false)
     }
@@ -127,25 +128,23 @@ export function SchedulePage() {
         <p className="schedule-toolbar__label">{formatDayLabel(day)}</p>
       </div>
 
-      {error ? (
-        <p className="schedule-banner schedule-banner--error" role="alert">
-          {error}
-        </p>
+      {error ? <ErrorBanner message={error} onRetry={reload} /> : null}
+
+      {loading ? <LoadingBlock label="Ładowanie harmonogramu…" variant="panel" /> : null}
+
+      {!loading && !error && visits.filter((v) => v.status !== 'CANCELLED').length === 0 ? (
+        <EmptyState
+          title="Brak wizyt tego dnia"
+          description="Kliknij w siatkę godzin albo użyj „+ Nowa wizyta”."
+          action={
+            <Button type="button" size="sm" onClick={() => openCreate(60)}>
+              + Nowa wizyta
+            </Button>
+          }
+        />
       ) : null}
 
-      {loading ? (
-        <div className="schedule-skeleton" aria-busy="true" aria-live="polite">
-          Ładowanie harmonogramu…
-        </div>
-      ) : null}
-
-      {!loading && visits.filter((v) => v.status !== 'CANCELLED').length === 0 ? (
-        <p className="schedule-empty" role="status">
-          Brak wizyt tego dnia. Kliknij w siatkę godzin albo „+ Nowa wizyta”.
-        </p>
-      ) : null}
-
-      {!loading ? (
+      {!loading && !error ? (
         <DayCalendar
           day={day}
           visits={visits}

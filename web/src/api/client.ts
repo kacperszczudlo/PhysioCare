@@ -185,6 +185,10 @@ export async function apiRequest<T>(
   return data as T
 }
 
+export function getErrorMessage(err: unknown, fallback: string): string {
+  return err instanceof ApiError ? err.message : fallback
+}
+
 export const api = {
   get: <T>(path: string, options?: RequestOptions) =>
     apiRequest<T>(path, { ...options, method: 'GET' }),

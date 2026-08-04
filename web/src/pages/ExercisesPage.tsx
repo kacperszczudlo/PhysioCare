@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 
 import { exercisesApi } from '@/api/exercises'
-import { ApiError } from '@/api/client'
+import { getErrorMessage } from '@/api/client'
 import type { Exercise, ExerciseCategory, MediaType } from '@/api/types'
+import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
@@ -80,7 +81,7 @@ export function ExercisesPage() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof ApiError ? err.message : 'Nie udało się pobrać ćwiczeń.')
+          setError(getErrorMessage(err, 'Nie udało się pobrać ćwiczeń.'))
           setExercises([])
         }
       } finally {
@@ -136,7 +137,7 @@ export function ExercisesPage() {
       setCreateOpen(false)
       setReloadToken((value) => value + 1)
     } catch (err) {
-      setCreateError(err instanceof ApiError ? err.message : 'Nie udało się dodać ćwiczenia.')
+      setCreateError(getErrorMessage(err, 'Nie udało się dodać ćwiczenia.'))
     } finally {
       setCreateBusy(false)
     }
@@ -192,24 +193,24 @@ export function ExercisesPage() {
       </div>
 
       {error ? (
-        <p className="exercises-banner exercises-banner--error" role="alert">
-          {error}
-        </p>
+        <ErrorBanner message={error} onRetry={() => setReloadToken((value) => value + 1)} />
       ) : null}
 
-      {loading ? (
-        <p className="exercises-muted" aria-busy="true">
-          Ładowanie katalogu…
-        </p>
+      {loading ? <LoadingBlock label="Ładowanie katalogu…" /> : null}
+
+      {!loading && !error && exercises.length === 0 ? (
+        <EmptyState
+          title="Brak ćwiczeń"
+          description="Nie znaleziono pozycji dla aktywnych filtrów. Dodaj ćwiczenie z plikiem MP4 lub PDF."
+          action={
+            <Button type="button" size="sm" onClick={openCreate}>
+              + Dodaj ćwiczenie
+            </Button>
+          }
+        />
       ) : null}
 
-      {!loading && exercises.length === 0 ? (
-        <p className="exercises-empty" role="status">
-          Brak ćwiczeń spełniających filtry. Dodaj pierwsze ćwiczenie z plikiem MP4 lub PDF.
-        </p>
-      ) : null}
-
-      {!loading && exercises.length > 0 ? (
+      {!loading && !error && exercises.length > 0 ? (
         <ul className="exercises-grid">
           {exercises.map((exercise) => (
             <li key={exercise.id} className="exercises-card">

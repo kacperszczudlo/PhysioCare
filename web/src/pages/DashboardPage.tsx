@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { therapistApi } from '@/api/auth'
-import { ApiError } from '@/api/client'
+import { getErrorMessage } from '@/api/client'
 import type { DashboardStats } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
+import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import './DashboardPage.css'
 
@@ -13,6 +14,11 @@ export function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [reloadToken, setReloadToken] = useState(0)
+
+  const reload = useCallback(() => {
+    setReloadToken((value) => value + 1)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -27,7 +33,8 @@ export function DashboardPage() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof ApiError ? err.message : 'Nie udało się pobrać statystyk.')
+          setStats(null)
+          setError(getErrorMessage(err, 'Nie udało się pobrać statystyk.'))
         }
       } finally {
         if (!cancelled) {
@@ -40,7 +47,7 @@ export function DashboardPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [reloadToken])
 
   const greeting = user?.first_name ? `Dzień dobry, ${user.first_name}` : 'Pulpit'
 
@@ -51,18 +58,9 @@ export function DashboardPage() {
         description="Szybki przegląd dnia i skróty do najważniejszych czynności."
       />
 
-      {loading ? (
-        <div className="dash-grid" aria-busy="true" aria-live="polite">
-          <div className="dash-stat dash-stat--skeleton" />
-          <div className="dash-stat dash-stat--skeleton" />
-        </div>
-      ) : null}
+      {loading ? <LoadingBlock label="Ładowanie pulpitu…" variant="panel" /> : null}
 
-      {error ? (
-        <p className="dash-error" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <ErrorBanner message={error} onRetry={reload} /> : null}
 
       {!loading && !error && stats ? (
         <div className="dash-grid">
@@ -75,6 +73,18 @@ export function DashboardPage() {
             <p className="dash-stat__value">{stats.patients_total}</p>
           </article>
         </div>
+      ) : null}
+
+      {!loading && !error && stats && stats.visits_today === 0 ? (
+        <EmptyState
+          title="Brak wizyt na dziś"
+          description="Dodaj termin w harmonogramie albo wróć tu jutro."
+          action={
+            <Link className="dash-action" to="/schedule">
+              Przejdź do harmonogramu
+            </Link>
+          }
+        />
       ) : null}
 
       <div className="dash-actions">
