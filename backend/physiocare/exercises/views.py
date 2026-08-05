@@ -226,6 +226,7 @@ class MeExercisesTodayView(PatientSelfMixin, generics.ListAPIView):
                 end_date__gte=today,
             )
             .select_related('exercise')
+            .prefetch_related('exercise__categories')
             .annotate(completed_today=Exists(completed))
             .order_by('assigned_at')
         )

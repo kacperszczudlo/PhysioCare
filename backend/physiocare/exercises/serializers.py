@@ -188,14 +188,16 @@ class TodayExerciseSerializer(serializers.ModelSerializer):
     exercise_instruction = serializers.CharField(source='exercise.instruction', read_only=True)
     exercise_file_url = serializers.CharField(source='exercise.file_url', read_only=True)
     exercise_media_type = serializers.CharField(source='exercise.media_type', read_only=True)
+    categories = ExerciseCategorySerializer(source='exercise.categories', many=True, read_only=True)
     completed_today = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = ExerciseAssignment
         fields = [
             'id', 'exercise', 'exercise_title', 'exercise_instruction',
-            'exercise_file_url', 'exercise_media_type', 'patient', 'episode',
-            'dosage', 'start_date', 'end_date', 'assigned_at', 'completed_today',
+            'exercise_file_url', 'exercise_media_type', 'categories',
+            'patient', 'episode', 'dosage', 'start_date', 'end_date',
+            'assigned_at', 'completed_today',
         ]
         read_only_fields = fields
 

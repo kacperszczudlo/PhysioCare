@@ -39,6 +39,8 @@ def test_patient_completes_assigned_exercise(api_client, patient, assignment):
     assert today_response.data['count'] == 1
     assert today_response.data['results'][0]['id'] == str(assignment.id)
     assert today_response.data['results'][0]['completed_today'] is False
+    assert 'categories' in today_response.data['results'][0]
+    assert today_response.data['results'][0]['categories'] == []
 
     complete_response = api_client.post(
         '/api/v1/me/exercise-completions/',

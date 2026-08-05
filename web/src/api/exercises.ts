@@ -29,6 +29,7 @@ export interface ExerciseListParams {
   media_type?: MediaType | ''
   q?: string
   kind?: CategoryKind
+  page?: number
 }
 
 export const exercisesApi = {
@@ -51,8 +52,16 @@ export const exercisesApi = {
     if (params.q?.trim()) {
       query.set('q', params.q.trim())
     }
+    if (params.page && params.page > 1) {
+      query.set('page', String(params.page))
+    }
     const suffix = query.toString() ? `?${query.toString()}` : ''
-    return listResults<Exercise>(`/therapist/exercises/${suffix}`)
+    return api.get<Paginated<Exercise> | Exercise[]>(`/therapist/exercises/${suffix}`).then((page) => {
+      if (Array.isArray(page)) {
+        return { count: page.length, next: null, previous: null, results: page }
+      }
+      return page
+    })
   },
 
   create(formData: FormData) {

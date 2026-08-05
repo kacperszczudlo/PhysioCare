@@ -169,6 +169,18 @@ export default function DashboardScreen() {
                   {item.exercise_title}
                 </Text>
                 <Text style={styles.muted}>{item.dosage}</Text>
+                {item.categories?.length ? (
+                  <View style={styles.tags}>
+                    {item.categories.slice(0, 3).map((category) => (
+                      <View key={category.id} style={styles.tag}>
+                        <Text style={styles.tagText}>{category.name}</Text>
+                      </View>
+                    ))}
+                    {item.categories.length > 3 ? (
+                      <Text style={styles.tagMore}>+{item.categories.length - 3}</Text>
+                    ) : null}
+                  </View>
+                ) : null}
                 <Text style={styles.openHint}>Instrukcja i materiał →</Text>
               </Pressable>
             </View>
@@ -204,6 +216,29 @@ const styles = StyleSheet.create({
     fontSize: typography.xs,
     fontWeight: '600',
     color: colors.primary,
+  },
+  tags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 4,
+  },
+  tag: {
+    backgroundColor: colors.primarySubtle,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+  },
+  tagText: {
+    fontSize: 11,
+    fontWeight: '650',
+    color: colors.primary,
+  },
+  tagMore: {
+    fontSize: 11,
+    fontWeight: '650',
+    color: colors.muted,
+    alignSelf: 'center',
   },
   dot: { width: 12, height: 12, borderRadius: 6 },
   list: { gap: space.md },

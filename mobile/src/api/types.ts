@@ -4,6 +4,15 @@ export type VisitStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
 
 export type MediaType = 'VIDEO' | 'PDF'
 
+export type CategoryKind = 'TYPE' | 'REGION' | 'MUSCLE' | 'INJURY'
+
+export interface ExerciseCategory {
+  id: string
+  name: string
+  kind: CategoryKind
+  slug: string
+}
+
 export interface User {
   id: string
   email: string
@@ -86,6 +95,7 @@ export interface TodayExercise {
   exercise_instruction: string
   exercise_file_url: string
   exercise_media_type: MediaType
+  categories?: ExerciseCategory[]
   patient: string
   episode: string | null
   dosage: string

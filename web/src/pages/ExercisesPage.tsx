@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
 
 import { exercisesApi } from '@/api/exercises'
 import { getErrorMessage } from '@/api/client'
@@ -14,6 +14,7 @@ import { resolveMediaUrl } from '@/lib/mediaUrl'
 import './ExercisesPage.css'
 
 const KIND_ORDER: CategoryKind[] = ['TYPE', 'REGION', 'MUSCLE', 'INJURY']
+const PAGE_SIZE = 20
 
 const KIND_LABELS: Record<CategoryKind, string> = {
   TYPE: 'Typ',
@@ -41,6 +42,8 @@ function groupByKind(categories: ExerciseCategory[]): Record<CategoryKind, Exerc
 
 export function ExercisesPage() {
   const [exercises, setExercises] = useState<Exercise[]>([])
+  const [totalCount, setTotalCount] = useState(0)
+  const [page, setPage] = useState(1)
   const [categories, setCategories] = useState<ExerciseCategory[]>([])
   const [typeFilter, setTypeFilter] = useState('')
   const [regionFilter, setRegionFilter] = useState('')
@@ -58,6 +61,9 @@ export function ExercisesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Exercise | null>(null)
 
   const grouped = useMemo(() => groupByKind(categories), [categories])
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+  const rangeStart = totalCount === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+  const rangeEnd = Math.min(page * PAGE_SIZE, totalCount)
 
   useEffect(() => {
     let cancelled = false
@@ -80,6 +86,10 @@ export function ExercisesPage() {
   }, [])
 
   useEffect(() => {
+    setPage(1)
+  }, [typeFilter, regionFilter, muscleFilter, injuryFilter, mediaFilter, query])
+
+  useEffect(() => {
     let cancelled = false
     async function load() {
       setLoading(true)
@@ -92,14 +102,17 @@ export function ExercisesPage() {
           injury: injuryFilter || undefined,
           media_type: mediaFilter || undefined,
           q: query || undefined,
+          page,
         })
         if (!cancelled) {
-          setExercises(data)
+          setExercises(data.results)
+          setTotalCount(data.count)
         }
       } catch (err) {
         if (!cancelled) {
           setError(getErrorMessage(err, 'Nie udało się pobrać ćwiczeń.'))
           setExercises([])
+          setTotalCount(0)
         }
       } finally {
         if (!cancelled) {
@@ -111,7 +124,13 @@ export function ExercisesPage() {
     return () => {
       cancelled = true
     }
-  }, [typeFilter, regionFilter, muscleFilter, injuryFilter, mediaFilter, query, reloadToken])
+  }, [typeFilter, regionFilter, muscleFilter, injuryFilter, mediaFilter, query, page, reloadToken])
+
+  function onFilterChange(setter: (value: string) => void) {
+    return (e: ChangeEvent<HTMLSelectElement | HTMLInputElement>) => {
+      setter(e.target.value)
+    }
+  }
 
   return (
     <section className="exercises-page">
@@ -130,7 +149,7 @@ export function ExercisesPage() {
           label="Szukaj"
           name="q"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={onFilterChange(setQuery)}
           placeholder="Tytuł lub fragment instrukcji…"
         />
         <label className="ui-field">
@@ -138,7 +157,7 @@ export function ExercisesPage() {
           <select
             className="exercises-select"
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
+            onChange={onFilterChange(setTypeFilter)}
           >
             <option value="">Wszystkie</option>
             {grouped.TYPE.map((category) => (
@@ -153,7 +172,7 @@ export function ExercisesPage() {
           <select
             className="exercises-select"
             value={regionFilter}
-            onChange={(e) => setRegionFilter(e.target.value)}
+            onChange={onFilterChange(setRegionFilter)}
           >
             <option value="">Wszystkie</option>
             {grouped.REGION.map((category) => (
@@ -168,7 +187,7 @@ export function ExercisesPage() {
           <select
             className="exercises-select"
             value={muscleFilter}
-            onChange={(e) => setMuscleFilter(e.target.value)}
+            onChange={onFilterChange(setMuscleFilter)}
           >
             <option value="">Wszystkie</option>
             {grouped.MUSCLE.map((category) => (
@@ -183,7 +202,7 @@ export function ExercisesPage() {
           <select
             className="exercises-select"
             value={injuryFilter}
-            onChange={(e) => setInjuryFilter(e.target.value)}
+            onChange={onFilterChange(setInjuryFilter)}
           >
             <option value="">Wszystkie</option>
             {grouped.INJURY.map((category) => (
@@ -221,92 +240,123 @@ export function ExercisesPage() {
       ) : null}
 
       {!loading && !error && exercises.length > 0 ? (
-        <ul className="exercises-grid">
-          {exercises.map((exercise) => {
-            const mediaUrl = resolveMediaUrl(exercise.file_url)
-            return (
-              <li key={exercise.id} className="exercises-card">
-                <div className="exercises-card__media">
-                  {mediaUrl && exercise.media_type === 'VIDEO' ? (
-                    <video
-                      className="exercises-card__player"
-                      src={mediaUrl}
-                      controls
-                      preload="metadata"
-                      playsInline
-                    />
-                  ) : null}
-                  {mediaUrl && exercise.media_type === 'PDF' ? (
-                    <a
-                      className="exercises-card__pdf"
-                      href={mediaUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <span className="exercises-card__type exercises-card__type--pdf">PDF</span>
-                      <span>Otwórz dokument</span>
-                    </a>
-                  ) : null}
-                </div>
-                <div className="exercises-card__top">
-                  <span
-                    className={`exercises-card__type exercises-card__type--${exercise.media_type.toLowerCase()}`}
-                  >
-                    {mediaLabel(exercise.media_type)}
-                  </span>
-                  <h2 className="exercises-card__title">{exercise.title}</h2>
-                </div>
-                {exercise.instruction ? (
-                  <p className="exercises-card__instruction">{exercise.instruction}</p>
-                ) : (
-                  <p className="exercises-card__instruction exercises-card__instruction--empty">
-                    Bez instrukcji tekstowej
-                  </p>
-                )}
-                {exercise.categories.length > 0 ? (
-                  <ul className="exercises-card__tags">
-                    {KIND_ORDER.flatMap((kind) =>
-                      exercise.categories
-                        .filter((category) => category.kind === kind)
-                        .map((category) => (
-                          <li
-                            key={category.id}
-                            className={`exercises-card__tag exercises-card__tag--${kind.toLowerCase()}`}
-                            title={KIND_LABELS[kind]}
-                          >
-                            {category.name}
-                          </li>
-                        )),
-                    )}
-                  </ul>
-                ) : null}
-                <div className="exercises-card__actions">
-                  <div className="exercises-card__buttons">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setDeleteTarget(exercise)}
-                    >
-                      Usuń
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setEditTarget(exercise)}
-                    >
-                      Edytuj
-                    </Button>
-                    <Button type="button" size="sm" onClick={() => setAssignTarget(exercise)}>
-                      Przypisz
-                    </Button>
+        <>
+          <ul className="exercises-grid">
+            {exercises.map((exercise) => {
+              const mediaUrl = resolveMediaUrl(exercise.file_url)
+              return (
+                <li key={exercise.id} className="exercises-card">
+                  <div className="exercises-card__media">
+                    {mediaUrl && exercise.media_type === 'VIDEO' ? (
+                      <video
+                        className="exercises-card__player"
+                        src={mediaUrl}
+                        controls
+                        preload="metadata"
+                        playsInline
+                      />
+                    ) : null}
+                    {mediaUrl && exercise.media_type === 'PDF' ? (
+                      <a
+                        className="exercises-card__pdf"
+                        href={mediaUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <span className="exercises-card__type exercises-card__type--pdf">PDF</span>
+                        <span>Otwórz dokument</span>
+                      </a>
+                    ) : null}
                   </div>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
+                  <div className="exercises-card__top">
+                    <span
+                      className={`exercises-card__type exercises-card__type--${exercise.media_type.toLowerCase()}`}
+                    >
+                      {mediaLabel(exercise.media_type)}
+                    </span>
+                    <h2 className="exercises-card__title">{exercise.title}</h2>
+                  </div>
+                  {exercise.instruction ? (
+                    <p className="exercises-card__instruction">{exercise.instruction}</p>
+                  ) : (
+                    <p className="exercises-card__instruction exercises-card__instruction--empty">
+                      Bez instrukcji tekstowej
+                    </p>
+                  )}
+                  {exercise.categories.length > 0 ? (
+                    <ul className="exercises-card__tags">
+                      {KIND_ORDER.flatMap((kind) =>
+                        exercise.categories
+                          .filter((category) => category.kind === kind)
+                          .map((category) => (
+                            <li
+                              key={category.id}
+                              className={`exercises-card__tag exercises-card__tag--${kind.toLowerCase()}`}
+                              title={KIND_LABELS[kind]}
+                            >
+                              {category.name}
+                            </li>
+                          )),
+                      )}
+                    </ul>
+                  ) : null}
+                  <div className="exercises-card__actions">
+                    <div className="exercises-card__buttons">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setDeleteTarget(exercise)}
+                      >
+                        Usuń
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setEditTarget(exercise)}
+                      >
+                        Edytuj
+                      </Button>
+                      <Button type="button" size="sm" onClick={() => setAssignTarget(exercise)}>
+                        Przypisz
+                      </Button>
+                    </div>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+
+          <div className="exercises-pagination">
+            <p className="exercises-pagination__meta">
+              {rangeStart}–{rangeEnd} z {totalCount}
+            </p>
+            <div className="exercises-pagination__controls">
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                disabled={page <= 1 || loading}
+                onClick={() => setPage((value) => Math.max(1, value - 1))}
+              >
+                Poprzednia
+              </Button>
+              <span className="exercises-pagination__page">
+                Strona {page} / {totalPages}
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                disabled={page >= totalPages || loading}
+                onClick={() => setPage((value) => value + 1)}
+              >
+                Następna
+              </Button>
+            </div>
+          </div>
+        </>
       ) : null}
 
       <CreateExerciseModal

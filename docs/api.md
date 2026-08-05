@@ -185,7 +185,7 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 
 | Metoda | Endpoint | Rola | Opis |
 |--------|----------|------|------|
-| GET | `/therapist/exercises` | THERAPIST | Katalog — filtry poniżej |
+| GET | `/therapist/exercises` | THERAPIST | Katalog — filtry poniżej; paginacja `?page=` (domyślnie 20) |
 | GET | `/therapist/exercises/{id}` | THERAPIST | Szczegóły ćwiczenia |
 | GET | `/therapist/exercise-categories` | THERAPIST | Lista kategorii (`?kind=TYPE\|REGION\|MUSCLE\|INJURY`) |
 | POST | `/therapist/exercises` | THERAPIST | Upload metadanych + plik |

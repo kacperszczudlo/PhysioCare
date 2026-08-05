@@ -4,7 +4,7 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-na
 
 import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
-import type { TodayExercise } from '@/api/types'
+import type { CategoryKind, TodayExercise } from '@/api/types'
 import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { ExerciseVideoPlayer } from '@/components/ExerciseVideoPlayer'
@@ -12,6 +12,36 @@ import { SectionCard } from '@/components/ScreenHeader'
 import { todayISODate } from '@/lib/format'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
 import { colors, radius, space, typography } from '@/theme/tokens'
+
+function tagStyleForKind(kind: CategoryKind) {
+  switch (kind) {
+    case 'TYPE':
+      return styles.tagType
+    case 'REGION':
+      return styles.tagRegion
+    case 'MUSCLE':
+      return styles.tagMuscle
+    case 'INJURY':
+      return styles.tagInjury
+    default:
+      return null
+  }
+}
+
+function tagTextForKind(kind: CategoryKind) {
+  switch (kind) {
+    case 'TYPE':
+      return styles.tagTextType
+    case 'REGION':
+      return styles.tagTextRegion
+    case 'MUSCLE':
+      return styles.tagTextMuscle
+    case 'INJURY':
+      return styles.tagTextInjury
+    default:
+      return null
+  }
+}
 
 export default function ExerciseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -116,6 +146,20 @@ export default function ExerciseDetailScreen() {
                   {item.completed_today ? <Text style={styles.checkMark}>✓</Text> : null}
                 </Pressable>
               </View>
+              {item.categories?.length ? (
+                <View style={styles.tags}>
+                  {item.categories.map((category) => (
+                    <View
+                      key={category.id}
+                      style={[styles.tag, tagStyleForKind(category.kind)]}
+                    >
+                      <Text style={[styles.tagText, tagTextForKind(category.kind)]}>
+                        {category.name}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
               <Text style={styles.hint}>
                 Zielone kółko oznacza wykonanie na dziś. Instrukcję i materiał masz poniżej.
               </Text>
@@ -178,6 +222,31 @@ const styles = StyleSheet.create({
   headerText: { flex: 1, gap: 4 },
   title: { fontSize: typography.xl, fontWeight: '700', color: colors.ink },
   dosage: { fontSize: typography.sm, color: colors.muted, fontWeight: '600' },
+  tags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: space.md,
+  },
+  tag: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+    backgroundColor: colors.primarySubtle,
+  },
+  tagText: {
+    fontSize: typography.xs,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  tagType: { backgroundColor: '#e4f3e8' },
+  tagRegion: { backgroundColor: '#e4eef8' },
+  tagMuscle: { backgroundColor: '#f8eee0' },
+  tagInjury: { backgroundColor: '#f8e6e4' },
+  tagTextType: { color: '#2f6b3c' },
+  tagTextRegion: { color: '#2f4f7a' },
+  tagTextMuscle: { color: '#7a4f20' },
+  tagTextInjury: { color: '#8a3530' },
   hint: { marginTop: space.md, fontSize: typography.sm, color: colors.muted, lineHeight: 20 },
   sectionLabel: {
     marginTop: space.sm,
