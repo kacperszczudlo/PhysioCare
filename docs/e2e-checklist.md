@@ -29,7 +29,7 @@ Automatyczne wsparcie: `scripts/run_api_usecases.py`, Postman (`docs/postman/`),
 | W4 | Pulpit / harmonogram | Lista wizyt dnia, D&D / formularz wizyty |
 | W5 | Pacjenci → karta | Epizody, mapa ciała (VAS), notatki |
 | W6 | Ćwiczenia | CRUD + przypisanie pacjentowi |
-| W7 | Profil | Podgląd / edycja danych terapeuty |
+| W7 | Profil | Podgląd / edycja + kod pacjenta + upload avatara (plik → podgląd) |
 | W8 | Sesja wygasła | Refresh cookie / redirect na login bez „wiszącego” UI |
 | W9 | Stany UI | Loading / empty / error widoczne przy braku danych i błędzie API |
 
@@ -37,13 +37,13 @@ Automatyczne wsparcie: `scripts/run_api_usecases.py`, Postman (`docs/postman/`),
 
 | # | Ścieżka | Oczekiwany rezultat |
 |---|---------|---------------------|
-| M1 | Rejestracja + zgody RODO | Konto pacjenta, token w SecureStore |
+| M1 | Rejestracja + zgody RODO + kod terapeuty | Konto pacjenta powiązane z terapeutą, token w SecureStore |
 | M2 | Logowanie | Tabs (pulpit / wizyty / profil) |
 | M3 | Pulpit | Compliance ćwiczeń, oznaczenie wykonania |
 | M4 | Wizyty | Nadchodzące + archiwum |
 | M5 | Szczegóły wizyty | Stack `visit/[id]` |
-| M6 | Profil terapeuty | Stack `therapist/[id]` |
-| M7 | Profil | Dokumenty, powiadomienia, zgody |
+| M6 | Profil terapeuty | Stack `therapist/[id]` ze zdjęciem (jeśli ustawione) |
+| M7 | Profil | Dokumenty, powiadomienia, zgody, upload własnego avatara |
 | M8 | Offline / błąd API | Czytelny komunikat, bez crasha |
 
 ## Cross-cutting

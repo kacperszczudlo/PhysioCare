@@ -108,11 +108,12 @@ export default function RegisterScreen() {
             hint="Minimum 8 znaków"
           />
           <Field
-            label="ID terapeuty (UUID)"
+            label="Kod terapeuty"
             value={therapistId}
             onChangeText={setTherapistId}
             autoCapitalize="none"
-            hint="Otrzymasz od fizjoterapeuty po założeniu konta w panelu webowym."
+            autoCorrect={false}
+            hint="Kod z panelu webowego terapeuty: Profil → „Kod dla pacjenta” (Kopiuj kod)."
           />
 
           <ConsentToggle

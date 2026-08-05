@@ -1,6 +1,8 @@
 import { useFocusEffect, useRouter } from 'expo-router'
+import * as ImagePicker from 'expo-image-picker'
 import { useCallback, useMemo, useState } from 'react'
 import {
+  Image,
   Linking,
   Pressable,
   RefreshControl,
@@ -26,6 +28,7 @@ import {
   formatDate,
   isRequiredConsent,
 } from '@/lib/format'
+import { resolveMediaUrl } from '@/lib/mediaUrl'
 import { colors, space, typography } from '@/theme/tokens'
 
 export default function ProfileScreen() {
@@ -44,6 +47,7 @@ export default function ProfileScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [pwdLoading, setPwdLoading] = useState(false)
+  const [avatarLoading, setAvatarLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
 
@@ -103,6 +107,41 @@ export default function ProfileScreen() {
       setError(getErrorMessage(err, 'Nie udało się zapisać profilu.'))
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function pickAvatar() {
+    setError(null)
+    setInfo(null)
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (!permission.granted) {
+      setError('Brak uprawnień do galerii zdjęć.')
+      return
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    })
+    if (result.canceled || !result.assets[0]) {
+      return
+    }
+
+    const asset = result.assets[0]
+    const mime = asset.mimeType ?? 'image/jpeg'
+    const name = asset.fileName ?? `avatar.${mime === 'image/png' ? 'png' : 'jpg'}`
+
+    setAvatarLoading(true)
+    try {
+      const updated = await patientApi.uploadAvatar(asset.uri, mime, name)
+      setProfile(updated)
+      setInfo('Avatar zapisany.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nie udało się przesłać avatara.'))
+    } finally {
+      setAvatarLoading(false)
     }
   }
 
@@ -190,6 +229,35 @@ export default function ProfileScreen() {
 
       {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
       {info ? <Text style={styles.info}>{info}</Text> : null}
+
+      <SectionCard>
+        <Text style={styles.sectionTitle}>Zdjęcie profilowe</Text>
+        <View style={styles.avatarRow}>
+          {resolveMediaUrl(profile?.avatar_url) ? (
+            <Image
+              source={{ uri: resolveMediaUrl(profile?.avatar_url)! }}
+              style={styles.avatar}
+              accessibilityIgnoresInvertColors
+            />
+          ) : (
+            <View style={[styles.avatar, styles.avatarPlaceholder]}>
+              <Text style={styles.avatarInitials}>
+                {`${profile?.first_name?.[0] ?? ''}${profile?.last_name?.[0] ?? ''}`.toUpperCase() ||
+                  '?'}
+              </Text>
+            </View>
+          )}
+          <View style={{ flex: 1, gap: space.sm }}>
+            <Text style={styles.muted}>JPEG, PNG lub WebP · max 5 MB</Text>
+            <Button
+              title="Wybierz z galerii"
+              variant="secondary"
+              loading={avatarLoading}
+              onPress={() => void pickAvatar()}
+            />
+          </View>
+        </View>
+      </SectionCard>
 
       <SectionCard>
         <Text style={styles.sectionTitle}>Dane kontaktowe</Text>
@@ -341,6 +409,15 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: typography.lg, fontWeight: '700', color: colors.ink },
   muted: { fontSize: typography.sm, color: colors.muted },
   info: { color: colors.success, fontSize: typography.sm },
+  avatarRow: { flexDirection: 'row', gap: space.base, alignItems: 'center' },
+  avatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.primarySubtle,
+  },
+  avatarPlaceholder: { alignItems: 'center', justifyContent: 'center' },
+  avatarInitials: { fontSize: typography.xl, fontWeight: '800', color: colors.primary },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 
 import { authApi, therapistApi } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
@@ -7,6 +7,7 @@ import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
+import { resolveMediaUrl } from '@/lib/mediaUrl'
 import './ProfilePage.css'
 
 export function ProfilePage() {
@@ -16,11 +17,16 @@ export function ProfilePage() {
 
   const [phone, setPhone] = useState('')
   const [bio, setBio] = useState('')
-  const [avatarUrl, setAvatarUrl] = useState('')
   const [courses, setCourses] = useState<string[]>([])
   const [newCourse, setNewCourse] = useState('')
   const [profileBusy, setProfileBusy] = useState(false)
   const [profileMessage, setProfileMessage] = useState<string | null>(null)
+
+  const [avatarBusy, setAvatarBusy] = useState(false)
+  const [avatarMessage, setAvatarMessage] = useState<string | null>(null)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -28,6 +34,7 @@ export function ProfilePage() {
   const [passwordBusy, setPasswordBusy] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null)
+  const [copyMessage, setCopyMessage] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
@@ -44,7 +51,6 @@ export function ProfilePage() {
         setProfile(data)
         setPhone(data.phone ?? '')
         setBio(data.bio ?? '')
-        setAvatarUrl(data.avatar_url ?? '')
         setCourses(Array.isArray(data.courses) ? data.courses : [])
       } catch (err) {
         if (!cancelled) {
@@ -64,6 +70,14 @@ export function ProfilePage() {
     }
   }, [reloadToken])
 
+  useEffect(() => {
+    return () => {
+      if (previewUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl)
+      }
+    }
+  }, [previewUrl])
+
   function addCourse() {
     const value = newCourse.trim()
     if (!value) {
@@ -77,6 +91,18 @@ export function ProfilePage() {
     setCourses((prev) => prev.filter((_, i) => i !== index))
   }
 
+  async function copyTherapistId() {
+    if (!profile?.id) {
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(profile.id)
+      setCopyMessage('Skopiowano — przekaż ten kod pacjentowi przy rejestracji w aplikacji.')
+    } catch {
+      setCopyMessage('Nie udało się skopiować. Zaznacz kod ręcznie i skopiuj.')
+    }
+  }
+
   async function onSaveProfile(event: FormEvent) {
     event.preventDefault()
     setProfileBusy(true)
@@ -86,7 +112,6 @@ export function ProfilePage() {
       const updated = await therapistApi.updateProfile({
         phone: phone.trim(),
         bio: bio.trim(),
-        avatar_url: avatarUrl.trim(),
         courses,
       })
       setProfile(updated)
@@ -95,6 +120,45 @@ export function ProfilePage() {
       setError(getErrorMessage(err, 'Nie udało się zapisać profilu.'))
     } finally {
       setProfileBusy(false)
+    }
+  }
+
+  async function onAvatarSelected(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) {
+      return
+    }
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setAvatarError('Dozwolone formaty: JPEG, PNG, WebP.')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError('Zdjęcie nie może być większe niż 5 MB.')
+      return
+    }
+
+    const localPreview = URL.createObjectURL(file)
+    setPreviewUrl((prev) => {
+      if (prev?.startsWith('blob:')) {
+        URL.revokeObjectURL(prev)
+      }
+      return localPreview
+    })
+    setAvatarError(null)
+    setAvatarMessage(null)
+    setAvatarBusy(true)
+    try {
+      const updated = await therapistApi.uploadAvatar(file)
+      setProfile(updated)
+      setAvatarMessage('Avatar zapisany — widoczny w aplikacji pacjenta.')
+      URL.revokeObjectURL(localPreview)
+      setPreviewUrl(null)
+    } catch (err) {
+      setAvatarError(getErrorMessage(err, 'Nie udało się przesłać avatara.'))
+    } finally {
+      setAvatarBusy(false)
     }
   }
 
@@ -145,6 +209,9 @@ export function ProfilePage() {
     )
   }
 
+  const avatarSrc = previewUrl ?? resolveMediaUrl(profile.avatar_url)
+  const initials = `${profile.first_name?.[0] ?? ''}${profile.last_name?.[0] ?? ''}`.toUpperCase()
+
   return (
     <section className="profile-page">
       <PageHeader
@@ -154,9 +221,73 @@ export function ProfilePage() {
 
       {error ? <ErrorBanner message={error} /> : null}
 
+      <aside className="profile-invite" aria-labelledby="invite-heading">
+        <div className="profile-invite__copy">
+          <h2 id="invite-heading">Kod dla pacjenta</h2>
+          <p className="profile-muted">
+            Pacjent podaje ten kod przy rejestracji w aplikacji mobilnej. Nie wymaga znajomości API —
+            wystarczy skopiować i przesłać (SMS, e-mail, wiadomość).
+          </p>
+        </div>
+        <div className="profile-invite__actions">
+          <code className="profile-invite__id" title="ID profilu terapeuty">
+            {profile.id}
+          </code>
+          <Button type="button" variant="secondary" size="sm" onClick={() => void copyTherapistId()}>
+            Kopiuj kod
+          </Button>
+        </div>
+        {copyMessage ? (
+          <p className="profile-banner profile-banner--ok" role="status">
+            {copyMessage}
+          </p>
+        ) : null}
+      </aside>
+
       <div className="profile-layout">
         <form className="profile-panel" onSubmit={(e) => void onSaveProfile(e)}>
           <h2>Dane gabinetowe</h2>
+
+          <div className="profile-avatar">
+            <div className="profile-avatar__preview" aria-hidden={!avatarSrc}>
+              {avatarSrc ? (
+                <img src={avatarSrc} alt="" className="profile-avatar__img" />
+              ) : (
+                <span className="profile-avatar__initials">{initials || '?'}</span>
+              )}
+            </div>
+            <div className="profile-avatar__meta">
+              <p className="profile-avatar__label">Zdjęcie profilowe</p>
+              <p className="profile-muted">JPEG, PNG lub WebP · max 5 MB. Widoczne dla pacjentów.</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="profile-avatar__input"
+                onChange={(e) => void onAvatarSelected(e)}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                loading={avatarBusy}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Wybierz zdjęcie
+              </Button>
+              {avatarError ? (
+                <p className="profile-banner profile-banner--error" role="alert">
+                  {avatarError}
+                </p>
+              ) : null}
+              {avatarMessage ? (
+                <p className="profile-banner profile-banner--ok" role="status">
+                  {avatarMessage}
+                </p>
+              ) : null}
+            </div>
+          </div>
+
           <Field
             label="Telefon"
             name="phone"
@@ -173,13 +304,6 @@ export function ProfilePage() {
               placeholder="Krótki opis doświadczenia i specjalizacji…"
             />
           </label>
-          <Field
-            label="URL avatara"
-            name="avatar_url"
-            value={avatarUrl}
-            onChange={(e) => setAvatarUrl(e.target.value)}
-            hint="Opcjonalny link do zdjęcia (widoczny w aplikacji pacjenta)."
-          />
 
           <div className="profile-courses">
             <h3>Kursy zawodowe</h3>

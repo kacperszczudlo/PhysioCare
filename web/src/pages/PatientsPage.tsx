@@ -7,6 +7,7 @@ import type { PatientSummary } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Field } from '@/components/ui/Field'
+import { resolveMediaUrl } from '@/lib/mediaUrl'
 import './PatientsPage.css'
 
 export function PatientsPage() {
@@ -97,8 +98,21 @@ export function PatientsPage() {
           {filtered.map((patient) => (
             <li key={patient.id}>
               <Link className="patients-row" to={`/patients/${patient.id}`}>
-                <span className="patients-row__name">
-                  {patient.first_name} {patient.last_name}
+                <span className="patients-row__identity">
+                  {patient.avatar_url ? (
+                    <img
+                      className="patients-row__avatar"
+                      src={resolveMediaUrl(patient.avatar_url) ?? undefined}
+                      alt=""
+                    />
+                  ) : (
+                    <span className="patients-row__avatar patients-row__avatar--placeholder" aria-hidden>
+                      {(patient.first_name?.[0] ?? '') + (patient.last_name?.[0] ?? '')}
+                    </span>
+                  )}
+                  <span className="patients-row__name">
+                    {patient.first_name} {patient.last_name}
+                  </span>
                 </span>
                 <span className="patients-row__meta">{patient.email}</span>
                 <span className="patients-row__meta">{patient.phone || '—'}</span>

@@ -20,8 +20,18 @@ export const patientApi = {
     return api.get<PatientProfile>('/me/profile/')
   },
 
-  updateProfile(payload: Partial<Pick<PatientProfile, 'pesel' | 'phone' | 'avatar_url'>>) {
+  updateProfile(payload: Partial<Pick<PatientProfile, 'pesel' | 'phone'>>) {
     return api.patch<PatientProfile>('/me/profile/', payload)
+  },
+
+  uploadAvatar(uri: string, mimeType = 'image/jpeg', fileName = 'avatar.jpg') {
+    const body = new FormData()
+    body.append('file', {
+      uri,
+      type: mimeType,
+      name: fileName,
+    } as unknown as Blob)
+    return api.post<PatientProfile>('/me/profile/avatar/', body)
   },
 
   async getConsents() {

@@ -60,7 +60,6 @@ export interface TherapistProfileUpdatePayload {
   phone?: string
   bio?: string
   courses?: string[]
-  avatar_url?: string
 }
 
 export const therapistApi = {
@@ -70,6 +69,12 @@ export const therapistApi = {
 
   updateProfile(payload: TherapistProfileUpdatePayload) {
     return api.patch<TherapistProfile>('/therapist/profile/', payload)
+  },
+
+  uploadAvatar(file: File) {
+    const body = new FormData()
+    body.append('file', file)
+    return api.post<TherapistProfile>('/therapist/profile/avatar/', body)
   },
 
   getDashboardStats() {

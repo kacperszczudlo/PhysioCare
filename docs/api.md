@@ -112,7 +112,8 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 | Metoda | Endpoint | Opis |
 |--------|----------|------|
 | GET | `/me/profile` | Dane pacjenta |
-| PATCH | `/me/profile` | Edycja PESEL, telefon, avatar |
+| PATCH | `/me/profile` | Edycja PESEL, telefon |
+| POST | `/me/profile/avatar` | Upload avatara (`multipart`, pole `file`: JPEG/PNG/WebP) |
 | GET | `/me/consents` | Lista zgód |
 | PATCH | `/me/consents/optional` | Marketing, badania |
 | POST | `/me/data-export` | Eksport RODO |
@@ -215,8 +216,9 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 
 | Metoda | Endpoint | Opis |
 |--------|----------|------|
-| GET | `/therapist/profile` | Biogram, kursy, PWZFz |
-| PATCH | `/therapist/profile` | Edycja |
+| GET | `/therapist/profile` | Biogram, kursy, PWZFz, avatar |
+| PATCH | `/therapist/profile` | Edycja (telefon, bio, kursy) |
+| POST | `/therapist/profile/avatar` | Upload avatara (`multipart`, pole `file`: JPEG/PNG/WebP) |
 | GET | `/therapist/dashboard/stats` | Widgety pulpitu |
 | GET | `/therapists/{id}/public` | Wizytówka dla pacjenta |
 

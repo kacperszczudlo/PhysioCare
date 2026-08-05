@@ -46,7 +46,7 @@ class MeProfileSerializer(serializers.ModelSerializer):
 class MeProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PatientProfile
-        fields = ['pesel', 'phone', 'avatar_url']
+        fields = ['pesel', 'phone']
 
 
 class ConsentSerializer(serializers.ModelSerializer):
