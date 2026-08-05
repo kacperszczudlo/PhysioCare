@@ -159,7 +159,8 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 | PATCH | `/episodes/{id}` | THERAPIST | Status, ICD-10 |
 | GET | `/episodes/{id}/body-pain` | THERAPIST | Wpisy mapy ciała |
 | POST | `/episodes/{id}/body-pain` | THERAPIST | Nowy wpis VAS |
-| PUT | `/episodes/{id}/body-pain/{entry_id}` | THERAPIST | Aktualizacja |
+| PUT/PATCH | `/episodes/{id}/body-pain/{entry_id}` | THERAPIST | Aktualizacja |
+| DELETE | `/episodes/{id}/body-pain/{entry_id}` | THERAPIST | Usunięcie wpisu |
 | POST | `/episodes/{id}/notes` | THERAPIST | Notatka z wizyty |
 | GET | `/episodes/{id}/notes` | THERAPIST | Lista notatek epizodu |
 
@@ -167,12 +168,16 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 
 ```json
 {
-  "body_region": "THIGH_RIGHT",
+  "body_region": "right-quadriceps",
   "view_side": "FRONT",
   "vas_score": 7,
-  "pain_character": ["SHARP", "RADIATING"]
+  "pain_character": ["SHARP", "RADIATING"],
+  "treatment_targets": ["QUAD_R", "HIP_JT_R"]
 }
 ```
+
+`body_region` — slug mięśnia/regionu z modelu anatomicznego (np. `left-lower-back`, `right-quadriceps`).  
+`treatment_targets` — opcjonalne cele leczenia (staw / mięsień / kość / tkanka) dla wybranego regionu.
 
 ---
 

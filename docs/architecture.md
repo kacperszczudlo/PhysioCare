@@ -92,7 +92,8 @@ Pacjent: Pulpit → „Zalecenia na dziś” → GET /api/me/exercises/today
 ### 2. Mapa ciała (Diagnostic Mapper)
 
 ```
-Terapeuta: Karta pacjenta → klik regionu → VAS + charakter bólu
+Terapeuta: Karta pacjenta → klik regionu anatomicznego → VAS + charakter bólu
+    → opcjonalnie cele leczenia (staw / mięsień / kość / tkanka)
     → POST /api/episodes/{id}/body-pain/
 Epizod: lista plakietek pod „Bieżąca diagnoza”
 ```

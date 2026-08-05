@@ -27,7 +27,7 @@ class BodyAreaPainSerializer(serializers.ModelSerializer):
         model = BodyAreaPain
         fields = [
             'id', 'episode', 'body_region', 'view_side',
-            'vas_score', 'pain_character', 'recorded_at',
+            'vas_score', 'pain_character', 'treatment_targets', 'recorded_at',
         ]
         read_only_fields = ['id', 'episode', 'recorded_at']
 

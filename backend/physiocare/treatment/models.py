@@ -54,6 +54,8 @@ class BodyAreaPain(UUIDModel):
     view_side = models.CharField(max_length=10, choices=BodyViewSide.choices)
     vas_score = models.PositiveSmallIntegerField()
     pain_character = models.JSONField(default=list)
+    # Optional clinical targets (muscle / joint / bone / soft tissue IDs).
+    treatment_targets = models.JSONField(default=list, blank=True)
     recorded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

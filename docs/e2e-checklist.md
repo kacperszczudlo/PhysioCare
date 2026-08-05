@@ -27,7 +27,7 @@ Automatyczne wsparcie: `scripts/run_api_usecases.py`, Postman (`docs/postman/`),
 | W2 | Logowanie | Dostęp do pulpitu |
 | W3 | Reset hasła | Mail w konsoli backendu + zmiana hasła działa |
 | W4 | Pulpit / harmonogram | Lista wizyt dnia, D&D / formularz wizyty |
-| W5 | Pacjenci → karta | Epizody, mapa ciała (VAS), notatki |
+| W5 | Pacjenci → karta | Epizody, mapa ciała (region → VAS → cel leczenia), notatki |
 | W6 | Ćwiczenia | CRUD + przypisanie pacjentowi |
 | W7 | Profil | Podgląd / edycja + kod pacjenta + upload avatara (plik → podgląd) |
 | W8 | Sesja wygasła | Refresh cookie / redirect na login bez „wiszącego” UI |

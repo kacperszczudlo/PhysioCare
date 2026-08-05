@@ -302,10 +302,11 @@ def main() -> int:
         f"/episodes/{state.get('episode_id')}/body-pain/",
         expected=201,
         body={
-            "body_region": "LUMBAR",
+            "body_region": "left-lower-back",
             "view_side": "BACK",
             "vas_score": 7,
             "pain_character": ["SHARP", "RADIATING"],
+            "treatment_targets": ["L_SPINE", "QL_L"],
         },
     )
     if isinstance(r, dict):
@@ -322,10 +323,11 @@ def main() -> int:
         f"/episodes/{state.get('episode_id')}/body-pain/{state.get('body_pain_id')}/",
         expected=200,
         body={
-            "body_region": "LUMBAR",
+            "body_region": "left-lower-back",
             "view_side": "BACK",
             "vas_score": 4,
             "pain_character": ["DULL"],
+            "treatment_targets": ["QL_L"],
         },
     )
     call(
@@ -334,7 +336,7 @@ def main() -> int:
         f"/episodes/{state.get('episode_id')}/body-pain/",
         expected=400,
         body={
-            "body_region": "THIGH_RIGHT",
+            "body_region": "right-quadriceps",
             "view_side": "FRONT",
             "vas_score": 15,
             "pain_character": ["SHARP"],

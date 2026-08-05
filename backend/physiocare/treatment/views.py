@@ -77,10 +77,10 @@ class EpisodeBodyPainListCreateView(generics.ListCreateAPIView):
         serializer.save(episode=self.get_episode())
 
 
-class EpisodeBodyPainDetailView(generics.UpdateAPIView):
+class EpisodeBodyPainDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = BodyAreaPainSerializer
     permission_classes = [IsAuthenticated, IsTherapist]
-    http_method_names = ['put', 'patch']
+    http_method_names = ['get', 'put', 'patch', 'delete', 'head', 'options']
 
     def get_queryset(self):
         return BodyAreaPain.objects.filter(

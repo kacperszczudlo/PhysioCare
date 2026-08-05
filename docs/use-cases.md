@@ -142,7 +142,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Pole | Wartość |
 |------|---------|
 | Aktor | Fizjoterapeuta |
-| Przebieg | 1. Przełącznik przód/tył. 2. Klik regionu → panel VAS (0–10) i charakter bólu. 3. Zapis → plakietka pod diagnozą + kolor na modelu. 4. Ponowny klik → edycja (Zaktualizuj). |
+| Przebieg | 1. Przełącznik przód/tył. 2. Zapisane regiony widać na sylwetce (kolor = VAS). 3. Klik regionu → panel VAS, charakter bólu i cele leczenia. 4. Zapisz / Zaktualizuj / Usuń. |
 
 ---
 

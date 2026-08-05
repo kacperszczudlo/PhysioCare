@@ -60,6 +60,7 @@ export const treatmentApi = {
       view_side: BodyViewSide
       vas_score: number
       pain_character: string[]
+      treatment_targets?: string[]
     },
   ) {
     return api.post<BodyAreaPain>(`/episodes/${episodeId}/body-pain/`, payload)
@@ -73,9 +74,14 @@ export const treatmentApi = {
       view_side?: BodyViewSide
       vas_score?: number
       pain_character?: string[]
+      treatment_targets?: string[]
     },
   ) {
     return api.patch<BodyAreaPain>(`/episodes/${episodeId}/body-pain/${entryId}/`, payload)
+  },
+
+  deleteBodyPain(episodeId: string, entryId: string) {
+    return api.delete<void>(`/episodes/${episodeId}/body-pain/${entryId}/`)
   },
 
   listNotes(episodeId: string) {

@@ -120,6 +120,7 @@ export interface BodyAreaPain {
   view_side: BodyViewSide
   vas_score: number
   pain_character: string[]
+  treatment_targets: string[]
   recorded_at: string
 }
 

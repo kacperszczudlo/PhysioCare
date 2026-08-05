@@ -418,17 +418,18 @@ pm.collectionVariables.set('episode_id', j.id);
 
     body_map = folder(
         "UC-13 Body map (Diagnostic Mapper)",
-        "VAS + charakter bólu na regionach ciała.",
+        "VAS + charakter bólu + cele leczenia na regionach ciała.",
         [
             req(
                 "Create body-pain entry",
                 "POST",
                 "/episodes/{{episode_id}}/body-pain/",
                 body={
-                    "body_region": "LUMBAR",
+                    "body_region": "left-lower-back",
                     "view_side": "BACK",
                     "vas_score": 7,
                     "pain_character": ["SHARP", "RADIATING"],
+                    "treatment_targets": ["L_SPINE", "QL_L"],
                 },
                 tests=EXPECT_STATUS(201)
                 + """
@@ -446,10 +447,11 @@ pm.collectionVariables.set('body_pain_id', pm.response.json().id);
                 "PUT",
                 "/episodes/{{episode_id}}/body-pain/{{body_pain_id}}/",
                 body={
-                    "body_region": "LUMBAR",
+                    "body_region": "left-lower-back",
                     "view_side": "BACK",
                     "vas_score": 4,
                     "pain_character": ["DULL"],
+                    "treatment_targets": ["QL_L"],
                 },
                 tests=EXPECT_STATUS(200),
             ),
@@ -458,7 +460,7 @@ pm.collectionVariables.set('body_pain_id', pm.response.json().id);
                 "POST",
                 "/episodes/{{episode_id}}/body-pain/",
                 body={
-                    "body_region": "THIGH_RIGHT",
+                    "body_region": "right-quadriceps",
                     "view_side": "FRONT",
                     "vas_score": 15,
                     "pain_character": ["SHARP"],
