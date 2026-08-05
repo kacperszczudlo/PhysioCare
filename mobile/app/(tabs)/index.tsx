@@ -46,17 +46,23 @@ export default function DashboardScreen() {
   )
 
   async function onToggleExercise(item: TodayExercise) {
-    if (item.completed_today || busyId) {
+    if (busyId) {
       return
     }
+    const nextDone = !item.completed_today
     setBusyId(item.id)
+    setExercises((prev) =>
+      prev.map((ex) => (ex.id === item.id ? { ...ex, completed_today: nextDone } : ex)),
+    )
     try {
-      await patientApi.completeExercise(item.id, todayISODate())
-      setExercises((prev) =>
-        prev.map((ex) => (ex.id === item.id ? { ...ex, completed_today: true } : ex)),
-      )
+      await patientApi.completeExercise(item.id, todayISODate(), nextDone)
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się oznaczyć ćwiczenia.'))
+      setExercises((prev) =>
+        prev.map((ex) =>
+          ex.id === item.id ? { ...ex, completed_today: item.completed_today } : ex,
+        ),
+      )
+      setError(getErrorMessage(err, 'Nie udało się zaktualizować zalecenia.'))
     } finally {
       setBusyId(null)
     }
@@ -139,10 +145,10 @@ export default function DashboardScreen() {
             <Pressable
               key={item.id}
               onPress={() => void onToggleExercise(item)}
-              disabled={item.completed_today || busyId === item.id}
+              disabled={busyId === item.id}
               style={[styles.exercise, item.completed_today ? styles.exerciseDone : null]}
-              accessibilityRole="button"
-              accessibilityState={{ checked: item.completed_today }}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: item.completed_today, busy: busyId === item.id }}
             >
               <View style={[styles.check, item.completed_today ? styles.checkOn : null]}>
                 {item.completed_today ? <Text style={styles.checkMark}>✓</Text> : null}

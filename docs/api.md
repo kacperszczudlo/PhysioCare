@@ -185,7 +185,7 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 | POST | `/therapist/exercises` | THERAPIST | Upload metadanych + plik |
 | POST | `/therapist/exercise-assignments` | THERAPIST | Przypisanie |
 | GET | `/me/exercises/today` | PATIENT | Zalecenia na dziś |
-| POST | `/me/exercise-completions` | PATIENT | Oznacz wykonanie |
+| POST | `/me/exercise-completions` | PATIENT | Oznacz / odznacz wykonanie (`done: true\|false`) |
 
 **Przypisanie:**
 

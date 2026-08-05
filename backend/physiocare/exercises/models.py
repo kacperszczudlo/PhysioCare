@@ -111,7 +111,7 @@ class ExerciseCompletion(UUIDModel):
         on_delete=models.CASCADE,
         related_name='completions',
     )
-    completed_on = models.DateField(auto_now_add=True)
+    completed_on = models.DateField()
     done = models.BooleanField(default=True)
     completed_at = models.DateTimeField(auto_now_add=True)
 

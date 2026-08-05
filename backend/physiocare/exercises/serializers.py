@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from patients.models import PatientProfile
@@ -133,6 +134,8 @@ class ExerciseCompletionSerializer(serializers.ModelSerializer):
 
 class ExerciseCompletionCreateSerializer(serializers.ModelSerializer):
     assignment_id = serializers.UUIDField(write_only=True)
+    completed_on = serializers.DateField(required=False, allow_null=True)
+    done = serializers.BooleanField(required=False, default=True)
 
     class Meta:
         model = ExerciseCompletion
@@ -141,6 +144,6 @@ class ExerciseCompletionCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return ExerciseCompletion.objects.create(
             assignment_id=validated_data.pop('assignment_id'),
-            completed_on=validated_data.get('completed_on'),
+            completed_on=validated_data.get('completed_on') or timezone.localdate(),
             done=validated_data.get('done', True),
         )

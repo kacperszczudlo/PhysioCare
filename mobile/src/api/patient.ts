@@ -73,11 +73,11 @@ export const patientApi = {
     return unwrapList(data)
   },
 
-  completeExercise(assignment_id: string, completed_on?: string) {
+  completeExercise(assignment_id: string, completed_on?: string, done = true) {
     return api.post<ExerciseCompletion>('/me/exercise-completions/', {
       assignment_id,
       completed_on,
-      done: true,
+      done,
     })
   },
 
