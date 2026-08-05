@@ -17,12 +17,15 @@ W dev Vite proxy przekierowuje `/api` i `/media` → `http://localhost:8000`. Op
 
 ## Skrypty
 
-| Komenda | Opis |
-|---------|------|
-| `npm run dev` | Dev server |
-| `npm run build` | Build produkcyjny |
-| `npm run preview` | Podgląd builda |
-| `npm run lint` | Oxlint |
+| Komenda                | Opis              |
+| ---------------------- | ----------------- |
+| `npm run dev`          | Dev server        |
+| `npm run build`        | Build produkcyjny |
+| `npm run preview`      | Podgląd builda    |
+| `npm run lint`         | ESLint + Oxlint   |
+| `npm run lint:fix`     | Autofix ESLint    |
+| `npm run format`       | Prettier (write)  |
+| `npm run format:check` | Prettier (check)  |
 
 ## Struktura
 

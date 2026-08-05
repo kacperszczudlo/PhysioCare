@@ -57,6 +57,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
+      - name: Ruff check
+        working-directory: backend
+        run: ruff check physiocare tests
+
       - name: Run pytest
         working-directory: backend
         run: |
