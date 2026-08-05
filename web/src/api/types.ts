@@ -153,6 +153,9 @@ export interface ExerciseAssignment {
   id: string
   exercise: string
   exercise_title: string
+  exercise_instruction?: string
+  exercise_file_url?: string
+  exercise_media_type?: MediaType
   patient: string
   episode: string | null
   dosage: string
@@ -168,4 +171,11 @@ export interface ExerciseAssignmentPayload {
   dosage: string
   start_date: string
   end_date: string
+}
+
+export interface ExerciseAssignmentUpdatePayload {
+  dosage?: string
+  start_date?: string
+  end_date?: string
+  episode_id?: string | null
 }

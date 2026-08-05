@@ -3,6 +3,7 @@ import type {
   Exercise,
   ExerciseAssignment,
   ExerciseAssignmentPayload,
+  ExerciseAssignmentUpdatePayload,
   ExerciseCategory,
   MediaType,
   Paginated,
@@ -43,11 +44,31 @@ export const exercisesApi = {
     return api.post<Exercise>('/therapist/exercises/', formData)
   },
 
+  update(id: string, formData: FormData) {
+    return api.patch<Exercise>(`/therapist/exercises/${id}/`, formData)
+  },
+
   remove(id: string) {
     return api.delete<void>(`/therapist/exercises/${id}/`)
   },
 
+  listAssignments(patientId: string, opts: { active?: boolean } = {}) {
+    const query = new URLSearchParams({ patient: patientId })
+    if (opts.active) {
+      query.set('active', '1')
+    }
+    return listResults<ExerciseAssignment>(`/therapist/exercise-assignments/?${query}`)
+  },
+
   assign(payload: ExerciseAssignmentPayload) {
     return api.post<ExerciseAssignment>('/therapist/exercise-assignments/', payload)
+  },
+
+  updateAssignment(id: string, payload: ExerciseAssignmentUpdatePayload) {
+    return api.patch<ExerciseAssignment>(`/therapist/exercise-assignments/${id}/`, payload)
+  },
+
+  deleteAssignment(id: string) {
+    return api.delete<void>(`/therapist/exercise-assignments/${id}/`)
   },
 }

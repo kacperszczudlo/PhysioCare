@@ -142,24 +142,36 @@ export default function DashboardScreen() {
       ) : (
         <View style={styles.list}>
           {exercises.map((item) => (
-            <Pressable
+            <View
               key={item.id}
-              onPress={() => void onToggleExercise(item)}
-              disabled={busyId === item.id}
               style={[styles.exercise, item.completed_today ? styles.exerciseDone : null]}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: item.completed_today, busy: busyId === item.id }}
             >
-              <View style={[styles.check, item.completed_today ? styles.checkOn : null]}>
+              <Pressable
+                onPress={() => void onToggleExercise(item)}
+                disabled={busyId === item.id}
+                style={[styles.check, item.completed_today ? styles.checkOn : null]}
+                accessibilityRole="checkbox"
+                accessibilityLabel={`Oznacz ${item.exercise_title} jako wykonane`}
+                accessibilityState={{ checked: item.completed_today, busy: busyId === item.id }}
+                hitSlop={10}
+              >
                 {item.completed_today ? <Text style={styles.checkMark}>✓</Text> : null}
-              </View>
-              <View style={styles.exerciseBody}>
+              </Pressable>
+              <Pressable
+                style={styles.exerciseBody}
+                onPress={() =>
+                  router.push({ pathname: '/exercise/[id]', params: { id: item.id } })
+                }
+                accessibilityRole="button"
+                accessibilityLabel={`Szczegóły: ${item.exercise_title}`}
+              >
                 <Text style={[styles.cardTitle, item.completed_today ? styles.strike : null]}>
                   {item.exercise_title}
                 </Text>
                 <Text style={styles.muted}>{item.dosage}</Text>
-              </View>
-            </Pressable>
+                <Text style={styles.openHint}>Instrukcja i materiał →</Text>
+              </Pressable>
+            </View>
           ))}
         </View>
       )}
@@ -187,6 +199,12 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: typography.lg, fontWeight: '700', color: colors.ink },
   meta: { fontSize: typography.sm, color: colors.ink },
   muted: { fontSize: typography.sm, color: colors.muted },
+  openHint: {
+    marginTop: 4,
+    fontSize: typography.xs,
+    fontWeight: '600',
+    color: colors.primary,
+  },
   dot: { width: 12, height: 12, borderRadius: 6 },
   list: { gap: space.md },
   exercise: {
@@ -209,6 +227,7 @@ const styles = StyleSheet.create({
     borderColor: colors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 2,
   },
   checkOn: { backgroundColor: colors.success, borderColor: colors.success },
   checkMark: { color: colors.onPrimary, fontWeight: '700' },

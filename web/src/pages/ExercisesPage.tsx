@@ -10,6 +10,7 @@ import { Field } from '@/components/ui/Field'
 import { AssignExerciseModal } from '@/pages/exercises/AssignExerciseModal'
 import { CreateExerciseModal } from '@/pages/exercises/CreateExerciseModal'
 import { DeleteExerciseModal } from '@/pages/exercises/DeleteExerciseModal'
+import { resolveMediaUrl } from '@/lib/mediaUrl'
 import './ExercisesPage.css'
 
 function mediaLabel(type: MediaType): string {
@@ -27,6 +28,7 @@ export function ExercisesPage() {
   const [reloadToken, setReloadToken] = useState(0)
 
   const [createOpen, setCreateOpen] = useState(false)
+  const [editTarget, setEditTarget] = useState<Exercise | null>(null)
   const [assignTarget, setAssignTarget] = useState<Exercise | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Exercise | null>(null)
 
@@ -145,58 +147,92 @@ export function ExercisesPage() {
 
       {!loading && !error && exercises.length > 0 ? (
         <ul className="exercises-grid">
-          {exercises.map((exercise) => (
-            <li key={exercise.id} className="exercises-card">
-              <div className="exercises-card__top">
-                <span
-                  className={`exercises-card__type exercises-card__type--${exercise.media_type.toLowerCase()}`}
-                >
-                  {mediaLabel(exercise.media_type)}
-                </span>
-                <h2 className="exercises-card__title">{exercise.title}</h2>
-              </div>
-              {exercise.instruction ? (
-                <p className="exercises-card__instruction">{exercise.instruction}</p>
-              ) : (
-                <p className="exercises-card__instruction exercises-card__instruction--empty">
-                  Bez instrukcji tekstowej
-                </p>
-              )}
-              {exercise.categories.length > 0 ? (
-                <ul className="exercises-card__tags">
-                  {exercise.categories.map((category) => (
-                    <li key={category.id}>{category.name}</li>
-                  ))}
-                </ul>
-              ) : null}
-              <div className="exercises-card__actions">
-                <a
-                  className="exercises-card__link"
-                  href={exercise.file_url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Podgląd pliku
-                </a>
-                <div className="exercises-card__buttons">
-                  <Button type="button" size="sm" variant="ghost" onClick={() => setDeleteTarget(exercise)}>
-                    Usuń
-                  </Button>
-                  <Button type="button" size="sm" onClick={() => setAssignTarget(exercise)}>
-                    Przypisz
-                  </Button>
+          {exercises.map((exercise) => {
+            const mediaUrl = resolveMediaUrl(exercise.file_url)
+            return (
+              <li key={exercise.id} className="exercises-card">
+                <div className="exercises-card__media">
+                  {mediaUrl && exercise.media_type === 'VIDEO' ? (
+                    <video
+                      className="exercises-card__player"
+                      src={mediaUrl}
+                      controls
+                      preload="metadata"
+                      playsInline
+                    />
+                  ) : null}
+                  {mediaUrl && exercise.media_type === 'PDF' ? (
+                    <a
+                      className="exercises-card__pdf"
+                      href={mediaUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <span className="exercises-card__type exercises-card__type--pdf">PDF</span>
+                      <span>Otwórz dokument</span>
+                    </a>
+                  ) : null}
                 </div>
-              </div>
-            </li>
-          ))}
+                <div className="exercises-card__top">
+                  <span
+                    className={`exercises-card__type exercises-card__type--${exercise.media_type.toLowerCase()}`}
+                  >
+                    {mediaLabel(exercise.media_type)}
+                  </span>
+                  <h2 className="exercises-card__title">{exercise.title}</h2>
+                </div>
+                {exercise.instruction ? (
+                  <p className="exercises-card__instruction">{exercise.instruction}</p>
+                ) : (
+                  <p className="exercises-card__instruction exercises-card__instruction--empty">
+                    Bez instrukcji tekstowej
+                  </p>
+                )}
+                {exercise.categories.length > 0 ? (
+                  <ul className="exercises-card__tags">
+                    {exercise.categories.map((category) => (
+                      <li key={category.id}>{category.name}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                <div className="exercises-card__actions">
+                  <div className="exercises-card__buttons">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setDeleteTarget(exercise)}
+                    >
+                      Usuń
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setEditTarget(exercise)}
+                    >
+                      Edytuj
+                    </Button>
+                    <Button type="button" size="sm" onClick={() => setAssignTarget(exercise)}>
+                      Przypisz
+                    </Button>
+                  </div>
+                </div>
+              </li>
+            )
+          })}
         </ul>
       ) : null}
 
       <CreateExerciseModal
-        open={createOpen}
+        open={createOpen || editTarget !== null}
         categories={categories}
-        onClose={() => setCreateOpen(false)}
-        onCreated={() => setReloadToken((value) => value + 1)}
+        exercise={editTarget}
+        onClose={() => {
+          setCreateOpen(false)
+          setEditTarget(null)
+        }}
+        onSaved={() => setReloadToken((value) => value + 1)}
       />
 
       <DeleteExerciseModal

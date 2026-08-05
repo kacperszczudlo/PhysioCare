@@ -41,7 +41,8 @@
         {
           "photosPermission": "PhysioCare potrzebuje dostępu do zdjęć, aby ustawić avatar profilu."
         }
-      ]
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true

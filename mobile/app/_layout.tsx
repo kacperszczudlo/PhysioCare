@@ -28,6 +28,10 @@ function RootNavigator() {
           options={{ headerShown: true, title: 'Szczegóły wizyty', presentation: 'card' }}
         />
         <Stack.Screen
+          name="exercise/[id]"
+          options={{ headerShown: true, title: 'Ćwiczenie', presentation: 'card' }}
+        />
+        <Stack.Screen
           name="therapist/[id]"
           options={{ headerShown: true, title: 'Twój terapeuta', presentation: 'card' }}
         />

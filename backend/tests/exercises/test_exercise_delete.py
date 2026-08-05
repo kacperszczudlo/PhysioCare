@@ -60,3 +60,26 @@ def test_therapist_can_retrieve_own_exercise(api_client, therapist, exercise):
     assert response.status_code == status.HTTP_200_OK
     assert response.data['id'] == str(exercise.id)
     assert response.data['title'] == 'Mostek'
+
+
+@pytest.mark.django_db
+def test_therapist_can_update_exercise_metadata(api_client, therapist, exercise):
+    api_client.force_authenticate(user=therapist.user)
+
+    response = api_client.patch(
+        f'/api/v1/therapist/exercises/{exercise.id}/',
+        {
+            'title': 'Mostek — progresja',
+            'instruction': 'Unieś biodra wyżej.',
+            'media_type': MediaType.VIDEO,
+            'has_categories': '1',
+        },
+        format='multipart',
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data['title'] == 'Mostek — progresja'
+    assert response.data['instruction'] == 'Unieś biodra wyżej.'
+    exercise.refresh_from_db()
+    assert exercise.title == 'Mostek — progresja'
+    assert exercise.file_url == '/media/exercises/mostek.mp4'

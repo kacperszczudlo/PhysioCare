@@ -13,11 +13,13 @@ from .models import Exercise, ExerciseAssignment, ExerciseCategory, ExerciseComp
 from .serializers import (
     ExerciseAssignmentCreateSerializer,
     ExerciseAssignmentSerializer,
+    ExerciseAssignmentUpdateSerializer,
     ExerciseCategorySerializer,
     ExerciseCompletionCreateSerializer,
     ExerciseCompletionSerializer,
     ExerciseCreateSerializer,
     ExerciseSerializer,
+    ExerciseUpdateSerializer,
     TodayExerciseSerializer,
 )
 
@@ -64,15 +66,64 @@ class TherapistExerciseListCreateView(generics.ListCreateAPIView):
         return Response(ExerciseSerializer(exercise).data, status=status.HTTP_201_CREATED)
 
 
-class TherapistExerciseDetailView(generics.RetrieveDestroyAPIView):
+class TherapistExerciseDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsTherapist]
-    serializer_class = ExerciseSerializer
-    http_method_names = ['get', 'delete', 'head', 'options']
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
+    http_method_names = ['get', 'put', 'patch', 'delete', 'head', 'options']
 
     def get_queryset(self):
         return Exercise.objects.filter(
             therapist=self.request.user.therapist_profile,
         ).prefetch_related('categories')
+
+    def get_serializer_class(self):
+        if self.request.method in ('PUT', 'PATCH'):
+            return ExerciseUpdateSerializer
+        return ExerciseSerializer
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        uploaded = request.FILES.get('file')
+        previous_url = instance.file_url
+        file_url = None
+        if uploaded is not None:
+            file_url = save_upload(uploaded, subdir='exercises')
+
+        context = {'therapist': request.user.therapist_profile}
+        if file_url:
+            context['file_url'] = file_url
+
+        # Categories are applied explicitly so an empty selection can clear M2M.
+        mutable = request.data.copy()
+        if hasattr(mutable, 'pop'):
+            mutable.pop('has_categories', None)
+            if str(request.data.get('has_categories', '')) == '1':
+                mutable.pop('categories', None)
+
+        serializer = ExerciseUpdateSerializer(
+            instance,
+            data=mutable,
+            partial=partial,
+            context=context,
+        )
+        serializer.is_valid(raise_exception=True)
+        exercise = serializer.save()
+
+        if str(request.data.get('has_categories', '')) == '1':
+            if hasattr(request.data, 'getlist'):
+                category_ids = request.data.getlist('categories')
+            else:
+                raw = request.data.get('categories') or []
+                category_ids = raw if isinstance(raw, list) else [raw]
+            categories = list(ExerciseCategory.objects.filter(pk__in=category_ids))
+            exercise.categories.set(categories)
+
+        if file_url and previous_url and previous_url != file_url:
+            delete_media_url(previous_url)
+
+        exercise = Exercise.objects.prefetch_related('categories').get(pk=exercise.pk)
+        return Response(ExerciseSerializer(exercise).data)
 
     def perform_destroy(self, instance):
         file_url = instance.file_url
@@ -90,9 +141,26 @@ class TherapistExerciseCategoryListView(generics.ListAPIView):
 
 
 
-class TherapistExerciseAssignmentCreateView(generics.CreateAPIView):
-    serializer_class = ExerciseAssignmentCreateSerializer
+class TherapistExerciseAssignmentListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsTherapist]
+
+    def get_queryset(self):
+        qs = ExerciseAssignment.objects.filter(
+            patient__therapist=self.request.user.therapist_profile,
+        ).select_related('exercise', 'patient')
+        patient_id = self.request.query_params.get('patient')
+        if patient_id:
+            qs = qs.filter(patient_id=patient_id)
+        active = self.request.query_params.get('active')
+        if active == '1':
+            today = timezone.localdate()
+            qs = qs.filter(start_date__lte=today, end_date__gte=today)
+        return qs.order_by('-assigned_at')
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ExerciseAssignmentCreateSerializer
+        return ExerciseAssignmentSerializer
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -108,6 +176,35 @@ class TherapistExerciseAssignmentCreateView(generics.CreateAPIView):
             ExerciseAssignmentSerializer(assignment).data,
             status=status.HTTP_201_CREATED,
         )
+
+
+class TherapistExerciseAssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated, IsTherapist]
+    http_method_names = ['get', 'patch', 'put', 'delete', 'head', 'options']
+
+    def get_queryset(self):
+        return ExerciseAssignment.objects.filter(
+            patient__therapist=self.request.user.therapist_profile,
+        ).select_related('exercise', 'patient')
+
+    def get_serializer_class(self):
+        if self.request.method in ('PATCH', 'PUT'):
+            return ExerciseAssignmentUpdateSerializer
+        return ExerciseAssignmentSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['therapist'] = self.request.user.therapist_profile
+        return context
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        assignment = serializer.save()
+        assignment = ExerciseAssignment.objects.select_related('exercise').get(pk=assignment.pk)
+        return Response(ExerciseAssignmentSerializer(assignment).data)
 
 
 class MeExercisesTodayView(PatientSelfMixin, generics.ListAPIView):

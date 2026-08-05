@@ -189,8 +189,12 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 | GET | `/therapist/exercises/{id}` | THERAPIST | Szczegóły ćwiczenia |
 | GET | `/therapist/exercise-categories` | THERAPIST | Lista kategorii |
 | POST | `/therapist/exercises` | THERAPIST | Upload metadanych + plik |
+| PATCH | `/therapist/exercises/{id}` | THERAPIST | Edycja (plik opcjonalny) |
 | DELETE | `/therapist/exercises/{id}` | THERAPIST | Usunięcie (kaskada: przypisania) |
+| GET | `/therapist/exercise-assignments` | THERAPIST | Lista (`?patient=`, `?active=1`) |
 | POST | `/therapist/exercise-assignments` | THERAPIST | Przypisanie |
+| PATCH | `/therapist/exercise-assignments/{id}` | THERAPIST | Okres / dawkowanie |
+| DELETE | `/therapist/exercise-assignments/{id}` | THERAPIST | Usunięcie zalecenia |
 | GET | `/me/exercises/today` | PATIENT | Zalecenia na dziś |
 | POST | `/me/exercise-completions` | PATIENT | Oznacz / odznacz wykonanie (`done: true\|false`) |
 

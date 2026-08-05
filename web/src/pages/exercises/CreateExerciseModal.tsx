@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState, type DragEvent, type FormEvent } fr
 
 import { exercisesApi } from '@/api/exercises'
 import { getErrorMessage } from '@/api/client'
-import type { ExerciseCategory, MediaType } from '@/api/types'
+import type { Exercise, ExerciseCategory, MediaType } from '@/api/types'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
@@ -11,8 +11,10 @@ import './CreateExerciseModal.css'
 interface CreateExerciseModalProps {
   open: boolean
   categories: ExerciseCategory[]
+  /** When set, modal edits this exercise instead of creating a new one. */
+  exercise?: Exercise | null
   onClose: () => void
-  onCreated: () => void
+  onSaved: () => void
 }
 
 const ACCEPT = 'video/mp4,application/pdf,.mp4,.pdf'
@@ -43,12 +45,20 @@ function mediaLabel(type: MediaType): string {
   return type === 'VIDEO' ? 'Wideo MP4' : 'Dokument PDF'
 }
 
+function fileNameFromUrl(url: string): string {
+  const cleaned = url.split('?')[0] ?? url
+  const parts = cleaned.split('/')
+  return parts[parts.length - 1] || 'obecny-plik'
+}
+
 export function CreateExerciseModal({
   open,
   categories,
+  exercise = null,
   onClose,
-  onCreated,
+  onSaved,
 }: CreateExerciseModalProps) {
+  const isEdit = exercise !== null
   const fileInputId = useId()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -56,6 +66,8 @@ export function CreateExerciseModal({
   const [instruction, setInstruction] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [mediaType, setMediaType] = useState<MediaType | null>(null)
+  const [keepExistingFile, setKeepExistingFile] = useState(false)
+  const [existingFileName, setExistingFileName] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [dragActive, setDragActive] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -66,42 +78,60 @@ export function CreateExerciseModal({
     if (!open) {
       return
     }
-    setTitle('')
-    setInstruction('')
-    setFile(null)
-    setMediaType(null)
-    setSelectedCategories([])
     setDragActive(false)
     setBusy(false)
     setError(null)
     setFileError(null)
+    setFile(null)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
-  }, [open])
+
+    if (exercise) {
+      setTitle(exercise.title)
+      setInstruction(exercise.instruction ?? '')
+      setMediaType(exercise.media_type)
+      setKeepExistingFile(true)
+      setExistingFileName(fileNameFromUrl(exercise.file_url))
+      setSelectedCategories(exercise.categories.map((item) => item.id))
+    } else {
+      setTitle('')
+      setInstruction('')
+      setMediaType(null)
+      setKeepExistingFile(false)
+      setExistingFileName('')
+      setSelectedCategories([])
+    }
+  }, [open, exercise])
 
   function applyFile(next: File | null) {
     setFileError(null)
     if (!next) {
       setFile(null)
-      setMediaType(null)
+      if (isEdit && exercise) {
+        setKeepExistingFile(true)
+        setMediaType(exercise.media_type)
+        setExistingFileName(fileNameFromUrl(exercise.file_url))
+      } else {
+        setMediaType(null)
+        setKeepExistingFile(false)
+      }
       return
     }
     const type = guessMediaType(next)
     if (!type) {
       setFile(null)
-      setMediaType(null)
       setFileError('Obsługiwane są tylko pliki MP4 i PDF.')
       return
     }
     if (next.size > MAX_FILE_BYTES) {
       setFile(null)
-      setMediaType(null)
       setFileError('Plik jest za duży — maksymalnie 80 MB.')
       return
     }
     setFile(next)
     setMediaType(type)
+    setKeepExistingFile(false)
   }
 
   function toggleCategory(id: string) {
@@ -132,12 +162,20 @@ export function CreateExerciseModal({
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    if (!file || !mediaType) {
+    if (!title.trim()) {
+      setError('Podaj tytuł ćwiczenia.')
+      return
+    }
+    if (!isEdit && (!file || !mediaType)) {
       setFileError('Dodaj plik MP4 lub PDF z instrukcją dla pacjenta.')
       return
     }
-    if (!title.trim()) {
-      setError('Podaj tytuł ćwiczenia.')
+    if (isEdit && !file && !keepExistingFile) {
+      setFileError('Dodaj plik MP4 lub PDF albo przywróć obecny materiał.')
+      return
+    }
+    if (!mediaType) {
+      setFileError('Nie rozpoznano typu materiału.')
       return
     }
 
@@ -148,26 +186,46 @@ export function CreateExerciseModal({
       form.append('title', title.trim())
       form.append('instruction', instruction.trim())
       form.append('media_type', mediaType)
-      form.append('file', file)
+      form.append('has_categories', '1')
       for (const categoryId of selectedCategories) {
         form.append('categories', categoryId)
       }
-      await exercisesApi.create(form)
-      onCreated()
+      if (file) {
+        form.append('file', file)
+      }
+
+      if (isEdit && exercise) {
+        await exercisesApi.update(exercise.id, form)
+      } else {
+        await exercisesApi.create(form)
+      }
+      onSaved()
       onClose()
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się dodać ćwiczenia.'))
+      setError(
+        getErrorMessage(
+          err,
+          isEdit ? 'Nie udało się zapisać ćwiczenia.' : 'Nie udało się dodać ćwiczenia.',
+        ),
+      )
     } finally {
       setBusy(false)
     }
   }
 
+  const showDropzone = !file && !keepExistingFile
+  const showFileCard = Boolean(file) || keepExistingFile
+
   return (
     <Modal
       open={open}
       size="lg"
-      title="Nowe ćwiczenie"
-      description="Opisz ruch jasnym językiem i dołącz wideo lub PDF — pacjent zobaczy to w aplikacji."
+      title={isEdit ? 'Edytuj ćwiczenie' : 'Nowe ćwiczenie'}
+      description={
+        isEdit
+          ? 'Zmień opis, kategorie albo podmień materiał — pacjenci zobaczą aktualną wersję.'
+          : 'Opisz ruch jasnym językiem i dołącz wideo lub PDF — pacjent zobaczy to w aplikacji.'
+      }
       onClose={onClose}
     >
       <form className="ex-create" onSubmit={(e) => void onSubmit(e)}>
@@ -208,7 +266,11 @@ export function CreateExerciseModal({
         <section className="ex-create__section" aria-labelledby="ex-create-media">
           <div className="ex-create__section-head">
             <h3 id="ex-create-media">Materiał</h3>
-            <p>Wideo demonstracyjne (MP4) albo karta PDF.</p>
+            <p>
+              {isEdit
+                ? 'Zostaw obecny plik albo wgraj nowy MP4 / PDF.'
+                : 'Wideo demonstracyjne (MP4) albo karta PDF.'}
+            </p>
           </div>
 
           <input
@@ -220,7 +282,7 @@ export function CreateExerciseModal({
             onChange={(e) => applyFile(e.target.files?.[0] ?? null)}
           />
 
-          {!file ? (
+          {showDropzone ? (
             <label
               htmlFor={fileInputId}
               className={`ex-create__drop${dragActive ? ' ex-create__drop--active' : ''}${fileError ? ' ex-create__drop--error' : ''}`}
@@ -249,16 +311,22 @@ export function CreateExerciseModal({
               <span className="ex-create__drop-title">Upuść plik tutaj albo wybierz z dysku</span>
               <span className="ex-create__drop-meta">MP4 lub PDF · do 80 MB</span>
             </label>
-          ) : (
+          ) : null}
+
+          {showFileCard ? (
             <div className="ex-create__file">
-              <div className={`ex-create__file-badge ex-create__file-badge--${mediaType?.toLowerCase()}`}>
+              <div
+                className={`ex-create__file-badge ex-create__file-badge--${mediaType?.toLowerCase()}`}
+              >
                 {mediaType ? mediaLabel(mediaType) : 'Plik'}
               </div>
               <div className="ex-create__file-meta">
-                <p className="ex-create__file-name" title={file.name}>
-                  {file.name}
+                <p className="ex-create__file-name" title={file?.name ?? existingFileName}>
+                  {file ? file.name : existingFileName}
                 </p>
-                <p className="ex-create__file-size">{formatBytes(file.size)}</p>
+                <p className="ex-create__file-size">
+                  {file ? formatBytes(file.size) : keepExistingFile ? 'Obecny materiał' : ''}
+                </p>
               </div>
               <div className="ex-create__file-actions">
                 <Button
@@ -267,24 +335,26 @@ export function CreateExerciseModal({
                   variant="secondary"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  Zmień
+                  {keepExistingFile && !file ? 'Podmień' : 'Zmień'}
                 </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => {
-                    applyFile(null)
-                    if (fileInputRef.current) {
-                      fileInputRef.current.value = ''
-                    }
-                  }}
-                >
-                  Usuń
-                </Button>
+                {file ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      applyFile(null)
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = ''
+                      }
+                    }}
+                  >
+                    {isEdit ? 'Przywróć' : 'Usuń'}
+                  </Button>
+                ) : null}
               </div>
             </div>
-          )}
+          ) : null}
 
           {fileError ? (
             <p className="ex-create__field-error" role="alert">
@@ -329,7 +399,7 @@ export function CreateExerciseModal({
             Anuluj
           </Button>
           <Button type="submit" loading={busy}>
-            Zapisz ćwiczenie
+            {isEdit ? 'Zapisz zmiany' : 'Zapisz ćwiczenie'}
           </Button>
         </div>
       </form>

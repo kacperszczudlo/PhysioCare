@@ -48,16 +48,47 @@ class ExerciseCreateSerializer(serializers.ModelSerializer):
         return exercise
 
 
+class ExerciseUpdateSerializer(serializers.ModelSerializer):
+    categories = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=ExerciseCategory.objects.all(),
+        required=False,
+    )
+
+    class Meta:
+        model = Exercise
+        fields = ['title', 'media_type', 'instruction', 'categories']
+
+    def update(self, instance, validated_data):
+        categories = validated_data.pop('categories', serializers.empty)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        file_url = self.context.get('file_url')
+        if file_url:
+            instance.file_url = file_url
+        instance.save()
+        if categories is not serializers.empty:
+            instance.categories.set(categories)
+        return instance
+
+
 class ExerciseAssignmentSerializer(serializers.ModelSerializer):
     exercise_title = serializers.CharField(source='exercise.title', read_only=True)
+    exercise_instruction = serializers.CharField(source='exercise.instruction', read_only=True)
+    exercise_file_url = serializers.CharField(source='exercise.file_url', read_only=True)
+    exercise_media_type = serializers.CharField(source='exercise.media_type', read_only=True)
 
     class Meta:
         model = ExerciseAssignment
         fields = [
-            'id', 'exercise', 'exercise_title', 'patient', 'episode',
+            'id', 'exercise', 'exercise_title', 'exercise_instruction',
+            'exercise_file_url', 'exercise_media_type', 'patient', 'episode',
             'dosage', 'start_date', 'end_date', 'assigned_at',
         ]
-        read_only_fields = ['id', 'assigned_at']
+        read_only_fields = [
+            'id', 'exercise', 'exercise_title', 'exercise_instruction',
+            'exercise_file_url', 'exercise_media_type', 'patient', 'assigned_at',
+        ]
 
 
 class ExerciseAssignmentCreateSerializer(serializers.ModelSerializer):
@@ -97,6 +128,13 @@ class ExerciseAssignmentCreateSerializer(serializers.ModelSerializer):
                 {'episode_id': 'Epizod nie należy do wskazanego pacjenta.'}
             )
 
+        start = attrs.get('start_date')
+        end = attrs.get('end_date')
+        if start and end and end < start:
+            raise serializers.ValidationError(
+                {'end_date': 'Data końcowa nie może być wcześniejsza niż początkowa.'}
+            )
+
         return attrs
 
     def create(self, validated_data):
@@ -106,6 +144,42 @@ class ExerciseAssignmentCreateSerializer(serializers.ModelSerializer):
             episode_id=validated_data.pop('episode_id', None),
             **validated_data,
         )
+
+
+class ExerciseAssignmentUpdateSerializer(serializers.ModelSerializer):
+    episode_id = serializers.UUIDField(required=False, allow_null=True)
+
+    class Meta:
+        model = ExerciseAssignment
+        fields = ['dosage', 'start_date', 'end_date', 'episode_id']
+
+    def validate(self, attrs):
+        start = attrs.get('start_date', getattr(self.instance, 'start_date', None))
+        end = attrs.get('end_date', getattr(self.instance, 'end_date', None))
+        if start and end and end < start:
+            raise serializers.ValidationError(
+                {'end_date': 'Data końcowa nie może być wcześniejsza niż początkowa.'}
+            )
+
+        if 'episode_id' in attrs:
+            episode_id = attrs['episode_id']
+            therapist = self.context['therapist']
+            patient_id = self.instance.patient_id
+            if episode_id is not None and not TreatmentEpisode.objects.filter(
+                pk=episode_id,
+                patient_id=patient_id,
+                patient__therapist=therapist,
+            ).exists():
+                raise serializers.ValidationError(
+                    {'episode_id': 'Epizod nie należy do wskazanego pacjenta.'}
+                )
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        if 'episode_id' in validated_data:
+            instance.episode_id = validated_data.pop('episode_id')
+        return super().update(instance, validated_data)
 
 
 class TodayExerciseSerializer(serializers.ModelSerializer):

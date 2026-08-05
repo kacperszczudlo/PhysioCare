@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { EPISODE_STATUS_LABELS } from '@/lib/bodyMap'
 import { DiagnosticMapper } from '@/pages/patients/DiagnosticMapper'
+import { PatientAssignments } from '@/pages/patients/PatientAssignments'
 import './PatientDetailPage.css'
 
 const STATUS_OPTIONS: EpisodeStatus[] = [
@@ -203,6 +204,8 @@ export function PatientDetailPage() {
       </p>
 
       {error ? <ErrorBanner message={error} /> : null}
+
+      <PatientAssignments patientId={patient.id} />
 
       <div className="patient-layout">
         <aside className="patient-episodes" aria-label="Epizody leczenia">
