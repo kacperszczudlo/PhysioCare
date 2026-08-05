@@ -31,9 +31,7 @@ User = get_user_model()
 logger = logging.getLogger('physiocare.auth')
 
 
-def _set_auth_cookies(response, refresh):
-    access_token = str(refresh.access_token)
-    refresh_token = str(refresh)
+def _set_auth_cookies(response, *, access_token: str, refresh_token: str):
     secure = settings.SECURE_COOKIES
 
     response.set_cookie(
@@ -80,6 +78,26 @@ def _user_payload(user):
     }
 
 
+def _token_pair(refresh: RefreshToken) -> dict[str, str]:
+    return {
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
+    }
+
+
+def _auth_response(user, refresh: RefreshToken, *, status_code=status.HTTP_200_OK):
+    tokens = _token_pair(refresh)
+    response = Response(
+        {'user': _user_payload(user), **tokens},
+        status=status_code,
+    )
+    return _set_auth_cookies(
+        response,
+        access_token=tokens['access'],
+        refresh_token=tokens['refresh'],
+    )
+
+
 class LoginView(APIView):
     permission_classes = []
     throttle_classes = [LoginRateThrottle]
@@ -92,8 +110,7 @@ class LoginView(APIView):
 
         if user is not None and user.is_active:
             refresh = RefreshToken.for_user(user)
-            response = Response({'user': _user_payload(user)}, status=status.HTTP_200_OK)
-            return _set_auth_cookies(response, refresh)
+            return _auth_response(user, refresh)
 
         logger.info('Failed login attempt for email=%s', email)
         return Response(
@@ -119,11 +136,7 @@ class PatientRegisterView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
-        response = Response(
-            {'user': _user_payload(user)},
-            status=status.HTTP_201_CREATED,
-        )
-        return _set_auth_cookies(response, refresh)
+        return _auth_response(user, refresh, status_code=status.HTTP_201_CREATED)
 
 
 class TherapistRegisterView(APIView):
@@ -135,11 +148,7 @@ class TherapistRegisterView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
-        response = Response(
-            {'user': _user_payload(user)},
-            status=status.HTTP_201_CREATED,
-        )
-        return _set_auth_cookies(response, refresh)
+        return _auth_response(user, refresh, status_code=status.HTTP_201_CREATED)
 
 
 class CookieTokenRefreshView(TokenRefreshView):
@@ -162,9 +171,18 @@ class CookieTokenRefreshView(TokenRefreshView):
 
         serializer = self.get_serializer(data={'refresh': refresh_value})
         serializer.is_valid(raise_exception=True)
-        refresh = RefreshToken(refresh_value)
-        response = Response({'detail': 'Token odświeżony.'}, status=status.HTTP_200_OK)
-        return _set_auth_cookies(response, refresh)
+        access = serializer.validated_data['access']
+        # ROTATE_REFRESH_TOKENS may issue a new refresh; otherwise reuse the presented one.
+        new_refresh = serializer.validated_data.get('refresh', refresh_value)
+        response = Response(
+            {
+                'detail': 'Token odświeżony.',
+                'access': access,
+                'refresh': new_refresh,
+            },
+            status=status.HTTP_200_OK,
+        )
+        return _set_auth_cookies(response, access_token=access, refresh_token=new_refresh)
 
 
 def _hash_token(raw_token: str) -> str:
