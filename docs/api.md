@@ -186,8 +186,10 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 | Metoda | Endpoint | Rola | Opis |
 |--------|----------|------|------|
 | GET | `/therapist/exercises` | THERAPIST | Katalog (`?category=`, `?media_type=`, `?q=`) |
+| GET | `/therapist/exercises/{id}` | THERAPIST | Szczegóły ćwiczenia |
 | GET | `/therapist/exercise-categories` | THERAPIST | Lista kategorii |
 | POST | `/therapist/exercises` | THERAPIST | Upload metadanych + plik |
+| DELETE | `/therapist/exercises/{id}` | THERAPIST | Usunięcie (kaskada: przypisania) |
 | POST | `/therapist/exercise-assignments` | THERAPIST | Przypisanie |
 | GET | `/me/exercises/today` | PATIENT | Zalecenia na dziś |
 | POST | `/me/exercise-completions` | PATIENT | Oznacz / odznacz wykonanie (`done: true\|false`) |

@@ -39,6 +39,14 @@
   background: var(--color-surface-raised);
   box-shadow: var(--shadow-sm);
   min-height: 12rem;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.exercises-card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
 }
 
 .exercises-card__type {
@@ -48,7 +56,18 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.exercises-card__type--video {
+  background: var(--color-accent-subtle);
   color: var(--color-accent);
+}
+
+.exercises-card__type--pdf {
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
 }
 
 .exercises-card__title {
@@ -60,6 +79,15 @@
   color: var(--color-muted);
   font-size: var(--text-sm);
   flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.exercises-card__instruction--empty {
+  font-style: italic;
+  color: var(--color-faint);
 }
 
 .exercises-card__tags {
@@ -87,6 +115,22 @@
   justify-content: space-between;
   gap: var(--space-2);
   margin-top: auto;
+}
+
+.exercises-card__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.exercises-card__buttons .ui-btn--ghost {
+  color: var(--color-danger);
+}
+
+.exercises-card__buttons .ui-btn--ghost:hover:not(:disabled) {
+  background: var(--color-danger-subtle);
+  color: var(--color-danger);
 }
 
 .exercises-card__link {
@@ -118,39 +162,6 @@
   border-radius: var(--radius-md);
 }
 
-.exercises-cats {
-  border: 0;
-  margin: 0;
-  padding: 0;
-}
-
-.exercises-cats legend {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  margin-bottom: var(--space-2);
-}
-
-.exercises-cats__list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.exercises-cats__item {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-sm);
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg);
-}
-
-.exercises-cats__item input {
-  accent-color: var(--color-primary);
-}
-
 .exercises-date-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -168,5 +179,15 @@
 @media (max-width: 800px) {
   .exercises-filters {
     grid-template-columns: 1fr;
+  }
+
+  .exercises-card:hover {
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exercises-card {
+    transition: none;
   }
 }

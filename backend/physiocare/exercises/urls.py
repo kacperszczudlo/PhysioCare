@@ -5,6 +5,7 @@ from .views import (
     MeExercisesTodayView,
     TherapistExerciseAssignmentCreateView,
     TherapistExerciseCategoryListView,
+    TherapistExerciseDetailView,
     TherapistExerciseListCreateView,
 )
 
@@ -13,6 +14,11 @@ urlpatterns = [
         'therapist/exercises/',
         TherapistExerciseListCreateView.as_view(),
         name='therapist-exercises',
+    ),
+    path(
+        'therapist/exercises/<uuid:pk>/',
+        TherapistExerciseDetailView.as_view(),
+        name='therapist-exercise-detail',
     ),
     path(
         'therapist/exercise-categories/',

@@ -43,6 +43,10 @@ export const exercisesApi = {
     return api.post<Exercise>('/therapist/exercises/', formData)
   },
 
+  remove(id: string) {
+    return api.delete<void>(`/therapist/exercises/${id}/`)
+  },
+
   assign(payload: ExerciseAssignmentPayload) {
     return api.post<ExerciseAssignment>('/therapist/exercise-assignments/', payload)
   },

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useState } from 'react'
 
 import { exercisesApi } from '@/api/exercises'
 import { getErrorMessage } from '@/api/client'
@@ -7,22 +7,13 @@ import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
-import { Modal } from '@/components/ui/Modal'
 import { AssignExerciseModal } from '@/pages/exercises/AssignExerciseModal'
+import { CreateExerciseModal } from '@/pages/exercises/CreateExerciseModal'
+import { DeleteExerciseModal } from '@/pages/exercises/DeleteExerciseModal'
 import './ExercisesPage.css'
 
 function mediaLabel(type: MediaType): string {
   return type === 'VIDEO' ? 'Wideo' : 'PDF'
-}
-
-function guessMediaType(file: File | null): MediaType {
-  if (!file) {
-    return 'VIDEO'
-  }
-  if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
-    return 'PDF'
-  }
-  return 'VIDEO'
 }
 
 export function ExercisesPage() {
@@ -36,14 +27,8 @@ export function ExercisesPage() {
   const [reloadToken, setReloadToken] = useState(0)
 
   const [createOpen, setCreateOpen] = useState(false)
-  const [title, setTitle] = useState('')
-  const [instruction, setInstruction] = useState('')
-  const [file, setFile] = useState<File | null>(null)
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-  const [createBusy, setCreateBusy] = useState(false)
-  const [createError, setCreateError] = useState<string | null>(null)
-
   const [assignTarget, setAssignTarget] = useState<Exercise | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Exercise | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -96,60 +81,13 @@ export function ExercisesPage() {
     }
   }, [categoryFilter, mediaFilter, query, reloadToken])
 
-  const selectedCategoryNames = useMemo(() => {
-    const map = new Map(categories.map((item) => [item.id, item.name]))
-    return selectedCategories.map((id) => map.get(id) ?? id)
-  }, [categories, selectedCategories])
-
-  function toggleCategory(id: string) {
-    setSelectedCategories((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
-    )
-  }
-
-  function openCreate() {
-    setTitle('')
-    setInstruction('')
-    setFile(null)
-    setSelectedCategories([])
-    setCreateError(null)
-    setCreateOpen(true)
-  }
-
-  async function onCreate(event: FormEvent) {
-    event.preventDefault()
-    if (!file) {
-      setCreateError('Dodaj plik MP4 lub PDF.')
-      return
-    }
-    setCreateBusy(true)
-    setCreateError(null)
-    try {
-      const form = new FormData()
-      form.append('title', title.trim())
-      form.append('instruction', instruction.trim())
-      form.append('media_type', guessMediaType(file))
-      form.append('file', file)
-      for (const categoryId of selectedCategories) {
-        form.append('categories', categoryId)
-      }
-      await exercisesApi.create(form)
-      setCreateOpen(false)
-      setReloadToken((value) => value + 1)
-    } catch (err) {
-      setCreateError(getErrorMessage(err, 'Nie udało się dodać ćwiczenia.'))
-    } finally {
-      setCreateBusy(false)
-    }
-  }
-
   return (
     <section className="exercises-page">
       <PageHeader
         title="Baza ćwiczeń"
         description="Katalog wideo i PDF — filtruj, dodawaj i wysyłaj pacjentom do aplikacji."
         actions={
-          <Button type="button" onClick={openCreate}>
+          <Button type="button" onClick={() => setCreateOpen(true)}>
             + Dodaj ćwiczenie
           </Button>
         }
@@ -161,7 +99,7 @@ export function ExercisesPage() {
           name="q"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Tytuł…"
+          placeholder="Tytuł lub fragment instrukcji…"
         />
         <label className="ui-field">
           <span className="ui-field__label">Kategoria</span>
@@ -201,9 +139,9 @@ export function ExercisesPage() {
       {!loading && !error && exercises.length === 0 ? (
         <EmptyState
           title="Brak ćwiczeń"
-          description="Nie znaleziono pozycji dla aktywnych filtrów. Dodaj ćwiczenie z plikiem MP4 lub PDF."
+          description="Dodaj pierwsze ćwiczenie z krótką instrukcją i plikiem MP4 lub PDF — pacjent zobaczy je w aplikacji."
           action={
-            <Button type="button" size="sm" onClick={openCreate}>
+            <Button type="button" size="sm" onClick={() => setCreateOpen(true)}>
               + Dodaj ćwiczenie
             </Button>
           }
@@ -215,12 +153,20 @@ export function ExercisesPage() {
           {exercises.map((exercise) => (
             <li key={exercise.id} className="exercises-card">
               <div className="exercises-card__top">
-                <span className="exercises-card__type">{mediaLabel(exercise.media_type)}</span>
+                <span
+                  className={`exercises-card__type exercises-card__type--${exercise.media_type.toLowerCase()}`}
+                >
+                  {mediaLabel(exercise.media_type)}
+                </span>
                 <h2 className="exercises-card__title">{exercise.title}</h2>
               </div>
               {exercise.instruction ? (
                 <p className="exercises-card__instruction">{exercise.instruction}</p>
-              ) : null}
+              ) : (
+                <p className="exercises-card__instruction exercises-card__instruction--empty">
+                  Bez instrukcji tekstowej
+                </p>
+              )}
               {exercise.categories.length > 0 ? (
                 <ul className="exercises-card__tags">
                   {exercise.categories.map((category) => (
@@ -237,77 +183,33 @@ export function ExercisesPage() {
                 >
                   Podgląd pliku
                 </a>
-                <Button type="button" size="sm" onClick={() => setAssignTarget(exercise)}>
-                  Przypisz
-                </Button>
+                <div className="exercises-card__buttons">
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setDeleteTarget(exercise)}>
+                    Usuń
+                  </Button>
+                  <Button type="button" size="sm" onClick={() => setAssignTarget(exercise)}>
+                    Przypisz
+                  </Button>
+                </div>
               </div>
             </li>
           ))}
         </ul>
       ) : null}
 
-      <Modal open={createOpen} title="Nowe ćwiczenie" onClose={() => setCreateOpen(false)}>
-        <form className="ui-modal__form" onSubmit={(e) => void onCreate(e)}>
-          <Field
-            label="Tytuł"
-            name="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-          />
-          <label className="ui-field">
-            <span className="ui-field__label">Instrukcja</span>
-            <textarea
-              className="ui-modal__textarea"
-              value={instruction}
-              onChange={(e) => setInstruction(e.target.value)}
-              rows={3}
-            />
-          </label>
-          <label className="ui-field">
-            <span className="ui-field__label">Plik (MP4 lub PDF)</span>
-            <input
-              type="file"
-              accept="video/mp4,application/pdf,.mp4,.pdf"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              required
-            />
-          </label>
-          {categories.length > 0 ? (
-            <fieldset className="exercises-cats">
-              <legend>Kategorie</legend>
-              <div className="exercises-cats__list">
-                {categories.map((category) => (
-                  <label key={category.id} className="exercises-cats__item">
-                    <input
-                      type="checkbox"
-                      checked={selectedCategories.includes(category.id)}
-                      onChange={() => toggleCategory(category.id)}
-                    />
-                    {category.name}
-                  </label>
-                ))}
-              </div>
-              {selectedCategoryNames.length > 0 ? (
-                <p className="exercises-muted">Wybrane: {selectedCategoryNames.join(', ')}</p>
-              ) : null}
-            </fieldset>
-          ) : null}
-          {createError ? (
-            <p className="ui-modal__error" role="alert">
-              {createError}
-            </p>
-          ) : null}
-          <div className="ui-modal__actions">
-            <Button type="button" variant="secondary" onClick={() => setCreateOpen(false)}>
-              Anuluj
-            </Button>
-            <Button type="submit" loading={createBusy}>
-              Zapisz
-            </Button>
-          </div>
-        </form>
-      </Modal>
+      <CreateExerciseModal
+        open={createOpen}
+        categories={categories}
+        onClose={() => setCreateOpen(false)}
+        onCreated={() => setReloadToken((value) => value + 1)}
+      />
+
+      <DeleteExerciseModal
+        open={deleteTarget !== null}
+        exercise={deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onDeleted={() => setReloadToken((value) => value + 1)}
+      />
 
       <AssignExerciseModal
         open={assignTarget !== null}

@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from core.mixins import PatientSelfMixin
 from core.permissions import IsPatient, IsTherapist
-from core.storage import save_upload
+from core.storage import delete_media_url, save_upload
 
 from .models import Exercise, ExerciseAssignment, ExerciseCategory, ExerciseCompletion
 from .serializers import (
@@ -62,6 +62,22 @@ class TherapistExerciseListCreateView(generics.ListCreateAPIView):
         exercise = serializer.save()
         exercise = Exercise.objects.prefetch_related('categories').get(pk=exercise.pk)
         return Response(ExerciseSerializer(exercise).data, status=status.HTTP_201_CREATED)
+
+
+class TherapistExerciseDetailView(generics.RetrieveDestroyAPIView):
+    permission_classes = [IsAuthenticated, IsTherapist]
+    serializer_class = ExerciseSerializer
+    http_method_names = ['get', 'delete', 'head', 'options']
+
+    def get_queryset(self):
+        return Exercise.objects.filter(
+            therapist=self.request.user.therapist_profile,
+        ).prefetch_related('categories')
+
+    def perform_destroy(self, instance):
+        file_url = instance.file_url
+        instance.delete()
+        delete_media_url(file_url)
 
 
 class TherapistExerciseCategoryListView(generics.ListAPIView):
