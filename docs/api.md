@@ -5,7 +5,8 @@
 
 **Base URL:** `http://localhost:8000/api/v1`  
 **Format:** JSON (`Content-Type: application/json`)  
-**Auth:** cookies `access_token` / `refresh_token` (httpOnly) **lub** `Authorization: Bearer <access_token>`
+**Auth:** cookies `access_token` / `refresh_token` (httpOnly) **lub** `Authorization: Bearer <access_token>`.  
+Login / rejestracja / refresh zwracają też `access` + `refresh` w JSON (dla mobile SecureStore).
 
 ## Konwencje
 
@@ -73,6 +74,9 @@
 { "email": "...", "password": "..." }
 ```
 
+**200** — `{ "user": {...}, "access": "<jwt>", "refresh": "<jwt>" }` + cookies JWT.  
+Mobile zapisuje `access`/`refresh` (np. SecureStore) i wysyła `Authorization: Bearer`.
+
 ### POST `/auth/logout`
 
 Czyści cookies `access_token` / `refresh_token`. **200** — `{ "detail": "Wylogowano." }`.
@@ -83,7 +87,8 @@ Czyści cookies `access_token` / `refresh_token`. **200** — `{ "detail": "Wylo
 { "refresh": "<refresh_token>" }
 ```
 
-Cookie `refresh_token` też jest akceptowane (body opcjonalne).
+Cookie `refresh_token` też jest akceptowane (body opcjonalne).  
+**200** — `{ "detail", "access", "refresh" }` + odświeżone cookies.
 ### POST `/auth/password-reset/request`
 
 ```json
