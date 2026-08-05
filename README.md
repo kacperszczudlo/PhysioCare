@@ -43,6 +43,10 @@ PhysioCare/
 | [docs/architecture.md](docs/architecture.md) | Architektura systemu |
 | [docs/use-cases.md](docs/use-cases.md) | Przypadki użycia |
 | [docs/api.md](docs/api.md) | Kontrakt REST API |
+| [docs/monitoring.md](docs/monitoring.md) | Logi strukturalne, latency, request id |
+| [docs/e2e-checklist.md](docs/e2e-checklist.md) | Checklist ścieżek krytycznych |
+| [docs/deployment.md](docs/deployment.md) | Wdrożenie demo (Railway / VPS / EAS) |
+| [docs/presentation-outline.md](docs/presentation-outline.md) | Konspekt prezentacji |
 | [docs/postman-testing.md](docs/postman-testing.md) | Kolekcja Postman, macierz UC, checklista |
 | [docs/postman/PhysioCare.json](docs/postman/PhysioCare.json) | Importowalna kolekcja Postman |
 | [docs/diagrams/](docs/diagrams/) | ERD, architektura, moduły, use case (draw.io) |
@@ -103,6 +107,27 @@ python scripts/reset_db.py
 
 ```powershell
 python scripts/sync_schema_sql.py
+```
+
+### Jakość kodu (lint / format)
+
+```powershell
+# Backend — Ruff (z katalogu `backend/`, venv aktywny)
+pip install -r requirements.txt
+ruff check physiocare tests
+ruff format --check physiocare tests
+
+# Web — ESLint + Prettier (+ Oxlint)
+cd web
+npm install
+npm run lint
+npm run format:check
+
+# Mobile — ESLint + Prettier + tsc
+cd mobile
+npm install
+npm run lint
+npm run format:check
 ```
 
 ### Testy
@@ -176,7 +201,7 @@ Referencja wizualna ekranów: plik `mockup_systemu_fizjoterapii.tsx` (poza repo 
 **Faza 0–3** — dokumentacja, modele, REST API, Postman, testy backendu.  
 **Faza 4 (branch `feat/web`)** — panel webowy terapeuty: auth, pulpit, harmonogram, pacjenci, ćwiczenia, profil (4.1–4.7).  
 **Faza 5 (branch `feat/mobile`)** — aplikacja mobilna pacjenta (Expo): auth RODO, pulpit, wizyty, profil, stack szczegółów (5.1–5.7).  
-**Następna:** Faza 6 — jakość, monitoring, finalizacja.
+**Faza 6 (branch `feat/refactor`)** — Ruff / ESLint / Prettier, monitoring (logi JSON + latency), checklist E2E, przewodnik wdrożenia, konspekt prezentacji.
 
 ## Licencja
 

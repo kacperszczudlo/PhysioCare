@@ -118,6 +118,8 @@ Współpraca komponentów: **web** i **mobile** korzystają z tego samego **REST
 | 6.6 | Aktualizacja README, screenshoty | Dokumentacja finalna |
 | 6.7 | Prezentacja pracy | Slajdy + demo live |
 
+> **Status Faza 6 (branch `feat/refactor`):** tooling (Ruff/ESLint/Prettier), middleware latency + logi JSON, `docs/monitoring.md`, `docs/e2e-checklist.md`, `docs/deployment.md`, `docs/presentation-outline.md`. Screenshoty UI do uzupełnienia w `docs/screenshots/`.
+
 ---
 
 ## Mapowanie na plan prowadzącego (21 punktów)
