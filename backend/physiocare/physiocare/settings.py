@@ -1,5 +1,5 @@
-from datetime import timedelta
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
@@ -66,6 +66,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.RequestTimingMiddleware',
 ]
 
 ROOT_URLCONF = 'physiocare.urls'
@@ -187,6 +188,8 @@ if DEBUG:
         'rest_framework.renderers.BrowsableAPIRenderer'
     )
 
+_LOG_FORMAT = os.environ.get('LOG_FORMAT', 'json' if not DEBUG else 'text').lower()
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -194,11 +197,14 @@ LOGGING = {
         'standard': {
             'format': '%(asctime)s %(levelname)s [%(name)s] %(message)s',
         },
+        'json': {
+            '()': 'core.logging_formatters.StructuredJsonFormatter',
+        },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'standard',
+            'formatter': 'json' if _LOG_FORMAT == 'json' else 'standard',
         },
     },
     'loggers': {
