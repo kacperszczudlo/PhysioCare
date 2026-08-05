@@ -1,5 +1,6 @@
 import { api } from './client'
 import type {
+  CategoryKind,
   Exercise,
   ExerciseAssignment,
   ExerciseAssignmentPayload,
@@ -15,20 +16,34 @@ async function listResults<T>(path: string): Promise<T[]> {
 }
 
 export interface ExerciseListParams {
+  /** Generic category UUID or slug */
   category?: string
+  /** Exercise type slug/UUID (TYPE) */
+  type?: string
+  /** Body region slug/UUID (REGION) */
+  region?: string
+  /** Muscle / group slug/UUID (MUSCLE) */
+  muscle?: string
+  /** Injury / indication slug/UUID (INJURY) */
+  injury?: string
   media_type?: MediaType | ''
   q?: string
+  kind?: CategoryKind
 }
 
 export const exercisesApi = {
-  listCategories() {
-    return api.get<ExerciseCategory[]>('/therapist/exercise-categories/')
+  listCategories(kind?: CategoryKind) {
+    const suffix = kind ? `?kind=${kind}` : ''
+    return api.get<ExerciseCategory[]>(`/therapist/exercise-categories/${suffix}`)
   },
 
   list(params: ExerciseListParams = {}) {
     const query = new URLSearchParams()
-    if (params.category) {
-      query.set('category', params.category)
+    for (const key of ['category', 'type', 'region', 'muscle', 'injury'] as const) {
+      const value = params[key]
+      if (value) {
+        query.set(key, value)
+      }
     }
     if (params.media_type) {
       query.set('media_type', params.media_type)

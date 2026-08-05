@@ -10,7 +10,8 @@ from .models import Exercise, ExerciseAssignment, ExerciseCategory, ExerciseComp
 class ExerciseCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ExerciseCategory
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'kind', 'slug']
+        read_only_fields = fields
 
 
 class ExerciseSerializer(serializers.ModelSerializer):

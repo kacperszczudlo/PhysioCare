@@ -9,7 +9,8 @@ from core.mixins import PatientSelfMixin
 from core.permissions import IsPatient, IsTherapist
 from core.storage import delete_media_url, save_upload
 
-from .models import Exercise, ExerciseAssignment, ExerciseCategory, ExerciseCompletion
+from .filters import filter_exercises_queryset
+from .models import CategoryKind, Exercise, ExerciseAssignment, ExerciseCategory, ExerciseCompletion
 from .serializers import (
     ExerciseAssignmentCreateSerializer,
     ExerciseAssignmentSerializer,
@@ -32,16 +33,7 @@ class TherapistExerciseListCreateView(generics.ListCreateAPIView):
         qs = Exercise.objects.filter(
             therapist=self.request.user.therapist_profile,
         ).prefetch_related('categories')
-        category = self.request.query_params.get('category')
-        if category:
-            qs = qs.filter(categories__id=category).distinct()
-        media_type = self.request.query_params.get('media_type')
-        if media_type:
-            qs = qs.filter(media_type=media_type)
-        search = self.request.query_params.get('q')
-        if search:
-            qs = qs.filter(title__icontains=search)
-        return qs.order_by('-created_at')
+        return filter_exercises_queryset(qs, self.request.query_params).order_by('-created_at')
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -137,7 +129,14 @@ class TherapistExerciseCategoryListView(generics.ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        return ExerciseCategory.objects.all().order_by('name')
+        qs = ExerciseCategory.objects.all()
+        kind = self.request.query_params.get('kind')
+        if kind:
+            kind = kind.upper()
+            if kind not in CategoryKind.values:
+                return qs.none()
+            qs = qs.filter(kind=kind)
+        return qs.order_by('kind', 'name')
 
 
 

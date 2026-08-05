@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { exercisesApi } from '@/api/exercises'
 import { getErrorMessage } from '@/api/client'
-import type { Exercise, ExerciseCategory, MediaType } from '@/api/types'
+import type { CategoryKind, Exercise, ExerciseCategory, MediaType } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
@@ -13,14 +13,39 @@ import { DeleteExerciseModal } from '@/pages/exercises/DeleteExerciseModal'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
 import './ExercisesPage.css'
 
+const KIND_ORDER: CategoryKind[] = ['TYPE', 'REGION', 'MUSCLE', 'INJURY']
+
+const KIND_LABELS: Record<CategoryKind, string> = {
+  TYPE: 'Typ',
+  REGION: 'Okolica',
+  MUSCLE: 'Mięsień',
+  INJURY: 'Kontuzja',
+}
+
 function mediaLabel(type: MediaType): string {
   return type === 'VIDEO' ? 'Wideo' : 'PDF'
+}
+
+function groupByKind(categories: ExerciseCategory[]): Record<CategoryKind, ExerciseCategory[]> {
+  const groups = {
+    TYPE: [] as ExerciseCategory[],
+    REGION: [] as ExerciseCategory[],
+    MUSCLE: [] as ExerciseCategory[],
+    INJURY: [] as ExerciseCategory[],
+  }
+  for (const category of categories) {
+    groups[category.kind]?.push(category)
+  }
+  return groups
 }
 
 export function ExercisesPage() {
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [categories, setCategories] = useState<ExerciseCategory[]>([])
-  const [categoryFilter, setCategoryFilter] = useState('')
+  const [typeFilter, setTypeFilter] = useState('')
+  const [regionFilter, setRegionFilter] = useState('')
+  const [muscleFilter, setMuscleFilter] = useState('')
+  const [injuryFilter, setInjuryFilter] = useState('')
   const [mediaFilter, setMediaFilter] = useState<MediaType | ''>('')
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
@@ -31,6 +56,8 @@ export function ExercisesPage() {
   const [editTarget, setEditTarget] = useState<Exercise | null>(null)
   const [assignTarget, setAssignTarget] = useState<Exercise | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Exercise | null>(null)
+
+  const grouped = useMemo(() => groupByKind(categories), [categories])
 
   useEffect(() => {
     let cancelled = false
@@ -59,7 +86,10 @@ export function ExercisesPage() {
       setError(null)
       try {
         const data = await exercisesApi.list({
-          category: categoryFilter || undefined,
+          type: typeFilter || undefined,
+          region: regionFilter || undefined,
+          muscle: muscleFilter || undefined,
+          injury: injuryFilter || undefined,
           media_type: mediaFilter || undefined,
           q: query || undefined,
         })
@@ -81,13 +111,13 @@ export function ExercisesPage() {
     return () => {
       cancelled = true
     }
-  }, [categoryFilter, mediaFilter, query, reloadToken])
+  }, [typeFilter, regionFilter, muscleFilter, injuryFilter, mediaFilter, query, reloadToken])
 
   return (
     <section className="exercises-page">
       <PageHeader
         title="Baza ćwiczeń"
-        description="Katalog wideo i PDF — filtruj, dodawaj i wysyłaj pacjentom do aplikacji."
+        description="Katalog wideo i PDF — filtruj po typie, okolicy, mięśniu i kontuzji, potem wysyłaj pacjentom."
         actions={
           <Button type="button" onClick={() => setCreateOpen(true)}>
             + Dodaj ćwiczenie
@@ -104,15 +134,60 @@ export function ExercisesPage() {
           placeholder="Tytuł lub fragment instrukcji…"
         />
         <label className="ui-field">
-          <span className="ui-field__label">Kategoria</span>
+          <span className="ui-field__label">Typ ćwiczenia</span>
           <select
             className="exercises-select"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
           >
             <option value="">Wszystkie</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
+            {grouped.TYPE.map((category) => (
+              <option key={category.id} value={category.slug}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="ui-field">
+          <span className="ui-field__label">Okolica</span>
+          <select
+            className="exercises-select"
+            value={regionFilter}
+            onChange={(e) => setRegionFilter(e.target.value)}
+          >
+            <option value="">Wszystkie</option>
+            {grouped.REGION.map((category) => (
+              <option key={category.id} value={category.slug}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="ui-field">
+          <span className="ui-field__label">Mięsień</span>
+          <select
+            className="exercises-select"
+            value={muscleFilter}
+            onChange={(e) => setMuscleFilter(e.target.value)}
+          >
+            <option value="">Wszystkie</option>
+            {grouped.MUSCLE.map((category) => (
+              <option key={category.id} value={category.slug}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="ui-field">
+          <span className="ui-field__label">Kontuzja</span>
+          <select
+            className="exercises-select"
+            value={injuryFilter}
+            onChange={(e) => setInjuryFilter(e.target.value)}
+          >
+            <option value="">Wszystkie</option>
+            {grouped.INJURY.map((category) => (
+              <option key={category.id} value={category.slug}>
                 {category.name}
               </option>
             ))}
@@ -190,9 +265,19 @@ export function ExercisesPage() {
                 )}
                 {exercise.categories.length > 0 ? (
                   <ul className="exercises-card__tags">
-                    {exercise.categories.map((category) => (
-                      <li key={category.id}>{category.name}</li>
-                    ))}
+                    {KIND_ORDER.flatMap((kind) =>
+                      exercise.categories
+                        .filter((category) => category.kind === kind)
+                        .map((category) => (
+                          <li
+                            key={category.id}
+                            className={`exercises-card__tag exercises-card__tag--${kind.toLowerCase()}`}
+                            title={KIND_LABELS[kind]}
+                          >
+                            {category.name}
+                          </li>
+                        )),
+                    )}
                   </ul>
                 ) : null}
                 <div className="exercises-card__actions">

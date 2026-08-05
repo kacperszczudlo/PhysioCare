@@ -185,9 +185,9 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 
 | Metoda | Endpoint | Rola | Opis |
 |--------|----------|------|------|
-| GET | `/therapist/exercises` | THERAPIST | Katalog (`?category=`, `?media_type=`, `?q=`) |
+| GET | `/therapist/exercises` | THERAPIST | Katalog — filtry poniżej |
 | GET | `/therapist/exercises/{id}` | THERAPIST | Szczegóły ćwiczenia |
-| GET | `/therapist/exercise-categories` | THERAPIST | Lista kategorii |
+| GET | `/therapist/exercise-categories` | THERAPIST | Lista kategorii (`?kind=TYPE\|REGION\|MUSCLE\|INJURY`) |
 | POST | `/therapist/exercises` | THERAPIST | Upload metadanych + plik |
 | PATCH | `/therapist/exercises/{id}` | THERAPIST | Edycja (plik opcjonalny) |
 | DELETE | `/therapist/exercises/{id}` | THERAPIST | Usunięcie (kaskada: przypisania) |
@@ -197,6 +197,22 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 | DELETE | `/therapist/exercise-assignments/{id}` | THERAPIST | Usunięcie zalecenia |
 | GET | `/me/exercises/today` | PATIENT | Zalecenia na dziś |
 | POST | `/me/exercise-completions` | PATIENT | Oznacz / odznacz wykonanie (`done: true\|false`) |
+
+**Filtry katalogu** (`GET /therapist/exercises`):
+
+| Param | Znaczenie |
+|-------|-----------|
+| `type` | Typ ćwiczenia — slug lub UUID (`strengthening`, `stretching`, `mobilization`, `education`…) |
+| `region` | Okolica ciała (`knee`, `lumbar`, `shoulder`…) |
+| `muscle` | Mięsień / grupa (`quadriceps`, `gluteals`…) |
+| `injury` | Kontuzja / wskazanie (`acl_rehab`, `lbp`…) |
+| `category` | Dowolna kategoria (slug lub UUID); OR przy wielu wartościach |
+| `media_type` | `VIDEO` / `PDF` |
+| `q` | Szukaj w tytule i instrukcji |
+
+Wymiary `type` / `region` / `muscle` / `injury` łączone są **AND** (ćwiczenie musi mieć tag z każdego wybranego wymiaru). W ramach jednego parametru wiele wartości (powtórzony query lub CSV) to **OR**.
+
+**Kategoria w odpowiedzi:** `{ id, name, kind, slug }` gdzie `kind` ∈ `TYPE` | `REGION` | `MUSCLE` | `INJURY`.
 
 **Przypisanie:**
 

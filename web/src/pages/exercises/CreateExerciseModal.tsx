@@ -1,8 +1,8 @@
-import { useEffect, useId, useRef, useState, type DragEvent, type FormEvent } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type DragEvent, type FormEvent } from 'react'
 
 import { exercisesApi } from '@/api/exercises'
 import { getErrorMessage } from '@/api/client'
-import type { Exercise, ExerciseCategory, MediaType } from '@/api/types'
+import type { CategoryKind, Exercise, ExerciseCategory, MediaType } from '@/api/types'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
@@ -19,6 +19,27 @@ interface CreateExerciseModalProps {
 
 const ACCEPT = 'video/mp4,application/pdf,.mp4,.pdf'
 const MAX_FILE_BYTES = 80 * 1024 * 1024
+
+const KIND_ORDER: CategoryKind[] = ['TYPE', 'REGION', 'MUSCLE', 'INJURY']
+
+const KIND_SECTION_LABELS: Record<CategoryKind, { title: string; hint: string }> = {
+  TYPE: {
+    title: 'Typ ćwiczenia',
+    hint: 'Cel interwencji — np. wzmacnianie, mobilizacja, edukacja.',
+  },
+  REGION: {
+    title: 'Okolica ciała',
+    hint: 'Główny region anatomiczny.',
+  },
+  MUSCLE: {
+    title: 'Mięsień / grupa',
+    hint: 'Docelowa grupa mięśniowa (opcjonalnie).',
+  },
+  INJURY: {
+    title: 'Kontuzja / wskazanie',
+    hint: 'Typowe wskazanie kliniczne (opcjonalnie).',
+  },
+}
 
 function guessMediaType(file: File): MediaType | null {
   const name = file.name.toLowerCase()
@@ -73,6 +94,19 @@ export function CreateExerciseModal({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fileError, setFileError] = useState<string | null>(null)
+
+  const groupedCategories = useMemo(() => {
+    const groups: Record<CategoryKind, ExerciseCategory[]> = {
+      TYPE: [],
+      REGION: [],
+      MUSCLE: [],
+      INJURY: [],
+    }
+    for (const category of categories) {
+      groups[category.kind]?.push(category)
+    }
+    return groups
+  }, [categories])
 
   useEffect(() => {
     if (!open) {
@@ -367,24 +401,45 @@ export function CreateExerciseModal({
           <section className="ex-create__section" aria-labelledby="ex-create-cats">
             <div className="ex-create__section-head">
               <h3 id="ex-create-cats">Kategorie</h3>
-              <p>Opcjonalnie — ułatwia filtrowanie w katalogu.</p>
+              <p>Oznacz typ, okolicę, mięsień i ewentualne wskazanie — ułatwia filtrowanie w katalogu.</p>
             </div>
-            <div className="ex-create__chips" role="group" aria-label="Kategorie ćwiczenia">
-              {categories.map((category) => {
-                const selected = selectedCategories.includes(category.id)
-                return (
-                  <button
-                    key={category.id}
-                    type="button"
-                    className={`ex-create__chip${selected ? ' ex-create__chip--selected' : ''}`}
-                    aria-pressed={selected}
-                    onClick={() => toggleCategory(category.id)}
+            {KIND_ORDER.map((kind) => {
+              const list = groupedCategories[kind]
+              if (!list.length) {
+                return null
+              }
+              const meta = KIND_SECTION_LABELS[kind]
+              return (
+                <div key={kind} className="ex-create__cat-group">
+                  <div className="ex-create__cat-group-head">
+                    <h4>{meta.title}</h4>
+                    <p>{meta.hint}</p>
+                  </div>
+                  <div
+                    className="ex-create__chips"
+                    role="group"
+                    aria-label={meta.title}
                   >
-                    {category.name}
-                  </button>
-                )
-              })}
-            </div>
+                    {list.map((category) => {
+                      const selected = selectedCategories.includes(category.id)
+                      return (
+                        <button
+                          key={category.id}
+                          type="button"
+                          className={`ex-create__chip ex-create__chip--${kind.toLowerCase()}${
+                            selected ? ' ex-create__chip--selected' : ''
+                          }`}
+                          aria-pressed={selected}
+                          onClick={() => toggleCategory(category.id)}
+                        >
+                          {category.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
           </section>
         ) : null}
 

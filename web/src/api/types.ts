@@ -134,9 +134,13 @@ export interface VisitNote {
 
 export type MediaType = 'VIDEO' | 'PDF'
 
+export type CategoryKind = 'TYPE' | 'REGION' | 'MUSCLE' | 'INJURY'
+
 export interface ExerciseCategory {
   id: string
   name: string
+  kind: CategoryKind
+  slug: string
 }
 
 export interface Exercise {

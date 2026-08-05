@@ -8,14 +8,32 @@ class MediaType(models.TextChoices):
     PDF = 'PDF', 'PDF'
 
 
+class CategoryKind(models.TextChoices):
+    TYPE = 'TYPE', 'Typ ćwiczenia'
+    REGION = 'REGION', 'Okolica ciała'
+    MUSCLE = 'MUSCLE', 'Mięsień / grupa'
+    INJURY = 'INJURY', 'Kontuzja / wskazanie'
+
+
 class ExerciseCategory(UUIDModel):
     name = models.CharField(max_length=80, unique=True)
+    kind = models.CharField(
+        max_length=10,
+        choices=CategoryKind.choices,
+        default=CategoryKind.TYPE,
+        db_index=True,
+    )
+    slug = models.SlugField(max_length=60, unique=True)
 
     class Meta:
         db_table = 'exercise_categories'
+        ordering = ['kind', 'name']
+        indexes = [
+            models.Index(fields=['kind', 'name'], name='idx_ex_cat_kind_name'),
+        ]
 
     def __str__(self):
-        return self.name
+        return f'{self.name} ({self.kind})'
 
 
 class Exercise(TimestampedModel):
