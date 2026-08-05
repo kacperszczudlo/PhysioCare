@@ -48,31 +48,31 @@ class TherapistDocumentUploadView(generics.CreateAPIView):
         visit_id = request.data.get('visit_id') or None
         episode_id = request.data.get('episode_id') or None
 
-        if visit_id:
-            if not Visit.objects.filter(pk=visit_id, patient=patient).exists():
-                return Response(
-                    {
-                        'error': {
-                            'code': 'VALIDATION',
-                            'message': 'Wizyta nie należy do wskazanego pacjenta.',
-                            'details': {'visit_id': visit_id},
-                        }
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        if visit_id and not Visit.objects.filter(pk=visit_id, patient=patient).exists():
+            return Response(
+                {
+                    'error': {
+                        'code': 'VALIDATION',
+                        'message': 'Wizyta nie należy do wskazanego pacjenta.',
+                        'details': {'visit_id': visit_id},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        if episode_id:
-            if not TreatmentEpisode.objects.filter(pk=episode_id, patient=patient).exists():
-                return Response(
-                    {
-                        'error': {
-                            'code': 'VALIDATION',
-                            'message': 'Epizod nie należy do wskazanego pacjenta.',
-                            'details': {'episode_id': episode_id},
-                        }
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        if episode_id and not TreatmentEpisode.objects.filter(
+            pk=episode_id, patient=patient
+        ).exists():
+            return Response(
+                {
+                    'error': {
+                        'code': 'VALIDATION',
+                        'message': 'Epizod nie należy do wskazanego pacjenta.',
+                        'details': {'episode_id': episode_id},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         document = MedicalDocument.objects.create(
             patient=patient,

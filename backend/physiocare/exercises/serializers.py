@@ -87,15 +87,14 @@ class ExerciseAssignmentCreateSerializer(serializers.ModelSerializer):
                 {'patient_id': 'Pacjent nie należy do tego terapeuty.'}
             )
 
-        if episode_id is not None:
-            if not TreatmentEpisode.objects.filter(
-                pk=episode_id,
-                patient_id=patient_id,
-                patient__therapist=therapist,
-            ).exists():
-                raise serializers.ValidationError(
-                    {'episode_id': 'Epizod nie należy do wskazanego pacjenta.'}
-                )
+        if episode_id is not None and not TreatmentEpisode.objects.filter(
+            pk=episode_id,
+            patient_id=patient_id,
+            patient__therapist=therapist,
+        ).exists():
+            raise serializers.ValidationError(
+                {'episode_id': 'Epizod nie należy do wskazanego pacjenta.'}
+            )
 
         return attrs
 

@@ -10,7 +10,7 @@ from core.mixins import PatientSelfMixin
 from core.permissions import IsPatient, IsTherapist
 from core.storage import save_upload
 
-from .models import Exercise, ExerciseAssignment, ExerciseCompletion
+from .models import Exercise, ExerciseAssignment, ExerciseCategory, ExerciseCompletion
 from .serializers import (
     ExerciseAssignmentCreateSerializer,
     ExerciseAssignmentSerializer,

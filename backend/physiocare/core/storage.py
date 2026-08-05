@@ -4,7 +4,6 @@ import uuid
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
-
 ALLOWED_UPLOAD_MIME = {
     'application/pdf',
     'video/mp4',

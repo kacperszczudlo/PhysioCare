@@ -7,7 +7,7 @@ from core.mixins import TherapistPatientQuerysetMixin
 from core.permissions import IsEpisodeParticipant, IsTherapist
 from patients.models import PatientProfile
 
-from .models import TreatmentEpisode, VisitNote
+from .models import BodyAreaPain, TreatmentEpisode, VisitNote
 from .serializers import (
     BodyAreaPainSerializer,
     TreatmentEpisodeCreateSerializer,

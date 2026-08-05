@@ -7,7 +7,6 @@ from core.mixins import PatientSelfMixin, TherapistPatientQuerysetMixin
 from core.permissions import IsOwnerPatientProfile, IsPatient, IsTherapist
 from privacy.models import Consent, ConsentType
 
-from .models import PatientProfile
 from .serializers import (
     ConsentSerializer,
     MeProfileSerializer,
