@@ -1,0 +1,67 @@
+import * as SecureStore from 'expo-secure-store'
+import { Platform } from 'react-native'
+
+const ACCESS_KEY = 'physiocare_access'
+const REFRESH_KEY = 'physiocare_refresh'
+
+const memory = new Map<string, string>()
+
+async function setItem(key: string, value: string): Promise<void> {
+  if (Platform.OS === 'web') {
+    memory.set(key, value)
+    try {
+      localStorage.setItem(key, value)
+    } catch {
+      // ignore quota / private mode
+    }
+    return
+  }
+  await SecureStore.setItemAsync(key, value)
+}
+
+async function getItem(key: string): Promise<string | null> {
+  if (Platform.OS === 'web') {
+    if (memory.has(key)) {
+      return memory.get(key) ?? null
+    }
+    try {
+      return localStorage.getItem(key)
+    } catch {
+      return null
+    }
+  }
+  return SecureStore.getItemAsync(key)
+}
+
+async function deleteItem(key: string): Promise<void> {
+  if (Platform.OS === 'web') {
+    memory.delete(key)
+    try {
+      localStorage.removeItem(key)
+    } catch {
+      // ignore
+    }
+    return
+  }
+  await SecureStore.deleteItemAsync(key)
+}
+
+export const tokenStorage = {
+  async getAccess(): Promise<string | null> {
+    return getItem(ACCESS_KEY)
+  },
+
+  async getRefresh(): Promise<string | null> {
+    return getItem(REFRESH_KEY)
+  },
+
+  async setTokens(access: string, refresh: string): Promise<void> {
+    await setItem(ACCESS_KEY, access)
+    await setItem(REFRESH_KEY, refresh)
+  },
+
+  async clear(): Promise<void> {
+    await deleteItem(ACCESS_KEY)
+    await deleteItem(REFRESH_KEY)
+  },
+}
