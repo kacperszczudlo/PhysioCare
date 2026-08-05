@@ -85,7 +85,8 @@ Współpraca komponentów: **web** i **mobile** korzystają z tego samego **REST
 | 4.6 | Profil terapeuty | Widoki |
 | 4.7 | Integracja z API (loading / error / empty) | Wszystkie moduły ✓ |
 
-> **Status Faza 4:** zamknięta na branchu `feat/web` (web panel terapeuty).
+> **Status Faza 4:** zamknięta na branchu `feat/web` (web panel terapeuty).  
+> **Status Faza 5:** deliverable 5.1–5.7 na branchu `feat/mobile` (Expo — pacjent).
 
 ---
 
@@ -100,6 +101,8 @@ Współpraca komponentów: **web** i **mobile** korzystają z tego samego **REST
 | 5.5 | Profil, dokumenty, powiadomienia, zgody | Ekrany |
 | 5.6 | Pod-widoki: szczegóły wizyty, profil terapeuty | Stack |
 | 5.7 | Integracja z API | Pełny flow pacjenta |
+
+> Po domknięciu 5.1–5.7: auth Bearer + SecureStore, ekrany UC-01–09 / 17–18.
 
 ---
 

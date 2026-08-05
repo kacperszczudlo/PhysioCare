@@ -29,4 +29,7 @@ class TherapistPublicSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TherapistProfile
-        fields = ['id', 'first_name', 'last_name', 'bio', 'courses', 'avatar_url']
+        fields = [
+            'id', 'first_name', 'last_name', 'bio', 'courses',
+            'avatar_url', 'phone',
+        ]

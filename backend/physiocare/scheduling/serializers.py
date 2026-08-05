@@ -22,6 +22,14 @@ class VisitSerializer(serializers.ModelSerializer):
         source='patient.user.last_name',
         read_only=True,
     )
+    therapist_first_name = serializers.CharField(
+        source='therapist.user.first_name',
+        read_only=True,
+    )
+    therapist_last_name = serializers.CharField(
+        source='therapist.user.last_name',
+        read_only=True,
+    )
     therapy_type_name = serializers.CharField(
         source='therapy_type.name',
         read_only=True,
@@ -40,6 +48,7 @@ class VisitSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'patient', 'therapist', 'episode', 'therapy_type',
             'patient_first_name', 'patient_last_name',
+            'therapist_first_name', 'therapist_last_name',
             'therapy_type_name', 'therapy_type_color', 'therapy_type_duration_min',
             'start_at', 'end_at', 'status', 'location_address',
             'prep_instructions', 'cancel_reason', 'created_at',
@@ -47,6 +56,7 @@ class VisitSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id', 'patient', 'therapist', 'episode', 'therapy_type',
             'patient_first_name', 'patient_last_name',
+            'therapist_first_name', 'therapist_last_name',
             'therapy_type_name', 'therapy_type_color', 'therapy_type_duration_min',
             'created_at',
         ]

@@ -37,6 +37,8 @@ class TherapistVisitListCreateView(generics.ListCreateAPIView):
         qs = Visit.objects.filter(therapist=therapist).select_related(
             'patient',
             'patient__user',
+            'therapist',
+            'therapist__user',
             'therapy_type',
             'episode',
         )
@@ -71,7 +73,14 @@ class TherapistVisitDetailView(generics.RetrieveUpdateAPIView):
     def get_queryset(self):
         return Visit.objects.filter(
             therapist=self.request.user.therapist_profile,
-        ).select_related('patient', 'patient__user', 'therapy_type', 'episode')
+        ).select_related(
+            'patient',
+            'patient__user',
+            'therapist',
+            'therapist__user',
+            'therapy_type',
+            'episode',
+        )
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -93,7 +102,12 @@ class MeVisitListView(PatientSelfMixin, generics.ListAPIView):
     def get_queryset(self):
         qs = Visit.objects.filter(
             patient=self.get_patient_profile(),
-        ).select_related('therapist', 'therapy_type', 'episode').order_by('start_at')
+        ).select_related(
+            'therapist',
+            'therapist__user',
+            'therapy_type',
+            'episode',
+        ).order_by('start_at')
 
         status_filter = self.request.query_params.get('status')
         now = timezone.now()
@@ -110,11 +124,19 @@ class VisitDetailView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        related = (
+            'patient',
+            'patient__user',
+            'therapist',
+            'therapist__user',
+            'therapy_type',
+            'episode',
+        )
         if user.role == 'PATIENT':
-            return Visit.objects.filter(patient=user.patient_profile)
+            return Visit.objects.filter(patient=user.patient_profile).select_related(*related)
         if user.role == 'THERAPIST':
-            return Visit.objects.filter(therapist=user.therapist_profile)
-        return Visit.objects.all()
+            return Visit.objects.filter(therapist=user.therapist_profile).select_related(*related)
+        return Visit.objects.all().select_related(*related)
 
 
 class VisitRescheduleView(APIView):

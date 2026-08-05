@@ -19,6 +19,7 @@ from .serializers import (
     ExerciseCompletionSerializer,
     ExerciseCreateSerializer,
     ExerciseSerializer,
+    TodayExerciseSerializer,
 )
 
 
@@ -95,16 +96,28 @@ class TherapistExerciseAssignmentCreateView(generics.CreateAPIView):
 
 
 class MeExercisesTodayView(PatientSelfMixin, generics.ListAPIView):
-    serializer_class = ExerciseAssignmentSerializer
+    serializer_class = TodayExerciseSerializer
     permission_classes = [IsAuthenticated, IsPatient]
 
     def get_queryset(self):
+        from django.db.models import Exists, OuterRef
+
         today = timezone.localdate()
-        return ExerciseAssignment.objects.filter(
-            patient=self.get_patient_profile(),
-            start_date__lte=today,
-            end_date__gte=today,
-        ).select_related('exercise').order_by('assigned_at')
+        completed = ExerciseCompletion.objects.filter(
+            assignment_id=OuterRef('pk'),
+            completed_on=today,
+            done=True,
+        )
+        return (
+            ExerciseAssignment.objects.filter(
+                patient=self.get_patient_profile(),
+                start_date__lte=today,
+                end_date__gte=today,
+            )
+            .select_related('exercise')
+            .annotate(completed_today=Exists(completed))
+            .order_by('assigned_at')
+        )
 
 
 class MeExerciseCompletionCreateView(PatientSelfMixin, APIView):

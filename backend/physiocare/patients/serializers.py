@@ -38,8 +38,9 @@ class MeProfileSerializer(serializers.ModelSerializer):
         model = PatientProfile
         fields = [
             'id', 'email', 'first_name', 'last_name',
-            'pesel', 'phone', 'avatar_url',
+            'pesel', 'phone', 'avatar_url', 'therapist',
         ]
+        read_only_fields = ['id', 'therapist']
 
 
 class MeProfileUpdateSerializer(serializers.ModelSerializer):

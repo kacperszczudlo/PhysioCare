@@ -175,7 +175,8 @@ Referencja wizualna ekranów: plik `mockup_systemu_fizjoterapii.tsx` (poza repo 
 
 **Faza 0–3** — dokumentacja, modele, REST API, Postman, testy backendu.  
 **Faza 4 (branch `feat/web`)** — panel webowy terapeuty: auth, pulpit, harmonogram, pacjenci, ćwiczenia, profil (4.1–4.7).  
-**Następna:** Faza 5 — aplikacja mobilna (Expo).
+**Faza 5 (branch `feat/mobile`)** — aplikacja mobilna pacjenta (Expo): auth RODO, pulpit, wizyty, profil, stack szczegółów (5.1–5.7).  
+**Następna:** Faza 6 — jakość, monitoring, finalizacja.
 
 ## Licencja
 
