@@ -4,8 +4,7 @@ import { tokenStorage } from './tokenStorage'
 const configured = (process.env.EXPO_PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '')
 
 /** Default: local Django. Override via EXPO_PUBLIC_API_BASE_URL. */
-export const API_BASE_URL =
-  configured.length > 0 ? configured : 'http://localhost:8000/api/v1'
+export const API_BASE_URL = configured.length > 0 ? configured : 'http://localhost:8000/api/v1'
 
 export class ApiError extends Error {
   readonly status: number
@@ -142,10 +141,7 @@ async function tryRefreshSession(): Promise<boolean> {
   return refreshPromise
 }
 
-export async function apiRequest<T>(
-  path: string,
-  options: RequestOptions = {},
-): Promise<T> {
+export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, skipAuthRefresh, auth = true, headers: customHeaders, ...rest } = options
   const headers = new Headers(customHeaders)
   headers.set('Accept', 'application/json')

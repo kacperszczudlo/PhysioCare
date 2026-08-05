@@ -1,13 +1,6 @@
 import { Link } from 'expo-router'
 import { useState } from 'react'
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { ApiError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'

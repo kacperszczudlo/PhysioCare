@@ -1,10 +1,5 @@
 import { api } from './client'
-import type {
-  Paginated,
-  TherapyType,
-  Visit,
-  VisitCreatePayload,
-} from './types'
+import type { Paginated, TherapyType, Visit, VisitCreatePayload } from './types'
 
 async function listResults<T>(path: string): Promise<T[]> {
   const page = await api.get<Paginated<T> | T[]>(path)
@@ -32,11 +27,7 @@ export const schedulingApi = {
     return listResults<TherapyType>('/therapist/therapy-types/')
   },
 
-  createTherapyType(payload: {
-    name: string
-    color_hex?: string
-    duration_min?: number
-  }) {
+  createTherapyType(payload: { name: string; color_hex?: string; duration_min?: number }) {
     return api.post<TherapyType>('/therapist/therapy-types/', payload)
   },
 }

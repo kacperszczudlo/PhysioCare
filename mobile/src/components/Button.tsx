@@ -1,11 +1,4 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type PressableProps,
-} from 'react-native'
+import { ActivityIndicator, Pressable, StyleSheet, Text, type PressableProps } from 'react-native'
 
 import { colors, radius, space, typography } from '@/theme/tokens'
 

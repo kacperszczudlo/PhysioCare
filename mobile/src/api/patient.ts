@@ -59,9 +59,7 @@ export const patientApi = {
   },
 
   async getExercisesToday() {
-    const data = await api.get<TodayExercise[] | Paginated<TodayExercise>>(
-      '/me/exercises/today/',
-    )
+    const data = await api.get<TodayExercise[] | Paginated<TodayExercise>>('/me/exercises/today/')
     return unwrapList(data)
   },
 
@@ -74,9 +72,7 @@ export const patientApi = {
   },
 
   async getDocuments() {
-    const data = await api.get<MedicalDocument[] | Paginated<MedicalDocument>>(
-      '/me/documents/',
-    )
+    const data = await api.get<MedicalDocument[] | Paginated<MedicalDocument>>('/me/documents/')
     return unwrapList(data)
   },
 
@@ -85,9 +81,9 @@ export const patientApi = {
   },
 
   async getNotificationPreferences() {
-    const data = await api.get<
-      NotificationPreference[] | Paginated<NotificationPreference>
-    >('/me/notification-preferences/')
+    const data = await api.get<NotificationPreference[] | Paginated<NotificationPreference>>(
+      '/me/notification-preferences/',
+    )
     return unwrapList(data)
   },
 

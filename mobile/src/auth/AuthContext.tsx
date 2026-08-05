@@ -121,15 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       requestPasswordReset,
       confirmPasswordReset,
     }),
-    [
-      user,
-      isLoading,
-      login,
-      register,
-      logout,
-      requestPasswordReset,
-      confirmPasswordReset,
-    ],
+    [user, isLoading, login, register, logout, requestPasswordReset, confirmPasswordReset],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

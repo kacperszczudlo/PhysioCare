@@ -1,13 +1,6 @@
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useState } from 'react'
-import {
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
@@ -151,18 +144,11 @@ export default function DashboardScreen() {
               accessibilityRole="button"
               accessibilityState={{ checked: item.completed_today }}
             >
-              <View
-                style={[styles.check, item.completed_today ? styles.checkOn : null]}
-              >
+              <View style={[styles.check, item.completed_today ? styles.checkOn : null]}>
                 {item.completed_today ? <Text style={styles.checkMark}>✓</Text> : null}
               </View>
               <View style={styles.exerciseBody}>
-                <Text
-                  style={[
-                    styles.cardTitle,
-                    item.completed_today ? styles.strike : null,
-                  ]}
-                >
+                <Text style={[styles.cardTitle, item.completed_today ? styles.strike : null]}>
                   {item.exercise_title}
                 </Text>
                 <Text style={styles.muted}>{item.dosage}</Text>

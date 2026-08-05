@@ -92,11 +92,7 @@ export interface VisitCreatePayload {
   prep_instructions?: string
 }
 
-export type EpisodeStatus =
-  | 'IN_PROGRESS'
-  | 'COMPLETED_SUCCESS'
-  | 'REFERRED'
-  | 'INTERRUPTED'
+export type EpisodeStatus = 'IN_PROGRESS' | 'COMPLETED_SUCCESS' | 'REFERRED' | 'INTERRUPTED'
 
 export type BodyViewSide = 'FRONT' | 'BACK'
 

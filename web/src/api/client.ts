@@ -1,14 +1,9 @@
 import type { ApiErrorBody } from './types'
 
-const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(
-  /\/$/,
-  '',
-)
+const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
 
 /** Dev: proxy Vite (`/api` → backend). Prod: ustaw `VITE_API_BASE_URL`. */
-export const API_BASE_URL = configuredBase && configuredBase.length > 0
-  ? configuredBase
-  : '/api/v1'
+export const API_BASE_URL = configuredBase && configuredBase.length > 0 ? configuredBase : '/api/v1'
 
 export class ApiError extends Error {
   readonly status: number
@@ -132,10 +127,7 @@ async function parseJson(response: Response): Promise<ApiErrorBody | null> {
   }
 }
 
-export async function apiRequest<T>(
-  path: string,
-  options: RequestOptions = {},
-): Promise<T> {
+export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, skipAuthRefresh, headers: customHeaders, ...rest } = options
   const headers = new Headers(customHeaders)
   headers.set('Accept', 'application/json')

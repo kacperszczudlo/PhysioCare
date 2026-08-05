@@ -75,7 +75,9 @@ export function VisitFormModal({
         setTherapyTypeId((prev) => prev || typeList[0]?.id || '')
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof ApiError ? err.message : 'Nie udało się pobrać danych formularza.')
+          setError(
+            err instanceof ApiError ? err.message : 'Nie udało się pobrać danych formularza.',
+          )
         }
       } finally {
         if (!cancelled) {
@@ -163,8 +165,8 @@ export function VisitFormModal({
 
       {!loadingMeta && patients.length === 0 ? (
         <p className="schedule-empty" role="status">
-          Brak pacjentów w gabinecie. Pacjent musi najpierw zarejestrować się w aplikacji mobilnej
-          z Twoim profilem terapeuty.
+          Brak pacjentów w gabinecie. Pacjent musi najpierw zarejestrować się w aplikacji mobilnej z
+          Twoim profilem terapeuty.
         </p>
       ) : null}
 

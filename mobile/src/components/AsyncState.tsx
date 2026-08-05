@@ -1,10 +1,4 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { colors, radius, space, typography } from '@/theme/tokens'
 import { Button } from './Button'
@@ -18,13 +12,7 @@ export function LoadingBlock({ label = 'Ładowanie…' }: { label?: string }) {
   )
 }
 
-export function ErrorBanner({
-  message,
-  onRetry,
-}: {
-  message: string
-  onRetry?: () => void
-}) {
+export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <View style={styles.errorBox} accessibilityRole="alert">
       <Text style={styles.errorText}>{message}</Text>

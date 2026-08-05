@@ -139,10 +139,7 @@ export function ProfilePage() {
       <section>
         <PageHeader title="Profil" description="Nie udało się wczytać danych." />
         {error ? (
-          <ErrorBanner
-            message={error}
-            onRetry={() => setReloadToken((value) => value + 1)}
-          />
+          <ErrorBanner message={error} onRetry={() => setReloadToken((value) => value + 1)} />
         ) : null}
       </section>
     )

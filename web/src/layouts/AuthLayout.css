@@ -39,8 +39,12 @@
   justify-content: end;
   gap: var(--space-3);
   padding: var(--space-12);
-  background:
-    linear-gradient(160deg, oklch(0.42 0.11 113) 0%, oklch(0.32 0.08 113) 55%, oklch(0.28 0.06 55) 100%);
+  background: linear-gradient(
+    160deg,
+    oklch(0.42 0.11 113) 0%,
+    oklch(0.32 0.08 113) 55%,
+    oklch(0.28 0.06 55) 100%
+  );
   color: var(--color-on-primary);
 }
 

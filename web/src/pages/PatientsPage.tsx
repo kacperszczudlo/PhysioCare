@@ -54,7 +54,8 @@ export function PatientsPage() {
       return patients
     }
     return patients.filter((patient) => {
-      const hay = `${patient.first_name} ${patient.last_name} ${patient.email} ${patient.phone ?? ''}`.toLowerCase()
+      const hay =
+        `${patient.first_name} ${patient.last_name} ${patient.email} ${patient.phone ?? ''}`.toLowerCase()
       return hay.includes(q)
     })
   }, [patients, query])

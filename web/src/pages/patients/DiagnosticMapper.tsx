@@ -4,12 +4,7 @@ import { treatmentApi } from '@/api/treatment'
 import { ApiError } from '@/api/client'
 import type { BodyAreaPain, BodyViewSide } from '@/api/types'
 import { Button } from '@/components/ui/Button'
-import {
-  BODY_REGIONS,
-  PAIN_CHARACTERS,
-  regionLabel,
-  vasColor,
-} from '@/lib/bodyMap'
+import { BODY_REGIONS, PAIN_CHARACTERS, regionLabel, vasColor } from '@/lib/bodyMap'
 import './DiagnosticMapper.css'
 
 interface DiagnosticMapperProps {
@@ -163,14 +158,7 @@ export function DiagnosticMapper({ episodeId }: DiagnosticMapperProps) {
             role="img"
             aria-label={side === 'FRONT' ? 'Sylwetka — przód' : 'Sylwetka — tył'}
           >
-            <rect
-              x="60"
-              y="4"
-              width="80"
-              height="392"
-              rx="40"
-              className="diag-map__silhouette"
-            />
+            <rect x="60" y="4" width="80" height="392" rx="40" className="diag-map__silhouette" />
             {BODY_REGIONS[side].map((region) => {
               const entry = sideEntries.find((item) => item.body_region === region.id)
               const selected = selectedRegion === region.id
@@ -183,15 +171,9 @@ export function DiagnosticMapper({ episodeId }: DiagnosticMapperProps) {
                     height={region.h}
                     rx={region.rx ?? 6}
                     className={
-                      selected
-                        ? 'diag-map__region diag-map__region--selected'
-                        : 'diag-map__region'
+                      selected ? 'diag-map__region diag-map__region--selected' : 'diag-map__region'
                     }
-                    style={
-                      entry
-                        ? { fill: vasColor(entry.vas_score), opacity: 0.92 }
-                        : undefined
-                    }
+                    style={entry ? { fill: vasColor(entry.vas_score), opacity: 0.92 } : undefined}
                     role="button"
                     tabIndex={0}
                     aria-label={`${region.label}${entry ? `, VAS ${entry.vas_score}` : ''}`}
@@ -221,7 +203,9 @@ export function DiagnosticMapper({ episodeId }: DiagnosticMapperProps) {
 
         <div className="diag-map__panel">
           {!selectedRegion ? (
-            <p className="diag-map__muted">Kliknij region na sylwetce, aby ustawić VAS i charakter bólu.</p>
+            <p className="diag-map__muted">
+              Kliknij region na sylwetce, aby ustawić VAS i charakter bólu.
+            </p>
           ) : (
             <form className="diag-map__form" onSubmit={(e) => void onSave(e)}>
               <h4>{regionLabel(selectedRegion, side)}</h4>

@@ -140,7 +140,7 @@ export function PatientDetailPage() {
         ended_at:
           status === 'IN_PROGRESS'
             ? null
-            : selected.ended_at ?? new Date().toISOString().slice(0, 10),
+            : (selected.ended_at ?? new Date().toISOString().slice(0, 10)),
       })
       setEpisodes((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
     } catch (err) {

@@ -1,13 +1,6 @@
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useState } from 'react'
-import {
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
@@ -65,11 +58,7 @@ export default function VisitsScreen() {
             active={tab === 'upcoming'}
             onPress={() => switchTab('upcoming')}
           />
-          <Segment
-            label="Archiwum"
-            active={tab === 'past'}
-            onPress={() => switchTab('past')}
-          />
+          <Segment label="Archiwum" active={tab === 'past'} onPress={() => switchTab('past')} />
         </View>
       </View>
 
@@ -108,8 +97,8 @@ export default function VisitsScreen() {
                 </View>
                 <Text style={styles.meta}>{formatDateTime(visit.start_at)}</Text>
                 <Text style={styles.muted}>
-                  {formatTimeRange(visit.start_at, visit.end_at)} ·{' '}
-                  {visit.therapist_first_name} {visit.therapist_last_name}
+                  {formatTimeRange(visit.start_at, visit.end_at)} · {visit.therapist_first_name}{' '}
+                  {visit.therapist_last_name}
                 </Text>
               </Pressable>
             ))

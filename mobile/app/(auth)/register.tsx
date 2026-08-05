@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native'
 
-import { ApiError, getErrorMessage } from '@/api/client'
+import { getErrorMessage } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
@@ -79,8 +79,18 @@ export default function RegisterScreen() {
         </Text>
 
         <View style={styles.form}>
-          <Field label="Imię" value={firstName} onChangeText={setFirstName} autoComplete="given-name" />
-          <Field label="Nazwisko" value={lastName} onChangeText={setLastName} autoComplete="family-name" />
+          <Field
+            label="Imię"
+            value={firstName}
+            onChangeText={setFirstName}
+            autoComplete="given-name"
+          />
+          <Field
+            label="Nazwisko"
+            value={lastName}
+            onChangeText={setLastName}
+            autoComplete="family-name"
+          />
           <Field
             label="E-mail"
             value={email}
@@ -122,12 +132,7 @@ export default function RegisterScreen() {
             </Text>
           ) : null}
 
-          <Button
-            title="Utwórz konto"
-            loading={loading}
-            disabled={!canSubmit}
-            onPress={onSubmit}
-          />
+          <Button title="Utwórz konto" loading={loading} disabled={!canSubmit} onPress={onSubmit} />
         </View>
 
         <Link href="/(auth)/login" style={styles.link}>

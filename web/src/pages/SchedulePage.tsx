@@ -100,7 +100,12 @@ export function SchedulePage() {
 
       <div className="schedule-toolbar">
         <div className="schedule-toolbar__nav">
-          <Button type="button" variant="secondary" size="sm" onClick={() => setDay((d) => addDays(d, -1))}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setDay((d) => addDays(d, -1))}
+          >
             Poprzedni
           </Button>
           <Button
@@ -111,7 +116,12 @@ export function SchedulePage() {
           >
             Dziś
           </Button>
-          <Button type="button" variant="secondary" size="sm" onClick={() => setDay((d) => addDays(d, 1))}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setDay((d) => addDays(d, 1))}
+          >
             Następny
           </Button>
         </div>

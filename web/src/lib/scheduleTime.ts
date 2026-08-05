@@ -42,7 +42,15 @@ export function formatTime(date: Date): string {
 }
 
 export function dayBounds(date: Date): { start: Date; end: Date; minutes: number } {
-  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate(), DAY_START_HOUR, 0, 0, 0)
+  const start = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    DAY_START_HOUR,
+    0,
+    0,
+    0,
+  )
   const end = new Date(date.getFullYear(), date.getMonth(), date.getDate(), DAY_END_HOUR, 0, 0, 0)
   const minutes = (end.getTime() - start.getTime()) / 60_000
   return { start, end, minutes }
