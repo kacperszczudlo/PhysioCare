@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.permissions import IsTherapist
+from exercises.models import ExerciseAssignment
 from scheduling.models import Visit, VisitStatus
 
 from .models import TherapistProfile
@@ -48,9 +49,15 @@ class TherapistDashboardStatsView(APIView):
             status=VisitStatus.SCHEDULED,
         ).count()
         patients_count = therapist.patients.count()
+        assignments_active = ExerciseAssignment.objects.filter(
+            patient__therapist=therapist,
+            start_date__lte=today,
+            end_date__gte=today,
+        ).count()
         return Response({
             'visits_today': upcoming,
             'patients_total': patients_count,
+            'assignments_active': assignments_active,
         })
 
 

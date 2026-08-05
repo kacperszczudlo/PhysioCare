@@ -43,6 +43,7 @@ export interface TherapistProfile {
 export interface DashboardStats {
   visits_today: number
   patients_total: number
+  assignments_active?: number
 }
 
 export interface PatientSummary {

@@ -911,7 +911,7 @@
                 "stats"
               ]
             },
-            "description": "visits_today, patients_total.",
+            "description": "visits_today, patients_total, assignments_active.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -936,6 +936,7 @@
                   "  const j = pm.response.json();",
                   "  pm.expect(j).to.have.property('visits_today');",
                   "  pm.expect(j).to.have.property('patients_total');",
+                  "  pm.expect(j).to.have.property('assignments_active');",
                   "});"
                 ]
               }
