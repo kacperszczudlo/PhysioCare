@@ -131,6 +131,7 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 | PATCH | `/visits/{id}/reschedule` | PATIENT | Zmiana terminu |
 | POST | `/visits/{id}/cancel` | obie | Odwołanie + powód |
 | GET | `/therapist/visits?date=2026-06-09` | THERAPIST | Harmonogram dnia |
+| GET | `/therapist/visits?upcoming=1` | THERAPIST | Najbliższe zaplanowane (od teraz) |
 | POST | `/therapist/visits` | THERAPIST | Nowa wizyta |
 | PATCH | `/therapist/visits/{id}` | THERAPIST | Edycja / drag slot |
 

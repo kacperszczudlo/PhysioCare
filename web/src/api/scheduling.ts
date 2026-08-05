@@ -11,6 +11,11 @@ export const schedulingApi = {
     return listResults<Visit>(`/therapist/visits/?date=${encodeURIComponent(dateIso)}`)
   },
 
+  /** Scheduled visits that are still ongoing or start in the future (any day). */
+  listUpcomingVisits() {
+    return listResults<Visit>('/therapist/visits/?upcoming=1')
+  },
+
   createVisit(payload: VisitCreatePayload) {
     return api.post<Visit>('/therapist/visits/', payload)
   },

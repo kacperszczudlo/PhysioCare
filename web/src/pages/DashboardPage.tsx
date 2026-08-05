@@ -10,7 +10,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { CreateExerciseModal } from '@/pages/exercises/CreateExerciseModal'
 import { VisitFormModal } from '@/pages/schedule/VisitFormModal'
-import { formatTime, startOfDay, toDateInputValue } from '@/lib/scheduleTime'
+import { addDays, formatTime, startOfDay, toDateInputValue } from '@/lib/scheduleTime'
 import './DashboardPage.css'
 
 function greetingForHour(hour: number, firstName?: string): string {
@@ -30,6 +30,27 @@ function visitDurationMin(visit: Visit): number {
     return visit.therapy_type_duration_min || 0
   }
   return Math.round(ms / 60_000)
+}
+
+/** Relative day label + time for upcoming visits across days. */
+function formatVisitWhen(start: Date, today: Date): string {
+  const time = formatTime(start)
+  const visitDay = startOfDay(start)
+  const todayStart = startOfDay(today)
+  const tomorrowStart = startOfDay(addDays(todayStart, 1))
+
+  if (visitDay.getTime() === todayStart.getTime()) {
+    return `dziś ${time}`
+  }
+  if (visitDay.getTime() === tomorrowStart.getTime()) {
+    return `jutro ${time}`
+  }
+  const dayLabel = new Intl.DateTimeFormat('pl-PL', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  }).format(start)
+  return `${dayLabel} ${time}`
 }
 
 function DateBadge({ now }: { now: Date }) {
@@ -164,18 +185,14 @@ export function DashboardPage() {
   const [createVisitOpen, setCreateVisitOpen] = useState(false)
 
   const today = useMemo(() => startOfDay(now), [now])
-  const dateIso = toDateInputValue(today)
   const greeting = greetingForHour(now.getHours(), user?.first_name)
 
-  const upcomingVisits = useMemo(() => {
-    const threshold = Date.now()
+  const nextVisits = useMemo(() => {
     return visits
       .filter((visit) => visit.status === 'SCHEDULED')
-      .filter((visit) => new Date(visit.end_at).getTime() >= threshold)
       .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())
+      .slice(0, 5)
   }, [visits])
-
-  const nextVisits = upcomingVisits.slice(0, 5)
 
   const reload = useCallback(() => {
     setReloadToken((value) => value + 1)
@@ -190,7 +207,7 @@ export function DashboardPage() {
       try {
         const [statsData, visitsData] = await Promise.all([
           therapistApi.getDashboardStats(),
-          schedulingApi.listVisitsForDate(dateIso),
+          schedulingApi.listUpcomingVisits(),
         ])
         if (!cancelled) {
           setStats(statsData)
@@ -213,7 +230,7 @@ export function DashboardPage() {
     return () => {
       cancelled = true
     }
-  }, [dateIso, reloadToken])
+  }, [reloadToken])
 
   useEffect(() => {
     let cancelled = false
@@ -309,7 +326,7 @@ export function DashboardPage() {
                   <h2 id="dash-visits-heading" className="dash-panel__title">
                     Najbliższe wizyty
                   </h2>
-                  <p className="dash-panel__desc">Od teraz - tylko wizyty, które jeszcze trwają lub nadchodzą.</p>
+                  <p className="dash-panel__desc">Kolejne zaplanowane terminy - dziś, jutro i dalej.</p>
                 </div>
                 <Link className="dash-panel__link" to="/schedule">
                   Pełny harmonogram
@@ -318,8 +335,8 @@ export function DashboardPage() {
 
               {nextVisits.length === 0 ? (
                 <EmptyState
-                  title="Brak wizyt na dziś"
-                  description="Dodaj termin w harmonogramie albo wróć tu jutro."
+                  title="Brak nadchodzących wizyt"
+                  description="Zaplanuj termin w harmonogramie - pokażemy tu najbliższe."
                   action={
                     <button
                       type="button"
@@ -357,7 +374,7 @@ export function DashboardPage() {
                           <span className="dash-visit__meta">
                             <span className="dash-visit__chip">
                               <IconClock />
-                              {formatTime(start)}
+                              {formatVisitWhen(start, today)}
                             </span>
                             <span className="dash-visit__chip">
                               <IconTimer />

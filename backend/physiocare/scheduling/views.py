@@ -45,6 +45,11 @@ class TherapistVisitListCreateView(generics.ListCreateAPIView):
         date_param = self.request.query_params.get('date')
         if date_param:
             qs = qs.filter(start_at__date=date_param)
+        if self.request.query_params.get('upcoming') == '1':
+            qs = qs.filter(
+                status=VisitStatus.SCHEDULED,
+                end_at__gte=timezone.now(),
+            )
         return qs.order_by('start_at')
 
     def get_serializer_class(self):
