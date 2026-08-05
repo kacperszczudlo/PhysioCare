@@ -16,6 +16,7 @@ export default function TherapistPublicScreen() {
   const [therapist, setTherapist] = useState<TherapistPublic | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [avatarFailed, setAvatarFailed] = useState(false)
 
   const load = useCallback(async () => {
     if (!id) {
@@ -25,6 +26,7 @@ export default function TherapistPublicScreen() {
     setLoading(true)
     try {
       setTherapist(await patientApi.getTherapistPublic(id))
+      setAvatarFailed(false)
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się pobrać profilu terapeuty.'))
     } finally {
@@ -51,6 +53,7 @@ export default function TherapistPublicScreen() {
   const fullName = `${therapist.first_name} ${therapist.last_name}`
   const avatarSrc = resolveMediaUrl(therapist.avatar_url)
   const initials = `${therapist.first_name?.[0] ?? ''}${therapist.last_name?.[0] ?? ''}`.toUpperCase()
+  const showAvatar = Boolean(avatarSrc) && !avatarFailed
 
   return (
     <>
@@ -60,12 +63,16 @@ export default function TherapistPublicScreen() {
 
         <SectionCard>
           <View style={styles.hero}>
-            {avatarSrc ? (
-              <Image
-                source={{ uri: avatarSrc }}
-                style={styles.avatar}
-                accessibilityIgnoresInvertColors
-              />
+            {showAvatar ? (
+              <View style={styles.avatarClip}>
+                <Image
+                  source={{ uri: avatarSrc! }}
+                  style={styles.avatar}
+                  resizeMode="cover"
+                  onError={() => setAvatarFailed(true)}
+                  accessibilityIgnoresInvertColors
+                />
+              </View>
             ) : (
               <View style={[styles.avatar, styles.avatarPlaceholder]}>
                 <Text style={styles.initials}>{initials || '?'}</Text>
@@ -127,6 +134,13 @@ const styles = StyleSheet.create({
   pad: { padding: space.lg },
   hero: { flexDirection: 'row', gap: space.base, alignItems: 'flex-start' },
   heroText: { flex: 1, gap: space.sm },
+  avatarClip: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    overflow: 'hidden',
+    backgroundColor: colors.primarySubtle,
+  },
   avatar: {
     width: 72,
     height: 72,

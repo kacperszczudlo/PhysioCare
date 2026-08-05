@@ -1,10 +1,12 @@
 import type { ApiErrorBody } from './types'
 import { tokenStorage } from './tokenStorage'
+import { rewriteLocalhostToLan } from '@/lib/lanHost'
 
 const configured = (process.env.EXPO_PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '')
+const rawBase = configured.length > 0 ? configured : 'http://localhost:8000/api/v1'
 
 /** Default: local Django. Override via EXPO_PUBLIC_API_BASE_URL. */
-export const API_BASE_URL = configured.length > 0 ? configured : 'http://localhost:8000/api/v1'
+export const API_BASE_URL = rewriteLocalhostToLan(rawBase)
 
 export class ApiError extends Error {
   readonly status: number

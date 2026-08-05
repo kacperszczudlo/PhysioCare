@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '@/api/client'
+import { rewriteLocalhostToLan } from '@/lib/lanHost'
 
 /** Turn `/media/...` from API into a loadable URL for RN Image. */
 export function resolveMediaUrl(path: string | null | undefined): string | null {
@@ -6,7 +7,7 @@ export function resolveMediaUrl(path: string | null | undefined): string | null 
     return null
   }
   if (/^https?:\/\//i.test(path)) {
-    return path
+    return rewriteLocalhostToLan(path)
   }
   const origin = API_BASE_URL.replace(/\/api\/v1\/?$/, '')
   if (path.startsWith('/')) {
