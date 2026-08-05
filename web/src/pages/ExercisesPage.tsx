@@ -140,11 +140,6 @@ export function ExercisesPage() {
         <EmptyState
           title="Brak ćwiczeń"
           description="Dodaj pierwsze ćwiczenie z krótką instrukcją i plikiem MP4 lub PDF — pacjent zobaczy je w aplikacji."
-          action={
-            <Button type="button" size="sm" onClick={() => setCreateOpen(true)}>
-              + Dodaj ćwiczenie
-            </Button>
-          }
         />
       ) : null}
 
