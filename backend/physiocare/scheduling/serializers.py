@@ -30,6 +30,12 @@ class VisitSerializer(serializers.ModelSerializer):
         source='therapist.user.last_name',
         read_only=True,
     )
+    therapy_type_id = serializers.PrimaryKeyRelatedField(
+        source='therapy_type',
+        queryset=TherapyType.objects.all(),
+        write_only=True,
+        required=False,
+    )
     therapy_type_name = serializers.CharField(
         source='therapy_type.name',
         read_only=True,
@@ -46,7 +52,7 @@ class VisitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Visit
         fields = [
-            'id', 'patient', 'therapist', 'episode', 'therapy_type',
+            'id', 'patient', 'therapist', 'episode', 'therapy_type', 'therapy_type_id',
             'patient_first_name', 'patient_last_name',
             'therapist_first_name', 'therapist_last_name',
             'therapy_type_name', 'therapy_type_color', 'therapy_type_duration_min',
@@ -60,6 +66,13 @@ class VisitSerializer(serializers.ModelSerializer):
             'therapy_type_name', 'therapy_type_color', 'therapy_type_duration_min',
             'created_at',
         ]
+
+    def validate_therapy_type_id(self, therapy_type):
+        if self.instance is None:
+            return therapy_type
+        if therapy_type.therapist_id != self.instance.therapist_id:
+            raise serializers.ValidationError('Typ terapii nie należy do tego terapeuty.')
+        return therapy_type
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

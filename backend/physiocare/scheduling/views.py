@@ -18,6 +18,7 @@ from .serializers import (
     VisitRescheduleSerializer,
     VisitSerializer,
 )
+from .therapy_type_presets import ensure_therapy_type_presets, preset_payloads
 
 
 def _visit_integrity_error(exc, *, overlap_message='Termin koliduje z inną wizytą tego terapeuty.'):
@@ -187,7 +188,46 @@ class TherapyTypeListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         return TherapyType.objects.filter(
             therapist=self.request.user.therapist_profile,
+        ).order_by('name')
+
+    def list(self, request, *args, **kwargs):
+        ensure_therapy_type_presets(request.user.therapist_profile)
+        return super().list(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        return Response(
+            {
+                'error': {
+                    'code': 'THERAPY_TYPES_FIXED',
+                    'message': 'Typy wizyt są stałe — wybierz z proponowanej listy.',
+                },
+            },
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
         )
 
-    def perform_create(self, serializer):
-        serializer.save(therapist=self.request.user.therapist_profile)
+
+class TherapyTypePresetListView(APIView):
+    permission_classes = [IsAuthenticated, IsTherapist]
+
+    def get(self, request):
+        therapist = request.user.therapist_profile
+        existing = set(
+            TherapyType.objects.filter(therapist=therapist).values_list('name', flat=True),
+        )
+        presets = [
+            {**preset, 'already_added': preset['name'] in existing}
+            for preset in preset_payloads()
+        ]
+        return Response({'results': presets})
+
+
+class TherapyTypeSeedPresetsView(APIView):
+    permission_classes = [IsAuthenticated, IsTherapist]
+
+    def post(self, request):
+        therapist = request.user.therapist_profile
+        types = ensure_therapy_type_presets(therapist)
+        return Response(
+            {'results': TherapyTypeSerializer(types, many=True).data},
+            status=status.HTTP_200_OK,
+        )

@@ -345,14 +345,16 @@ def main() -> int:
 
     # --- UC-11 / 07 / 14 ---
     r = call(
-        "UC-11 create therapy type",
+        "UC-11 seed therapy type presets",
         "POST",
-        "/therapist/therapy-types/",
-        expected=201,
-        body={"name": f"Manualna {stamp}", "color_hex": "#3B82F6", "duration_min": 45},
+        "/therapist/therapy-types/seed-presets/",
+        expected=200,
+        body={},
     )
     if isinstance(r, dict):
-        state["therapy_type_id"] = r["id"]
+        results = r.get("results") or []
+        if results:
+            state["therapy_type_id"] = results[0]["id"]
     r = call(
         "UC-11 create visit",
         "POST",

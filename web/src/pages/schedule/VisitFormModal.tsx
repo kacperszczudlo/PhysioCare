@@ -1,13 +1,20 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from 'react'
 
 import { schedulingApi } from '@/api/scheduling'
 import { patientsApi } from '@/api/treatment'
 import { ApiError } from '@/api/client'
-import type { PatientSummary, TherapyType, VisitCreatePayload } from '@/api/types'
+import type {
+  PatientSummary,
+  TherapyType,
+  TherapyTypePreset,
+  VisitCreatePayload,
+} from '@/api/types'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { dateFromDayMinutes, formatTime, toIsoLocal } from '@/lib/scheduleTime'
+
+import './VisitFormModal.css'
 
 interface VisitFormModalProps {
   open: boolean
@@ -15,6 +22,18 @@ interface VisitFormModalProps {
   initialMinutes: number
   onClose: () => void
   onCreated: () => void
+}
+
+const GROUP_ORDER: TherapyTypePreset['group'][] = ['kind', 'profile']
+
+const GROUP_LABEL: Record<TherapyTypePreset['group'], string> = {
+  kind: 'Główne typy wizyt',
+  profile: 'Profil / specjalizacja',
+}
+
+type VisitTypeOption = TherapyType & {
+  group: TherapyTypePreset['group']
+  description: string
 }
 
 export function VisitFormModal({
@@ -25,7 +44,7 @@ export function VisitFormModal({
   onCreated,
 }: VisitFormModalProps) {
   const [patients, setPatients] = useState<PatientSummary[]>([])
-  const [therapyTypes, setTherapyTypes] = useState<TherapyType[]>([])
+  const [options, setOptions] = useState<VisitTypeOption[]>([])
   const [loadingMeta, setLoadingMeta] = useState(false)
   const [patientId, setPatientId] = useState('')
   const [therapyTypeId, setTherapyTypeId] = useState('')
@@ -34,14 +53,19 @@ export function VisitFormModal({
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  const [newTypeName, setNewTypeName] = useState('')
-  const [newTypeColor, setNewTypeColor] = useState('#4a6b28')
-  const [newTypeDuration, setNewTypeDuration] = useState(45)
-  const [creatingType, setCreatingType] = useState(false)
-
   const selectedType = useMemo(
-    () => therapyTypes.find((item) => item.id === therapyTypeId) ?? null,
-    [therapyTypes, therapyTypeId],
+    () => options.find((item) => item.id === therapyTypeId) ?? null,
+    [options, therapyTypeId],
+  )
+
+  const optionsByGroup = useMemo(
+    () =>
+      GROUP_ORDER.map((group) => ({
+        group,
+        label: GROUP_LABEL[group],
+        items: options.filter((item) => item.group === group),
+      })).filter((entry) => entry.items.length > 0),
+    [options],
   )
 
   useEffect(() => {
@@ -55,22 +79,42 @@ export function VisitFormModal({
     setError(null)
     setPrep('')
     setBusy(false)
+    setPatientId('')
+    setTherapyTypeId('')
 
     let cancelled = false
     async function loadMeta() {
       setLoadingMeta(true)
       try {
-        const [patientList, typeList] = await Promise.all([
+        const [patientList, typeList, presetList] = await Promise.all([
           patientsApi.list(),
-          schedulingApi.listTherapyTypes(),
+          schedulingApi.seedTherapyTypePresets(),
+          schedulingApi.listTherapyTypePresets(),
         ])
         if (cancelled) {
           return
         }
+
+        const byName = new Map(typeList.map((type) => [type.name, type]))
+        const nextOptions: VisitTypeOption[] = []
+        for (const preset of presetList) {
+          const type = byName.get(preset.name)
+          if (!type) {
+            continue
+          }
+          nextOptions.push({
+            ...type,
+            group: preset.group,
+            description: preset.description,
+            color_hex: preset.color_hex || type.color_hex,
+            duration_min: type.duration_min || preset.duration_min,
+          })
+        }
+
         setPatients(patientList)
-        setTherapyTypes(typeList)
-        setPatientId((prev) => prev || patientList[0]?.id || '')
-        setTherapyTypeId((prev) => prev || typeList[0]?.id || '')
+        setOptions(nextOptions)
+        setPatientId(patientList[0]?.id || '')
+        setTherapyTypeId(nextOptions[0]?.id || '')
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -90,35 +134,12 @@ export function VisitFormModal({
     }
   }, [open, day, initialMinutes])
 
-  async function createTherapyType(event: FormEvent) {
-    event.preventDefault()
-    if (!newTypeName.trim()) {
-      return
-    }
-    setCreatingType(true)
-    setError(null)
-    try {
-      const created = await schedulingApi.createTherapyType({
-        name: newTypeName.trim(),
-        color_hex: newTypeColor,
-        duration_min: newTypeDuration,
-      })
-      setTherapyTypes((prev) => [...prev, created])
-      setTherapyTypeId(created.id)
-      setNewTypeName('')
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się dodać typu terapii.')
-    } finally {
-      setCreatingType(false)
-    }
-  }
-
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
 
     if (!patientId || !therapyTypeId || !selectedType) {
-      setError('Wybierz pacjenta i typ terapii.')
+      setError('Wybierz pacjenta i typ wizyty.')
       return
     }
 
@@ -157,7 +178,13 @@ export function VisitFormModal({
   })()
 
   return (
-    <Modal open={open} title="Nowa wizyta" onClose={onClose}>
+    <Modal
+      open={open}
+      title="Nowa wizyta"
+      description="Wybierz typ wizyty klikając kafelek — przy każdej wizycie osobno."
+      size="lg"
+      onClose={onClose}
+    >
       {loadingMeta ? <p className="schedule-muted">Ładowanie…</p> : null}
 
       {!loadingMeta && patients.length === 0 ? (
@@ -167,45 +194,7 @@ export function VisitFormModal({
         </p>
       ) : null}
 
-      {!loadingMeta && therapyTypes.length === 0 ? (
-        <form className="ui-modal__form" onSubmit={(e) => void createTherapyType(e)}>
-          <p className="schedule-muted">Najpierw dodaj typ terapii (kolor + domyślny czas).</p>
-          <Field
-            label="Nazwa typu"
-            name="type_name"
-            value={newTypeName}
-            onChange={(e) => setNewTypeName(e.target.value)}
-            required
-          />
-          <label className="ui-field">
-            <span className="ui-field__label">Kolor</span>
-            <input
-              type="color"
-              value={newTypeColor}
-              onChange={(e) => setNewTypeColor(e.target.value)}
-            />
-          </label>
-          <Field
-            label="Czas trwania (min)"
-            name="duration"
-            type="number"
-            min={15}
-            step={15}
-            value={String(newTypeDuration)}
-            onChange={(e) => setNewTypeDuration(Number(e.target.value) || 45)}
-          />
-          {error ? (
-            <p className="ui-modal__error" role="alert">
-              {error}
-            </p>
-          ) : null}
-          <Button type="submit" loading={creatingType}>
-            Dodaj typ terapii
-          </Button>
-        </form>
-      ) : null}
-
-      {!loadingMeta && patients.length > 0 && therapyTypes.length > 0 ? (
+      {!loadingMeta && patients.length > 0 ? (
         <form className="ui-modal__form" onSubmit={(e) => void onSubmit(e)}>
           <label className="ui-field">
             <span className="ui-field__label">Pacjent</span>
@@ -223,21 +212,42 @@ export function VisitFormModal({
             </select>
           </label>
 
-          <label className="ui-field">
-            <span className="ui-field__label">Typ terapii</span>
-            <select
-              className="ui-modal__select"
-              value={therapyTypeId}
-              onChange={(e) => setTherapyTypeId(e.target.value)}
-              required
-            >
-              {therapyTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name} ({type.duration_min} min)
-                </option>
-              ))}
-            </select>
-          </label>
+          <fieldset className="visit-type-picker">
+            <legend className="ui-field__label">Typ wizyty</legend>
+            {optionsByGroup.map((group) => (
+              <div key={group.group} className="visit-type-picker__group">
+                <p className="visit-type-picker__group-label">{group.label}</p>
+                <div className="visit-type-picker__tiles" role="radiogroup" aria-label={group.label}>
+                  {group.items.map((type) => {
+                    const selected = type.id === therapyTypeId
+                    return (
+                      <button
+                        key={type.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        className={
+                          selected
+                            ? 'visit-type-tile visit-type-tile--selected'
+                            : 'visit-type-tile'
+                        }
+                        title={type.description}
+                        onClick={() => setTherapyTypeId(type.id)}
+                        style={{ '--tile-color': type.color_hex } as CSSProperties}
+                      >
+                        <span className="visit-type-tile__dot" aria-hidden />
+                        <span className="visit-type-tile__body">
+                          <span className="visit-type-tile__name">{type.name}</span>
+                          <span className="visit-type-tile__meta">{type.duration_min} min</span>
+                          <span className="visit-type-tile__desc">{type.description}</span>
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </fieldset>
 
           <Field
             label="Start"
@@ -270,7 +280,7 @@ export function VisitFormModal({
             <Button type="button" variant="secondary" onClick={onClose} disabled={busy}>
               Anuluj
             </Button>
-            <Button type="submit" loading={busy}>
+            <Button type="submit" loading={busy} disabled={!therapyTypeId}>
               Zapisz wizytę
             </Button>
           </div>

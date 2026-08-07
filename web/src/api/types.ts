@@ -64,6 +64,17 @@ export interface TherapyType {
   created_at: string
 }
 
+export type TherapyTypePresetGroup = 'kind' | 'profile'
+
+export interface TherapyTypePreset {
+  group: TherapyTypePresetGroup
+  name: string
+  color_hex: string
+  duration_min: number
+  description: string
+  already_added: boolean
+}
+
 export interface Visit {
   id: string
   patient: string

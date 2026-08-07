@@ -1,5 +1,11 @@
 import { api } from './client'
-import type { Paginated, TherapyType, Visit, VisitCreatePayload } from './types'
+import type {
+  Paginated,
+  TherapyType,
+  TherapyTypePreset,
+  Visit,
+  VisitCreatePayload,
+} from './types'
 
 async function listResults<T>(path: string): Promise<T[]> {
   const page = await api.get<Paginated<T> | T[]>(path)
@@ -24,6 +30,10 @@ export const schedulingApi = {
     return api.patch<Visit>(`/therapist/visits/${id}/`, { start_at, end_at })
   },
 
+  updateVisitType(id: string, therapy_type_id: string) {
+    return api.patch<Visit>(`/therapist/visits/${id}/`, { therapy_type_id })
+  },
+
   cancelVisit(id: string, cancel_reason = '') {
     return api.post<Visit>(`/visits/${id}/cancel/`, { cancel_reason })
   },
@@ -32,7 +42,15 @@ export const schedulingApi = {
     return listResults<TherapyType>('/therapist/therapy-types/')
   },
 
-  createTherapyType(payload: { name: string; color_hex?: string; duration_min?: number }) {
-    return api.post<TherapyType>('/therapist/therapy-types/', payload)
+  listTherapyTypePresets() {
+    return listResults<TherapyTypePreset>('/therapist/therapy-types/presets/')
+  },
+
+  async seedTherapyTypePresets() {
+    const page = await api.post<Paginated<TherapyType> | { results: TherapyType[] }>(
+      '/therapist/therapy-types/seed-presets/',
+      {},
+    )
+    return Array.isArray(page) ? page : page.results
   },
 }

@@ -475,13 +475,16 @@ pm.collectionVariables.set('body_pain_id', pm.response.json().id);
         "Harmonogram terapeuty + wizyty pacjenta (reschedule/cancel).",
         [
             req(
-                "Create therapy type",
+                "Seed therapy type presets",
                 "POST",
-                "/therapist/therapy-types/",
-                body={"name": "Terapia manualna", "color_hex": "#3B82F6", "duration_min": 45},
-                tests=EXPECT_STATUS(201)
+                "/therapist/therapy-types/seed-presets/",
+                body={},
+                tests=EXPECT_STATUS(200)
                 + """
-pm.collectionVariables.set('therapy_type_id', pm.response.json().id);
+const results = pm.response.json().results || [];
+if (results.length) {
+  pm.collectionVariables.set('therapy_type_id', results[0].id);
+}
 """,
             ),
             req(
