@@ -1,19 +1,12 @@
 import { Link, useRouter } from 'expo-router'
 import { useMemo, useState } from 'react'
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage, getFieldError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
+import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { PasswordRequirements } from '@/components/PasswordRequirements'
 import { getEmailError } from '@/lib/emailPolicy'
 import { getFirstNameError, getLastNameError } from '@/lib/fieldPolicy'
@@ -156,119 +149,114 @@ export default function RegisterScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.brand}>PhysioCare</Text>
-        <Text style={styles.title}>Rejestracja pacjenta</Text>
-        <Text style={styles.subtitle}>
-          Załóż konto i zaakceptuj wymagane zgody, aby korzystać z zaleceń terapeuty.
-        </Text>
+    <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.container}>
+      <Text style={styles.brand}>PhysioCare</Text>
+      <Text style={styles.title}>Rejestracja pacjenta</Text>
+      <Text style={styles.subtitle}>
+        Załóż konto i zaakceptuj wymagane zgody, aby korzystać z zaleceń terapeuty.
+      </Text>
 
-        <View style={styles.form}>
-          <Field
-            label="Imię"
-            value={firstName}
-            onChangeText={(value) => {
-              setFirstName(value)
-              if (fieldErrors.firstName) {
-                setFieldErrors((prev) => ({ ...prev, firstName: undefined }))
-              }
-            }}
-            autoComplete="given-name"
-            error={fieldErrors.firstName}
-          />
-          <Field
-            label="Nazwisko"
-            value={lastName}
-            onChangeText={(value) => {
-              setLastName(value)
-              if (fieldErrors.lastName) {
-                setFieldErrors((prev) => ({ ...prev, lastName: undefined }))
-              }
-            }}
-            autoComplete="family-name"
-            error={fieldErrors.lastName}
-          />
-          <Field
-            label="E-mail"
-            value={email}
-            onChangeText={(value) => {
-              setEmail(value)
-              if (fieldErrors.email) {
-                setFieldErrors((prev) => ({ ...prev, email: undefined }))
-              }
-            }}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoComplete="email"
-            error={fieldErrors.email}
-          />
-          <Field
-            label="Hasło"
-            value={password}
-            onChangeText={(value) => {
-              setPassword(value)
-              if (fieldErrors.password) {
-                setFieldErrors((prev) => ({ ...prev, password: undefined }))
-              }
-            }}
-            onBlur={() => setPasswordTouched(true)}
-            secureTextEntry
-            autoComplete="new-password"
-            error={fieldErrors.password}
-          />
-          <PasswordRequirements
-            requirements={passwordRequirements}
-            showErrors={showRequirementErrors}
-          />
-          <Field
-            label="Kod terapeuty"
-            value={therapistId}
-            onChangeText={(value) => {
-              setTherapistId(value)
-              if (fieldErrors.therapistId) {
-                setFieldErrors((prev) => ({ ...prev, therapistId: undefined }))
-              }
-            }}
-            autoCapitalize="none"
-            autoCorrect={false}
-            error={fieldErrors.therapistId}
-            hint="Kod z panelu webowego terapeuty: Profil → „Kod dla pacjenta” (Kopiuj kod)."
-          />
+      <View style={styles.form}>
+        <Field
+          label="Imię"
+          value={firstName}
+          onChangeText={(value) => {
+            setFirstName(value)
+            if (fieldErrors.firstName) {
+              setFieldErrors((prev) => ({ ...prev, firstName: undefined }))
+            }
+          }}
+          autoComplete="given-name"
+          error={fieldErrors.firstName}
+        />
+        <Field
+          label="Nazwisko"
+          value={lastName}
+          onChangeText={(value) => {
+            setLastName(value)
+            if (fieldErrors.lastName) {
+              setFieldErrors((prev) => ({ ...prev, lastName: undefined }))
+            }
+          }}
+          autoComplete="family-name"
+          error={fieldErrors.lastName}
+        />
+        <Field
+          label="E-mail"
+          value={email}
+          onChangeText={(value) => {
+            setEmail(value)
+            if (fieldErrors.email) {
+              setFieldErrors((prev) => ({ ...prev, email: undefined }))
+            }
+          }}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          autoComplete="email"
+          error={fieldErrors.email}
+        />
+        <Field
+          label="Hasło"
+          value={password}
+          onChangeText={(value) => {
+            setPassword(value)
+            if (fieldErrors.password) {
+              setFieldErrors((prev) => ({ ...prev, password: undefined }))
+            }
+          }}
+          onBlur={() => setPasswordTouched(true)}
+          secureTextEntry
+          autoComplete="new-password"
+          error={fieldErrors.password}
+        />
+        <PasswordRequirements
+          requirements={passwordRequirements}
+          showErrors={showRequirementErrors}
+        />
+        <Field
+          label="Kod terapeuty"
+          value={therapistId}
+          onChangeText={(value) => {
+            setTherapistId(value)
+            if (fieldErrors.therapistId) {
+              setFieldErrors((prev) => ({ ...prev, therapistId: undefined }))
+            }
+          }}
+          autoCapitalize="none"
+          autoCorrect={false}
+          error={fieldErrors.therapistId}
+          hint="Kod z panelu webowego terapeuty: Profil → „Kod dla pacjenta” (Kopiuj kod)."
+        />
 
-          <ConsentToggle
-            label="Akceptuję regulamin serwisu (wymagane)"
-            checked={terms}
-            onToggle={() => setTerms((v) => !v)}
-          />
-          <ConsentToggle
-            label="Wyrażam zgodę na przetwarzanie danych medycznych (wymagane)"
-            checked={medical}
-            onToggle={() => setMedical((v) => !v)}
-          />
+        <ConsentToggle
+          label="Akceptuję regulamin serwisu (wymagane)"
+          checked={terms}
+          onToggle={() => setTerms((v) => !v)}
+        />
+        <ConsentToggle
+          label="Wyrażam zgodę na przetwarzanie danych medycznych (wymagane)"
+          checked={medical}
+          onToggle={() => setMedical((v) => !v)}
+        />
 
-          {error ? (
-            <Text style={styles.error} accessibilityRole="alert">
-              {error}
-            </Text>
-          ) : null}
+        {error ? (
+          <Text style={styles.error} accessibilityRole="alert">
+            {error}
+          </Text>
+        ) : null}
 
-          <Button
-            title="Utwórz konto"
-            loading={loading}
-            disabled={!canSubmit}
-            onPress={() => void onSubmit()}
-          />
-        </View>
+        <Button
+          title="Utwórz konto"
+          loading={loading}
+          disabled={!canSubmit}
+          onPress={() => void onSubmit()}
+        />
+      </View>
 
-        <Link href="/(auth)/login" style={styles.link}>
-          Mam już konto - zaloguj się
-        </Link>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <Link href="/(auth)/login" style={styles.link}>
+        Mam już konto - zaloguj się
+      </Link>
+    </KeyboardAwareForm>
   )
 }
 

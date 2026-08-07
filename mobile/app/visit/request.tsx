@@ -1,6 +1,6 @@
 import { Stack, useRouter } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
@@ -9,6 +9,7 @@ import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { DateTimePickerField } from '@/components/DateTimePickerField'
 import { Field } from '@/components/Field'
+import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { addMinutesISO } from '@/lib/format'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
@@ -102,7 +103,7 @@ export default function VisitRequestScreen() {
       {loading ? (
         <LoadingBlock label="Ładowanie typów wizyt…" />
       ) : (
-        <ScrollView style={styles.flex} contentContainerStyle={styles.content}>
+        <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.content}>
           <Text style={styles.lead}>
             Wybierz typ i proponowany termin. Fizjoterapeuta zatwierdzi albo zaproponuje zmianę.
           </Text>
@@ -165,7 +166,7 @@ export default function VisitRequestScreen() {
             onPress={() => void onSubmit()}
           />
           <Button title="Anuluj" variant="ghost" onPress={() => router.back()} disabled={busy} />
-        </ScrollView>
+        </KeyboardAwareForm>
       )}
     </>
   )

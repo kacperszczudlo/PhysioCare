@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
@@ -9,6 +9,7 @@ import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { DateTimePickerField } from '@/components/DateTimePickerField'
 import { Field } from '@/components/Field'
+import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { SectionCard } from '@/components/ScreenHeader'
 import { addMinutesISO, formatDateTime, formatTimeRange, visitStatusLabel } from '@/lib/format'
 import { openAddressInMaps } from '@/lib/maps'
@@ -147,7 +148,7 @@ export default function VisitDetailScreen() {
   return (
     <>
       <Stack.Screen options={{ title: visit.therapy_type_name }} />
-      <ScrollView style={styles.flex} contentContainerStyle={styles.content}>
+      <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.content}>
         {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
 
         <SectionCard>
@@ -224,15 +225,11 @@ export default function VisitDetailScreen() {
             />
           </SectionCard>
         ) : null}
-      </ScrollView>
+      </KeyboardAwareForm>
 
       <Modal visible={rescheduleOpen} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
-          <ScrollView
-            style={styles.modalScroll}
-            contentContainerStyle={styles.modalCard}
-            keyboardShouldPersistTaps="handled"
-          >
+          <KeyboardAwareForm style={styles.modalScroll} contentContainerStyle={styles.modalCard}>
             <Text style={styles.title}>Nowy termin</Text>
             <Text style={styles.muted}>
               Wybierz dzień i godzinę. Koniec wyliczymy z czasu zabiegu (
@@ -246,7 +243,7 @@ export default function VisitDetailScreen() {
             />
             <Button title="Zapisz termin" loading={busy} onPress={() => void onReschedule()} />
             <Button title="Anuluj" variant="ghost" onPress={() => setRescheduleOpen(false)} />
-          </ScrollView>
+          </KeyboardAwareForm>
         </View>
       </Modal>
     </>

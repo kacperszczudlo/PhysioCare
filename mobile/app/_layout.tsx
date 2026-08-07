@@ -1,6 +1,8 @@
+import 'react-native-reanimated'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { AuthProvider, useAuth } from '@/auth/AuthContext'
@@ -56,11 +58,13 @@ function RootNavigator() {
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <NetworkProvider>
-        <AuthProvider>
-          <RootNavigator />
-        </AuthProvider>
-      </NetworkProvider>
+      <KeyboardProvider preload={false}>
+        <NetworkProvider>
+          <AuthProvider>
+            <RootNavigator />
+          </AuthProvider>
+        </NetworkProvider>
+      </KeyboardProvider>
     </SafeAreaProvider>
   )
 }

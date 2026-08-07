@@ -26,7 +26,8 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.physiocare.patient",
-      "usesCleartextTraffic": true
+      "usesCleartextTraffic": true,
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
       "favicon": "./assets/favicon.png",

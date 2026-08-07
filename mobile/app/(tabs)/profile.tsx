@@ -6,7 +6,6 @@ import {
   Linking,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -18,6 +17,7 @@ import type { MedicalDocument, PatientProfile } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
+import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
 import { formatDate } from '@/lib/format'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
@@ -159,9 +159,10 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView
+    <KeyboardAwareForm
       style={styles.flex}
       contentContainerStyle={styles.content}
+      bottomOffset={96}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -275,7 +276,7 @@ export default function ProfileScreen() {
           ))
         )}
       </SectionCard>
-    </ScrollView>
+    </KeyboardAwareForm>
   )
 }
 

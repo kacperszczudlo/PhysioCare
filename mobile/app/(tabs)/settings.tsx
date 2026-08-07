@@ -1,6 +1,6 @@
 import { useFocusEffect } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
+import { RefreshControl, StyleSheet, Switch, Text, View } from 'react-native'
 
 import { authApi } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
@@ -10,6 +10,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
+import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { PasswordRequirements } from '@/components/PasswordRequirements'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
 import {
@@ -160,9 +161,10 @@ export default function SettingsScreen() {
   }
 
   return (
-    <ScrollView
+    <KeyboardAwareForm
       style={styles.flex}
       contentContainerStyle={styles.content}
+      bottomOffset={96}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -286,7 +288,7 @@ export default function SettingsScreen() {
           void logout()
         }}
       />
-    </ScrollView>
+    </KeyboardAwareForm>
   )
 }
 
