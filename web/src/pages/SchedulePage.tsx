@@ -11,10 +11,10 @@ import {
   addDays,
   formatDayLabel,
   formatTime,
-  parseDateInput,
   startOfDay,
   toDateInputValue,
 } from '@/lib/scheduleTime'
+import { DayCarousel } from '@/components/ui/DayCarousel'
 import { DayCalendar } from '@/pages/schedule/DayCalendar'
 import { VisitFormModal } from '@/pages/schedule/VisitFormModal'
 import './SchedulePage.css'
@@ -324,16 +324,17 @@ export function SchedulePage() {
           </Button>
         </div>
 
-        <label className="schedule-toolbar__date">
-          <span className="sr-only">Data</span>
-          <input
-            type="date"
-            value={dateIso}
-            onChange={(event) => setDay(parseDateInput(event.target.value))}
-          />
-        </label>
-
         <p className="schedule-toolbar__label">{formatDayLabel(day)}</p>
+
+        <div className="schedule-toolbar__carousel">
+          <DayCarousel
+            label="Wybierz dzień"
+            value={day}
+            onChange={setDay}
+            minimumDate={addDays(startOfDay(new Date()), -60)}
+            dayCount={120}
+          />
+        </div>
       </div>
 
       {error ? <ErrorBanner message={error} onRetry={reload} /> : null}

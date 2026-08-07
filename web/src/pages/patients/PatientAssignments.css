@@ -144,8 +144,8 @@
 
 .patient-assignments__dates {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-3);
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
 }
 
 @media (max-width: 900px) {

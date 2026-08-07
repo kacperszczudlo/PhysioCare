@@ -1,0 +1,113 @@
+.time-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.time-carousel__label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.time-carousel__required {
+  color: var(--color-danger);
+}
+
+.time-carousel__readout {
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: var(--color-ink);
+  line-height: 1.1;
+}
+
+.time-carousel__wheels {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.time-carousel__col {
+  position: relative;
+  width: 5.5rem;
+  height: calc(40px * 5);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.time-carousel__highlight {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: calc(40px * 2);
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-subtle);
+  border: 1px solid var(--color-primary);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.time-carousel__wheel {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding-block: calc(40px * 2);
+}
+
+.time-carousel__wheel::-webkit-scrollbar {
+  display: none;
+}
+
+.time-carousel__wheel:focus-visible {
+  outline: none;
+  box-shadow: inset var(--focus-ring);
+}
+
+.time-carousel__item {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: center;
+  font-size: var(--text-lg);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-faint);
+  user-select: none;
+}
+
+.time-carousel__item--on {
+  color: var(--color-ink);
+  font-weight: 700;
+  font-size: var(--text-xl);
+}
+
+.time-carousel__sep {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-ink);
+  line-height: 1;
+}
+
+.time-carousel__hint {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .time-carousel__wheel {
+    scroll-behavior: auto;
+  }
+}

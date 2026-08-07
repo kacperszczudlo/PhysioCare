@@ -1,32 +1,22 @@
 import { Stack, useRouter } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { TherapyType } from '@/api/types'
 import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
+import { DateTimePickerField } from '@/components/DateTimePickerField'
 import { Field } from '@/components/Field'
 import { addMinutesISO } from '@/lib/format'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
-function defaultStartLocal(): string {
+function defaultStart(): Date {
   const date = new Date()
   date.setDate(date.getDate() + 1)
   date.setHours(10, 0, 0, 0)
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  const hh = String(date.getHours()).padStart(2, '0')
-  const mm = String(date.getMinutes()).padStart(2, '0')
-  return `${y}-${m}-${d}T${hh}:${mm}`
+  return date
 }
 
 export default function VisitRequestScreen() {
@@ -36,13 +26,18 @@ export default function VisitRequestScreen() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [therapyTypeId, setTherapyTypeId] = useState('')
-  const [startLocal, setStartLocal] = useState(defaultStartLocal)
+  const [startAt, setStartAt] = useState(defaultStart)
   const [note, setNote] = useState('')
 
   const selectedType = useMemo(
     () => types.find((item) => item.id === therapyTypeId) ?? null,
     [types, therapyTypeId],
   )
+
+  const minimumDate = useMemo(() => {
+    const now = new Date()
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -77,12 +72,7 @@ export default function VisitRequestScreen() {
       setError('Wybierz typ wizyty.')
       return
     }
-    const start = new Date(startLocal)
-    if (Number.isNaN(start.getTime())) {
-      setError('Podaj poprawną datę i godzinę (YYYY-MM-DDTHH:mm).')
-      return
-    }
-    if (start.getTime() <= Date.now()) {
+    if (startAt.getTime() <= Date.now()) {
       setError('Termin musi być w przyszłości.')
       return
     }
@@ -90,7 +80,7 @@ export default function VisitRequestScreen() {
     setBusy(true)
     setError(null)
     try {
-      const startIso = start.toISOString()
+      const startIso = startAt.toISOString()
       const endIso = addMinutesISO(startIso, selectedType.duration_min)
       const visit = await patientApi.requestVisit({
         therapy_type_id: selectedType.id,
@@ -147,11 +137,11 @@ export default function VisitRequestScreen() {
             </View>
           )}
 
-          <Field
-            label="Proponowany start (YYYY-MM-DDTHH:mm)"
-            value={startLocal}
-            onChangeText={setStartLocal}
-            autoCapitalize="none"
+          <DateTimePickerField
+            label="Proponowany termin"
+            value={startAt}
+            onChange={setStartAt}
+            minimumDate={minimumDate}
             hint={
               selectedType
                 ? `Koniec wyliczymy automatycznie (${selectedType.duration_min} min).`

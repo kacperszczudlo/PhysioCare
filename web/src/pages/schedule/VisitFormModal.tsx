@@ -12,9 +12,10 @@ import type {
   VisitUpdatePayload,
 } from '@/api/types'
 import { Button } from '@/components/ui/Button'
-import { Field } from '@/components/ui/Field'
+import { DayCarousel } from '@/components/ui/DayCarousel'
 import { Modal } from '@/components/ui/Modal'
-import { dateFromDayMinutes, formatTime, toIsoLocal } from '@/lib/scheduleTime'
+import { TimeCarousel } from '@/components/ui/TimeCarousel'
+import { addDays, dateFromDayMinutes, formatTime, startOfDay, toIsoLocal } from '@/lib/scheduleTime'
 
 import './VisitFormModal.css'
 
@@ -64,6 +65,7 @@ export function VisitFormModal({
   const [loadingMeta, setLoadingMeta] = useState(false)
   const [patientId, setPatientId] = useState('')
   const [therapyTypeId, setTherapyTypeId] = useState('')
+  const [formDay, setFormDay] = useState(() => startOfDay(day))
   const [startLocal, setStartLocal] = useState('')
   const [prep, setPrep] = useState('')
   const [location, setLocation] = useState('')
@@ -95,6 +97,7 @@ export function VisitFormModal({
 
     if (visit) {
       const start = new Date(visit.start_at)
+      setFormDay(startOfDay(start))
       setStartLocal(timeLocalFromDate(start))
       setPrep(visit.prep_instructions || '')
       setLocation(visit.location_address || '')
@@ -102,6 +105,7 @@ export function VisitFormModal({
       setTherapyTypeId(visit.therapy_type)
     } else {
       const start = dateFromDayMinutes(day, initialMinutes)
+      setFormDay(startOfDay(day))
       setStartLocal(timeLocalFromDate(start))
       setPrep('')
       setLocation('')
@@ -194,7 +198,6 @@ export function VisitFormModal({
     }
 
     const [hours, minutes] = startLocal.split(':').map(Number)
-    const formDay = visit ? new Date(visit.start_at) : day
     const start = new Date(
       formDay.getFullYear(),
       formDay.getMonth(),
@@ -279,7 +282,6 @@ export function VisitFormModal({
       return null
     }
     const [hours, minutes] = startLocal.split(':').map(Number)
-    const formDay = visit ? new Date(visit.start_at) : day
     const start = new Date(
       formDay.getFullYear(),
       formDay.getMonth(),
@@ -292,6 +294,8 @@ export function VisitFormModal({
     const end = new Date(start.getTime() + selectedType.duration_min * 60_000)
     return formatTime(end)
   })()
+
+  const dayPickerMin = addDays(startOfDay(new Date()), -14)
 
   const patientLabel = visit
     ? `${visit.patient_first_name} ${visit.patient_last_name}`.trim()
@@ -384,13 +388,18 @@ export function VisitFormModal({
             ))}
           </fieldset>
 
-          <Field
+          <DayCarousel
+            label="Dzień"
+            value={formDay}
+            onChange={setFormDay}
+            minimumDate={dayPickerMin}
+            dayCount={56}
+          />
+
+          <TimeCarousel
             label="Start"
-            name="start"
-            type="time"
-            step={900}
             value={startLocal}
-            onChange={(e) => setStartLocal(e.target.value)}
+            onChange={setStartLocal}
             required
             hint={endPreview ? `Koniec: ${endPreview}` : undefined}
           />

@@ -5,9 +5,11 @@ import { getErrorMessage } from '@/api/client'
 import type { ExerciseAssignment } from '@/api/types'
 import { EmptyState, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/ui/Button'
+import { DateCarousel } from '@/components/ui/DateCarousel'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
+import { addDays, toDateInputValue } from '@/lib/scheduleTime'
 import './PatientAssignments.css'
 
 interface PatientAssignmentsProps {
@@ -211,20 +213,20 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
             required
           />
           <div className="patient-assignments__dates">
-            <Field
+            <DateCarousel
               label="Od"
-              name="start_date"
-              type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={setStartDate}
+              minimumDate={toDateInputValue(addDays(new Date(), -90))}
+              dayCount={180}
               required
             />
-            <Field
+            <DateCarousel
               label="Do"
-              name="end_date"
-              type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={setEndDate}
+              minimumDate={startDate}
+              dayCount={180}
               required
             />
           </div>

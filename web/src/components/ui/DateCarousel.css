@@ -1,0 +1,94 @@
+.date-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.date-carousel__label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.date-carousel__required {
+  color: var(--color-danger);
+}
+
+.date-carousel__track {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding: var(--space-1) 0 var(--space-2);
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.date-carousel__track::-webkit-scrollbar {
+  height: 4px;
+}
+
+.date-carousel__track::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 999px;
+}
+
+.date-carousel__chip {
+  flex: 0 0 3.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: var(--space-2) var(--space-1);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  color: var(--color-ink);
+  scroll-snap-align: center;
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.date-carousel__chip:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-subtle);
+}
+
+.date-carousel__chip:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.date-carousel__chip--on {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.date-carousel__weekday,
+.date-carousel__month {
+  font-size: var(--text-xs);
+  text-transform: lowercase;
+  color: var(--color-muted);
+  line-height: 1.2;
+}
+
+.date-carousel__chip--on .date-carousel__weekday,
+.date-carousel__chip--on .date-carousel__month {
+  color: oklch(1 0 0 / 0.85);
+}
+
+.date-carousel__num {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.date-carousel__hint {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}

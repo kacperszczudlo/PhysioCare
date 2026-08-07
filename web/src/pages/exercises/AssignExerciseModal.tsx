@@ -5,6 +5,7 @@ import { patientsApi, treatmentApi } from '@/api/treatment'
 import { ApiError } from '@/api/client'
 import type { Exercise, PatientSummary, TreatmentEpisode } from '@/api/types'
 import { Button } from '@/components/ui/Button'
+import { DateCarousel } from '@/components/ui/DateCarousel'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { toDateInputValue } from '@/lib/scheduleTime'
@@ -187,20 +188,20 @@ export function AssignExerciseModal({
             required
           />
           <div className="exercises-date-row">
-            <Field
+            <DateCarousel
               label="Od"
-              name="start_date"
-              type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={setStartDate}
+              minimumDate={toDateInputValue(new Date())}
+              dayCount={90}
               required
             />
-            <Field
+            <DateCarousel
               label="Do"
-              name="end_date"
-              type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={setEndDate}
+              minimumDate={startDate}
+              dayCount={120}
               required
             />
           </div>

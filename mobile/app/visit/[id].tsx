@@ -1,5 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
@@ -7,11 +7,25 @@ import { patientApi } from '@/api/patient'
 import type { Visit } from '@/api/types'
 import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
+import { DateTimePickerField } from '@/components/DateTimePickerField'
 import { Field } from '@/components/Field'
 import { SectionCard } from '@/components/ScreenHeader'
 import { addMinutesISO, formatDateTime, formatTimeRange, visitStatusLabel } from '@/lib/format'
 import { openAddressInMaps } from '@/lib/maps'
 import { colors, space, typography } from '@/theme/tokens'
+
+function defaultRescheduleStart(from?: string): Date {
+  if (from) {
+    const parsed = new Date(from)
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed
+    }
+  }
+  const date = new Date()
+  date.setDate(date.getDate() + 1)
+  date.setHours(10, 0, 0, 0)
+  return date
+}
 
 export default function VisitDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -21,8 +35,13 @@ export default function VisitDetailScreen() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [rescheduleOpen, setRescheduleOpen] = useState(false)
-  const [newStart, setNewStart] = useState('')
+  const [newStart, setNewStart] = useState(() => defaultRescheduleStart())
   const [cancelReason, setCancelReason] = useState('')
+
+  const minimumDate = useMemo(() => {
+    const now = new Date()
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  }, [])
 
   const load = useCallback(async () => {
     if (!id) {
@@ -33,7 +52,7 @@ export default function VisitDetailScreen() {
     try {
       const data = await patientApi.getVisit(id)
       setVisit(data)
-      setNewStart(data.start_at.slice(0, 16))
+      setNewStart(defaultRescheduleStart(data.start_at))
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się pobrać wizyty.'))
     } finally {
@@ -46,13 +65,17 @@ export default function VisitDetailScreen() {
   }, [load])
 
   async function onReschedule() {
-    if (!visit || !newStart) {
+    if (!visit) {
+      return
+    }
+    if (newStart.getTime() <= Date.now()) {
+      setError('Termin musi być w przyszłości.')
       return
     }
     setBusy(true)
     setError(null)
     try {
-      const startIso = new Date(newStart).toISOString()
+      const startIso = newStart.toISOString()
       const endIso = addMinutesISO(startIso, visit.therapy_type_duration_min || 45)
       const updated = await patientApi.rescheduleVisit(visit.id, {
         start_at: startIso,
@@ -205,21 +228,25 @@ export default function VisitDetailScreen() {
 
       <Modal visible={rescheduleOpen} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
+          <ScrollView
+            style={styles.modalScroll}
+            contentContainerStyle={styles.modalCard}
+            keyboardShouldPersistTaps="handled"
+          >
             <Text style={styles.title}>Nowy termin</Text>
             <Text style={styles.muted}>
-              Podaj datę i godzinę (lokalna). Koniec wyliczymy z czasu zabiegu.
+              Wybierz dzień i godzinę. Koniec wyliczymy z czasu zabiegu (
+              {visit.therapy_type_duration_min || 45} min).
             </Text>
-            <Field
-              label="Start (YYYY-MM-DDTHH:mm)"
+            <DateTimePickerField
+              label="Termin wizyty"
               value={newStart}
-              onChangeText={setNewStart}
-              autoCapitalize="none"
-              hint="Np. 2026-06-12T11:00"
+              onChange={setNewStart}
+              minimumDate={minimumDate}
             />
             <Button title="Zapisz termin" loading={busy} onPress={() => void onReschedule()} />
             <Button title="Anuluj" variant="ghost" onPress={() => setRescheduleOpen(false)} />
-          </View>
+          </ScrollView>
         </View>
       </Modal>
     </>
@@ -251,11 +278,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.35)',
     justifyContent: 'flex-end',
   },
+  modalScroll: {
+    maxHeight: '92%',
+  },
   modalCard: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: space.lg,
     gap: space.md,
+    paddingBottom: space['3xl'],
   },
 })
