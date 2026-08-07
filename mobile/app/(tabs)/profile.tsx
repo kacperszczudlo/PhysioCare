@@ -1,6 +1,6 @@
 import { useFocusEffect, useRouter } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Image,
   Linking,
@@ -18,7 +18,7 @@ import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { Consent, MedicalDocument, NotificationPreference, PatientProfile } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
-import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { EmptyState, ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
@@ -30,6 +30,8 @@ import {
 } from '@/lib/format'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
 import { colors, space, typography } from '@/theme/tokens'
+
+type FeedbackKind = 'avatar' | 'profile' | 'notifications' | 'consents' | 'privacy' | 'password'
 
 export default function ProfileScreen() {
   const { logout } = useAuth()
@@ -49,7 +51,20 @@ export default function ProfileScreen() {
   const [pwdLoading, setPwdLoading] = useState(false)
   const [avatarLoading, setAvatarLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [info, setInfo] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<{ kind: FeedbackKind; message: string } | null>(null)
+
+  const showSuccess = useCallback((kind: FeedbackKind, message: string) => {
+    setError(null)
+    setFeedback({ kind, message })
+  }, [])
+
+  useEffect(() => {
+    if (!feedback) {
+      return
+    }
+    const timer = setTimeout(() => setFeedback(null), 5000)
+    return () => clearTimeout(timer)
+  }, [feedback])
 
   const load = useCallback(async () => {
     setError(null)
@@ -95,14 +110,14 @@ export default function ProfileScreen() {
   async function saveProfile() {
     setSaving(true)
     setError(null)
-    setInfo(null)
+    setFeedback(null)
     try {
       const updated = await patientApi.updateProfile({
         phone: phone.trim(),
         pesel: pesel.trim() || null,
       })
       setProfile(updated)
-      setInfo('Profil zapisany.')
+      showSuccess('profile', 'Dane profilu zostały zapisane.')
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się zapisać profilu.'))
     } finally {
@@ -112,7 +127,7 @@ export default function ProfileScreen() {
 
   async function pickAvatar() {
     setError(null)
-    setInfo(null)
+    setFeedback(null)
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (!permission.granted) {
       setError('Brak uprawnień do galerii zdjęć.')
@@ -137,7 +152,7 @@ export default function ProfileScreen() {
     try {
       const updated = await patientApi.uploadAvatar(asset.uri, mime, name)
       setProfile(updated)
-      setInfo('Avatar zapisany.')
+      showSuccess('avatar', 'Zdjęcie profilowe zostało zapisane.')
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się przesłać avatara.'))
     } finally {
@@ -148,10 +163,10 @@ export default function ProfileScreen() {
   async function changePassword() {
     setPwdLoading(true)
     setError(null)
-    setInfo(null)
+    setFeedback(null)
     try {
       const { detail } = await authApi.changePassword(currentPassword, newPassword)
-      setInfo(detail)
+      showSuccess('password', detail || 'Hasło zostało zmienione.')
       setCurrentPassword('')
       setNewPassword('')
     } catch (err) {
@@ -166,6 +181,7 @@ export default function ProfileScreen() {
     try {
       const next = await patientApi.updateOptionalConsents({ [type]: value })
       setConsents(next)
+      showSuccess('consents', 'Zgoda została zaktualizowana.')
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się zaktualizować zgody.'))
     }
@@ -176,6 +192,7 @@ export default function ProfileScreen() {
     try {
       const next = await patientApi.updateNotificationPreferences({ [key]: value })
       setPrefs(next)
+      showSuccess('notifications', 'Preferencje powiadomień zostały zapisane.')
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się zapisać preferencji.'))
     }
@@ -183,10 +200,10 @@ export default function ProfileScreen() {
 
   async function exportData() {
     setError(null)
-    setInfo(null)
+    setFeedback(null)
     try {
       await patientApi.requestDataExport()
-      setInfo('Eksport danych przygotowany (odpowiedź API).')
+      showSuccess('privacy', 'Wniosek o eksport danych został przyjęty.')
     } catch (err) {
       setError(getErrorMessage(err, 'Eksport nie powiódł się.'))
     }
@@ -194,10 +211,10 @@ export default function ProfileScreen() {
 
   async function requestDeletion() {
     setError(null)
-    setInfo(null)
+    setFeedback(null)
     try {
       const { detail } = await patientApi.requestAccountDeletion()
-      setInfo(detail)
+      showSuccess('privacy', detail || 'Wniosek o usunięcie konta został zgłoszony.')
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się zgłosić wniosku.'))
     }
@@ -228,7 +245,6 @@ export default function ProfileScreen() {
       />
 
       {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
-      {info ? <Text style={styles.info}>{info}</Text> : null}
 
       <SectionCard>
         <Text style={styles.sectionTitle}>Zdjęcie profilowe</Text>
@@ -257,6 +273,7 @@ export default function ProfileScreen() {
             />
           </View>
         </View>
+        {feedback?.kind === 'avatar' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
 
       <SectionCard>
@@ -265,6 +282,7 @@ export default function ProfileScreen() {
         <Field label="Telefon" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
         <Field label="PESEL" value={pesel} onChangeText={setPesel} keyboardType="number-pad" />
         <Button title="Zapisz dane" loading={saving} onPress={() => void saveProfile()} />
+        {feedback?.kind === 'profile' ? <SuccessBanner message={feedback.message} /> : null}
         {profile?.therapist ? (
           <Button
             title="Profil terapeuty"
@@ -311,6 +329,7 @@ export default function ProfileScreen() {
             />
           </View>
         ))}
+        {feedback?.kind === 'notifications' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
 
       <SectionCard>
@@ -367,12 +386,14 @@ export default function ProfileScreen() {
             />
           </View>
         ) : null}
+        {feedback?.kind === 'consents' ? <SuccessBanner message={feedback.message} /> : null}
         <Button title="Eksport danych" variant="secondary" onPress={() => void exportData()} />
         <Button
           title="Wniosek o usunięcie konta"
           variant="danger"
           onPress={() => void requestDeletion()}
         />
+        {feedback?.kind === 'privacy' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
 
       <SectionCard>
@@ -390,6 +411,7 @@ export default function ProfileScreen() {
           secureTextEntry
         />
         <Button title="Zmień hasło" loading={pwdLoading} onPress={() => void changePassword()} />
+        {feedback?.kind === 'password' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
 
       <Button
@@ -408,7 +430,6 @@ const styles = StyleSheet.create({
   content: { padding: space.lg, gap: space.base, paddingBottom: space['4xl'] },
   sectionTitle: { fontSize: typography.lg, fontWeight: '700', color: colors.ink },
   muted: { fontSize: typography.sm, color: colors.muted },
-  info: { color: colors.success, fontSize: typography.sm },
   avatarRow: { flexDirection: 'row', gap: space.base, alignItems: 'center' },
   avatar: {
     width: 72,

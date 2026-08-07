@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 
 import { getErrorMessage, getFieldError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
+import { ErrorBanner, SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { PasswordRequirements } from '@/components/PasswordRequirements'
@@ -141,12 +142,8 @@ export default function PasswordResetScreen() {
             </>
           )}
 
-          {message ? <Text style={styles.ok}>{message}</Text> : null}
-          {error ? (
-            <Text style={styles.error} accessibilityRole="alert">
-              {error}
-            </Text>
-          ) : null}
+          {message ? <SuccessBanner message={message} /> : null}
+          {error ? <ErrorBanner message={error} /> : null}
         </View>
 
         <Link href="/(auth)/login" style={styles.link}>
@@ -163,8 +160,6 @@ const styles = StyleSheet.create({
   title: { fontSize: typography['2xl'], fontWeight: '700', color: colors.ink },
   subtitle: { fontSize: typography.sm, color: colors.muted, marginBottom: space.sm },
   form: { gap: space.base },
-  ok: { color: colors.success, fontSize: typography.sm },
-  error: { color: colors.danger, fontSize: typography.sm },
   link: {
     color: colors.primary,
     fontWeight: '600',

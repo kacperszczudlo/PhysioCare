@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 
 import { ApiError, getFieldError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
+import { ErrorBanner, SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { PasswordRequirements } from '@/components/ui/PasswordRequirements'
@@ -169,15 +170,15 @@ export function PasswordResetPage() {
               error={fieldErrors.confirmPassword}
             />
           </div>
-          {error ? (
-            <p className="auth-form__error" role="alert">
-              {error}
-            </p>
-          ) : null}
+          {error ? <ErrorBanner message={error} /> : null}
           {message ? (
-            <p className="auth-form__success" role="status">
-              {message} <Link to="/login">Przejdź do logowania</Link>
-            </p>
+            <SuccessBanner
+              message={
+                <p>
+                  {message} <Link to="/login">Przejdź do logowania</Link>
+                </p>
+              }
+            />
           ) : null}
           <Button type="submit" loading={loading} className="auth-form__submit">
             Zapisz hasło
@@ -200,16 +201,8 @@ export function PasswordResetPage() {
             }}
             error={fieldErrors.email}
           />
-          {error ? (
-            <p className="auth-form__error" role="alert">
-              {error}
-            </p>
-          ) : null}
-          {message ? (
-            <p className="auth-form__success" role="status">
-              {message}
-            </p>
-          ) : null}
+          {error ? <ErrorBanner message={error} /> : null}
+          {message ? <SuccessBanner message={message} /> : null}
           <Button type="submit" loading={loading} className="auth-form__submit">
             Wyślij link
           </Button>

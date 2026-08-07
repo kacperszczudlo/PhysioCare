@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'r
 import { authApi, therapistApi } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
 import type { TherapistProfile } from '@/api/types'
-import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
@@ -36,6 +36,7 @@ export function ProfilePage() {
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null)
   const [copyMessage, setCopyMessage] = useState<string | null>(null)
+  const [copyError, setCopyError] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
@@ -99,9 +100,11 @@ export function ProfilePage() {
     }
     try {
       await navigator.clipboard.writeText(profile.id)
+      setCopyError(null)
       setCopyMessage('Skopiowano — przekaż ten kod pacjentowi przy rejestracji w aplikacji.')
     } catch {
-      setCopyMessage('Nie udało się skopiować. Zaznacz kod ręcznie i skopiuj.')
+      setCopyMessage(null)
+      setCopyError('Nie udało się skopiować. Zaznacz kod ręcznie i skopiuj.')
     }
   }
 
@@ -118,7 +121,7 @@ export function ProfilePage() {
         courses,
       })
       setProfile(updated)
-      setProfileMessage('Profil zapisany.')
+      setProfileMessage('Dane profilu zostały zapisane.')
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się zapisać profilu.'))
     } finally {
@@ -155,7 +158,7 @@ export function ProfilePage() {
     try {
       const updated = await therapistApi.uploadAvatar(file)
       setProfile(updated)
-      setAvatarMessage('Avatar zapisany — widoczny w aplikacji pacjenta.')
+      setAvatarMessage('Zdjęcie profilowe zostało zapisane — widoczne w aplikacji pacjenta.')
       URL.revokeObjectURL(localPreview)
       setPreviewUrl(null)
     } catch (err) {
@@ -240,11 +243,8 @@ export function ProfilePage() {
             Kopiuj kod
           </Button>
         </div>
-        {copyMessage ? (
-          <p className="profile-banner profile-banner--ok" role="status">
-            {copyMessage}
-          </p>
-        ) : null}
+        {copyError ? <ErrorBanner message={copyError} /> : null}
+        {copyMessage ? <SuccessBanner message={copyMessage} /> : null}
       </aside>
 
       <div className="profile-layout">
@@ -278,16 +278,8 @@ export function ProfilePage() {
               >
                 Wybierz zdjęcie
               </Button>
-              {avatarError ? (
-                <p className="profile-banner profile-banner--error" role="alert">
-                  {avatarError}
-                </p>
-              ) : null}
-              {avatarMessage ? (
-                <p className="profile-banner profile-banner--ok" role="status">
-                  {avatarMessage}
-                </p>
-              ) : null}
+              {avatarError ? <ErrorBanner message={avatarError} /> : null}
+              {avatarMessage ? <SuccessBanner message={avatarMessage} /> : null}
             </div>
           </div>
 
@@ -351,15 +343,10 @@ export function ProfilePage() {
             </div>
           </div>
 
-          {profileMessage ? (
-            <p className="profile-banner profile-banner--ok" role="status">
-              {profileMessage}
-            </p>
-          ) : null}
-
           <Button type="submit" loading={profileBusy}>
             Zapisz profil
           </Button>
+          {profileMessage ? <SuccessBanner message={profileMessage} /> : null}
         </form>
 
         <form className="profile-panel" onSubmit={(e) => void onChangePassword(e)}>
@@ -392,20 +379,11 @@ export function ProfilePage() {
             required
           />
 
-          {passwordError ? (
-            <p className="profile-banner profile-banner--error" role="alert">
-              {passwordError}
-            </p>
-          ) : null}
-          {passwordMessage ? (
-            <p className="profile-banner profile-banner--ok" role="status">
-              {passwordMessage}
-            </p>
-          ) : null}
-
           <Button type="submit" loading={passwordBusy}>
             Zmień hasło
           </Button>
+          {passwordError ? <ErrorBanner message={passwordError} /> : null}
+          {passwordMessage ? <SuccessBanner message={passwordMessage} /> : null}
         </form>
       </div>
     </section>

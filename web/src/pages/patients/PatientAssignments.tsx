@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { exercisesApi } from '@/api/exercises'
 import { getErrorMessage } from '@/api/client'
 import type { ExerciseAssignment } from '@/api/types'
-import { EmptyState, LoadingBlock } from '@/components/AsyncState'
+import { EmptyState, ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/ui/Button'
 import { DateCarousel } from '@/components/ui/DateCarousel'
 import { Field } from '@/components/ui/Field'
@@ -40,6 +40,7 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
   const [endDate, setEndDate] = useState('')
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -59,12 +60,21 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
     void load()
   }, [load])
 
+  useEffect(() => {
+    if (!successMessage) {
+      return
+    }
+    const timer = window.setTimeout(() => setSuccessMessage(null), 5000)
+    return () => window.clearTimeout(timer)
+  }, [successMessage])
+
   function openEdit(assignment: ExerciseAssignment) {
     setEditTarget(assignment)
     setDosage(assignment.dosage)
     setStartDate(assignment.start_date)
     setEndDate(assignment.end_date)
     setFormError(null)
+    setSuccessMessage(null)
   }
 
   async function onSave(event: FormEvent) {
@@ -82,6 +92,7 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
       })
       setItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
       setEditTarget(null)
+      setSuccessMessage('Zalecenie zostało zapisane.')
     } catch (err) {
       setFormError(getErrorMessage(err, 'Nie udało się zapisać zalecenia.'))
     } finally {
@@ -99,6 +110,7 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
       await exercisesApi.deleteAssignment(deleteTarget.id)
       setItems((prev) => prev.filter((item) => item.id !== deleteTarget.id))
       setDeleteTarget(null)
+      setSuccessMessage('Zalecenie zostało usunięte.')
     } catch (err) {
       setFormError(getErrorMessage(err, 'Nie udało się usunąć zalecenia.'))
     } finally {
@@ -120,7 +132,8 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
 
       {loading ? <LoadingBlock label="Ładowanie zaleceń…" /> : null}
 
-      {!loading && error ? <p className="patient-assignments__error">{error}</p> : null}
+      {!loading && error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
+      {successMessage ? <SuccessBanner message={successMessage} /> : null}
 
       {!loading && !error && items.length === 0 ? (
         <EmptyState

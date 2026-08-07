@@ -40,6 +40,18 @@ export function ErrorBanner({ message, onRetry }: ErrorBannerProps) {
   )
 }
 
+interface SuccessBannerProps {
+  message: ReactNode
+}
+
+export function SuccessBanner({ message }: SuccessBannerProps) {
+  return (
+    <div className="async-success" role="status">
+      {typeof message === 'string' || typeof message === 'number' ? <p>{message}</p> : message}
+    </div>
+  )
+}
+
 interface EmptyStateProps {
   title: string
   description?: string

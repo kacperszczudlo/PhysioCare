@@ -4,6 +4,7 @@ import { exercisesApi } from '@/api/exercises'
 import { patientsApi, treatmentApi } from '@/api/treatment'
 import { ApiError } from '@/api/client'
 import type { Exercise, PatientSummary, TreatmentEpisode } from '@/api/types'
+import { SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/ui/Button'
 import { DateCarousel } from '@/components/ui/DateCarousel'
 import { Field } from '@/components/ui/Field'
@@ -211,11 +212,7 @@ export function AssignExerciseModal({
               {error}
             </p>
           ) : null}
-          {success ? (
-            <p className="exercises-success" role="status">
-              {success}
-            </p>
-          ) : null}
+          {success ? <SuccessBanner message={success} /> : null}
 
           <div className="ui-modal__actions">
             <Button type="button" variant="secondary" onClick={onClose} disabled={busy}>

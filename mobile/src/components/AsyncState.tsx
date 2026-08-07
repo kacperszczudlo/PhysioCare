@@ -25,6 +25,14 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
   )
 }
 
+export function SuccessBanner({ message }: { message: string }) {
+  return (
+    <View style={styles.successBox} accessibilityRole="text" accessibilityLiveRegion="polite">
+      <Text style={styles.successText}>{message}</Text>
+    </View>
+  )
+}
+
 export function EmptyState({
   title,
   description,
@@ -70,11 +78,24 @@ const styles = StyleSheet.create({
   errorText: {
     color: colors.danger,
     fontSize: typography.sm,
+    fontWeight: '600',
   },
   retry: {
     color: colors.danger,
     fontWeight: '700',
     fontSize: typography.sm,
+  },
+  successBox: {
+    backgroundColor: colors.successSubtle,
+    borderRadius: radius.md,
+    padding: space.base,
+    borderWidth: 1,
+    borderColor: colors.success,
+  },
+  successText: {
+    color: colors.success,
+    fontSize: typography.sm,
+    fontWeight: '700',
   },
   empty: {
     alignItems: 'center',
