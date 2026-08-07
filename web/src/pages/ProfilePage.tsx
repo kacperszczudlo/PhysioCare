@@ -225,8 +225,8 @@ export function ProfilePage() {
         <div className="profile-invite__copy">
           <h2 id="invite-heading">Kod dla pacjenta</h2>
           <p className="profile-muted">
-            Pacjent podaje ten kod przy rejestracji w aplikacji mobilnej. Nie wymaga znajomości API —
-            wystarczy skopiować i przesłać (SMS, e-mail, wiadomość).
+            Pacjent podaje ten kod przy rejestracji w aplikacji mobilnej. Skopiuj i prześlij
+            go pacjentowi (SMS, e-mail lub wiadomość).
           </p>
         </div>
         <div className="profile-invite__actions">
