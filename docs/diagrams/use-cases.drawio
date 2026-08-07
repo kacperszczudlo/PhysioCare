@@ -71,7 +71,7 @@
         </mxCell>
 
         <!-- Client apps note -->
-        <mxCell id="clients_note" value="Pacjent → Mobile (Expo)&#xa;Fizjoterapeuta → Web (React)" style="text;html=1;align=left;fillColor=#ffffcc;strokeColor=#36393d;" vertex="1" parent="1">
+        <mxCell id="clients_note" value="Pacjent -> Mobile (Expo)&#xa;Fizjoterapeuta -> Web (React)" style="text;html=1;align=left;fillColor=#ffffcc;strokeColor=#36393d;" vertex="1" parent="1">
           <mxGeometry x="40" y="720" width="220" height="50" as="geometry"/>
         </mxCell>
 

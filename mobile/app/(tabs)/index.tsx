@@ -181,7 +181,7 @@ export default function DashboardScreen() {
                     ) : null}
                   </View>
                 ) : null}
-                <Text style={styles.openHint}>Instrukcja i materiał →</Text>
+                <Text style={styles.openHint}>Instrukcja i materiał</Text>
               </Pressable>
             </View>
           ))}

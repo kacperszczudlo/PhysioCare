@@ -251,7 +251,7 @@ export default function RegisterScreen() {
           autoCapitalize="none"
           autoCorrect={false}
           error={fieldErrors.therapistId}
-          hint="Kod z panelu webowego terapeuty: Profil → „Kod dla pacjenta” (Kopiuj kod)."
+          hint="Kod z panelu webowego terapeuty: Profil / „Kod dla pacjenta” (Kopiuj kod)."
         />
 
         <ConsentToggle

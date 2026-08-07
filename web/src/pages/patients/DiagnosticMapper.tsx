@@ -208,7 +208,7 @@ export function DiagnosticMapper({ episodeId }: DiagnosticMapperProps) {
         <div>
           <h3>Mapa ciała (VAS)</h3>
           <p className="diag-map__subtitle">
-            Kliknij mięsień / region → VAS, charakter bólu i cel leczenia
+            Kliknij mięsień lub region, aby ustawić VAS, charakter bólu i cel leczenia
           </p>
         </div>
         <div className="diag-map__tabs" role="tablist" aria-label="Strona ciała">
@@ -265,7 +265,7 @@ export function DiagnosticMapper({ episodeId }: DiagnosticMapperProps) {
             <form className="diag-map__form" onSubmit={(e) => void onSave(e)}>
               <h4>{regionLabel(selectedRegion, side)}</h4>
               <p className="diag-map__hint">
-                Lokalizacja bólu na modelu → precyzyjny cel (staw / mięsień / kość).
+                Lokalizacja bólu na modelu: precyzyjny cel (staw / mięsień / kość).
               </p>
 
               <label className="diag-map__vas">

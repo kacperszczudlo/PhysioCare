@@ -13,7 +13,7 @@ npm.cmd run dev
 Aplikacja: http://localhost:5173  
 API (osobny terminal): `python manage.py runserver` w `backend/physiocare`.
 
-W dev Vite proxy przekierowuje `/api` i `/media` → `http://localhost:8000`. Opcjonalnie ustaw `VITE_API_BASE_URL` w `.env.local` (szablon: `.env.example`).
+W dev Vite proxy przekierowuje `/api` i `/media` -> `http://localhost:8000`. Opcjonalnie ustaw `VITE_API_BASE_URL` w `.env.local` (szablon: `.env.example`).
 
 ## Skrypty
 

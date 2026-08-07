@@ -143,7 +143,7 @@ class ExerciseAssignment(UUIDModel):
         ]
 
     def __str__(self):
-        return f'{self.exercise.title} → {self.patient}'
+        return f'{self.exercise.title} - {self.patient}'
 
 
 class ExerciseCompletion(UUIDModel):

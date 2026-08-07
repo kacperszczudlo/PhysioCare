@@ -15,7 +15,7 @@ npm.cmd start
 
 Wymaga działającego API: `python manage.py runserver` w `backend/physiocare`.
 
-Skopiuj `.env.example` → `.env` i ustaw `EXPO_PUBLIC_API_BASE_URL`:
+Skopiuj `.env.example` -> `.env` i ustaw `EXPO_PUBLIC_API_BASE_URL`:
 
 | Środowisko               | URL                            |
 | ------------------------ | ------------------------------ |

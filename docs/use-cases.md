@@ -21,7 +21,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Warunki wstępne | Konto istnieje w systemie |
 | Przebieg | 1. Użytkownik podaje e-mail i hasło. 2. System weryfikuje dane. 3. Zwraca JWT. |
 | Warunki końcowe | Sesja aktywna, przekierowanie do pulpitu |
-| Wyjątki | E1: Błędne dane → 401. E2: Konto nieaktywne → 403. |
+| Wyjątki | E1: Błędne dane -> 401. E2: Konto nieaktywne -> 403. |
 
 ---
 
@@ -34,7 +34,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Warunki wstępne | Brak konta o danym e-mailu |
 | Przebieg | 1. Pacjent wypełnia formularz. 2. Zaznacza zgody wymagane (regulamin, dane medyczne). 3. Przycisk aktywny dopiero po zgodach. 4. System tworzy User + PatientProfile. |
 | Warunki końcowe | Konto utworzone, zgody zapisane z datą |
-| Wyjątki | E1: E-mail zajęty → 409. E2: Brak zgód → 400. |
+| Wyjątki | E1: E-mail zajęty -> 409. E2: Brak zgód -> 400. |
 
 ---
 
@@ -45,7 +45,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Aktor | Fizjoterapeuta |
 | Cel | Założenie konta gabinetu z weryfikacją PWZFz |
 | Przebieg | 1. Formularz z numerem PWZFz i oświadczeniem. 2. System tworzy User (THERAPIST) + TherapistProfile. |
-| Wyjątki | E1: PWZFz już zarejestrowany → 409. |
+| Wyjątki | E1: PWZFz już zarejestrowany -> 409. |
 
 ---
 
@@ -85,7 +85,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 |------|---------|
 | Aktor | Pacjent |
 | Przebieg | 1. Zakładka nadchodzące / zakończone. 2. Szczegóły wizyty (adres, przygotowanie). 3. Opcjonalnie: zmiana terminu (modal), odwołanie z potwierdzeniem. |
-| Wyjątki | E1: Termin niedostępny → 409. |
+| Wyjątki | E1: Termin niedostępny -> 409. |
 
 ---
 
@@ -94,7 +94,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Pole | Wartość |
 |------|---------|
 | Aktor | Pacjent |
-| Przebieg | 1. Profil → dokumentacja lub archiwum wizyt. 2. Pobranie PDF udostępnionego przez terapeutę. |
+| Przebieg | 1. Profil -> dokumentacja lub archiwum wizyt. 2. Pobranie PDF udostępnionego przez terapeutę. |
 | Bezpieczeństwo | Tylko dokumenty przypisane do zalogowanego pacjenta. |
 
 ---
@@ -113,7 +113,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Pole | Wartość |
 |------|---------|
 | Aktor | Fizjoterapeuta |
-| Przebieg | Widgety: liczba wizyt, nowi pacjenci, przypisane ćwiczenia. Lista najbliższych wizyt → przejście do karty pacjenta. |
+| Przebieg | Widgety: liczba wizyt, nowi pacjenci, przypisane ćwiczenia. Lista najbliższych wizyt -> przejście do karty pacjenta. |
 
 ---
 
@@ -123,7 +123,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 |------|---------|
 | Aktor | Fizjoterapeuta |
 | Przebieg | 1. Widok dzienny z nawigacją dat. 2. Dodanie wizyty (+ lub klik slotu). 3. Drag & drop zmiany godziny. 4. Automatyczny kolor wg typu terapii. |
-| Wyjątki | E1: Kolizja terminów → 409. |
+| Wyjątki | E1: Kolizja terminów -> 409. |
 
 ---
 
@@ -142,7 +142,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Pole | Wartość |
 |------|---------|
 | Aktor | Fizjoterapeuta |
-| Przebieg | 1. Przełącznik przód/tył. 2. Zapisane regiony widać na sylwetce (kolor = VAS). 3. Klik regionu → panel VAS, charakter bólu i cele leczenia. 4. Zapisz / Zaktualizuj / Usuń. |
+| Przebieg | 1. Przełącznik przód/tył. 2. Zapisane regiony widać na sylwetce (kolor = VAS). 3. Klik regionu -> panel VAS, charakter bólu i cele leczenia. 4. Zapisz / Zaktualizuj / Usuń. |
 
 ---
 
@@ -160,7 +160,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Pole | Wartość |
 |------|---------|
 | Aktor | Fizjoterapeuta |
-| Przebieg | 1. Filtrowanie kategorii. 2. Dodanie ćwiczenia (mp4/PDF). 3. Przypisanie: pacjent, dawkowanie, okres → „Wyślij do aplikacji”. |
+| Przebieg | 1. Filtrowanie kategorii. 2. Dodanie ćwiczenia (mp4/PDF). 3. Przypisanie: pacjent, dawkowanie, okres -> „Wyślij do aplikacji”. |
 
 ---
 

@@ -60,10 +60,10 @@ flowchart TB
 
 ### Import
 
-1. **Import** → `docs/postman/PhysioCare.json`
-2. **Import** → `docs/postman/PhysioCare.postman_environment.json`
+1. **Import** -> `docs/postman/PhysioCare.json`
+2. **Import** -> `docs/postman/PhysioCare.postman_environment.json`
 3. Wybierz environment **PhysioCare Local**
-4. Collection Runner → folder **`00 Setup - Auth & seed`** jako pierwszy
+4. Collection Runner -> folder **`00 Setup - Auth & seed`** jako pierwszy
 
 ### Seed (kolejność krytyczna)
 
@@ -71,7 +71,7 @@ Rejestracja pacjenta wymaga `therapist_id` (UUID profilu terapeuty):
 
 1. `POST /auth/register/therapist/`
 2. `POST /auth/login/` (terapeuta)
-3. `GET /therapist/profile/` → zapis `therapist_profile_id`
+3. `GET /therapist/profile/` -> zapis `therapist_profile_id`
 4. `POST /auth/register/patient/` z `therapist_id`
 5. Dalej foldery domenowe
 
@@ -103,51 +103,51 @@ Poniżej „makiety” ścieżek API - to nie UI, tylko sekwencje requestów odp
 ### 4.1 Onboarding gabinetu (web)
 
 ```text
-[Rejestracja terapeuty] ──201──► cookies JWT
-        │
-        ▼
-[Login] ──200──► GET /therapist/profile
-        │
-        ▼
+[Rejestracja terapeuty] --201--> cookies JWT
+        |
+        v
+[Login] --200--> GET /therapist/profile
+        |
+        v
 [Pulpit] GET /therapist/dashboard/stats
-        │
-        ▼
+        |
+        v
 [Typ terapii] POST /therapist/therapy-types
-        │
-        ▼
+        |
+        v
 (pacjent już zarejestrowany z therapist_id)
 ```
 
 ### 4.2 Pierwsza wizyta i dokumentacja (web)
 
 ```text
-GET /patients/  ──►  patient_profile_id
-        │
-        ▼
-POST .../episodes/  ──►  episode_id   (ICD-10, status)
-        │
-        ├─► POST .../body-pain/     (mapa ciała VAS)
-        ├─► POST .../notes/         (notatka)
-        └─► POST /therapist/visits/ (termin + therapy_type)
-                    │
-                    └─ overlap? ──400── „koliduje z inną wizytą”
+GET /patients/  -->  patient_profile_id
+        |
+        v
+POST .../episodes/  -->  episode_id   (ICD-10, status)
+        |
+        |-- POST .../body-pain/     (mapa ciała VAS)
+        |-- POST .../notes/         (notatka)
+        `-- POST /therapist/visits/ (termin + therapy_type)
+                    |
+                    `-- overlap? --400-- „koliduje z inną wizytą”
 ```
 
 ### 4.3 Pacjent w aplikacji (mobile)
 
 ```text
 Login patient
-   │
-   ├─ GET /me/visits?status=upcoming     (UC-05 / UC-07)
-   ├─ GET /me/exercises/today            (UC-05 / UC-06)
-   │       └─ POST /me/exercise-completions
-   ├─ GET /me/documents + download       (UC-08)
-   ├─ GET/PATCH /me/consents*            (UC-09)
-   ├─ GET /therapists/{id}/public        (UC-17)
-   └─ GET/PATCH /me/notification-preferences  (UC-18)
+   |
+   |-- GET /me/visits?status=upcoming     (UC-05 / UC-07)
+   |-- GET /me/exercises/today            (UC-05 / UC-06)
+   |       `-- POST /me/exercise-completions
+   |-- GET /me/documents + download       (UC-08)
+   |-- GET/PATCH /me/consents*            (UC-09)
+   |-- GET /therapists/{id}/public        (UC-17)
+   `-- GET/PATCH /me/notification-preferences  (UC-18)
 ```
 
-### 4.4 Compliance ćwiczeń (web → mobile)
+### 4.4 Compliance ćwiczeń (web -> mobile)
 
 ```mermaid
 sequenceDiagram
@@ -168,27 +168,27 @@ sequenceDiagram
 
 | UC | Folder Postman | Happy path | Wyjątki w kolekcji |
 |----|----------------|------------|--------------------|
-| **UC-01** Logowanie | `00 Setup` | `POST /auth/login/` → 200 | złe hasło → **401** `AUTH_001` |
-| **UC-02** Rej. pacjenta | `00 Setup` | `POST /auth/register/patient/` → 201 | brak zgód → **400**; e-mail zajęty → **400/409** |
-| **UC-03** Rej. terapeuty | `00 Setup` | `POST /auth/register/therapist/` → 201 | brak PWZFz → **400**; duplikat → **400/409** |
-| **UC-04** Reset hasła | `00 Setup` | `.../request/` → 200 (anti-enum) | zły token confirm → **400** `AUTH_002` |
+| **UC-01** Logowanie | `00 Setup` | `POST /auth/login/` -> 200 | złe hasło -> **401** `AUTH_001` |
+| **UC-02** Rej. pacjenta | `00 Setup` | `POST /auth/register/patient/` -> 201 | brak zgód -> **400**; e-mail zajęty -> **400/409** |
+| **UC-03** Rej. terapeuty | `00 Setup` | `POST /auth/register/therapist/` -> 201 | brak PWZFz -> **400**; duplikat -> **400/409** |
+| **UC-04** Reset hasła | `00 Setup` | `.../request/` -> 200 (anti-enum) | zły token confirm -> **400** `AUTH_002` |
 | **UC-05** Pulpit pacjenta | `Exercises` + `Visits` | `GET /me/visits`, `GET /me/exercises/today` | - (dane z poprzednich kroków) |
-| **UC-06** Compliance | `Exercises` | `POST /me/exercise-completions/` → 201 | obce `assignment_id` → **400** |
-| **UC-07** Wizyty pacjenta | `Visits` | list / reschedule / cancel | overlap przy reschedule → **400** |
-| **UC-08** Dokumenty | `Documents` | list + download | brak pliku upload → **400**; cudzy dostęp → **404** |
-| **UC-09** Zgody / RODO | `Patient me` | consents, export **200**, deletion **202** | brak tokena → **401** |
-| **UC-10** Pulpit terapeuty | `Dashboard` | `GET .../dashboard/stats` → 200 | zła rola → **401/403** |
-| **UC-11** Harmonogram | `Visits` | day list, create, PATCH slot | kolizja terminu → **400** |
-| **UC-12** Karta / epizody | `Patients & episodes` | CRUD epizod + notatka | pacjent spoza gabinetu → **404** |
-| **UC-13** Mapa ciała | `Body map` | POST/GET/PUT body-pain | VAS > 10 → **400** |
-| **UC-14** Zarządzanie wizytą | `Visits` | PATCH visit, cancel | brak dostępu → **404** |
-| **UC-15** Ćwiczenia | `Exercises` | create + assign | brak pliku → **400** |
+| **UC-06** Compliance | `Exercises` | `POST /me/exercise-completions/` -> 201 | obce `assignment_id` -> **400** |
+| **UC-07** Wizyty pacjenta | `Visits` | list / reschedule / cancel | overlap przy reschedule -> **400** |
+| **UC-08** Dokumenty | `Documents` | list + download | brak pliku upload -> **400**; cudzy dostęp -> **404** |
+| **UC-09** Zgody / RODO | `Patient me` | consents, export **200**, deletion **202** | brak tokena -> **401** |
+| **UC-10** Pulpit terapeuty | `Dashboard` | `GET .../dashboard/stats` -> 200 | zła rola -> **401/403** |
+| **UC-11** Harmonogram | `Visits` | day list, create, PATCH slot | kolizja terminu -> **400** |
+| **UC-12** Karta / epizody | `Patients & episodes` | CRUD epizod + notatka | pacjent spoza gabinetu -> **404** |
+| **UC-13** Mapa ciała | `Body map` | POST/GET/PUT body-pain | VAS > 10 -> **400** |
+| **UC-14** Zarządzanie wizytą | `Visits` | PATCH visit, cancel | brak dostępu -> **404** |
+| **UC-15** Ćwiczenia | `Exercises` | create + assign | brak pliku -> **400** |
 | **UC-16** Profil terapeuty | `Therapist profile` | GET/PATCH `/therapist/profile/` | - |
 | **UC-17** Wizytówka | `Therapist profile` | `GET /therapists/{id}/public/` | - |
 | **UC-18** Powiadomienia | `Patient me` | GET/PATCH preferences | - |
-| **Security** | `Security` | - | patient → `/patients/` **403**; no token **401** |
+| **Security** | `Security` | - | patient -> `/patients/` **403**; no token **401** |
 
-Refresh token: `POST /auth/refresh/` → 200 (w Setup).
+Refresh token: `POST /auth/refresh/` -> 200 (w Setup).
 
 ---
 
@@ -251,9 +251,9 @@ Uruchom Collection Runner (kolejność folderów) i odhacz:
 - [ ] Stats pulpitu 200
 - [ ] Lista / detail pacjenta
 - [ ] Nowy epizod + patch + notatka
-- [ ] Body-pain create / update; VAS 15 → 400
+- [ ] Body-pain create / update; VAS 15 -> 400
 - [ ] Typ terapii + wizyta 201
-- [ ] Druga wizyta w tym samym slocie → 400 overlap
+- [ ] Druga wizyta w tym samym slocie -> 400 overlap
 - [ ] Harmonogram dnia, PATCH slotu
 - [ ] Upload ćwiczenia (z plikiem) + assignment
 - [ ] Upload dokumentu PDF
@@ -264,12 +264,12 @@ Uruchom Collection Runner (kolejność folderów) i odhacz:
 - [ ] `me/visits` upcoming / past
 - [ ] Reschedule + cancel
 - [ ] `me/exercises/today` + completion 201
-- [ ] Completion obcego assignment → 400
+- [ ] Completion obcego assignment -> 400
 - [ ] `me/documents` + download
 - [ ] Profil, zgody opcjonalne, eksport, deletion 202
 - [ ] Preferencje powiadomień
 - [ ] Publiczny profil terapeuty
-- [ ] Request bez auth → 401
+- [ ] Request bez auth -> 401
 
 ### Role
 
@@ -280,7 +280,7 @@ Uruchom Collection Runner (kolejność folderów) i odhacz:
 
 ## 9. Aktualizacja kolekcji
 
-Kolekcja w `docs/postman/` jest artefaktem w repo - edytuj ją w Postmanie (Export → nadpisz JSON) albo ręcznie, gdy zmienia się kontrakt API.
+Kolekcja w `docs/postman/` jest artefaktem w repo - edytuj ją w Postmanie (Export -> nadpisz JSON) albo ręcznie, gdy zmienia się kontrakt API.
 
 ---
 

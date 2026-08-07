@@ -19,9 +19,9 @@ Slajdy + demo live (Faza 6.7). Czas orientacyjny: 10-12 minut.
 
 Kolejność:
 
-1. Logowanie terapeuty (web) → harmonogram → otwarcie karty pacjenta
+1. Logowanie terapeuty (web) -> harmonogram -> otwarcie karty pacjenta
 2. Przypisanie ćwiczenia
-3. Logowanie pacjenta (mobile) → pulpit → oznaczenie wykonania
+3. Logowanie pacjenta (mobile) -> pulpit -> oznaczenie wykonania
 4. (Opcjonalnie) log JSON w terminalu backendu z `request_id`
 
 Backup: nagranie ekranu / Postman smoke, gdy sieć lub emulator zawiedzie.

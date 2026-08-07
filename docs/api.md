@@ -15,7 +15,7 @@ Login / rejestracja / refresh zwracają też `access` + `refresh` w JSON (dla mo
 | Identyfikatory | UUID v4 |
 | Daty | ISO 8601 (`2026-06-09T14:30:00+02:00`) |
 | Błędy | `{ "error": { "code": "...", "message": "...", "details": {} } }` |
-| Paginacja | `?page=1&page_size=20` → `{ "count", "next", "previous", "results" }` |
+| Paginacja | `?page=1&page_size=20` -> `{ "count", "next", "previous", "results" }` |
 | Role | `PATIENT` \| `THERAPIST` - egzekwowane per endpoint |
 
 ## Kody HTTP (wybrane)
@@ -272,6 +272,6 @@ Dozwolone MIME: `application/pdf`, `video/mp4`.
 ## Kolejne kroki
 
 1. ~~Implementacja serializers + permissions w DRF~~ (Faza 2)
-2. ~~Eksport kolekcji Postman~~ → [`postman/PhysioCare.json`](postman/PhysioCare.json), przewodnik [`postman-testing.md`](postman-testing.md)
+2. ~~Eksport kolekcji Postman~~ -> [`postman/PhysioCare.json`](postman/PhysioCare.json), przewodnik [`postman-testing.md`](postman-testing.md)
 3. Przejście checklisty Postman (wszystkie UC + wyjątki)
 4. Walidacja kontraktu testami integracyjnymi (Faza 3)

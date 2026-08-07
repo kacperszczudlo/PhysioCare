@@ -66,7 +66,7 @@ Otwórz pliki `.drawio` w [diagrams.net](https://app.diagrams.net) lub rozszerze
 ### Wymagania
 
 - Python 3.12+
-- PostgreSQL 16+ (+ rozszerzenie `btree_gist` / Stack Builder → *PostgreSQL Database Server Contrib*)
+- PostgreSQL 16+ (+ rozszerzenie `btree_gist` / Stack Builder -> *PostgreSQL Database Server Contrib*)
 - Node.js 20 LTS (web/mobile - Faza 4+)
 - (Mobile) Expo CLI
 - (Windows) PowerShell 5.1+; binaria `psql` / `pg_dump` w PATH lub w `C:\Program Files\PostgreSQL\<wersja>\bin`
@@ -168,7 +168,7 @@ npx expo start
 |--------|------|
 | `setup_postgres_auth.py` | User, baza, `btree_gist` |
 | `reset_db.py` | Drop/create DB + migrate |
-| `sync_schema_sql.py` | Dump schematu → `database/schema.sql` |
+| `sync_schema_sql.py` | Dump schematu -> `database/schema.sql` |
 | `run_tests.py` | pytest + coverage HTML |
 
 Uruchamianie (zawsze z roota repo):

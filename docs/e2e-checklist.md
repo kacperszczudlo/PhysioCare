@@ -24,9 +24,9 @@ Automatyczne wsparcie: Postman (`docs/postman/`), pytest backend.
 | W2 | Logowanie | Dostęp do pulpitu |
 | W3 | Reset hasła | Mail w konsoli backendu + zmiana hasła działa |
 | W4 | Pulpit / harmonogram | Lista wizyt dnia, D&D / formularz wizyty |
-| W5 | Pacjenci → karta | Epizody, mapa ciała (region → VAS → cel leczenia), notatki |
+| W5 | Pacjenci -> karta | Epizody, mapa ciała (region -> VAS -> cel leczenia), notatki |
 | W6 | Ćwiczenia | CRUD + przypisanie pacjentowi |
-| W7 | Profil | Podgląd / edycja + kod pacjenta + upload avatara (plik → podgląd) |
+| W7 | Profil | Podgląd / edycja + kod pacjenta + upload avatara (plik -> podgląd) |
 | W8 | Sesja wygasła | Refresh cookie / redirect na login bez „wiszącego” UI |
 | W9 | Stany UI | Loading / empty / error widoczne przy braku danych i błędzie API |
 

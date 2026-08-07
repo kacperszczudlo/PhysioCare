@@ -5,10 +5,10 @@ Przewodnik demo / staging. Lokalny rozwój pozostaje w root `README.md`.
 ## Architektura wdrożenia
 
 ```
-[Web: static Vite] ──┐
-                     ├──► [Django + DRF + Gunicorn] ──► [PostgreSQL]
-[Mobile: Expo EAS] ──┘         │
-                               └── media (volume / object storage)
+[Web: static Vite] --+
+                     +--> [Django + DRF + Gunicorn] --> [PostgreSQL]
+[Mobile: Expo EAS] --+         |
+                               +-- media (volume / object storage)
 ```
 
 | Komponent | Rekomendacja demo |
@@ -43,7 +43,7 @@ Skopiuj z `.env.example`, w szczególności:
 
 ### VPS (skrót)
 
-- Nginx → reverse proxy TLS → Gunicorn
+- Nginx -> reverse proxy TLS -> Gunicorn
 - `certbot` dla HTTPS
 - systemd unit dla Gunicorn + Postgres jako usługa systemowa lub Docker Compose
 

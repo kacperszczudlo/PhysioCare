@@ -355,7 +355,7 @@
           ]
         },
         {
-          "name": "GET therapist profile → save therapist_profile_id",
+          "name": "GET therapist profile -> save therapist_profile_id",
           "request": {
             "method": "GET",
             "header": [],
@@ -638,7 +638,7 @@
                 "login"
               ]
             },
-            "description": "E1: błędne dane → AUTH_001.",
+            "description": "E1: błędne dane -> AUTH_001.",
             "auth": {
               "type": "noauth"
             },
@@ -831,7 +831,7 @@
           ]
         },
         {
-          "name": "Switch role → therapist token",
+          "name": "Switch role -> therapist token",
           "request": {
             "method": "POST",
             "header": [
@@ -3038,7 +3038,7 @@
           ]
         },
         {
-          "name": "Login patient → public profile",
+          "name": "Login patient -> public profile",
           "request": {
             "method": "POST",
             "header": [
@@ -3600,7 +3600,7 @@
           ]
         },
         {
-          "name": "No token → 401 on protected",
+          "name": "No token -> 401 on protected",
           "request": {
             "method": "GET",
             "header": [],
