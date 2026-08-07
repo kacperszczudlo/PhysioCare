@@ -88,6 +88,7 @@ export interface Visit {
   therapy_type: string
   patient_first_name: string
   patient_last_name: string
+  patient_avatar_url: string | null
   therapy_type_name: string
   therapy_type_color: string
   therapy_type_duration_min: number

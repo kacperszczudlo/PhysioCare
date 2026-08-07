@@ -10,6 +10,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { CreateExerciseModal } from '@/pages/exercises/CreateExerciseModal'
 import { VisitFormModal } from '@/pages/schedule/VisitFormModal'
+import { resolveMediaUrl } from '@/lib/mediaUrl'
 import { addDays, formatTime, startOfDay, toDateInputValue } from '@/lib/scheduleTime'
 import './DashboardPage.css'
 
@@ -353,6 +354,7 @@ export function DashboardPage() {
                     const start = new Date(visit.start_at)
                     const duration = visitDurationMin(visit)
                     const name = `${visit.patient_first_name} ${visit.patient_last_name}`.trim()
+                    const avatarSrc = resolveMediaUrl(visit.patient_avatar_url)
                     return (
                       <li key={visit.id}>
                         <Link
@@ -364,9 +366,17 @@ export function DashboardPage() {
                             } as CSSProperties
                           }
                         >
-                          <span className="dash-visit__avatar" aria-hidden="true">
-                            {initials(visit.patient_first_name, visit.patient_last_name)}
-                          </span>
+                          {avatarSrc ? (
+                            <img
+                              className="dash-visit__avatar"
+                              src={avatarSrc}
+                              alt=""
+                            />
+                          ) : (
+                            <span className="dash-visit__avatar" aria-hidden="true">
+                              {initials(visit.patient_first_name, visit.patient_last_name)}
+                            </span>
+                          )}
                           <span className="dash-visit__main">
                             <span className="dash-visit__name">{name}</span>
                             <span className="dash-visit__type">{visit.therapy_type_name}</span>

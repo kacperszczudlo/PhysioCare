@@ -23,6 +23,10 @@ class VisitSerializer(serializers.ModelSerializer):
         source='patient.user.last_name',
         read_only=True,
     )
+    patient_avatar_url = serializers.CharField(
+        source='patient.avatar_url',
+        read_only=True,
+    )
     therapist_first_name = serializers.CharField(
         source='therapist.user.first_name',
         read_only=True,
@@ -54,7 +58,7 @@ class VisitSerializer(serializers.ModelSerializer):
         model = Visit
         fields = [
             'id', 'patient', 'therapist', 'episode', 'therapy_type', 'therapy_type_id',
-            'patient_first_name', 'patient_last_name',
+            'patient_first_name', 'patient_last_name', 'patient_avatar_url',
             'therapist_first_name', 'therapist_last_name',
             'therapy_type_name', 'therapy_type_color', 'therapy_type_duration_min',
             'start_at', 'end_at', 'status', 'location_address',
@@ -62,7 +66,7 @@ class VisitSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             'id', 'patient', 'therapist', 'episode', 'therapy_type',
-            'patient_first_name', 'patient_last_name',
+            'patient_first_name', 'patient_last_name', 'patient_avatar_url',
             'therapist_first_name', 'therapist_last_name',
             'therapy_type_name', 'therapy_type_color', 'therapy_type_duration_min',
             'patient_note', 'created_at',
