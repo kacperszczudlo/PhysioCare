@@ -54,17 +54,21 @@ def _set_auth_cookies(response, *, access_token: str, refresh_token: str):
 
 
 def _clear_auth_cookies(response):
+    # delete_cookie() does not accept secure=; expire with matching attrs instead.
     secure = settings.SECURE_COOKIES
-    response.delete_cookie(
-        key=settings.SIMPLE_JWT.get('AUTH_COOKIE_ACCESS', 'access_token'),
-        samesite='Lax',
-        secure=secure,
-    )
-    response.delete_cookie(
-        key=settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token'),
-        samesite='Lax',
-        secure=secure,
-    )
+    for key in (
+        settings.SIMPLE_JWT.get('AUTH_COOKIE_ACCESS', 'access_token'),
+        settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token'),
+    ):
+        response.set_cookie(
+            key=key,
+            value='',
+            max_age=0,
+            expires='Thu, 01 Jan 1970 00:00:00 GMT',
+            secure=secure,
+            httponly=True,
+            samesite='Lax',
+        )
     return response
 
 
@@ -170,7 +174,22 @@ class CookieTokenRefreshView(TokenRefreshView):
             )
 
         serializer = self.get_serializer(data={'refresh': refresh_value})
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except User.DoesNotExist:
+            # Stale refresh for a deleted user — treat as unauthenticated.
+            response = Response(
+                {
+                    'error': {
+                        'code': 'AUTH_003',
+                        'message': 'Token odświeżania jest nieprawidłowy lub wygasł.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+            return _clear_auth_cookies(response)
+
         access = serializer.validated_data['access']
         # ROTATE_REFRESH_TOKENS may issue a new refresh; otherwise reuse the presented one.
         new_refresh = serializer.validated_data.get('refresh', refresh_value)

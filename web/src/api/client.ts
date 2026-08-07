@@ -61,10 +61,42 @@ async function tryRefreshSession(): Promise<boolean> {
   return refreshPromise
 }
 
+function firstFieldMessage(details: unknown): string | null {
+  if (!details || typeof details !== 'object') {
+    return null
+  }
+  if (Array.isArray(details)) {
+    return typeof details[0] === 'string' ? details[0] : null
+  }
+
+  for (const value of Object.values(details as Record<string, unknown>)) {
+    if (typeof value === 'string') {
+      return value
+    }
+    if (Array.isArray(value) && typeof value[0] === 'string') {
+      return value[0]
+    }
+    if (value && typeof value === 'object') {
+      const nested = firstFieldMessage(value)
+      if (nested) {
+        return nested
+      }
+    }
+  }
+  return null
+}
+
 function firstValidationMessage(body: ApiErrorBody | null): string | null {
   if (!body) {
     return null
   }
+
+  // Prefer field-level details over the generic "Walidacja nie powiodła się."
+  const fromDetails = firstFieldMessage(body.error?.details)
+  if (fromDetails) {
+    return fromDetails
+  }
+
   if (body.error?.message) {
     return body.error.message
   }
@@ -76,17 +108,9 @@ function firstValidationMessage(body: ApiErrorBody | null): string | null {
     if (key === 'error' || key === 'detail') {
       continue
     }
-    if (typeof value === 'string') {
-      return value
-    }
-    if (Array.isArray(value) && typeof value[0] === 'string') {
-      return value[0]
-    }
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      const nested = firstValidationMessage(value as ApiErrorBody)
-      if (nested) {
-        return nested
-      }
+    const nested = firstFieldMessage(value)
+    if (nested) {
+      return nested
     }
   }
   return null

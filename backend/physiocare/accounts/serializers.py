@@ -97,6 +97,13 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
             )
         return value
 
+    def validate_pwzf_number(self, value):
+        if TherapistProfile.objects.filter(pwzf_number=value).exists():
+            raise serializers.ValidationError(
+                'Ten numer PWZF jest już zarejestrowany.'
+            )
+        return value
+
     @transaction.atomic
     def create(self, validated_data):
         first_name = validated_data.pop('first_name')
