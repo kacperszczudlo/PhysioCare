@@ -8,6 +8,13 @@ from therapists.models import TherapistProfile
 
 User = get_user_model()
 
+EMAIL_TAKEN_MESSAGE = (
+    'Ten adres e-mail jest już zarejestrowany. Zaloguj się lub użyj innego adresu.'
+)
+PWZF_TAKEN_MESSAGE = (
+    'Konto z tym numerem PWZFz już istnieje. Zaloguj się lub użyj innego numeru.'
+)
+
 
 class PatientRegistrationSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(max_length=100, write_only=True)
@@ -23,6 +30,15 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
             'therapist_id', 'consents',
         )
         read_only_fields = ('id',)
+        extra_kwargs = {
+            'email': {'validators': []},
+        }
+
+    def validate_email(self, value):
+        email = User.objects.normalize_email(value)
+        if User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError(EMAIL_TAKEN_MESSAGE)
+        return email
 
     def validate_consents(self, value):
         if not value.get('terms', False):
@@ -89,20 +105,30 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
             'pwzf_number', 'pwzf_declaration',
         )
         read_only_fields = ('id',)
+        extra_kwargs = {
+            'email': {'validators': []},
+        }
+
+    def validate_email(self, value):
+        email = User.objects.normalize_email(value)
+        if User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError(EMAIL_TAKEN_MESSAGE)
+        return email
 
     def validate_pwzf_declaration(self, value):
         if not value:
             raise serializers.ValidationError(
-                'Rejestracja wymaga potwierdzenia numeru PWZF.'
+                'Zaznacz oświadczenie o posiadaniu ważnego numeru PWZFz.'
             )
         return value
 
     def validate_pwzf_number(self, value):
-        if TherapistProfile.objects.filter(pwzf_number=value).exists():
-            raise serializers.ValidationError(
-                'Ten numer PWZF jest już zarejestrowany.'
-            )
-        return value
+        normalized = value.strip()
+        if not normalized:
+            raise serializers.ValidationError('Podaj numer PWZFz.')
+        if TherapistProfile.objects.filter(pwzf_number=normalized).exists():
+            raise serializers.ValidationError(PWZF_TAKEN_MESSAGE)
+        return normalized
 
     @transaction.atomic
     def create(self, validated_data):
@@ -140,4 +166,3 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 class ChangePasswordSerializer(serializers.Serializer):
     current_password = serializers.CharField()
     new_password = serializers.CharField(min_length=8)
-

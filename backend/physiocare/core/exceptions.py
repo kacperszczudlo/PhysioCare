@@ -1,26 +1,112 @@
 import logging
+import re
 
 from django.conf import settings
+from django.db import IntegrityError
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
 logger = logging.getLogger('physiocare.api')
 
+# Map known unique constraints to field + Polish user-facing message.
+_UNIQUE_CONSTRAINT_MESSAGES = {
+    'therapist_profiles_pwzf_number_key': (
+        'pwzf_number',
+        'Konto z tym numerem PWZFz już istnieje. Zaloguj się lub użyj innego numeru.',
+    ),
+    'users_email_key': (
+        'email',
+        'Ten adres e-mail jest już zarejestrowany. Zaloguj się lub użyj innego adresu.',
+    ),
+    'accounts_customuser_email_key': (
+        'email',
+        'Ten adres e-mail jest już zarejestrowany. Zaloguj się lub użyj innego adresu.',
+    ),
+}
+
+
+def _stringify_detail(value):
+    if value is None:
+        return None
+    if isinstance(value, (list, tuple)):
+        if not value:
+            return None
+        return _stringify_detail(value[0])
+    if isinstance(value, dict):
+        for nested in value.values():
+            message = _stringify_detail(nested)
+            if message:
+                return message
+        return None
+    return str(value)
+
+
+def _integrity_conflict_response(exc: IntegrityError) -> Response | None:
+    text = str(exc)
+    for constraint, (field, message) in _UNIQUE_CONSTRAINT_MESSAGES.items():
+        if constraint in text:
+            return Response(
+                {
+                    'error': {
+                        'code': 'CONFLICT',
+                        'message': message,
+                        'details': {field: [message]},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    # Generic unique violation: "Key (column)=(value) already exists."
+    match = re.search(r'Key \((?P<field>[^)]+)\)=', text)
+    if match or 'unique' in text.lower() or 'unikalności' in text.lower():
+        field = match.group('field') if match else 'detail'
+        message = 'Ta wartość jest już zajęta. Sprawdź dane i spróbuj ponownie.'
+        return Response(
+            {
+                'error': {
+                    'code': 'CONFLICT',
+                    'message': message,
+                    'details': {field: [message]},
+                }
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return None
+
 
 def custom_exception_handler(exc, context):
-    response = exception_handler(exc, context)
     request = context.get('request')
     view = context.get('view')
     request_id = getattr(request, 'request_id', None) if request is not None else None
     view_name = view.__class__.__name__ if view is not None else None
 
+    if isinstance(exc, IntegrityError):
+        conflict = _integrity_conflict_response(exc)
+        if conflict is not None:
+            logger.warning(
+                'API error: %s',
+                conflict.data['error']['message'],
+                extra={
+                    'request_id': request_id,
+                    'method': getattr(request, 'method', None),
+                    'path': getattr(request, 'path', None),
+                    'status_code': conflict.status_code,
+                    'error_code': 'CONFLICT',
+                    'view': view_name,
+                },
+            )
+            return conflict
+
+    response = exception_handler(exc, context)
+
     if response is not None:
         code = getattr(exc, 'default_code', 'ERROR')
         if hasattr(exc, 'detail'):
             if isinstance(exc.detail, dict):
-                message = 'Walidacja nie powiodła się.'
                 details = exc.detail
+                message = _stringify_detail(details) or 'Walidacja nie powiodła się.'
             elif isinstance(exc.detail, list):
                 message = str(exc.detail[0]) if exc.detail else 'Błąd żądania.'
                 details = {'messages': [str(item) for item in exc.detail]}
@@ -68,16 +154,19 @@ def custom_exception_handler(exc, context):
         },
     )
 
-    if not settings.DEBUG:
-        return Response(
-            {
-                'error': {
-                    'code': 'SERVER_ERROR',
-                    'message': 'Wystąpił nieoczekiwany błąd serwera.',
-                    'details': {},
-                }
-            },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-
-    return response
+    # Always return JSON so the SPA never falls back to a blank "Błąd serwera".
+    message = (
+        'Wystąpił nieoczekiwany błąd serwera.'
+        if not settings.DEBUG
+        else 'Wystąpił nieoczekiwany błąd serwera. Szczegóły są w logach backendu.'
+    )
+    return Response(
+        {
+            'error': {
+                'code': 'SERVER_ERROR',
+                'message': message,
+                'details': {},
+            }
+        },
+        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    )

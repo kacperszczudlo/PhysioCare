@@ -61,6 +61,14 @@ async function tryRefreshSession(): Promise<boolean> {
   return refreshPromise
 }
 
+const GENERIC_API_MESSAGES = new Set([
+  'Walidacja nie powiodła się.',
+  'Wystąpił błąd.',
+  'Wystąpił nieoczekiwany błąd.',
+  'Wystąpił nieoczekiwany błąd serwera.',
+  'Wystąpił nieoczekiwany błąd serwera. Szczegóły są w logach backendu.',
+])
+
 function firstFieldMessage(details: unknown): string | null {
   if (!details || typeof details !== 'object') {
     return null
@@ -70,10 +78,10 @@ function firstFieldMessage(details: unknown): string | null {
   }
 
   for (const value of Object.values(details as Record<string, unknown>)) {
-    if (typeof value === 'string') {
+    if (typeof value === 'string' && value.trim()) {
       return value
     }
-    if (Array.isArray(value) && typeof value[0] === 'string') {
+    if (Array.isArray(value) && typeof value[0] === 'string' && value[0].trim()) {
       return value[0]
     }
     if (value && typeof value === 'object') {
@@ -91,16 +99,15 @@ function firstValidationMessage(body: ApiErrorBody | null): string | null {
     return null
   }
 
-  // Prefer field-level details over the generic "Walidacja nie powiodła się."
   const fromDetails = firstFieldMessage(body.error?.details)
   if (fromDetails) {
     return fromDetails
   }
 
-  if (body.error?.message) {
+  if (body.error?.message && !GENERIC_API_MESSAGES.has(body.error.message)) {
     return body.error.message
   }
-  if (typeof body.detail === 'string') {
+  if (typeof body.detail === 'string' && body.detail.trim()) {
     return body.detail
   }
 
@@ -112,6 +119,11 @@ function firstValidationMessage(body: ApiErrorBody | null): string | null {
     if (nested) {
       return nested
     }
+  }
+
+  // Fall back to API message even if generic — better than inventing one.
+  if (body.error?.message) {
+    return body.error.message
   }
   return null
 }

@@ -40,8 +40,12 @@ export function RegisterPage() {
         pwzf_declaration: true,
       })
       navigate('/', { replace: true })
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się utworzyć konta.')
+        } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : 'Nie udało się utworzyć konta. Sprawdź dane i spróbuj ponownie.',
+      )
     } finally {
       setLoading(false)
     }
