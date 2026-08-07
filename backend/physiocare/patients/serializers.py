@@ -44,6 +44,15 @@ class MeProfileSerializer(serializers.ModelSerializer):
 
 
 class MeProfileUpdateSerializer(serializers.ModelSerializer):
+    phone = serializers.CharField(
+        max_length=20,
+        required=False,
+        allow_blank=True,
+        error_messages={
+            'max_length': 'Numer telefonu może mieć co najwyżej 20 znaków.',
+        },
+    )
+
     class Meta:
         model = PatientProfile
         fields = ['pesel', 'phone']

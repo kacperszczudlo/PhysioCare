@@ -6,6 +6,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { PasswordRequirements } from '@/components/ui/PasswordRequirements'
+import { getEmailError } from '@/lib/emailPolicy'
 import {
   getPasswordError,
   getPasswordRequirements,
@@ -27,6 +28,8 @@ export function RegisterPage() {
   const [declaration, setDeclaration] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<{
+    email?: string
+    pwzf?: string
     password?: string
     confirmPassword?: string
   }>({})
@@ -38,12 +41,36 @@ export function RegisterPage() {
   const passwordRequirements = getPasswordRequirements(password, passwordHints)
   const showRequirementErrors = submitted || passwordTouched
 
+  function getPwzfError(value: string): string | null {
+    const normalized = value.trim()
+    if (!normalized) {
+      return 'Podaj numer PWZFz.'
+    }
+    if (normalized.length > 20) {
+      return 'Numer PWZFz może mieć co najwyżej 20 znaków.'
+    }
+    return null
+  }
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
     setSubmitted(true)
 
-    const nextFieldErrors: { password?: string; confirmPassword?: string } = {}
+    const nextFieldErrors: {
+      email?: string
+      pwzf?: string
+      password?: string
+      confirmPassword?: string
+    } = {}
+    const emailError = getEmailError(email)
+    if (emailError) {
+      nextFieldErrors.email = emailError
+    }
+    const pwzfError = getPwzfError(pwzf)
+    if (pwzfError) {
+      nextFieldErrors.pwzf = pwzfError
+    }
     const passwordError = getPasswordError(password, passwordHints)
     if (passwordError) {
       nextFieldErrors.password = passwordError
@@ -58,7 +85,12 @@ export function RegisterPage() {
       return
     }
 
-    if (nextFieldErrors.password || nextFieldErrors.confirmPassword) {
+    if (
+      nextFieldErrors.email ||
+      nextFieldErrors.pwzf ||
+      nextFieldErrors.password ||
+      nextFieldErrors.confirmPassword
+    ) {
       setFieldErrors(nextFieldErrors)
       return
     }
@@ -76,16 +108,25 @@ export function RegisterPage() {
       })
       navigate('/', { replace: true })
     } catch (err) {
+      const apiEmailError = getFieldError(err, 'email')
+      const apiPwzfError = getFieldError(err, 'pwzf_number')
       const apiPasswordError = getFieldError(err, 'password')
-      if (apiPasswordError) {
-        setFieldErrors({ password: apiPasswordError })
+      if (apiEmailError || apiPwzfError || apiPasswordError) {
+        setFieldErrors({
+          email: apiEmailError ?? undefined,
+          pwzf: apiPwzfError ?? undefined,
+          password: apiPasswordError ?? undefined,
+        })
       }
       const message =
         err instanceof ApiError
           ? err.message
           : 'Nie udało się utworzyć konta. Sprawdź dane i spróbuj ponownie.'
-      // Avoid duplicating the same password message in the banner and field.
-      setError(apiPasswordError && message === apiPasswordError ? null : message)
+      const duplicate =
+        (apiEmailError && message === apiEmailError) ||
+        (apiPwzfError && message === apiPwzfError) ||
+        (apiPasswordError && message === apiPasswordError)
+      setError(duplicate ? null : message)
     } finally {
       setLoading(false)
     }
@@ -124,15 +165,28 @@ export function RegisterPage() {
           autoComplete="email"
           required
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            if (fieldErrors.email) {
+              setFieldErrors((prev) => ({ ...prev, email: undefined }))
+            }
+          }}
+          error={fieldErrors.email}
         />
         <Field
           label="Numer PWZFz"
           name="pwzf_number"
           required
+          maxLength={20}
           value={pwzf}
-          onChange={(e) => setPwzf(e.target.value)}
-          hint="Numer prawa wykonywania zawodu fizjoterapeuty"
+          onChange={(e) => {
+            setPwzf(e.target.value)
+            if (fieldErrors.pwzf) {
+              setFieldErrors((prev) => ({ ...prev, pwzf: undefined }))
+            }
+          }}
+          error={fieldErrors.pwzf}
+          hint="Numer prawa wykonywania zawodu fizjoterapeuty (max. 20 znaków)"
         />
 
         <div className="auth-form__password">

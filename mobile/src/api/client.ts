@@ -279,6 +279,21 @@ export function getErrorMessage(err: unknown, fallback: string): string {
   return fallback
 }
 
+/** First message for a named field from ApiError.details (DRF-style). */
+export function getFieldError(err: unknown, field: string): string | null {
+  if (!(err instanceof ApiError)) {
+    return null
+  }
+  const value = err.details?.[field]
+  if (typeof value === 'string' && value.trim()) {
+    return value
+  }
+  if (Array.isArray(value) && typeof value[0] === 'string' && value[0].trim()) {
+    return value[0]
+  }
+  return null
+}
+
 export const api = {
   get: <T>(path: string, options?: RequestOptions) =>
     apiRequest<T>(path, { ...options, method: 'GET' }),

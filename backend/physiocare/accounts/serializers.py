@@ -3,6 +3,11 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from rest_framework import serializers
 
+from accounts.email_policy import (
+    EMAIL_FIELD_ERRORS,
+    EMAIL_TAKEN,
+    normalize_and_validate_email,
+)
 from accounts.password_policy import enforce_password_policy
 from patients.models import PatientProfile
 from privacy.models import Consent, ConsentType
@@ -10,9 +15,7 @@ from therapists.models import TherapistProfile
 
 User = get_user_model()
 
-EMAIL_TAKEN_MESSAGE = (
-    'Ten adres e-mail jest już zarejestrowany. Zaloguj się lub użyj innego adresu.'
-)
+EMAIL_TAKEN_MESSAGE = EMAIL_TAKEN
 PWZF_TAKEN_MESSAGE = (
     'Konto z tym numerem PWZFz już istnieje. Zaloguj się lub użyj innego numeru.'
 )
@@ -21,6 +24,19 @@ _PASSWORD_FIELD_ERRORS = {
     'blank': 'Podaj hasło.',
     'required': 'Podaj hasło.',
     'null': 'Podaj hasło.',
+}
+
+_PWZF_FIELD_ERRORS = {
+    'blank': 'Podaj numer PWZFz.',
+    'required': 'Podaj numer PWZFz.',
+    'null': 'Podaj numer PWZFz.',
+    'max_length': 'Numer PWZFz może mieć co najwyżej 20 znaków.',
+}
+
+_THERAPIST_ID_FIELD_ERRORS = {
+    'required': 'Podaj kod terapeuty.',
+    'null': 'Podaj kod terapeuty.',
+    'invalid': 'Podaj prawidłowy kod terapeuty (UUID z panelu terapeuty).',
 }
 
 
@@ -48,7 +64,10 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         style={'input_type': 'password'},
         error_messages=_PASSWORD_FIELD_ERRORS,
     )
-    therapist_id = serializers.UUIDField(write_only=True)
+    therapist_id = serializers.UUIDField(
+        write_only=True,
+        error_messages=_THERAPIST_ID_FIELD_ERRORS,
+    )
     consents = serializers.DictField(child=serializers.BooleanField(), write_only=True)
 
     class Meta:
@@ -59,11 +78,15 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('id',)
         extra_kwargs = {
-            'email': {'validators': []},
+            'email': {'validators': [], 'error_messages': EMAIL_FIELD_ERRORS},
         }
 
     def validate_email(self, value):
-        email = User.objects.normalize_email(value)
+        try:
+            email = normalize_and_validate_email(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+        email = User.objects.normalize_email(email)
         if User.objects.filter(email__iexact=email).exists():
             raise serializers.ValidationError(EMAIL_TAKEN_MESSAGE)
         return email
@@ -133,7 +156,11 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
         style={'input_type': 'password'},
         error_messages=_PASSWORD_FIELD_ERRORS,
     )
-    pwzf_number = serializers.CharField(max_length=20, write_only=True)
+    pwzf_number = serializers.CharField(
+        max_length=20,
+        write_only=True,
+        error_messages=_PWZF_FIELD_ERRORS,
+    )
     pwzf_declaration = serializers.BooleanField(write_only=True)
 
     class Meta:
@@ -144,11 +171,15 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('id',)
         extra_kwargs = {
-            'email': {'validators': []},
+            'email': {'validators': [], 'error_messages': EMAIL_FIELD_ERRORS},
         }
 
     def validate_email(self, value):
-        email = User.objects.normalize_email(value)
+        try:
+            email = normalize_and_validate_email(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+        email = User.objects.normalize_email(email)
         if User.objects.filter(email__iexact=email).exists():
             raise serializers.ValidationError(EMAIL_TAKEN_MESSAGE)
         return email
@@ -199,7 +230,13 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    email = serializers.EmailField(error_messages=EMAIL_FIELD_ERRORS)
+
+    def validate_email(self, value):
+        try:
+            return User.objects.normalize_email(normalize_and_validate_email(value))
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):

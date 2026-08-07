@@ -26,6 +26,38 @@ _UNIQUE_CONSTRAINT_MESSAGES = {
 }
 
 
+_MAX_LENGTH_EN = re.compile(
+    r'^Ensure this field has no more than (?P<n>\d+) characters\.?$',
+    re.IGNORECASE,
+)
+_MAX_LENGTH_PL_GENERIC = re.compile(
+    r'^Upewnij się, że to pole ma nie więcej niż (?P<n>\d+) znaków\.?$',
+    re.IGNORECASE,
+)
+
+_ENGLISH_VALIDATION_MESSAGES = {
+    'Enter a valid email address.': (
+        'Podaj prawidłowy adres e-mail (np. jan.kowalski@example.com).'
+    ),
+    'This field may not be blank.': 'To pole nie może być puste.',
+    'This field is required.': 'To pole jest wymagane.',
+    'Must be a valid UUID.': 'Podaj prawidłowy kod (UUID).',
+}
+
+
+def _localize_user_message(message: str) -> str:
+    """Translate leftover English/generic DRF validation text to Polish."""
+    text = str(message).strip()
+    if text in _ENGLISH_VALIDATION_MESSAGES:
+        return _ENGLISH_VALIDATION_MESSAGES[text]
+
+    match = _MAX_LENGTH_EN.match(text) or _MAX_LENGTH_PL_GENERIC.match(text)
+    if match:
+        return f'To pole może mieć co najwyżej {match.group("n")} znaków.'
+
+    return text
+
+
 def _stringify_detail(value):
     if value is None:
         return None
@@ -39,7 +71,7 @@ def _stringify_detail(value):
             if message:
                 return message
         return None
-    return str(value)
+    return _localize_user_message(str(value))
 
 
 def _integrity_conflict_response(exc: IntegrityError) -> Response | None:
@@ -76,6 +108,16 @@ def _integrity_conflict_response(exc: IntegrityError) -> Response | None:
     return None
 
 
+def _localize_details(value):
+    if isinstance(value, list):
+        return [_localize_details(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _localize_details(item) for key, item in value.items()}
+    if value is None:
+        return value
+    return _localize_user_message(str(value))
+
+
 def custom_exception_handler(exc, context):
     request = context.get('request')
     view = context.get('view')
@@ -105,13 +147,14 @@ def custom_exception_handler(exc, context):
         code = getattr(exc, 'default_code', 'ERROR')
         if hasattr(exc, 'detail'):
             if isinstance(exc.detail, dict):
-                details = exc.detail
+                details = _localize_details(exc.detail)
                 message = _stringify_detail(details) or 'Walidacja nie powiodła się.'
             elif isinstance(exc.detail, list):
-                message = str(exc.detail[0]) if exc.detail else 'Błąd żądania.'
-                details = {'messages': [str(item) for item in exc.detail]}
+                localized = [_localize_user_message(str(item)) for item in exc.detail]
+                message = localized[0] if localized else 'Błąd żądania.'
+                details = {'messages': localized}
             else:
-                message = str(exc.detail)
+                message = _localize_user_message(str(exc.detail))
                 details = {}
         else:
             message = 'Wystąpił błąd.'

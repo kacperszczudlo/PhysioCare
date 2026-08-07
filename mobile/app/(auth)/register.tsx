@@ -10,10 +10,13 @@ import {
   View,
 } from 'react-native'
 
-import { getErrorMessage } from '@/api/client'
+import { getErrorMessage, getFieldError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
+import { PasswordRequirements } from '@/components/PasswordRequirements'
+import { getEmailError } from '@/lib/emailPolicy'
+import { getPasswordError, getPasswordRequirements } from '@/lib/passwordPolicy'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
 export default function RegisterScreen() {
@@ -28,7 +31,17 @@ export default function RegisterScreen() {
   const [terms, setTerms] = useState(false)
   const [medical, setMedical] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<{
+    email?: string
+    password?: string
+  }>({})
+  const [passwordTouched, setPasswordTouched] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  const passwordHints = { email, firstName, lastName }
+  const passwordRequirements = getPasswordRequirements(password, passwordHints)
+  const showRequirementErrors = submitted || passwordTouched
 
   const canSubmit = useMemo(
     () =>
@@ -37,17 +50,42 @@ export default function RegisterScreen() {
       firstName.trim() &&
       lastName.trim() &&
       email.trim() &&
-      password.length >= 8 &&
+      password.length > 0 &&
       therapistId.trim(),
     [terms, medical, firstName, lastName, email, password, therapistId],
   )
 
   async function onSubmit() {
-    if (!canSubmit) {
+    setSubmitted(true)
+    setError(null)
+
+    if (!terms || !medical) {
       setError('Uzupełnij formularz i zaznacz wymagane zgody RODO.')
       return
     }
-    setError(null)
+
+    const nextFieldErrors: { email?: string; password?: string } = {}
+    const emailError = getEmailError(email)
+    if (emailError) {
+      nextFieldErrors.email = emailError
+    }
+    const passwordError = getPasswordError(password, passwordHints)
+    if (passwordError) {
+      nextFieldErrors.password = passwordError
+    }
+
+    if (!firstName.trim() || !lastName.trim() || !therapistId.trim()) {
+      setFieldErrors(nextFieldErrors)
+      setError('Uzupełnij formularz i zaznacz wymagane zgody RODO.')
+      return
+    }
+
+    if (nextFieldErrors.email || nextFieldErrors.password) {
+      setFieldErrors(nextFieldErrors)
+      return
+    }
+
+    setFieldErrors({})
     setLoading(true)
     try {
       await register({
@@ -60,7 +98,19 @@ export default function RegisterScreen() {
       })
       router.replace('/(tabs)')
     } catch (err) {
-      setError(getErrorMessage(err, 'Rejestracja nie powiodła się.'))
+      const apiEmailError = getFieldError(err, 'email')
+      const apiPasswordError = getFieldError(err, 'password')
+      if (apiEmailError || apiPasswordError) {
+        setFieldErrors({
+          email: apiEmailError ?? undefined,
+          password: apiPasswordError ?? undefined,
+        })
+      }
+      const message = getErrorMessage(err, 'Rejestracja nie powiodła się.')
+      const duplicate =
+        (apiEmailError && message === apiEmailError) ||
+        (apiPasswordError && message === apiPasswordError)
+      setError(duplicate ? null : message)
     } finally {
       setLoading(false)
     }
@@ -94,18 +144,34 @@ export default function RegisterScreen() {
           <Field
             label="E-mail"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(value) => {
+              setEmail(value)
+              if (fieldErrors.email) {
+                setFieldErrors((prev) => ({ ...prev, email: undefined }))
+              }
+            }}
             autoCapitalize="none"
             keyboardType="email-address"
             autoComplete="email"
+            error={fieldErrors.email}
           />
           <Field
             label="Hasło"
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(value) => {
+              setPassword(value)
+              if (fieldErrors.password) {
+                setFieldErrors((prev) => ({ ...prev, password: undefined }))
+              }
+            }}
+            onBlur={() => setPasswordTouched(true)}
             secureTextEntry
             autoComplete="new-password"
-            hint="Minimum 8 znaków"
+            error={fieldErrors.password}
+          />
+          <PasswordRequirements
+            requirements={passwordRequirements}
+            showErrors={showRequirementErrors}
           />
           <Field
             label="Kod terapeuty"
@@ -133,7 +199,12 @@ export default function RegisterScreen() {
             </Text>
           ) : null}
 
-          <Button title="Utwórz konto" loading={loading} disabled={!canSubmit} onPress={onSubmit} />
+          <Button
+            title="Utwórz konto"
+            loading={loading}
+            disabled={!canSubmit}
+            onPress={() => void onSubmit()}
+          />
         </View>
 
         <Link href="/(auth)/login" style={styles.link}>

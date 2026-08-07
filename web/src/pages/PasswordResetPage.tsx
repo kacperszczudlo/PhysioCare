@@ -6,6 +6,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { PasswordRequirements } from '@/components/ui/PasswordRequirements'
+import { getEmailError } from '@/lib/emailPolicy'
 import {
   getPasswordError,
   getPasswordRequirements,
@@ -26,6 +27,7 @@ export function PasswordResetPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<{
+    email?: string
     password?: string
     confirmPassword?: string
   }>({})
@@ -41,12 +43,24 @@ export function PasswordResetPage() {
     event.preventDefault()
     setError(null)
     setMessage(null)
+    const emailError = getEmailError(email)
+    if (emailError) {
+      setFieldErrors({ email: emailError })
+      return
+    }
+    setFieldErrors({})
     setLoading(true)
     try {
       const detail = await requestPasswordReset(email.trim())
       setMessage(detail)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się wysłać prośby.')
+      const apiEmailError = getFieldError(err, 'email')
+      if (apiEmailError) {
+        setFieldErrors({ email: apiEmailError })
+        setError(null)
+      } else {
+        setError(err instanceof ApiError ? err.message : 'Nie udało się wysłać prośby.')
+      }
     } finally {
       setLoading(false)
     }
@@ -178,7 +192,13 @@ export function PasswordResetPage() {
             autoComplete="email"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value)
+              if (fieldErrors.email) {
+                setFieldErrors((prev) => ({ ...prev, email: undefined }))
+              }
+            }}
+            error={fieldErrors.email}
           />
           {error ? (
             <p className="auth-form__error" role="alert">
