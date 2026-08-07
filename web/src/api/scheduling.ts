@@ -19,8 +19,12 @@ export const schedulingApi = {
   },
 
   /** Scheduled visits that are still ongoing or start in the future (any day). */
-  listUpcomingVisits() {
-    return listResults<Visit>('/therapist/visits/?upcoming=1')
+  listUpcomingVisits(limit?: number) {
+    const params = new URLSearchParams({ upcoming: '1' })
+    if (limit != null && limit > 0) {
+      params.set('limit', String(limit))
+    }
+    return listResults<Visit>(`/therapist/visits/?${params}`)
   },
 
   createVisit(payload: VisitCreatePayload) {

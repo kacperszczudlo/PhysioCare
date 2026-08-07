@@ -14,6 +14,9 @@ import { resolveMediaUrl } from '@/lib/mediaUrl'
 import { addDays, formatTime, startOfDay, toDateInputValue } from '@/lib/scheduleTime'
 import './DashboardPage.css'
 
+/** Dashboard preview only — full schedule lives under /schedule. */
+const UPCOMING_VISITS_PREVIEW = 5
+
 function greetingForHour(hour: number, firstName?: string): string {
   const name = firstName?.trim()
   const base =
@@ -192,7 +195,7 @@ export function DashboardPage() {
     return visits
       .filter((visit) => visit.status === 'SCHEDULED')
       .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())
-      .slice(0, 5)
+      .slice(0, UPCOMING_VISITS_PREVIEW)
   }, [visits])
 
   const reload = useCallback(() => {
@@ -208,7 +211,7 @@ export function DashboardPage() {
       try {
         const [statsData, visitsData] = await Promise.all([
           therapistApi.getDashboardStats(),
-          schedulingApi.listUpcomingVisits(),
+          schedulingApi.listUpcomingVisits(UPCOMING_VISITS_PREVIEW),
         ])
         if (!cancelled) {
           setStats(statsData)

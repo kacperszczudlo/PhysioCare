@@ -54,6 +54,21 @@ def _visit_related():
 class TherapistVisitListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsTherapist]
 
+    def _upcoming_limit(self):
+        """Optional ?limit=N for dashboard preview (upcoming=1 only). Clamped 1–50."""
+        if self.request.query_params.get('upcoming') != '1':
+            return None
+        raw = self.request.query_params.get('limit')
+        if raw is None:
+            return None
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            return None
+        if value < 1:
+            return None
+        return min(value, 50)
+
     def get_queryset(self):
         therapist = self.request.user.therapist_profile
         qs = Visit.objects.filter(therapist=therapist).select_related(*_visit_related())
@@ -67,7 +82,17 @@ class TherapistVisitListCreateView(generics.ListCreateAPIView):
             )
         if self.request.query_params.get('pending') == '1':
             qs = qs.filter(status=VisitStatus.PENDING_APPROVAL)
-        return qs.order_by('start_at')
+        qs = qs.order_by('start_at')
+        limit = self._upcoming_limit()
+        if limit is not None:
+            return qs[:limit]
+        return qs
+
+    def paginate_queryset(self, queryset):
+        # Capped upcoming preview returns a plain list (not a paginated page).
+        if self._upcoming_limit() is not None:
+            return None
+        return super().paginate_queryset(queryset)
 
     def get_serializer_class(self):
         if self.request.method == 'POST':

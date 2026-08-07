@@ -146,3 +146,28 @@ def test_patient_can_list_therapist_therapy_types(api_client, patient, therapy_t
     assert response.status_code == status.HTTP_200_OK
     results = response.data['results'] if 'results' in response.data else response.data
     assert any(item['id'] == str(therapy_type.id) for item in results)
+
+
+@pytest.mark.django_db
+def test_therapist_upcoming_respects_limit(api_client, therapist, patient, therapy_type):
+    base = timezone.now() + timedelta(hours=1)
+    for i in range(7):
+        start_at = base + timedelta(hours=i * 2)
+        Visit.objects.create(
+            patient=patient,
+            therapist=therapist,
+            therapy_type=therapy_type,
+            start_at=start_at,
+            end_at=start_at + timedelta(minutes=45),
+            status=VisitStatus.SCHEDULED,
+            location_address='Gabinet 1',
+        )
+
+    api_client.force_authenticate(user=therapist.user)
+    response = api_client.get('/api/v1/therapist/visits/?upcoming=1&limit=5')
+    assert response.status_code == status.HTTP_200_OK
+    # Cap returns a plain list (pagination disabled for this preview).
+    assert isinstance(response.data, list)
+    assert len(response.data) == 5
+    starts = [item['start_at'] for item in response.data]
+    assert starts == sorted(starts)
