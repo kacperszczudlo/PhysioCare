@@ -1,6 +1,7 @@
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.utils import timezone
 from rest_framework import generics, parsers, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,6 +13,7 @@ from core.storage import delete_media_url, save_upload
 from .filters import filter_exercises_queryset
 from .models import CategoryKind, Exercise, ExerciseAssignment, ExerciseCategory, ExerciseCompletion
 from .serializers import (
+    OVERLAPPING_ASSIGNMENT_MESSAGE,
     ExerciseAssignmentCreateSerializer,
     ExerciseAssignmentSerializer,
     ExerciseAssignmentUpdateSerializer,
@@ -23,6 +25,17 @@ from .serializers import (
     ExerciseUpdateSerializer,
     TodayExerciseSerializer,
 )
+
+
+def _assignment_integrity_error(exc):
+    message = str(exc).lower()
+    if 'exclude_overlapping_exercise_assignments' in message:
+        return ValidationError({'exercise_id': OVERLAPPING_ASSIGNMENT_MESSAGE})
+    if 'chk_exercise_assignment_dates' in message:
+        return ValidationError(
+            {'end_date': 'Data końcowa nie może być wcześniejsza niż początkowa.'}
+        )
+    return ValidationError({'detail': 'Nie udało się zapisać zalecenia.'})
 
 
 class TherapistExerciseListCreateView(generics.ListCreateAPIView):
@@ -169,7 +182,10 @@ class TherapistExerciseAssignmentListCreateView(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        assignment = serializer.save()
+        try:
+            assignment = serializer.save()
+        except IntegrityError as exc:
+            raise _assignment_integrity_error(exc) from None
         assignment = ExerciseAssignment.objects.select_related('exercise').get(pk=assignment.pk)
         return Response(
             ExerciseAssignmentSerializer(assignment).data,
@@ -201,7 +217,10 @@ class TherapistExerciseAssignmentDetailView(generics.RetrieveUpdateDestroyAPIVie
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
-        assignment = serializer.save()
+        try:
+            assignment = serializer.save()
+        except IntegrityError as exc:
+            raise _assignment_integrity_error(exc) from None
         assignment = ExerciseAssignment.objects.select_related('exercise').get(pk=assignment.pk)
         return Response(ExerciseAssignmentSerializer(assignment).data)
 

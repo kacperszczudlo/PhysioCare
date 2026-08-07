@@ -1,6 +1,14 @@
+from django.contrib.postgres.constraints import ExclusionConstraint
+from django.contrib.postgres.fields import DateRangeField, RangeBoundary, RangeOperators
 from django.db import models
+from django.db.models import Func
 
 from core.models import TimestampedModel, UUIDModel
+
+
+class DateRange(Func):
+    function = 'DATERANGE'
+    output_field = DateRangeField()
 
 
 class MediaType(models.TextChoices):
@@ -116,6 +124,21 @@ class ExerciseAssignment(UUIDModel):
             models.CheckConstraint(
                 condition=models.Q(end_date__gte=models.F('start_date')),
                 name='chk_exercise_assignment_dates',
+            ),
+            ExclusionConstraint(
+                name='exclude_overlapping_exercise_assignments',
+                expressions=[
+                    ('patient', RangeOperators.EQUAL),
+                    ('exercise', RangeOperators.EQUAL),
+                    (
+                        DateRange(
+                            'start_date',
+                            'end_date',
+                            RangeBoundary(inclusive_lower=True, inclusive_upper=True),
+                        ),
+                        RangeOperators.OVERLAPS,
+                    ),
+                ],
             ),
         ]
 

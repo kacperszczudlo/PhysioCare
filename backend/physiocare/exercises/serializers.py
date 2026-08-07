@@ -6,6 +6,34 @@ from treatment.models import TreatmentEpisode
 
 from .models import Exercise, ExerciseAssignment, ExerciseCategory, ExerciseCompletion
 
+OVERLAPPING_ASSIGNMENT_MESSAGE = (
+    'To ćwiczenie jest już przypisane temu pacjentowi w nakładającym się okresie.'
+)
+
+
+def assert_no_overlapping_assignment(
+    *,
+    exercise_id,
+    patient_id,
+    start_date,
+    end_date,
+    exclude_id=None,
+    error_field='exercise_id',
+):
+    """Reject same exercise + patient when date ranges overlap (inclusive)."""
+    if not start_date or not end_date:
+        return
+    qs = ExerciseAssignment.objects.filter(
+        exercise_id=exercise_id,
+        patient_id=patient_id,
+        start_date__lte=end_date,
+        end_date__gte=start_date,
+    )
+    if exclude_id is not None:
+        qs = qs.exclude(pk=exclude_id)
+    if qs.exists():
+        raise serializers.ValidationError({error_field: OVERLAPPING_ASSIGNMENT_MESSAGE})
+
 
 class ExerciseCategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -136,6 +164,13 @@ class ExerciseAssignmentCreateSerializer(serializers.ModelSerializer):
                 {'end_date': 'Data końcowa nie może być wcześniejsza niż początkowa.'}
             )
 
+        assert_no_overlapping_assignment(
+            exercise_id=exercise_id,
+            patient_id=patient_id,
+            start_date=start,
+            end_date=end,
+        )
+
         return attrs
 
     def create(self, validated_data):
@@ -174,6 +209,15 @@ class ExerciseAssignmentUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {'episode_id': 'Epizod nie należy do wskazanego pacjenta.'}
                 )
+
+        assert_no_overlapping_assignment(
+            exercise_id=self.instance.exercise_id,
+            patient_id=self.instance.patient_id,
+            start_date=start,
+            end_date=end,
+            exclude_id=self.instance.pk,
+            error_field='start_date',
+        )
 
         return attrs
 

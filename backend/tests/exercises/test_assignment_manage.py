@@ -82,3 +82,84 @@ def test_cannot_manage_foreign_assignment(api_client, therapist_b, assignment):
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert ExerciseAssignment.objects.filter(pk=assignment.id).exists()
+
+
+@pytest.mark.django_db
+def test_cannot_assign_same_exercise_overlapping_period(
+    api_client, therapist, exercise, patient, assignment,
+):
+    api_client.force_authenticate(user=therapist.user)
+    today = timezone.localdate()
+
+    response = api_client.post(
+        '/api/v1/therapist/exercise-assignments/',
+        {
+            'exercise_id': str(exercise.id),
+            'patient_id': str(patient.id),
+            'dosage': '2x8',
+            'start_date': today.isoformat(),
+            'end_date': (today + timedelta(days=3)).isoformat(),
+        },
+        format='json',
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert 'nakładającym' in response.data['error']['message']
+    assert ExerciseAssignment.objects.filter(
+        exercise=exercise,
+        patient=patient,
+    ).count() == 1
+
+
+@pytest.mark.django_db
+def test_can_assign_same_exercise_after_previous_period(
+    api_client, therapist, exercise, patient, assignment,
+):
+    api_client.force_authenticate(user=therapist.user)
+    next_start = assignment.end_date + timedelta(days=1)
+
+    response = api_client.post(
+        '/api/v1/therapist/exercise-assignments/',
+        {
+            'exercise_id': str(exercise.id),
+            'patient_id': str(patient.id),
+            'dosage': '2x8',
+            'start_date': next_start.isoformat(),
+            'end_date': (next_start + timedelta(days=7)).isoformat(),
+        },
+        format='json',
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert ExerciseAssignment.objects.filter(
+        exercise=exercise,
+        patient=patient,
+    ).count() == 2
+
+
+@pytest.mark.django_db
+def test_cannot_patch_assignment_into_overlapping_period(
+    api_client, therapist, exercise, patient, assignment,
+):
+    api_client.force_authenticate(user=therapist.user)
+    later = ExerciseAssignment.objects.create(
+        exercise=exercise,
+        patient=patient,
+        dosage='2x8',
+        start_date=assignment.end_date + timedelta(days=5),
+        end_date=assignment.end_date + timedelta(days=12),
+    )
+
+    response = api_client.patch(
+        f'/api/v1/therapist/exercise-assignments/{later.id}/',
+        {
+            'start_date': assignment.start_date.isoformat(),
+            'end_date': assignment.end_date.isoformat(),
+        },
+        format='json',
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert 'nakładającym' in response.data['error']['message']
+    later.refresh_from_db()
+    assert later.start_date == assignment.end_date + timedelta(days=5)

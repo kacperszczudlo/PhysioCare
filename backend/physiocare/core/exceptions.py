@@ -23,6 +23,10 @@ _UNIQUE_CONSTRAINT_MESSAGES = {
         'email',
         'Ten adres e-mail jest już zarejestrowany. Zaloguj się lub użyj innego adresu.',
     ),
+    'exclude_overlapping_exercise_assignments': (
+        'exercise_id',
+        'To ćwiczenie jest już przypisane temu pacjentowi w nakładającym się okresie.',
+    ),
 }
 
 
