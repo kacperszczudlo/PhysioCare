@@ -10,7 +10,12 @@ import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { PasswordRequirements } from '@/components/PasswordRequirements'
 import { getEmailError } from '@/lib/emailPolicy'
 import { getFirstNameError, getLastNameError } from '@/lib/fieldPolicy'
-import { getPasswordError, getPasswordRequirements } from '@/lib/passwordPolicy'
+import {
+  getPasswordError,
+  getPasswordRequirements,
+  PASSWORD_MESSAGES,
+  passwordsMatch,
+} from '@/lib/passwordPolicy'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
 export default function RegisterScreen() {
@@ -21,6 +26,7 @@ export default function RegisterScreen() {
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [therapistId, setTherapistId] = useState('')
   const [terms, setTerms] = useState(false)
   const [medical, setMedical] = useState(false)
@@ -30,6 +36,7 @@ export default function RegisterScreen() {
     lastName?: string
     email?: string
     password?: string
+    confirmPassword?: string
     therapistId?: string
   }>({})
   const [passwordTouched, setPasswordTouched] = useState(false)
@@ -48,8 +55,9 @@ export default function RegisterScreen() {
       lastName.trim() &&
       email.trim() &&
       password.length > 0 &&
+      confirmPassword.length > 0 &&
       therapistId.trim(),
-    [terms, medical, firstName, lastName, email, password, therapistId],
+    [terms, medical, firstName, lastName, email, password, confirmPassword, therapistId],
   )
 
   async function onSubmit() {
@@ -66,6 +74,7 @@ export default function RegisterScreen() {
       lastName?: string
       email?: string
       password?: string
+      confirmPassword?: string
       therapistId?: string
     } = {}
     const firstNameError = getFirstNameError(firstName)
@@ -84,6 +93,9 @@ export default function RegisterScreen() {
     if (passwordError) {
       nextFieldErrors.password = passwordError
     }
+    if (!passwordsMatch(password, confirmPassword)) {
+      nextFieldErrors.confirmPassword = PASSWORD_MESSAGES.mismatch
+    }
     if (!therapistId.trim()) {
       nextFieldErrors.therapistId = 'Podaj kod terapeuty.'
     } else if (
@@ -99,6 +111,7 @@ export default function RegisterScreen() {
       nextFieldErrors.lastName ||
       nextFieldErrors.email ||
       nextFieldErrors.password ||
+      nextFieldErrors.confirmPassword ||
       nextFieldErrors.therapistId
     ) {
       setFieldErrors(nextFieldErrors)
@@ -212,6 +225,19 @@ export default function RegisterScreen() {
         <PasswordRequirements
           requirements={passwordRequirements}
           showErrors={showRequirementErrors}
+        />
+        <Field
+          label="Powtórz hasło"
+          value={confirmPassword}
+          onChangeText={(value) => {
+            setConfirmPassword(value)
+            if (fieldErrors.confirmPassword) {
+              setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }))
+            }
+          }}
+          secureTextEntry
+          autoComplete="new-password"
+          error={fieldErrors.confirmPassword}
         />
         <Field
           label="Kod terapeuty"

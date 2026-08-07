@@ -9,6 +9,7 @@ export const PASSWORD_MESSAGES = {
     'Hasło musi zawierać co najmniej jeden znak specjalny (np. ! @ # $ % & *).',
   tooSimilar: 'Hasło jest zbyt podobne do Twoich danych (e-mail, imię lub nazwisko).',
   required: 'Podaj hasło.',
+  mismatch: 'Hasła nie są identyczne.',
 } as const
 
 export type PasswordRequirementId =
@@ -119,4 +120,8 @@ export function getPasswordError(
     return PASSWORD_MESSAGES.tooSimilar
   }
   return null
+}
+
+export function passwordsMatch(password: string, confirm: string): boolean {
+  return password.length > 0 && password === confirm
 }
