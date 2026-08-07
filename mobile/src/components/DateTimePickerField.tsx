@@ -26,9 +26,7 @@ interface DateTimePickerFieldProps {
   onChange: (next: Date) => void
   hint?: string
   error?: string | null
-  /** Inclusive lower bound (start of that calendar day). */
   minimumDate?: Date
-  /** How many days to offer from minimum/today. */
   dayCount?: number
   minuteStep?: number
   startHour?: number
@@ -170,7 +168,6 @@ function WheelColumn({ items, selectedIndex, onChangeIndex, accessibilityLabel }
 
   function onDragEnd(event: NativeSyntheticEvent<NativeScrollEvent>) {
     const velocity = event.nativeEvent.velocity?.y ?? 0
-    // If the drag ends without fling momentum, commit immediately.
     if (Math.abs(velocity) < 0.05) {
       syncFromOffset(event.nativeEvent.contentOffset.y, true)
       isUserScrolling.current = false
@@ -183,7 +180,6 @@ function WheelColumn({ items, selectedIndex, onChangeIndex, accessibilityLabel }
       accessibilityLabel={`${accessibilityLabel}: ${items[activeIndex] ?? ''}`}
       accessibilityRole="adjustable"
     >
-      {/* Selection band sits behind the numbers so the value stays readable. */}
       <View pointerEvents="none" style={styles.wheelHighlight} />
       <ScrollView
         ref={scrollRef}

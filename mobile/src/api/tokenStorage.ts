@@ -15,7 +15,6 @@ async function setItem(key: string, value: string): Promise<void> {
     try {
       localStorage.setItem(key, value)
     } catch {
-      // ignore quota / private mode
     }
     return
   }
@@ -42,7 +41,6 @@ async function deleteItem(key: string): Promise<void> {
     try {
       localStorage.removeItem(key)
     } catch {
-      // ignore
     }
     return
   }

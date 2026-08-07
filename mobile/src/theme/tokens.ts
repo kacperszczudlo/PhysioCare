@@ -1,4 +1,3 @@
-/** Clinic olive palette — aligned with web panel tokens. */
 export const colors = {
   bg: '#F4F7F2',
   surface: '#FFFFFF',

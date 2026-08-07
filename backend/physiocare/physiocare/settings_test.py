@@ -14,7 +14,6 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.MD5PasswordHasher',
 ]
 
-# Stale limity — niezalezne od lokalnego .env (np. podbite limity pod Postmana).
 REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {  # noqa: F405
     'anon': '60/minute',
     'user': '300/minute',

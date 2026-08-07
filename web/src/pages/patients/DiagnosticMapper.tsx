@@ -88,7 +88,6 @@ export function DiagnosticMapper({ episodeId }: DiagnosticMapperProps) {
 
   const groupedTargets = useMemo(() => groupTargetsByKind(regionTargets), [regionTargets])
 
-  /** All saved VAS regions for this side + live preview of the selected one. */
   const highlightData = useMemo((): BodyPartData[] => {
     const bySlug = new Map<BodyPartSlug, string>()
 

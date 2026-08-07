@@ -5,11 +5,9 @@ import { addDays, startOfDay, toDateInputValue } from '@/lib/scheduleTime'
 import './DateCarousel.css'
 
 interface DateCarouselProps {
-  /** ISO date `YYYY-MM-DD`. */
   value: string
   onChange: (next: string) => void
   label: string
-  /** Inclusive lower bound as `YYYY-MM-DD`. */
   minimumDate?: string
   dayCount?: number
   id?: string

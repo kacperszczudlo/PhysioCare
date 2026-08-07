@@ -7,7 +7,6 @@ import './TimeCarousel.css'
 const ITEM_HEIGHT = 40
 
 interface TimeCarouselProps {
-  /** Local time as `HH:mm`. */
   value: string
   onChange: (next: string) => void
   label?: string

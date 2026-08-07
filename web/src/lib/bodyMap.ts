@@ -34,7 +34,6 @@ export const EPISODE_STATUS_LABELS: Record<string, string> = {
   INTERRUPTED: 'Przerwany',
 }
 
-/** Polish labels for anatomical model slugs (simple-body-highlighter-react). */
 export const REGION_LABELS: Record<BodyPartSlug, string> = {
   abs: 'Brzuch',
   head: 'Głowa',
@@ -82,7 +81,6 @@ export const REGION_LABELS: Record<BodyPartSlug, string> = {
   'right-feet': 'Stopa P',
 }
 
-/** Legacy schematic IDs from earlier maps. */
 const LEGACY_REGION_LABELS: Record<string, string> = {
   HEAD: 'Głowa',
   HEAD_L: 'Głowa L',
@@ -162,7 +160,6 @@ function bilateral(
   }
 }
 
-/** Clinical targets after selecting an anatomical muscle/region. */
 export const REGION_TARGETS: Record<string, TreatmentTargetDef[]> = {
   head: [
     { id: 'TMJ', label: 'Staw skroniowo-żuchwowy', kind: 'JOINT' },
@@ -305,12 +302,10 @@ export const REGION_TARGETS: Record<string, TreatmentTargetDef[]> = {
   ]),
 }
 
-/** Soft anatomical fills for idle muscle state on the model. */
 export const BODY_MODEL_COLORS = {
   defaultFill: '#c8d0d8',
 } as const
 
-/** VAS 0–10 → olive→amber→red fill for map badges. */
 export function vasColor(score: number): string {
   const t = Math.min(10, Math.max(0, score)) / 10
   const hue = 113 - t * 95

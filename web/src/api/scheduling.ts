@@ -18,7 +18,6 @@ export const schedulingApi = {
     return listResults<Visit>(`/therapist/visits/?date=${encodeURIComponent(dateIso)}`)
   },
 
-  /** Scheduled visits that are still ongoing or start in the future (any day). */
   listUpcomingVisits(limit?: number) {
     const params = new URLSearchParams({ upcoming: '1' })
     if (limit != null && limit > 0) {

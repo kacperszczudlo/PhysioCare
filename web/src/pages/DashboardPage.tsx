@@ -14,7 +14,6 @@ import { resolveMediaUrl } from '@/lib/mediaUrl'
 import { addDays, formatTime, startOfDay, toDateInputValue } from '@/lib/scheduleTime'
 import './DashboardPage.css'
 
-/** Dashboard preview only — full schedule lives under /schedule. */
 const UPCOMING_VISITS_PREVIEW = 5
 
 function greetingForHour(hour: number, firstName?: string): string {
@@ -36,7 +35,6 @@ function visitDurationMin(visit: Visit): number {
   return Math.round(ms / 60_000)
 }
 
-/** Relative day label + time for upcoming visits across days. */
 function formatVisitWhen(start: Date, today: Date): string {
   const time = formatTime(start)
   const visitDay = startOfDay(start)

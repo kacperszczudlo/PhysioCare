@@ -10,9 +10,7 @@ import {
 } from 'react'
 
 export interface NetworkStatus {
-  /** True when we know the device has no usable network / internet. */
   isOffline: boolean
-  /** False until the first NetInfo snapshot arrives. */
   isResolved: boolean
   isConnected: boolean | null
   isInternetReachable: boolean | null
@@ -88,7 +86,6 @@ export function useNetwork(): NetworkStatus {
   return ctx
 }
 
-/** Safe for modules that may run outside the provider (e.g. tests). */
 export function useNetworkOptional(): NetworkStatus | null {
   return useContext(NetworkContext)
 }

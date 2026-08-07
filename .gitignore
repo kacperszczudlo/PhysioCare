@@ -10,7 +10,6 @@
 
 # Personal Postman environments (tokens / prawdziwe hasla)
 *.local.postman_environment.json
-postman/environments.local/
 .postman/local/
 
 # --- Python / Django ---

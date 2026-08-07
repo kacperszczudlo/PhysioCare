@@ -1,9 +1,5 @@
 import Constants from 'expo-constants'
 
-/**
- * On a physical device, `localhost` points at the phone — swap it for the
- * LAN host that Metro is already using (e.g. 192.168.1.45 from Expo Go).
- */
 export function rewriteLocalhostToLan(url: string): string {
   if (!/localhost|127\.0\.0\.1/i.test(url)) {
     return url

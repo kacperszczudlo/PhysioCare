@@ -4,7 +4,6 @@ import { StyleSheet, Text, View } from 'react-native'
 
 interface PasswordRequirementsProps {
   requirements: PasswordRequirement[]
-  /** When true, unmet rules use error color (after submit / blur). */
   showErrors?: boolean
 }
 

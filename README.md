@@ -144,18 +144,7 @@ Raporty:
 - `backend/reports/pytest-report.html`
 - `backend/reports/coverage/index.html`
 
-**2) Smoke use-case API (wymaga `runserver` na :8000)**
-
-```powershell
-# terminal 1
-cd backend\physiocare
-..\venv\Scripts\python.exe manage.py runserver
-
-# terminal 2 — z root repo
-.\backend\venv\Scripts\python.exe scripts\run_api_usecases.py
-```
-
-**3) Kolekcja Postman** — import `docs/postman/PhysioCare.json`, `baseUrl=http://localhost:8000/api/v1`, Cookie Jar ON. URL-e ze slashami na końcu.
+**2) Kolekcja Postman** — import `docs/postman/PhysioCare.json`, `baseUrl=http://localhost:8000/api/v1`, Cookie Jar ON. URL-e ze slashami na końcu.
 
 ### Web
 
@@ -181,9 +170,6 @@ npx expo start
 | `reset_db.py` | Drop/create DB + migrate |
 | `sync_schema_sql.py` | Dump schematu → `database/schema.sql` |
 | `run_tests.py` | pytest + coverage HTML |
-| `run_api_usecases.py` | Smoke UC-01–18 przeciwko lokalnemu API |
-| `grant_test_db_privileges.py` | Opcjonalnie `CREATEDB` |
-| `generate_postman_collection.py` | Regeneracja kolekcji Postman |
 
 Uruchamianie (zawsze z roota repo):
 

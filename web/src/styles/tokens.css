@@ -1,9 +1,3 @@
-/*
-  PhysioCare therapist panel
-  Mood: quiet clinic morning — clean treatment-room light, chart work, olive by the window.
-  Strategy: restrained product UI. Brand hue from seed ~113° (olive).
-*/
-
 :root {
   --color-bg: oklch(1 0 0);
   --color-surface: oklch(0.965 0.006 113);

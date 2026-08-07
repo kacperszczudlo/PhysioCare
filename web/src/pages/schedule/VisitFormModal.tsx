@@ -23,7 +23,6 @@ interface VisitFormModalProps {
   open: boolean
   day: Date
   initialMinutes: number
-  /** When set, modal edits this visit instead of creating a new one. */
   visit?: Visit | null
   onClose: () => void
   onCreated: () => void
@@ -142,7 +141,6 @@ export function VisitFormModal({
           })
         }
 
-        // Keep current therapy type visible even if it is not among presets.
         if (visit?.therapy_type && !nextOptions.some((item) => item.id === visit.therapy_type)) {
           const current = typeList.find((type) => type.id === visit.therapy_type)
           if (current) {

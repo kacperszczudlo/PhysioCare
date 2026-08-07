@@ -166,7 +166,6 @@ def test_therapist_upcoming_respects_limit(api_client, therapist, patient, thera
     api_client.force_authenticate(user=therapist.user)
     response = api_client.get('/api/v1/therapist/visits/?upcoming=1&limit=5')
     assert response.status_code == status.HTTP_200_OK
-    # Cap returns a plain list (pagination disabled for this preview).
     assert isinstance(response.data, list)
     assert len(response.data) == 5
     starts = [item['start_at'] for item in response.data]

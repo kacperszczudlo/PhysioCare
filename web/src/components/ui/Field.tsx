@@ -6,7 +6,6 @@ interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string
   error?: string
   hint?: string
-  /** Eye toggle for password fields. Defaults to true when `type` is `password`. */
   revealable?: boolean
 }
 

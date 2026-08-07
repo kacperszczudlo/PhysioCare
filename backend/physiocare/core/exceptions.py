@@ -9,7 +9,6 @@ from rest_framework.views import exception_handler
 
 logger = logging.getLogger('physiocare.api')
 
-# Map known unique constraints to field + Polish user-facing message.
 _UNIQUE_CONSTRAINT_MESSAGES = {
     'therapist_profiles_pwzf_number_key': (
         'pwzf_number',
@@ -93,7 +92,6 @@ def _integrity_conflict_response(exc: IntegrityError) -> Response | None:
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    # Generic unique violation: "Key (column)=(value) already exists."
     match = re.search(r'Key \((?P<field>[^)]+)\)=', text)
     if match or 'unique' in text.lower() or 'unikalności' in text.lower():
         field = match.group('field') if match else 'detail'
@@ -201,7 +199,6 @@ def custom_exception_handler(exc, context):
         },
     )
 
-    # Always return JSON so the SPA never falls back to a blank "Błąd serwera".
     message = (
         'Wystąpił nieoczekiwany błąd serwera.'
         if not settings.DEBUG

@@ -1,8 +1,5 @@
-/** Client-side password policy — aligned with backend AUTH_PASSWORD_VALIDATORS. */
-
 export const MIN_PASSWORD_LENGTH = 8
 
-/** Non-alphanumeric (letters/digits/underscore excluded), same as backend. */
 const SPECIAL_CHAR_PATTERN = /[^A-Za-z0-9_]/
 
 export const PASSWORD_MESSAGES = {
@@ -60,7 +57,6 @@ export function hasSpecialCharacter(password: string): boolean {
   return SPECIAL_CHAR_PATTERN.test(password)
 }
 
-/** Rough client mirror of Django UserAttributeSimilarityValidator. */
 export function isPasswordTooSimilar(password: string, hints: PasswordUserHints): boolean {
   const pw = normalize(password)
   if (pw.length < 3) {
@@ -104,7 +100,6 @@ export function getPasswordRequirements(
   return requirements
 }
 
-/** First blocking client-side error, or null if basic rules pass. */
 export function getPasswordError(
   password: string,
   hints: PasswordUserHints = {},

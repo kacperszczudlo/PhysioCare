@@ -16,15 +16,10 @@ async function listResults<T>(path: string): Promise<T[]> {
 }
 
 export interface ExerciseListParams {
-  /** Generic category UUID or slug */
   category?: string
-  /** Exercise type slug/UUID (TYPE) */
   type?: string
-  /** Body region slug/UUID (REGION) */
   region?: string
-  /** Muscle / group slug/UUID (MUSCLE) */
   muscle?: string
-  /** Injury / indication slug/UUID (INJURY) */
   injury?: string
   media_type?: MediaType | ''
   q?: string

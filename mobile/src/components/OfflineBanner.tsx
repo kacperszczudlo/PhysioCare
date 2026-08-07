@@ -4,7 +4,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useNetwork } from '@/network/NetworkContext'
 import { colors, space, typography } from '@/theme/tokens'
 
-/** Global strip shown above navigation when the device is offline. */
 export function OfflineBanner() {
   const { isOffline, isResolved } = useNetwork()
   const insets = useSafeAreaInsets()

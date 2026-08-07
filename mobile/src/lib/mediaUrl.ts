@@ -1,7 +1,6 @@
 import { API_BASE_URL } from '@/api/client'
 import { rewriteLocalhostToLan } from '@/lib/lanHost'
 
-/** Turn `/media/...` from API into a loadable URL for RN Image. */
 export function resolveMediaUrl(path: string | null | undefined): string | null {
   if (!path) {
     return null

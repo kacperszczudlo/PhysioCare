@@ -11,7 +11,6 @@ import './CreateExerciseModal.css'
 interface CreateExerciseModalProps {
   open: boolean
   categories: ExerciseCategory[]
-  /** When set, modal edits this exercise instead of creating a new one. */
   exercise?: Exercise | null
   onClose: () => void
   onSaved: () => void

@@ -5,7 +5,6 @@ import { rewriteLocalhostToLan } from '@/lib/lanHost'
 const configured = (process.env.EXPO_PUBLIC_API_BASE_URL ?? '').replace(/\/$/, '')
 const rawBase = configured.length > 0 ? configured : 'http://localhost:8000/api/v1'
 
-/** Default: local Django. Override via EXPO_PUBLIC_API_BASE_URL. */
 export const API_BASE_URL = rewriteLocalhostToLan(rawBase)
 
 export class ApiError extends Error {
@@ -32,7 +31,6 @@ export class ApiError extends Error {
   }
 }
 
-/** Thrown when the device cannot reach the API (offline or host unreachable). */
 export class NetworkError extends Error {
   readonly reason: 'offline' | 'unreachable'
 
@@ -188,7 +186,6 @@ async function tryRefreshSession(): Promise<boolean> {
       await tokenStorage.setTokens(data.access, data.refresh ?? refresh)
       return true
     } catch {
-      // Network blip during refresh — keep tokens; caller will surface NetworkError.
       return false
     } finally {
       refreshPromise = null
@@ -279,7 +276,6 @@ export function getErrorMessage(err: unknown, fallback: string): string {
   return fallback
 }
 
-/** First message for a named field from ApiError.details (DRF-style). */
 export function getFieldError(err: unknown, field: string): string | null {
   if (!(err instanceof ApiError)) {
     return null

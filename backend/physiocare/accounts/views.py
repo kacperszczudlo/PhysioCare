@@ -54,7 +54,6 @@ def _set_auth_cookies(response, *, access_token: str, refresh_token: str):
 
 
 def _clear_auth_cookies(response):
-    # delete_cookie() does not accept secure=; expire with matching attrs instead.
     secure = settings.SECURE_COOKIES
     for key in (
         settings.SIMPLE_JWT.get('AUTH_COOKIE_ACCESS', 'access_token'),
@@ -188,7 +187,6 @@ class CookieTokenRefreshView(TokenRefreshView):
         try:
             serializer.is_valid(raise_exception=True)
         except User.DoesNotExist:
-            # Stale refresh for a deleted user — treat as unauthenticated.
             response = Response(
                 {
                     'error': {
@@ -202,7 +200,6 @@ class CookieTokenRefreshView(TokenRefreshView):
             return _clear_auth_cookies(response)
 
         access = serializer.validated_data['access']
-        # ROTATE_REFRESH_TOKENS may issue a new refresh; otherwise reuse the presented one.
         new_refresh = serializer.validated_data.get('refresh', refresh_value)
         response = Response(
             {

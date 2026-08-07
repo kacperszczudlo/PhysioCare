@@ -1,6 +1,5 @@
 import { Linking } from 'react-native'
 
-/** Opens Google Maps search for the given address. */
 export function openAddressInMaps(address: string) {
   const query = address.trim()
   if (!query) {

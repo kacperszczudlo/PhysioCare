@@ -67,8 +67,6 @@ export function SchedulePage() {
           setVisits(dayVisits)
           setPendingAll(pending)
 
-          // First load: jump to soonest pending day so zgłoszenie is on the calendar
-          // without requiring „Pokaż dzień”.
           if (!didAutoFocusPending && pending.length > 0) {
             const soonest = [...pending].sort(
               (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),

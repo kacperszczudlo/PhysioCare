@@ -70,7 +70,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('Session restore failed', error)
       }
 
-      // Keep existing in-memory user if present; otherwise fall back to cache.
       if (!userRef.current) {
         const cached = await tokenStorage.getCachedUser()
         setUser(cached)
@@ -102,7 +101,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [hydrateFromProfile])
 
-  // When connectivity returns, refresh profile if we still have tokens.
   useEffect(() => {
     if (!network?.isResolved) {
       return

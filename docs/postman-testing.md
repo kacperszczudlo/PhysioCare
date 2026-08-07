@@ -65,8 +65,6 @@ flowchart TB
 3. Wybierz environment **PhysioCare Local**
 4. Collection Runner → folder **`00 Setup - Auth & seed`** jako pierwszy
 
-Kopia kolekcji leży też w `postman/collections/PhysioCare.json` (Local View wtyczki Postman).
-
 ### Seed (kolejność krytyczna)
 
 Rejestracja pacjenta wymaga `therapist_id` (UUID profilu terapeuty):
@@ -280,24 +278,9 @@ Uruchom Collection Runner (kolejność folderów) i odhacz:
 
 ---
 
-## 9. Regeneracja kolekcji
+## 9. Aktualizacja kolekcji
 
-Źródło prawdy generatora:
-
-```bash
-# Linux/macOS / venv
-python scripts/generate_postman_collection.py
-
-# Windows (gdy `python` niedostępny, użyj lokalnego interpretera)
-```
-
-Skrypt nadpisuje:
-
-- `docs/postman/PhysioCare.json`
-- `docs/postman/PhysioCare.postman_environment.json`
-- `postman/collections/PhysioCare.json`
-
-Po zmianie URL-i lub serializerów w Django — zaktualizuj generator i przebuduj kolekcję, potem ten dokument.
+Kolekcja w `docs/postman/` jest artefaktem w repo — edytuj ją w Postmanie (Export → nadpisz JSON) albo ręcznie, gdy zmienia się kontrakt API.
 
 ---
 

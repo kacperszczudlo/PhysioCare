@@ -7,9 +7,7 @@ import './DayCarousel.css'
 interface DayCarouselProps {
   value: Date
   onChange: (day: Date) => void
-  /** Inclusive lower bound (calendar day). Defaults to today. */
   minimumDate?: Date
-  /** How many days to show from the minimum day. */
   dayCount?: number
   label?: string
   id?: string

@@ -2,7 +2,6 @@ import type { ApiErrorBody } from './types'
 
 const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
 
-/** Dev: proxy Vite (`/api` → backend). Prod: ustaw `VITE_API_BASE_URL`. */
 export const API_BASE_URL = configuredBase && configuredBase.length > 0 ? configuredBase : '/api/v1'
 
 export class ApiError extends Error {
@@ -31,7 +30,6 @@ export class ApiError extends Error {
 
 type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown
-  /** Skip one automatic refresh+retry on 401. */
   skipAuthRefresh?: boolean
 }
 
@@ -121,7 +119,6 @@ function firstValidationMessage(body: ApiErrorBody | null): string | null {
     }
   }
 
-  // Fall back to API message even if generic — better than inventing one.
   if (body.error?.message) {
     return body.error.message
   }
@@ -217,7 +214,6 @@ export function getErrorMessage(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback
 }
 
-/** First message for a named field from ApiError.details (DRF-style). */
 export function getFieldError(err: unknown, field: string): string | null {
   if (!(err instanceof ApiError)) {
     return null

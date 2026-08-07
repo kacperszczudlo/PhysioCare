@@ -89,7 +89,6 @@ class TherapistVisitListCreateView(generics.ListCreateAPIView):
         return qs
 
     def paginate_queryset(self, queryset):
-        # Capped upcoming preview returns a plain list (not a paginated page).
         if self._upcoming_limit() is not None:
             return None
         return super().paginate_queryset(queryset)

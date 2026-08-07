@@ -8,7 +8,6 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 
 MIN_PASSWORD_LENGTH = 8
-# Letters, digits, underscore are excluded — everything else counts as special.
 SPECIAL_CHAR_PATTERN = re.compile(r'[^A-Za-z0-9_]')
 
 PASSWORD_TOO_SHORT = (

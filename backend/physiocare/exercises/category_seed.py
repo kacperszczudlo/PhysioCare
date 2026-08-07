@@ -9,7 +9,6 @@ KIND_REGION = 'REGION'
 KIND_MUSCLE = 'MUSCLE'
 KIND_INJURY = 'INJURY'
 
-# Existing seeded names (0003) remapped to kind + slug.
 LEGACY_CATEGORY_MAP = {
     'Rozciąganie': (KIND_TYPE, 'stretching'),
     'Mobilizacja': (KIND_TYPE, 'mobilization'),
@@ -17,9 +16,7 @@ LEGACY_CATEGORY_MAP = {
     'Odcinek lędźwiowy': (KIND_REGION, 'lumbar'),
 }
 
-# (kind, slug, name)
 CATEGORY_SEED = [
-    # --- Typ ćwiczenia / cel interwencji ---
     (KIND_TYPE, 'mobilization', 'Mobilizacja'),
     (KIND_TYPE, 'stretching', 'Rozciąganie'),
     (KIND_TYPE, 'strengthening', 'Wzmacnianie'),
@@ -28,7 +25,6 @@ CATEGORY_SEED = [
     (KIND_TYPE, 'neuromobilization', 'Neuromobilizacja'),
     (KIND_TYPE, 'breathing', 'Oddechowe'),
     (KIND_TYPE, 'education', 'Edukacja'),
-    # --- Okolica ciała ---
     (KIND_REGION, 'cervical', 'Szyja / odcinek szyjny'),
     (KIND_REGION, 'shoulder', 'Bark / obręcz barkowa'),
     (KIND_REGION, 'thoracic', 'Odcinek piersiowy'),
@@ -39,7 +35,6 @@ CATEGORY_SEED = [
     (KIND_REGION, 'upper_limb', 'Kończyna górna'),
     (KIND_REGION, 'lower_limb', 'Kończyna dolna'),
     (KIND_REGION, 'core', 'Tułów / core'),
-    # --- Mięsień / grupa (bez L/R — klinicznie wystarczające do filtrowania) ---
     (KIND_MUSCLE, 'deep_neck_flexors', 'Głębokie zginacze szyi'),
     (KIND_MUSCLE, 'scm', 'Mostkowo-obojczykowo-sutkowy'),
     (KIND_MUSCLE, 'trapezius', 'Czworoboczny'),
@@ -56,7 +51,6 @@ CATEGORY_SEED = [
     (KIND_MUSCLE, 'adductors', 'Przywodziciele'),
     (KIND_MUSCLE, 'calf', 'Łydka (brzuchaty / płaszczkowaty)'),
     (KIND_MUSCLE, 'tibialis_anterior', 'Piszczelowy przedni'),
-    # --- Kontuzja / wskazanie ---
     (KIND_INJURY, 'lbp', 'Ból odcinka lędźwiowego'),
     (KIND_INJURY, 'neck_pain', 'Ból szyi'),
     (KIND_INJURY, 'shoulder_pain', 'Zespół bólowy barku'),

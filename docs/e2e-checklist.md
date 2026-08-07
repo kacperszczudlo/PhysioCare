@@ -1,7 +1,7 @@
 # Checklist E2E — krytyczne ścieżki PhysioCare
 
 Manualna / półautomatyczna weryfikacja przed demem (Faza 6.4).  
-Automatyczne wsparcie: `scripts/run_api_usecases.py`, Postman (`docs/postman/`), pytest backend.
+Automatyczne wsparcie: Postman (`docs/postman/`), pytest backend.
 
 ## Przygotowanie
 
@@ -13,11 +13,8 @@ Automatyczne wsparcie: `scripts/run_api_usecases.py`, Postman (`docs/postman/`),
 
 ## Backend API (smoke)
 
-```powershell
-.\backend\venv\Scripts\python.exe scripts\run_api_usecases.py
-```
-
-- [ ] Skrypt kończy się bez błędów (UC-01–18 objęte smoke)
+- [ ] Collection Runner w Postmanie (`docs/postman/PhysioCare.json`) — happy pathy UC bez błędów
+- [ ] `python scripts/run_tests.py` — pytest zielony
 
 ## Web — fizjoterapeuta
 

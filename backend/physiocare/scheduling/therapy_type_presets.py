@@ -7,7 +7,6 @@ Grupy:
 
 from .models import TherapyType
 
-# (group, name, color_hex, duration_min, description)
 THERAPY_TYPE_PRESETS = [
     (
         'kind',

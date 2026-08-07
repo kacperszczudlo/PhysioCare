@@ -99,7 +99,6 @@ class TherapistExerciseDetailView(generics.RetrieveUpdateDestroyAPIView):
         if file_url:
             context['file_url'] = file_url
 
-        # Categories are applied explicitly so an empty selection can clear M2M.
         mutable = request.data.copy()
         if hasattr(mutable, 'pop'):
             mutable.pop('has_categories', None)
@@ -150,7 +149,6 @@ class TherapistExerciseCategoryListView(generics.ListAPIView):
                 return qs.none()
             qs = qs.filter(kind=kind)
         return qs.order_by('kind', 'name')
-
 
 
 class TherapistExerciseAssignmentListCreateView(generics.ListCreateAPIView):
@@ -268,7 +266,6 @@ class MeExerciseCompletionCreateView(PatientSelfMixin, APIView):
 
         serializer = ExerciseCompletionCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # Clinic TZ ("dziś") is authoritative — ignore client clock/timezone drift.
         completed_on = timezone.localdate()
         done = serializer.validated_data.get('done', True)
 
