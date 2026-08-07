@@ -82,6 +82,30 @@ def test_patient_can_uncheck_exercise_completion(api_client, patient, assignment
 
 
 @pytest.mark.django_db
+def test_completion_uses_server_local_date_not_client_clock(api_client, patient, assignment):
+    """Client completed_on must not desync from MeExercisesToday (clinic TZ)."""
+    api_client.force_authenticate(user=patient.user)
+    today = timezone.localdate()
+    client_skewed = (today - timedelta(days=1)).isoformat()
+
+    response = api_client.post(
+        '/api/v1/me/exercise-completions/',
+        {'assignment_id': str(assignment.id), 'completed_on': client_skewed, 'done': True},
+        format='json',
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.data['completed_on'] == today.isoformat()
+    assert ExerciseCompletion.objects.filter(
+        assignment=assignment,
+        completed_on=today,
+        done=True,
+    ).exists()
+
+    today_after = api_client.get('/api/v1/me/exercises/today/')
+    assert today_after.data['results'][0]['completed_today'] is True
+
+
+@pytest.mark.django_db
 def test_duplicate_exercise_completion_updates_existing(api_client, patient, assignment):
     api_client.force_authenticate(user=patient.user)
 

@@ -268,7 +268,8 @@ class MeExerciseCompletionCreateView(PatientSelfMixin, APIView):
 
         serializer = ExerciseCompletionCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        completed_on = serializer.validated_data.get('completed_on') or timezone.localdate()
+        # Clinic TZ ("dziś") is authoritative — ignore client clock/timezone drift.
+        completed_on = timezone.localdate()
         done = serializer.validated_data.get('done', True)
 
         with transaction.atomic():

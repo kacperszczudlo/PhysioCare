@@ -9,7 +9,6 @@ import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { ExerciseVideoPlayer } from '@/components/ExerciseVideoPlayer'
 import { SectionCard } from '@/components/ScreenHeader'
-import { todayISODate } from '@/lib/format'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
@@ -91,7 +90,7 @@ export default function ExerciseDetailScreen() {
     setBusy(true)
     setItem({ ...item, completed_today: nextDone })
     try {
-      await patientApi.completeExercise(item.id, todayISODate(), nextDone)
+      await patientApi.completeExercise(item.id, undefined, nextDone)
     } catch (err) {
       setItem({ ...item, completed_today: previous })
       setError(getErrorMessage(err, 'Nie udało się zaktualizować zalecenia.'))

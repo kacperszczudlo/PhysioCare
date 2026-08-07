@@ -8,7 +8,7 @@ import type { TodayExercise, Visit } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
-import { formatDateTime, formatTimeRange, todayISODate } from '@/lib/format'
+import { formatDateTime, formatTimeRange } from '@/lib/format'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
 export default function DashboardScreen() {
@@ -55,7 +55,7 @@ export default function DashboardScreen() {
       prev.map((ex) => (ex.id === item.id ? { ...ex, completed_today: nextDone } : ex)),
     )
     try {
-      await patientApi.completeExercise(item.id, todayISODate(), nextDone)
+      await patientApi.completeExercise(item.id, undefined, nextDone)
     } catch (err) {
       setExercises((prev) =>
         prev.map((ex) =>

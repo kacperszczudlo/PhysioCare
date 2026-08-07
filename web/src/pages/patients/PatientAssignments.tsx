@@ -9,7 +9,7 @@ import { DateCarousel } from '@/components/ui/DateCarousel'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
-import { addDays, toDateInputValue } from '@/lib/scheduleTime'
+import { addDays, parseDateInput, toDateInputValue } from '@/lib/scheduleTime'
 import './PatientAssignments.css'
 
 interface PatientAssignmentsProps {
@@ -18,14 +18,14 @@ interface PatientAssignmentsProps {
 
 function formatPeriod(start: string, end: string): string {
   const fmt = new Intl.DateTimeFormat('pl-PL', { dateStyle: 'medium' })
-  return `${fmt.format(new Date(start))} – ${fmt.format(new Date(end))}`
+  return `${fmt.format(parseDateInput(start))} – ${fmt.format(parseDateInput(end))}`
 }
 
 function isActive(assignment: ExerciseAssignment): boolean {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const start = new Date(assignment.start_date)
-  const end = new Date(assignment.end_date)
+  const start = parseDateInput(assignment.start_date)
+  const end = parseDateInput(assignment.end_date)
   return start <= today && end >= today
 }
 
