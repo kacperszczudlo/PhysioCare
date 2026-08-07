@@ -44,7 +44,7 @@ Automatyczne wsparcie: `scripts/run_api_usecases.py`, Postman (`docs/postman/`),
 | M5 | Szczegóły wizyty | Stack `visit/[id]` |
 | M6 | Profil terapeuty | Stack `therapist/[id]` ze zdjęciem (jeśli ustawione) |
 | M7 | Profil | Dokumenty, powiadomienia, zgody, upload własnego avatara |
-| M8 | Offline / błąd API | Czytelny komunikat, bez crasha |
+| M8 | Offline / błąd API | Banner offline + czytelny `NetworkError` / ErrorBanner, bez crasha i bez wylogowania |
 
 ## Cross-cutting
 

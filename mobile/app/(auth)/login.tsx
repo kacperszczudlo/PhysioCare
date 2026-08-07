@@ -2,7 +2,7 @@ import { Link, useRouter } from 'expo-router'
 import { useState } from 'react'
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native'
 
-import { ApiError } from '@/api/client'
+import { getErrorMessage } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
@@ -23,7 +23,7 @@ export default function LoginScreen() {
       await login(email.trim(), password)
       router.replace('/(tabs)')
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się zalogować.')
+      setError(getErrorMessage(err, 'Nie udało się zalogować.'))
     } finally {
       setLoading(false)
     }

@@ -2,7 +2,7 @@ import { Link } from 'expo-router'
 import { useState } from 'react'
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native'
 
-import { ApiError } from '@/api/client'
+import { getErrorMessage } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
@@ -27,7 +27,7 @@ export default function PasswordResetScreen() {
       setMessage(detail)
       setStep('confirm')
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się wysłać linku.')
+      setError(getErrorMessage(err, 'Nie udało się wysłać linku.'))
     } finally {
       setLoading(false)
     }
@@ -44,7 +44,7 @@ export default function PasswordResetScreen() {
       })
       setMessage(detail)
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się ustawić hasła.')
+      setError(getErrorMessage(err, 'Nie udało się ustawić hasła.'))
     } finally {
       setLoading(false)
     }

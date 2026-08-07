@@ -32,6 +32,21 @@ export class ApiError extends Error {
   }
 }
 
+/** Thrown when the device cannot reach the API (offline or host unreachable). */
+export class NetworkError extends Error {
+  readonly reason: 'offline' | 'unreachable'
+
+  constructor(reason: 'offline' | 'unreachable', message: string) {
+    super(message)
+    this.name = 'NetworkError'
+    this.reason = reason
+  }
+}
+
+export function isNetworkFailure(err: unknown): boolean {
+  return err instanceof NetworkError || err instanceof TypeError
+}
+
 type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown
   skipAuthRefresh?: boolean
@@ -106,6 +121,45 @@ async function parseJson(response: Response): Promise<ApiErrorBody | null> {
   }
 }
 
+function offlineMessage(): string {
+  return 'Brak połączenia z internetem. Sprawdź sieć i spróbuj ponownie.'
+}
+
+function unreachableMessage(): string {
+  if (__DEV__) {
+    return `Nie udało się połączyć z API (${API_BASE_URL}). Na telefonie ustaw EXPO_PUBLIC_API_BASE_URL na IP komputera, nie localhost.`
+  }
+  return 'Nie udało się połączyć z serwerem. Sprawdź połączenie internetowe i spróbuj ponownie.'
+}
+
+async function detectOffline(): Promise<boolean> {
+  try {
+    const NetInfo = (await import('@react-native-community/netinfo')).default
+    const state = await NetInfo.fetch()
+    if (state.isConnected === false) {
+      return true
+    }
+    if (state.isInternetReachable === false) {
+      return true
+    }
+    return false
+  } catch {
+    return false
+  }
+}
+
+async function toNetworkError(cause: unknown): Promise<NetworkError> {
+  const offline = await detectOffline()
+  if (offline) {
+    return new NetworkError('offline', offlineMessage())
+  }
+  const fallback = unreachableMessage()
+  if (cause instanceof Error && cause.message && __DEV__) {
+    return new NetworkError('unreachable', `${fallback} (${cause.message})`)
+  }
+  return new NetworkError('unreachable', fallback)
+}
+
 async function tryRefreshSession(): Promise<boolean> {
   if (refreshPromise) {
     return refreshPromise
@@ -134,6 +188,7 @@ async function tryRefreshSession(): Promise<boolean> {
       await tokenStorage.setTokens(data.access, data.refresh ?? refresh)
       return true
     } catch {
+      // Network blip during refresh — keep tokens; caller will surface NetworkError.
       return false
     } finally {
       refreshPromise = null
@@ -169,11 +224,20 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     ? path
     : `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`
 
-  const response = await fetch(url, {
-    ...rest,
-    headers,
-    body: payload,
-  })
+  if (await detectOffline()) {
+    throw new NetworkError('offline', offlineMessage())
+  }
+
+  let response: Response
+  try {
+    response = await fetch(url, {
+      ...rest,
+      headers,
+      body: payload,
+    })
+  } catch (err) {
+    throw await toNetworkError(err)
+  }
 
   if (response.status === 401 && auth && !skipAuthRefresh) {
     const refreshed = await tryRefreshSession()
@@ -200,11 +264,14 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 }
 
 export function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof NetworkError) {
+    return err.message
+  }
   if (err instanceof ApiError) {
     return err.message
   }
   if (err instanceof TypeError) {
-    return `Brak połączenia z API (${API_BASE_URL}). Na telefonie ustaw EXPO_PUBLIC_API_BASE_URL na IP komputera, nie localhost.`
+    return unreachableMessage()
   }
   if (err instanceof Error && err.message) {
     return err.message

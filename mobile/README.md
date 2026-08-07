@@ -47,9 +47,17 @@ app/                 # Expo Router (auth + tabs + stack)
 src/
   api/               # client + auth + patient endpoints
   auth/              # AuthProvider (Bearer + SecureStore)
-  components/        # Button, Field, AsyncState…
+  network/           # NetInfo — status offline / online
+  components/        # Button, Field, AsyncState, OfflineBanner…
   theme/             # tokeny kolorystyczne (olive clinic)
 ```
+
+## Offline
+
+- Globalny banner „Brak połączenia z internetem” (NetInfo)
+- Wywołania API zwracają czytelny `NetworkError` zamiast crasha
+- Przywracanie sesji offline: tokeny nie są kasowane; używany jest cache użytkownika
+- Po powrocie sieci profil jest odświeżany automatycznie
 
 ## Status (Faza 5)
 

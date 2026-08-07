@@ -1,8 +1,11 @@
 import * as SecureStore from 'expo-secure-store'
 import { Platform } from 'react-native'
 
+import type { User } from './types'
+
 const ACCESS_KEY = 'physiocare_access'
 const REFRESH_KEY = 'physiocare_refresh'
+const USER_KEY = 'physiocare_cached_user'
 
 const memory = new Map<string, string>()
 
@@ -60,8 +63,25 @@ export const tokenStorage = {
     await setItem(REFRESH_KEY, refresh)
   },
 
+  async getCachedUser(): Promise<User | null> {
+    const raw = await getItem(USER_KEY)
+    if (!raw) {
+      return null
+    }
+    try {
+      return JSON.parse(raw) as User
+    } catch {
+      return null
+    }
+  },
+
+  async setCachedUser(user: User): Promise<void> {
+    await setItem(USER_KEY, JSON.stringify(user))
+  },
+
   async clear(): Promise<void> {
     await deleteItem(ACCESS_KEY)
     await deleteItem(REFRESH_KEY)
+    await deleteItem(USER_KEY)
   },
 }
