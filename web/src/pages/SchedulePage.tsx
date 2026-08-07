@@ -342,12 +342,7 @@ export function SchedulePage() {
       {!loading && !error && visits.filter((v) => v.status !== 'CANCELLED').length === 0 ? (
         <EmptyState
           title="Brak wizyt tego dnia"
-          description="Kliknij w siatkę godzin albo użyj „+ Nowa wizyta”."
-          action={
-            <Button type="button" size="sm" onClick={() => openCreate(60)}>
-              + Nowa wizyta
-            </Button>
-          }
+          description="Kliknij w siatkę godzin albo użyj „+ Nowa wizyta” u góry strony."
         />
       ) : null}
 
