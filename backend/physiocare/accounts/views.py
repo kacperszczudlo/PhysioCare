@@ -246,15 +246,20 @@ class PasswordResetConfirmView(APIView):
     throttle_classes = [PasswordResetRateThrottle]
 
     def post(self, request, *args, **kwargs):
-        serializer = PasswordResetConfirmSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        token_hash = _hash_token(serializer.validated_data['token'])
+        raw_token = request.data.get('token')
+        reset_token = None
+        if isinstance(raw_token, str) and raw_token.strip():
+            reset_token = PasswordResetToken.objects.filter(
+                token_hash=_hash_token(raw_token.strip()),
+                used_at__isnull=True,
+                expires_at__gt=timezone.now(),
+            ).select_related('user').first()
 
-        reset_token = PasswordResetToken.objects.filter(
-            token_hash=token_hash,
-            used_at__isnull=True,
-            expires_at__gt=timezone.now(),
-        ).select_related('user').first()
+        serializer = PasswordResetConfirmSerializer(
+            data=request.data,
+            context={'user': reset_token.user if reset_token is not None else None},
+        )
+        serializer.is_valid(raise_exception=True)
 
         if reset_token is None:
             return Response(
@@ -295,7 +300,10 @@ class ChangePasswordView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        serializer = ChangePasswordSerializer(data=request.data)
+        serializer = ChangePasswordSerializer(
+            data=request.data,
+            context={'request': request},
+        )
         serializer.is_valid(raise_exception=True)
 
         user = request.user

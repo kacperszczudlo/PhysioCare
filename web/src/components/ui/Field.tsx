@@ -12,6 +12,9 @@ export function Field({ id, label, error, hint, className = '', ...rest }: Field
   const fieldId = id ?? rest.name
   const errorId = error && fieldId ? `${fieldId}-error` : undefined
   const hintId = hint && fieldId ? `${fieldId}-hint` : undefined
+  const { 'aria-describedby': extraDescribedBy, ...inputProps } = rest
+  const describedBy =
+    [errorId, hintId, extraDescribedBy].filter(Boolean).join(' ') || undefined
 
   return (
     <label className={`ui-field ${className}`.trim()} htmlFor={fieldId}>
@@ -20,8 +23,8 @@ export function Field({ id, label, error, hint, className = '', ...rest }: Field
         id={fieldId}
         className={error ? 'ui-field__input ui-field__input--error' : 'ui-field__input'}
         aria-invalid={error ? true : undefined}
-        aria-describedby={[errorId, hintId].filter(Boolean).join(' ') || undefined}
-        {...rest}
+        aria-describedby={describedBy}
+        {...inputProps}
       />
       {hint ? (
         <span id={hintId} className="ui-field__hint">

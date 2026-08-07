@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from rest_framework import serializers
 
+from accounts.password_policy import enforce_password_policy
 from patients.models import PatientProfile
 from privacy.models import Consent, ConsentType
 from therapists.models import TherapistProfile
@@ -15,11 +17,37 @@ PWZF_TAKEN_MESSAGE = (
     'Konto z tym numerem PWZFz już istnieje. Zaloguj się lub użyj innego numeru.'
 )
 
+_PASSWORD_FIELD_ERRORS = {
+    'blank': 'Podaj hasło.',
+    'required': 'Podaj hasło.',
+    'null': 'Podaj hasło.',
+}
+
+
+def _password_user_from_data(data) -> User:
+    """Build an unsaved user for similarity checks during registration."""
+    return User(
+        email=(data.get('email') or '') if hasattr(data, 'get') else '',
+        first_name=(data.get('first_name') or '') if hasattr(data, 'get') else '',
+        last_name=(data.get('last_name') or '') if hasattr(data, 'get') else '',
+    )
+
+
+def _validate_password_value(password: str, user=None) -> str:
+    try:
+        return enforce_password_policy(password, user=user)
+    except DjangoValidationError as exc:
+        raise serializers.ValidationError(list(exc.messages)) from exc
+
 
 class PatientRegistrationSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(max_length=100, write_only=True)
     last_name = serializers.CharField(max_length=100, write_only=True)
-    password = serializers.CharField(write_only=True, min_length=8)
+    password = serializers.CharField(
+        write_only=True,
+        style={'input_type': 'password'},
+        error_messages=_PASSWORD_FIELD_ERRORS,
+    )
     therapist_id = serializers.UUIDField(write_only=True)
     consents = serializers.DictField(child=serializers.BooleanField(), write_only=True)
 
@@ -39,6 +67,12 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         if User.objects.filter(email__iexact=email).exists():
             raise serializers.ValidationError(EMAIL_TAKEN_MESSAGE)
         return email
+
+    def validate_password(self, value):
+        return _validate_password_value(
+            value,
+            user=_password_user_from_data(self.initial_data),
+        )
 
     def validate_consents(self, value):
         if not value.get('terms', False):
@@ -94,7 +128,11 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
 class TherapistRegistrationSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(max_length=100, write_only=True)
     last_name = serializers.CharField(max_length=100, write_only=True)
-    password = serializers.CharField(write_only=True, min_length=8)
+    password = serializers.CharField(
+        write_only=True,
+        style={'input_type': 'password'},
+        error_messages=_PASSWORD_FIELD_ERRORS,
+    )
     pwzf_number = serializers.CharField(max_length=20, write_only=True)
     pwzf_declaration = serializers.BooleanField(write_only=True)
 
@@ -114,6 +152,12 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
         if User.objects.filter(email__iexact=email).exists():
             raise serializers.ValidationError(EMAIL_TAKEN_MESSAGE)
         return email
+
+    def validate_password(self, value):
+        return _validate_password_value(
+            value,
+            user=_password_user_from_data(self.initial_data),
+        )
 
     def validate_pwzf_declaration(self, value):
         if not value:
@@ -160,9 +204,33 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     token = serializers.CharField()
-    new_password = serializers.CharField(min_length=8)
+    new_password = serializers.CharField(
+        style={'input_type': 'password'},
+        error_messages=_PASSWORD_FIELD_ERRORS,
+    )
+
+    def validate_new_password(self, value):
+        user = self.context.get('user')
+        return _validate_password_value(value, user=user)
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    current_password = serializers.CharField()
-    new_password = serializers.CharField(min_length=8)
+    current_password = serializers.CharField(
+        style={'input_type': 'password'},
+        error_messages={
+            'blank': 'Podaj obecne hasło.',
+            'required': 'Podaj obecne hasło.',
+            'null': 'Podaj obecne hasło.',
+        },
+    )
+    new_password = serializers.CharField(
+        style={'input_type': 'password'},
+        error_messages=_PASSWORD_FIELD_ERRORS,
+    )
+
+    def validate_new_password(self, value):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None) if request is not None else None
+        if user is not None and not getattr(user, 'is_authenticated', False):
+            user = None
+        return _validate_password_value(value, user=user)
