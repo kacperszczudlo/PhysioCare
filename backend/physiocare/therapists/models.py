@@ -12,6 +12,7 @@ class TherapistProfile(TimestampedModel):
     )
     pwzf_number = models.CharField(max_length=20, unique=True)
     phone = models.CharField(max_length=20, blank=True, default='')
+    location_address = models.CharField(max_length=300, blank=True, default='')
     bio = models.TextField(blank=True, default='')
     courses = models.JSONField(default=list)
     avatar_url = models.CharField(max_length=500, blank=True, default='')

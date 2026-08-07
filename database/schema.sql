@@ -386,6 +386,7 @@ CREATE TABLE public.therapist_profiles (
     created_at timestamp with time zone NOT NULL,
     pwzf_number character varying(20) NOT NULL,
     phone character varying(20) NOT NULL,
+    location_address character varying(300) NOT NULL,
     bio text NOT NULL,
     courses jsonb NOT NULL,
     avatar_url character varying(500) NOT NULL,

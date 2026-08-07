@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
-import { Alert, Modal, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
@@ -10,6 +10,7 @@ import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { SectionCard } from '@/components/ScreenHeader'
 import { addMinutesISO, formatDateTime, formatTimeRange, visitStatusLabel } from '@/lib/format'
+import { openAddressInMaps } from '@/lib/maps'
 import { colors, space, typography } from '@/theme/tokens'
 
 export default function VisitDetailScreen() {
@@ -134,7 +135,18 @@ export default function VisitDetailScreen() {
 
         <SectionCard>
           <Text style={styles.section}>Lokalizacja</Text>
-          <Text style={styles.body}>{visit.location_address || '—'}</Text>
+          {visit.location_address ? (
+            <Pressable
+              onPress={() => openAddressInMaps(visit.location_address)}
+              accessibilityRole="link"
+              accessibilityHint="Otwiera adres w Google Maps"
+            >
+              <Text style={styles.link}>{visit.location_address}</Text>
+              <Text style={styles.muted}>Otwórz w Google Maps</Text>
+            </Pressable>
+          ) : (
+            <Text style={styles.body}>—</Text>
+          )}
           <Text style={styles.section}>Przygotowanie</Text>
           <Text style={styles.body}>{visit.prep_instructions || 'Brak instrukcji.'}</Text>
           {visit.cancel_reason ? (
@@ -198,6 +210,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   body: { fontSize: typography.base, color: colors.ink },
+  link: {
+    fontSize: typography.base,
+    color: colors.primary,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
   meta: { fontSize: typography.sm, color: colors.primary, fontWeight: '700' },
   muted: { fontSize: typography.sm, color: colors.muted },
   modalBackdrop: {

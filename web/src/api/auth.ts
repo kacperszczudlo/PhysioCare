@@ -58,6 +58,7 @@ export const authApi = {
 
 export interface TherapistProfileUpdatePayload {
   phone?: string
+  location_address?: string
   bio?: string
   courses?: string[]
 }

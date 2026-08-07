@@ -61,6 +61,12 @@ class VisitSerializer(serializers.ModelSerializer):
             'created_at',
         ]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not (data.get('location_address') or '').strip():
+            data['location_address'] = instance.therapist.location_address or ''
+        return data
+
 
 class VisitCreateSerializer(serializers.ModelSerializer):
     patient_id = serializers.UUIDField(write_only=True)
@@ -71,7 +77,7 @@ class VisitCreateSerializer(serializers.ModelSerializer):
         model = Visit
         fields = [
             'patient_id', 'episode_id', 'therapy_type_id',
-            'start_at', 'end_at', 'location_address', 'prep_instructions',
+            'start_at', 'end_at', 'prep_instructions',
         ]
 
     def validate(self, attrs):
@@ -111,6 +117,7 @@ class VisitCreateSerializer(serializers.ModelSerializer):
             therapist=therapist,
             episode_id=episode_id,
             therapy_type_id=therapy_type_id,
+            location_address=therapist.location_address or '',
             **validated_data,
         )
 

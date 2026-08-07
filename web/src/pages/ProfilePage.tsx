@@ -16,6 +16,7 @@ export function ProfilePage() {
   const [error, setError] = useState<string | null>(null)
 
   const [phone, setPhone] = useState('')
+  const [locationAddress, setLocationAddress] = useState('')
   const [bio, setBio] = useState('')
   const [courses, setCourses] = useState<string[]>([])
   const [newCourse, setNewCourse] = useState('')
@@ -50,6 +51,7 @@ export function ProfilePage() {
         }
         setProfile(data)
         setPhone(data.phone ?? '')
+        setLocationAddress(data.location_address ?? '')
         setBio(data.bio ?? '')
         setCourses(Array.isArray(data.courses) ? data.courses : [])
       } catch (err) {
@@ -111,6 +113,7 @@ export function ProfilePage() {
     try {
       const updated = await therapistApi.updateProfile({
         phone: phone.trim(),
+        location_address: locationAddress.trim(),
         bio: bio.trim(),
         courses,
       })
@@ -293,6 +296,14 @@ export function ProfilePage() {
             name="phone"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+          />
+          <Field
+            label="Adres / lokalizacja gabinetu"
+            name="location_address"
+            value={locationAddress}
+            onChange={(e) => setLocationAddress(e.target.value)}
+            placeholder="np. ul. Kwiatowa 12, 00-001 Warszawa"
+            hint="Widoczny dla pacjentów przy wizycie — kliknięcie otwiera mapę."
           />
           <label className="ui-field">
             <span className="ui-field__label">Biogram</span>

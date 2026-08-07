@@ -12,7 +12,8 @@ class TherapistProfileSerializer(serializers.ModelSerializer):
         model = TherapistProfile
         fields = [
             'id', 'email', 'first_name', 'last_name',
-            'pwzf_number', 'phone', 'bio', 'courses', 'avatar_url', 'created_at',
+            'pwzf_number', 'phone', 'location_address', 'bio', 'courses',
+            'avatar_url', 'created_at',
         ]
         read_only_fields = ['id', 'pwzf_number', 'created_at']
 
@@ -20,7 +21,7 @@ class TherapistProfileSerializer(serializers.ModelSerializer):
 class TherapistProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TherapistProfile
-        fields = ['phone', 'bio', 'courses']
+        fields = ['phone', 'location_address', 'bio', 'courses']
 
 
 class TherapistPublicSerializer(serializers.ModelSerializer):
@@ -31,5 +32,5 @@ class TherapistPublicSerializer(serializers.ModelSerializer):
         model = TherapistProfile
         fields = [
             'id', 'first_name', 'last_name', 'bio', 'courses',
-            'avatar_url', 'phone',
+            'avatar_url', 'phone', 'location_address',
         ]

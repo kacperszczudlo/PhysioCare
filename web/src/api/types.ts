@@ -34,6 +34,7 @@ export interface TherapistProfile {
   last_name: string
   pwzf_number: string
   phone: string | null
+  location_address: string | null
   bio: string | null
   courses: string[]
   avatar_url: string | null
@@ -89,7 +90,6 @@ export interface VisitCreatePayload {
   episode_id?: string | null
   start_at: string
   end_at: string
-  location_address?: string
   prep_instructions?: string
 }
 

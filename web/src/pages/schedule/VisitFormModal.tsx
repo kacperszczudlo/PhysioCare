@@ -30,7 +30,6 @@ export function VisitFormModal({
   const [patientId, setPatientId] = useState('')
   const [therapyTypeId, setTherapyTypeId] = useState('')
   const [startLocal, setStartLocal] = useState('')
-  const [location, setLocation] = useState('')
   const [prep, setPrep] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -54,7 +53,6 @@ export function VisitFormModal({
     const local = `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`
     setStartLocal(local)
     setError(null)
-    setLocation('')
     setPrep('')
     setBusy(false)
 
@@ -133,7 +131,6 @@ export function VisitFormModal({
       therapy_type_id: therapyTypeId,
       start_at: toIsoLocal(start),
       end_at: toIsoLocal(end),
-      location_address: location.trim(),
       prep_instructions: prep.trim(),
     }
 
@@ -251,13 +248,6 @@ export function VisitFormModal({
             onChange={(e) => setStartLocal(e.target.value)}
             required
             hint={endPreview ? `Koniec: ${endPreview}` : undefined}
-          />
-
-          <Field
-            label="Adres / lokalizacja"
-            name="location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
           />
 
           <label className="ui-field">

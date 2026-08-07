@@ -364,7 +364,6 @@ def main() -> int:
             "therapy_type_id": state.get("therapy_type_id"),
             "start_at": start.isoformat(),
             "end_at": end.isoformat(),
-            "location_address": "ul. Testowa 1",
             "prep_instructions": "Wyniki badań",
         },
     )
@@ -554,6 +553,7 @@ def main() -> int:
         expected=200,
         body={
             "phone": "+48123123123",
+            "location_address": "ul. Testowa 1",
             "bio": "Terapia manualna",
             "courses": ["PNF"],
         },

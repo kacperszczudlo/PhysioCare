@@ -500,7 +500,6 @@ pm.collectionVariables.set('therapy_type_id', pm.response.json().id);
                     "therapy_type_id": "{{therapy_type_id}}",
                     "start_at": "{{visit_start}}",
                     "end_at": "{{visit_end}}",
-                    "location_address": "ul. Przykładowa 1, Tarnów",
                     "prep_instructions": "Proszę zabrać aktualne wyniki badań.",
                 },
                 tests=EXPECT_STATUS(201)
@@ -518,7 +517,6 @@ pm.collectionVariables.set('visit_id', pm.response.json().id);
                     "therapy_type_id": "{{therapy_type_id}}",
                     "start_at": "{{visit_start}}",
                     "end_at": "{{visit_end}}",
-                    "location_address": "ul. Przykładowa 1, Tarnów",
                 },
                 description="E1: kolizja terminów (ExclusionConstraint).",
                 tests=EXPECT_ERROR(400),
@@ -783,6 +781,7 @@ if (list.length) pm.collectionVariables.set('document_id', list[0].id);
                 "/therapist/profile/",
                 body={
                     "phone": "+48123123123",
+                    "location_address": "ul. Przykładowa 1, Tarnów",
                     "bio": "Specjalista terapii manualnej i sportowej.",
                     "courses": ["PNF", "Terapia tkanek miękkich"],
                 },

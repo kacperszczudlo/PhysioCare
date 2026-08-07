@@ -132,6 +132,7 @@ export interface TherapistPublic {
   courses: string[]
   avatar_url: string
   phone: string
+  location_address: string
 }
 
 export interface NotificationPreference {
