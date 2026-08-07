@@ -93,10 +93,15 @@
   opacity: 0.85;
 }
 
-.day-cal__event-cancel {
+.day-cal__event-actions {
   position: absolute;
   top: var(--space-2);
   right: var(--space-2);
+  display: flex;
+  gap: 0.25rem;
+}
+
+.day-cal__event-action {
   border: 0;
   border-radius: var(--radius-sm);
   background: oklch(1 0 0 / 0.2);
@@ -107,7 +112,7 @@
   cursor: pointer;
 }
 
-.day-cal__event-cancel:hover {
+.day-cal__event-action:hover {
   background: oklch(1 0 0 / 0.35);
 }
 
@@ -116,10 +121,9 @@
     grid-template-columns: 3.25rem 1fr;
   }
 
-  .day-cal__event-cancel {
+  .day-cal__event-actions {
     position: static;
     margin-top: var(--space-1);
-    display: inline-block;
   }
 }
 

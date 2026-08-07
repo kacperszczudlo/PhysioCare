@@ -7,7 +7,9 @@ import type {
   PatientSummary,
   TherapyType,
   TherapyTypePreset,
+  Visit,
   VisitCreatePayload,
+  VisitUpdatePayload,
 } from '@/api/types'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
@@ -20,8 +22,11 @@ interface VisitFormModalProps {
   open: boolean
   day: Date
   initialMinutes: number
+  /** When set, modal edits this visit instead of creating a new one. */
+  visit?: Visit | null
   onClose: () => void
   onCreated: () => void
+  onUpdated?: (visit: Visit) => void
 }
 
 const GROUP_ORDER: TherapyTypePreset['group'][] = ['kind', 'profile']
@@ -36,13 +41,21 @@ type VisitTypeOption = TherapyType & {
   description: string
 }
 
+function timeLocalFromDate(value: Date): string {
+  return `${String(value.getHours()).padStart(2, '0')}:${String(value.getMinutes()).padStart(2, '0')}`
+}
+
 export function VisitFormModal({
   open,
   day,
   initialMinutes,
+  visit = null,
   onClose,
   onCreated,
+  onUpdated,
 }: VisitFormModalProps) {
+  const isEdit = visit != null
+
   const [patients, setPatients] = useState<PatientSummary[]>([])
   const [options, setOptions] = useState<VisitTypeOption[]>([])
   const [loadingMeta, setLoadingMeta] = useState(false)
@@ -50,6 +63,7 @@ export function VisitFormModal({
   const [therapyTypeId, setTherapyTypeId] = useState('')
   const [startLocal, setStartLocal] = useState('')
   const [prep, setPrep] = useState('')
+  const [location, setLocation] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -73,14 +87,24 @@ export function VisitFormModal({
       return
     }
 
-    const start = dateFromDayMinutes(day, initialMinutes)
-    const local = `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`
-    setStartLocal(local)
     setError(null)
-    setPrep('')
     setBusy(false)
-    setPatientId('')
-    setTherapyTypeId('')
+
+    if (visit) {
+      const start = new Date(visit.start_at)
+      setStartLocal(timeLocalFromDate(start))
+      setPrep(visit.prep_instructions || '')
+      setLocation(visit.location_address || '')
+      setPatientId(visit.patient)
+      setTherapyTypeId(visit.therapy_type)
+    } else {
+      const start = dateFromDayMinutes(day, initialMinutes)
+      setStartLocal(timeLocalFromDate(start))
+      setPrep('')
+      setLocation('')
+      setPatientId('')
+      setTherapyTypeId('')
+    }
 
     let cancelled = false
     async function loadMeta() {
@@ -111,10 +135,28 @@ export function VisitFormModal({
           })
         }
 
+        // Keep current therapy type visible even if it is not among presets.
+        if (visit?.therapy_type && !nextOptions.some((item) => item.id === visit.therapy_type)) {
+          const current = typeList.find((type) => type.id === visit.therapy_type)
+          if (current) {
+            nextOptions.unshift({
+              ...current,
+              group: 'kind',
+              description: 'Aktualny typ wizyty',
+            })
+          }
+        }
+
         setPatients(patientList)
         setOptions(nextOptions)
-        setPatientId(patientList[0]?.id || '')
-        setTherapyTypeId(nextOptions[0]?.id || '')
+
+        if (visit) {
+          setPatientId(visit.patient)
+          setTherapyTypeId(visit.therapy_type)
+        } else {
+          setPatientId(patientList[0]?.id || '')
+          setTherapyTypeId(nextOptions[0]?.id || '')
+        }
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -132,36 +174,68 @@ export function VisitFormModal({
     return () => {
       cancelled = true
     }
-  }, [open, day, initialMinutes])
+  }, [open, day, initialMinutes, visit])
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
 
-    if (!patientId || !therapyTypeId || !selectedType) {
-      setError('Wybierz pacjenta i typ wizyty.')
+    if (!therapyTypeId || !selectedType) {
+      setError('Wybierz typ wizyty.')
+      return
+    }
+
+    if (!isEdit && !patientId) {
+      setError('Wybierz pacjenta.')
       return
     }
 
     const [hours, minutes] = startLocal.split(':').map(Number)
-    const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hours, minutes, 0, 0)
+    const formDay = visit ? new Date(visit.start_at) : day
+    const start = new Date(
+      formDay.getFullYear(),
+      formDay.getMonth(),
+      formDay.getDate(),
+      hours,
+      minutes,
+      0,
+      0,
+    )
     const end = new Date(start.getTime() + selectedType.duration_min * 60_000)
-
-    const payload: VisitCreatePayload = {
-      patient_id: patientId,
-      therapy_type_id: therapyTypeId,
-      start_at: toIsoLocal(start),
-      end_at: toIsoLocal(end),
-      prep_instructions: prep.trim(),
-    }
 
     setBusy(true)
     try {
-      await schedulingApi.createVisit(payload)
-      onCreated()
-      onClose()
+      if (visit) {
+        const payload: VisitUpdatePayload = {
+          therapy_type_id: therapyTypeId,
+          start_at: toIsoLocal(start),
+          end_at: toIsoLocal(end),
+          prep_instructions: prep.trim(),
+          location_address: location.trim(),
+        }
+        const updated = await schedulingApi.updateVisit(visit.id, payload)
+        onUpdated?.(updated)
+        onClose()
+      } else {
+        const payload: VisitCreatePayload = {
+          patient_id: patientId,
+          therapy_type_id: therapyTypeId,
+          start_at: toIsoLocal(start),
+          end_at: toIsoLocal(end),
+          prep_instructions: prep.trim(),
+        }
+        await schedulingApi.createVisit(payload)
+        onCreated()
+        onClose()
+      }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się utworzyć wizyty.')
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : isEdit
+            ? 'Nie udało się zapisać zmian wizyty.'
+            : 'Nie udało się utworzyć wizyty.',
+      )
     } finally {
       setBusy(false)
     }
@@ -172,45 +246,71 @@ export function VisitFormModal({
       return null
     }
     const [hours, minutes] = startLocal.split(':').map(Number)
-    const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hours, minutes, 0, 0)
+    const formDay = visit ? new Date(visit.start_at) : day
+    const start = new Date(
+      formDay.getFullYear(),
+      formDay.getMonth(),
+      formDay.getDate(),
+      hours,
+      minutes,
+      0,
+      0,
+    )
     const end = new Date(start.getTime() + selectedType.duration_min * 60_000)
     return formatTime(end)
   })()
 
+  const patientLabel = visit
+    ? `${visit.patient_first_name} ${visit.patient_last_name}`.trim()
+    : null
+
+  const showForm = isEdit || (!loadingMeta && patients.length > 0)
+
   return (
     <Modal
       open={open}
-      title="Nowa wizyta"
-      description="Wybierz typ wizyty klikając kafelek — przy każdej wizycie osobno."
+      title={isEdit ? 'Edytuj wizytę' : 'Nowa wizyta'}
+      description={
+        isEdit
+          ? 'Zmień typ, godzinę, przygotowanie lub adres wizyty.'
+          : 'Wybierz typ wizyty klikając kafelek — przy każdej wizycie osobno.'
+      }
       size="lg"
       onClose={onClose}
     >
       {loadingMeta ? <p className="schedule-muted">Ładowanie…</p> : null}
 
-      {!loadingMeta && patients.length === 0 ? (
+      {!loadingMeta && !isEdit && patients.length === 0 ? (
         <p className="schedule-empty" role="status">
           Brak pacjentów w gabinecie. Pacjent musi najpierw zarejestrować się w aplikacji mobilnej z
           Twoim profilem terapeuty.
         </p>
       ) : null}
 
-      {!loadingMeta && patients.length > 0 ? (
+      {!loadingMeta && showForm ? (
         <form className="ui-modal__form" onSubmit={(e) => void onSubmit(e)}>
-          <label className="ui-field">
-            <span className="ui-field__label">Pacjent</span>
-            <select
-              className="ui-modal__select"
-              value={patientId}
-              onChange={(e) => setPatientId(e.target.value)}
-              required
-            >
-              {patients.map((patient) => (
-                <option key={patient.id} value={patient.id}>
-                  {patient.first_name} {patient.last_name}
-                </option>
-              ))}
-            </select>
-          </label>
+          {isEdit ? (
+            <label className="ui-field">
+              <span className="ui-field__label">Pacjent</span>
+              <input className="ui-modal__select" value={patientLabel || ''} disabled readOnly />
+            </label>
+          ) : (
+            <label className="ui-field">
+              <span className="ui-field__label">Pacjent</span>
+              <select
+                className="ui-modal__select"
+                value={patientId}
+                onChange={(e) => setPatientId(e.target.value)}
+                required
+              >
+                {patients.map((patient) => (
+                  <option key={patient.id} value={patient.id}>
+                    {patient.first_name} {patient.last_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <fieldset className="visit-type-picker">
             <legend className="ui-field__label">Typ wizyty</legend>
@@ -267,8 +367,22 @@ export function VisitFormModal({
               value={prep}
               onChange={(e) => setPrep(e.target.value)}
               rows={3}
+              placeholder="Np. wygodny strój, wyniki badań…"
             />
           </label>
+
+          {isEdit ? (
+            <label className="ui-field">
+              <span className="ui-field__label">Adres wizyty</span>
+              <textarea
+                className="ui-modal__textarea"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                rows={2}
+                placeholder="Adres gabinetu lub wizyty domowej"
+              />
+            </label>
+          ) : null}
 
           {error ? (
             <p className="ui-modal__error" role="alert">
@@ -281,7 +395,7 @@ export function VisitFormModal({
               Anuluj
             </Button>
             <Button type="submit" loading={busy} disabled={!therapyTypeId}>
-              Zapisz wizytę
+              {isEdit ? 'Zapisz zmiany' : 'Zapisz wizytę'}
             </Button>
           </div>
         </form>

@@ -5,6 +5,7 @@ import type {
   TherapyTypePreset,
   Visit,
   VisitCreatePayload,
+  VisitUpdatePayload,
 } from './types'
 
 async function listResults<T>(path: string): Promise<T[]> {
@@ -24,6 +25,10 @@ export const schedulingApi = {
 
   createVisit(payload: VisitCreatePayload) {
     return api.post<Visit>('/therapist/visits/', payload)
+  },
+
+  updateVisit(id: string, payload: VisitUpdatePayload) {
+    return api.patch<Visit>(`/therapist/visits/${id}/`, payload)
   },
 
   updateVisitTimes(id: string, start_at: string, end_at: string) {

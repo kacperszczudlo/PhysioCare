@@ -30,6 +30,7 @@ interface DayCalendarProps {
   visits: Visit[]
   onVisitsChange: (visits: Visit[]) => void
   onSlotClick: (minutesFromStart: number) => void
+  onEditVisit: (visit: Visit) => void
   onCancelVisit: (visit: Visit) => void
   onError: (message: string | null) => void
 }
@@ -47,6 +48,7 @@ export function DayCalendar({
   visits,
   onVisitsChange,
   onSlotClick,
+  onEditVisit,
   onCancelVisit,
   onError,
 }: DayCalendarProps) {
@@ -239,17 +241,30 @@ export function DayCalendar({
                   {visit.patient_first_name} {visit.patient_last_name}
                 </p>
                 <p className="day-cal__event-meta">{visit.therapy_type_name}</p>
-                <button
-                  type="button"
-                  className="day-cal__event-cancel"
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    onCancelVisit(visit)
-                  }}
-                  onPointerDown={(event) => event.stopPropagation()}
-                >
-                  Odwołaj
-                </button>
+                <div className="day-cal__event-actions">
+                  <button
+                    type="button"
+                    className="day-cal__event-action"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onEditVisit(visit)
+                    }}
+                    onPointerDown={(event) => event.stopPropagation()}
+                  >
+                    Edytuj
+                  </button>
+                  <button
+                    type="button"
+                    className="day-cal__event-action"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onCancelVisit(visit)
+                    }}
+                    onPointerDown={(event) => event.stopPropagation()}
+                  >
+                    Odwołaj
+                  </button>
+                </div>
               </article>
             )
           })}

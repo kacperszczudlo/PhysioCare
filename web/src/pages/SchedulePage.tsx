@@ -25,6 +25,7 @@ export function SchedulePage() {
   const [error, setError] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [slotMinutes, setSlotMinutes] = useState(0)
+  const [editTarget, setEditTarget] = useState<Visit | null>(null)
   const [cancelTarget, setCancelTarget] = useState<Visit | null>(null)
   const [cancelBusy, setCancelBusy] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)
@@ -65,8 +66,19 @@ export function SchedulePage() {
   }, [dateIso, reloadToken])
 
   function openCreate(minutesFromStart: number) {
+    setEditTarget(null)
     setSlotMinutes(minutesFromStart)
     setFormOpen(true)
+  }
+
+  function openEdit(visit: Visit) {
+    setEditTarget(visit)
+    setFormOpen(true)
+  }
+
+  function closeForm() {
+    setFormOpen(false)
+    setEditTarget(null)
   }
 
   async function confirmCancel(reason: string) {
@@ -90,7 +102,7 @@ export function SchedulePage() {
     <section className="schedule-page">
       <PageHeader
         title="Harmonogram"
-        description="Widok dzienny — kliknij wolny slot, aby dodać wizytę, przeciągnij blok, aby zmienić godzinę."
+        description="Widok dzienny — kliknij wolny slot, aby dodać wizytę, przeciągnij blok, aby zmienić godzinę, lub Edytuj, aby zmienić treść wizyty."
         actions={
           <Button type="button" onClick={() => openCreate(60)}>
             + Nowa wizyta
@@ -160,6 +172,7 @@ export function SchedulePage() {
           visits={visits}
           onVisitsChange={setVisits}
           onSlotClick={openCreate}
+          onEditVisit={openEdit}
           onCancelVisit={setCancelTarget}
           onError={setError}
         />
@@ -169,8 +182,12 @@ export function SchedulePage() {
         open={formOpen}
         day={day}
         initialMinutes={slotMinutes}
-        onClose={() => setFormOpen(false)}
+        visit={editTarget}
+        onClose={closeForm}
         onCreated={reload}
+        onUpdated={(updated) => {
+          setVisits((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
+        }}
       />
 
       <CancelVisitModal

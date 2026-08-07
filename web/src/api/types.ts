@@ -104,6 +104,15 @@ export interface VisitCreatePayload {
   prep_instructions?: string
 }
 
+export interface VisitUpdatePayload {
+  therapy_type_id?: string
+  start_at?: string
+  end_at?: string
+  prep_instructions?: string
+  location_address?: string
+  status?: VisitStatus
+}
+
 export type EpisodeStatus = 'IN_PROGRESS' | 'COMPLETED_SUCCESS' | 'REFERRED' | 'INTERRUPTED'
 
 export type BodyViewSide = 'FRONT' | 'BACK'
