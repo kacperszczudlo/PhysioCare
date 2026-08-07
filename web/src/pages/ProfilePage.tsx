@@ -125,7 +125,7 @@ export function ProfilePage() {
     try {
       await navigator.clipboard.writeText(profile.id)
       setCopyError(null)
-      setCopyMessage('Skopiowano — przekaż ten kod pacjentowi przy rejestracji w aplikacji.')
+      setCopyMessage('Skopiowano - przekaż ten kod pacjentowi przy rejestracji w aplikacji.')
     } catch {
       setCopyMessage(null)
       setCopyError('Nie udało się skopiować. Zaznacz kod ręcznie i skopiuj.')
@@ -205,7 +205,7 @@ export function ProfilePage() {
     try {
       const updated = await therapistApi.uploadAvatar(file)
       setProfile(updated)
-      setAvatarMessage('Zdjęcie profilowe zostało zapisane — widoczne w aplikacji pacjenta.')
+      setAvatarMessage('Zdjęcie profilowe zostało zapisane - widoczne w aplikacji pacjenta.')
       URL.revokeObjectURL(localPreview)
       setPreviewUrl(null)
     } catch (err) {
@@ -364,7 +364,7 @@ export function ProfilePage() {
             }}
             error={fieldErrors.locationAddress}
             placeholder="np. ul. Kwiatowa 12, 00-001 Warszawa"
-            hint="Widoczny dla pacjentów przy wizycie — kliknięcie otwiera mapę."
+            hint="Widoczny dla pacjentów przy wizycie - kliknięcie otwiera mapę."
           />
           <label className="ui-field">
             <span className="ui-field__label">Biogram</span>
@@ -396,7 +396,7 @@ export function ProfilePage() {
           <div className="profile-courses">
             <h3>Kursy zawodowe</h3>
             {courses.length === 0 ? (
-              <p className="profile-muted">Brak kursów — dodaj pierwszy poniżej.</p>
+              <p className="profile-muted">Brak kursów - dodaj pierwszy poniżej.</p>
             ) : (
               <ul className="profile-courses__list">
                 {courses.map((course, index) => (
@@ -426,7 +426,7 @@ export function ProfilePage() {
                   }
                 }}
                 error={fieldErrors.newCourse}
-                placeholder="np. Terapia manualna — kurs podstawowy"
+                placeholder="np. Terapia manualna - kurs podstawowy"
               />
               <Button type="button" variant="secondary" size="sm" onClick={addCourse}>
                 + Dodaj

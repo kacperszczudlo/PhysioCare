@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 
 PWZF_REQUIRED = 'Podaj numer PWZFz.'
 PWZF_INVALID = (
-    'Podaj prawidłowy numer PWZFz — dokładnie 5 cyfr (np. 12345).'
+    'Podaj prawidłowy numer PWZFz - dokładnie 5 cyfr (np. 12345).'
 )
 PWZF_TOO_LONG = 'Numer PWZFz może mieć co najwyżej 20 znaków.'
 PWZF_TAKEN = (

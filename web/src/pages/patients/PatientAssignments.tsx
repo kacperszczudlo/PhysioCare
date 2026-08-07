@@ -19,7 +19,7 @@ interface PatientAssignmentsProps {
 
 function formatPeriod(start: string, end: string): string {
   const fmt = new Intl.DateTimeFormat('pl-PL', { dateStyle: 'medium' })
-  return `${fmt.format(parseDateInput(start))} – ${fmt.format(parseDateInput(end))}`
+  return `${fmt.format(parseDateInput(start))} - ${fmt.format(parseDateInput(end))}`
 }
 
 function isActive(assignment: ExerciseAssignment): boolean {
@@ -220,7 +220,7 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
       <Modal
         open={editTarget !== null}
         title="Edytuj zalecenie"
-        description={editTarget ? `„${editTarget.exercise_title}” — dawkowanie i okres.` : undefined}
+        description={editTarget ? `„${editTarget.exercise_title}” - dawkowanie i okres.` : undefined}
         onClose={() => setEditTarget(null)}
       >
         <form className="ui-modal__form" onSubmit={(e) => void onSave(e)}>

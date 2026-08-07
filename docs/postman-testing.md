@@ -1,9 +1,9 @@
-# Testowanie API w Postmanie — PhysioCare
+# Testowanie API w Postmanie - PhysioCare
 
 > Deliverable Faz 2.6: pełna kolekcja kontraktu REST + macierz przypadków użycia.
 > Kolekcja: [`postman/PhysioCare.json`](postman/PhysioCare.json) · środowisko: [`postman/PhysioCare.postman_environment.json`](postman/PhysioCare.postman_environment.json)
 
-Dokument łączy **zamysł projektu** (UC-01–UC-18) z **konkretnymi requestami** do uruchomienia na lokalnym backendzie. Celem jest sprawdzenie każdego happy pathu i typowych wyjątków zanim web/mobile zaczną konsumować API.
+Dokument łączy **zamysł projektu** (UC-01-UC-18) z **konkretnymi requestami** do uruchomienia na lokalnym backendzie. Celem jest sprawdzenie każdego happy pathu i typowych wyjątków zanim web/mobile zaczną konsumować API.
 
 ---
 
@@ -13,8 +13,8 @@ PhysioCare ma dwóch aktorów i jeden backend:
 
 | Klient | Rola JWT | Główne UC |
 |--------|----------|-----------|
-| Mobile | `PATIENT` | UC-01–09, UC-17–18 |
-| Web | `THERAPIST` | UC-01–04, UC-10–16 |
+| Mobile | `PATIENT` | UC-01-09, UC-17-18 |
+| Web | `THERAPIST` | UC-01-04, UC-10-16 |
 
 Każdy request w kolekcji ma skrypt testowy (status HTTP + często envelope błędu / zapis ID do zmiennych).
 
@@ -56,7 +56,7 @@ flowchart TB
 
 1. Backend działa na `http://localhost:8000` (patrz README).
 2. Postman Desktop (zalecane) lub Cursor Postman plugin.
-3. Włączony **Cookie Jar** — auth ustawia `access_token` / `refresh_token` jako cookies httpOnly; skrypty próbują też skopiować je do `{{access_token}}` (Bearer).
+3. Włączony **Cookie Jar** - auth ustawia `access_token` / `refresh_token` jako cookies httpOnly; skrypty próbują też skopiować je do `{{access_token}}` (Bearer).
 
 ### Import
 
@@ -79,16 +79,16 @@ Przy ponownym uruchomieniu na tej samej bazie zmień e-maile / `pwzf_number` w z
 
 ### Pliki (multipart)
 
-Requesty uploadu (`exercises`, `documents`) mają pole `file` typu File — w Postmanie wskaż lokalny `.mp4` / `.pdf`. Bez pliku oczekiwany jest `400 FILE_REQUIRED`.
+Requesty uploadu (`exercises`, `documents`) mają pole `file` typu File - w Postmanie wskaż lokalny `.mp4` / `.pdf`. Bez pliku oczekiwany jest `400 FILE_REQUIRED`.
 
 ---
 
-## 3. Auth — jak działa w praktyce
+## 3. Auth - jak działa w praktyce
 
 | Mechanizm | Zachowanie backendu |
 |-----------|---------------------|
 | Login / register | Ustawia cookies `access_token`, `refresh_token` |
-| Chronione endpointy | `CookieJWTAuthentication` — cookie **lub** `Authorization: Bearer` |
+| Chronione endpointy | `CookieJWTAuthentication` - cookie **lub** `Authorization: Bearer` |
 | Refresh | Body `{ "refresh" }` **lub** cookie `refresh_token` |
 | Błędy | `{ "error": { "code", "message", "details" } }` |
 
@@ -98,7 +98,7 @@ W kolekcji: auth na poziomie collection = Bearer `{{access_token}}`. Po loginie 
 
 ## 4. Mockup przepływów (scenariusze E2E)
 
-Poniżej „makiety” ścieżek API — to nie UI, tylko sekwencje requestów odpowiadające ekranom z use-case’ów.
+Poniżej „makiety” ścieżek API - to nie UI, tylko sekwencje requestów odpowiadające ekranom z use-case’ów.
 
 ### 4.1 Onboarding gabinetu (web)
 
@@ -172,7 +172,7 @@ sequenceDiagram
 | **UC-02** Rej. pacjenta | `00 Setup` | `POST /auth/register/patient/` → 201 | brak zgód → **400**; e-mail zajęty → **400/409** |
 | **UC-03** Rej. terapeuty | `00 Setup` | `POST /auth/register/therapist/` → 201 | brak PWZFz → **400**; duplikat → **400/409** |
 | **UC-04** Reset hasła | `00 Setup` | `.../request/` → 200 (anti-enum) | zły token confirm → **400** `AUTH_002` |
-| **UC-05** Pulpit pacjenta | `Exercises` + `Visits` | `GET /me/visits`, `GET /me/exercises/today` | — (dane z poprzednich kroków) |
+| **UC-05** Pulpit pacjenta | `Exercises` + `Visits` | `GET /me/visits`, `GET /me/exercises/today` | - (dane z poprzednich kroków) |
 | **UC-06** Compliance | `Exercises` | `POST /me/exercise-completions/` → 201 | obce `assignment_id` → **400** |
 | **UC-07** Wizyty pacjenta | `Visits` | list / reschedule / cancel | overlap przy reschedule → **400** |
 | **UC-08** Dokumenty | `Documents` | list + download | brak pliku upload → **400**; cudzy dostęp → **404** |
@@ -183,10 +183,10 @@ sequenceDiagram
 | **UC-13** Mapa ciała | `Body map` | POST/GET/PUT body-pain | VAS > 10 → **400** |
 | **UC-14** Zarządzanie wizytą | `Visits` | PATCH visit, cancel | brak dostępu → **404** |
 | **UC-15** Ćwiczenia | `Exercises` | create + assign | brak pliku → **400** |
-| **UC-16** Profil terapeuty | `Therapist profile` | GET/PATCH `/therapist/profile/` | — |
-| **UC-17** Wizytówka | `Therapist profile` | `GET /therapists/{id}/public/` | — |
-| **UC-18** Powiadomienia | `Patient me` | GET/PATCH preferences | — |
-| **Security** | `Security` | — | patient → `/patients/` **403**; no token **401** |
+| **UC-16** Profil terapeuty | `Therapist profile` | GET/PATCH `/therapist/profile/` | - |
+| **UC-17** Wizytówka | `Therapist profile` | `GET /therapists/{id}/public/` | - |
+| **UC-18** Powiadomienia | `Patient me` | GET/PATCH preferences | - |
+| **Security** | `Security` | - | patient → `/patients/` **403**; no token **401** |
 
 Refresh token: `POST /auth/refresh/` → 200 (w Setup).
 
@@ -223,7 +223,7 @@ Refresh token: `POST /auth/refresh/` → 200 (w Setup).
 | `assignment_start` / `assignment_end` / `today` | Okres ćwiczeń i data completion |
 | `access_token` / `refresh_token` | Synchronizowane po loginie |
 
-Daty w zmiennych domyślnych są ustawione na sierpień 2026 — dostosuj do „dziś”, żeby `GET /me/exercises/today` i `upcoming` zwracały dane.
+Daty w zmiennych domyślnych są ustawione na sierpień 2026 - dostosuj do „dziś”, żeby `GET /me/exercises/today` i `upcoming` zwracały dane.
 
 ---
 
@@ -280,7 +280,7 @@ Uruchom Collection Runner (kolejność folderów) i odhacz:
 
 ## 9. Aktualizacja kolekcji
 
-Kolekcja w `docs/postman/` jest artefaktem w repo — edytuj ją w Postmanie (Export → nadpisz JSON) albo ręcznie, gdy zmienia się kontrakt API.
+Kolekcja w `docs/postman/` jest artefaktem w repo - edytuj ją w Postmanie (Export → nadpisz JSON) albo ręcznie, gdy zmienia się kontrakt API.
 
 ---
 
@@ -297,7 +297,7 @@ Kolekcja w `docs/postman/` jest artefaktem w repo — edytuj ją w Postmanie (Ex
 
 ## 11. Uwagi implementacyjne (stan backendu)
 
-1. **Tokeny nie wracają w JSON body** — tylko cookies (+ opcjonalnie Bearer jeśli klient je ustawi).
-2. **Download dokumentu:** `GET /api/v1/{document_id}/download/` (bez segmentu `documents/` — tak jest w `documents/urls.py`).
-3. **Rejestracja pacjenta** wymaga `therapist_id` (pole obowiązkowe w serializerze) — różnica względem starszego szkicu w `api.md` (bez terapeuty).
-4. Rate limiting: login / register / password-reset mają throttle — przy agresywnym Runnerze możesz dostać **429**.
+1. **Tokeny nie wracają w JSON body** - tylko cookies (+ opcjonalnie Bearer jeśli klient je ustawi).
+2. **Download dokumentu:** `GET /api/v1/{document_id}/download/` (bez segmentu `documents/` - tak jest w `documents/urls.py`).
+3. **Rejestracja pacjenta** wymaga `therapist_id` (pole obowiązkowe w serializerze) - różnica względem starszego szkicu w `api.md` (bez terapeuty).
+4. Rate limiting: login / register / password-reset mają throttle - przy agresywnym Runnerze możesz dostać **429**.

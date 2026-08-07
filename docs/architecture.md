@@ -117,11 +117,11 @@ Terapeuta: widok w harmonogramie i karcie pacjenta (ten sam zasób Visit)
 
 ## Stack technologiczny
 
-Zgodnie z tematem zatwierdzonym przez prowadzącego — patrz [topic-selection.md](topic-selection.md).
+Zgodnie z tematem zatwierdzonym przez prowadzącego - patrz [topic-selection.md](topic-selection.md).
 
 ## Powiązane dokumenty
 
-- [use-cases.md](use-cases.md) — przypadki użycia
-- [api.md](api.md) — kontrakt REST
-- [diagrams/erd.drawio](diagrams/erd.drawio) — model danych
-- [development-plan.md](development-plan.md) — harmonogram prac
+- [use-cases.md](use-cases.md) - przypadki użycia
+- [api.md](api.md) - kontrakt REST
+- [diagrams/erd.drawio](diagrams/erd.drawio) - model danych
+- [development-plan.md](development-plan.md) - harmonogram prac

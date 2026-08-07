@@ -1,6 +1,6 @@
-# Monitoring i logowanie — PhysioCare
+# Monitoring i logowanie - PhysioCare
 
-Opis warstwy obserwowalności (Faza 6.2–6.3): strukturalne logi serwera oraz metryki czasu odpowiedzi HTTP.
+Opis warstwy obserwowalności (Faza 6.2-6.3): strukturalne logi serwera oraz metryki czasu odpowiedzi HTTP.
 
 ## Cele
 
@@ -13,7 +13,7 @@ Opis warstwy obserwowalności (Faza 6.2–6.3): strukturalne logi serwera oraz m
 | Zmienna | Domyślnie | Opis |
 |---------|-----------|------|
 | `LOG_FORMAT` | `text` gdy `DJANGO_DEBUG=true`, inaczej `json` | Format logów konsoli |
-| `DJANGO_DEBUG` | — | Wpływa na domyślny format i ujawnianie 500 w odpowiedzi |
+| `DJANGO_DEBUG` | - | Wpływa na domyślny format i ujawnianie 500 w odpowiedzi |
 
 Przykład w `.env`:
 
@@ -48,9 +48,9 @@ Dodatkowe pola przy błędach DRF / nieobsłużonych wyjątkach:
 | `view` | Nazwa klasy widoku |
 | `exception` | Stacktrace (tylko przy `logger.exception`) |
 
-Logger `physiocare.auth` — zdarzenia auth (m.in. nieudane logowanie).
+Logger `physiocare.auth` - zdarzenia auth (m.in. nieudane logowanie).
 
-Logger `django.request` — ostrzeżenia/błędy frameworka Django.
+Logger `django.request` - ostrzeżenia/błędy frameworka Django.
 
 ## Middleware czasu odpowiedzi
 
@@ -86,7 +86,7 @@ Każdy błąd DRF jest dodatkowo logowany (WARNING/ERROR) z `request_id` i `erro
 ```powershell
 cd backend\physiocare
 ..\venv\Scripts\python.exe manage.py runserver
-# w drugim terminalu — przykładowe żądanie
+# w drugim terminalu - przykładowe żądanie
 curl -i http://127.0.0.1:8000/api/v1/
 ```
 

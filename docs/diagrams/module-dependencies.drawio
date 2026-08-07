@@ -4,13 +4,13 @@
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="title" value="PhysioCare — Zależności modułów backendu (Django apps)" style="text;html=1;fontSize=18;fontStyle=1;align=left;fontFamily=Helvetica;" parent="1" vertex="1">
+                <mxCell id="title" value="PhysioCare - Zależności modułów backendu (Django apps)" style="text;html=1;fontSize=18;fontStyle=1;align=left;fontFamily=Helvetica;" parent="1" vertex="1">
                     <mxGeometry x="60" y="30" width="600" height="32" as="geometry"/>
                 </mxCell>
                 <mxCell id="legend" value="&lt;b&gt;Legenda&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size:11px&quot;&gt;━━  zależność import / FK&lt;br&gt;╌╌  użycie adaptera (storage)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fillColor=#f5f5f5;strokeColor=#666666;fontFamily=Helvetica;" parent="1" vertex="1">
                     <mxGeometry x="1280" y="50" width="260" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="l1" value="Warstwa 1 — Fundament" style="swimlane;startSize=32;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
+                <mxCell id="l1" value="Warstwa 1 - Fundament" style="swimlane;startSize=32;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
                     <mxGeometry x="60" y="90" width="1100" height="130" as="geometry"/>
                 </mxCell>
                 <mxCell id="core" value="&lt;b&gt;core/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;config, urls&lt;br&gt;middleware, errors&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#6c8ebf;fontFamily=Helvetica;" parent="l1" vertex="1">
@@ -19,7 +19,7 @@
                 <mxCell id="accounts" value="&lt;b&gt;accounts/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;User, JWT&lt;br&gt;login, register&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#6c8ebf;fontFamily=Helvetica;" parent="l1" vertex="1">
                     <mxGeometry x="460" y="50" width="180" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="l2" value="Warstwa 2 — Profile i RODO" style="swimlane;startSize=32;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
+                <mxCell id="l2" value="Warstwa 2 - Profile i RODO" style="swimlane;startSize=32;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
                     <mxGeometry x="60" y="260" width="1100" height="140" as="geometry"/>
                 </mxCell>
                 <mxCell id="patients" value="&lt;b&gt;patients/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;PatientProfile&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#82b366;fontFamily=Helvetica;" parent="l2" vertex="1">
@@ -31,7 +31,7 @@
                 <mxCell id="privacy" value="&lt;b&gt;privacy/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Consents&lt;br&gt;eksport, usunięcie&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#82b366;fontFamily=Helvetica;" parent="l2" vertex="1">
                     <mxGeometry x="640" y="55" width="180" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="l3" value="Warstwa 3 — Leczenie i harmonogram" style="swimlane;startSize=32;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
+                <mxCell id="l3" value="Warstwa 3 - Leczenie i harmonogram" style="swimlane;startSize=32;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
                     <mxGeometry x="60" y="440" width="1100" height="150" as="geometry"/>
                 </mxCell>
                 <mxCell id="treatment" value="&lt;b&gt;treatment/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;TreatmentEpisode&lt;br&gt;BodyAreaPain&lt;br&gt;VisitNote&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#d6b656;fontFamily=Helvetica;" parent="l3" vertex="1">
@@ -43,13 +43,13 @@
                 <mxCell id="documents" value="&lt;b&gt;documents/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;MedicalDocument&lt;br&gt;upload / download&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#d6b656;fontFamily=Helvetica;" parent="l3" vertex="1">
                     <mxGeometry x="680" y="55" width="200" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="l4" value="Warstwa 4 — Ćwiczenia" style="swimlane;startSize=32;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
+                <mxCell id="l4" value="Warstwa 4 - Ćwiczenia" style="swimlane;startSize=32;fillColor=#f8cecc;strokeColor=#b85450;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
                     <mxGeometry x="60" y="630" width="1100" height="130" as="geometry"/>
                 </mxCell>
                 <mxCell id="exercises" value="&lt;b&gt;exercises/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Exercise, Category&lt;br&gt;Assignment, Completion&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#b85450;fontFamily=Helvetica;" parent="l4" vertex="1">
                     <mxGeometry x="360" y="50" width="220" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="l5" value="Warstwa 5 — Dodatki" style="swimlane;startSize=32;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
+                <mxCell id="l5" value="Warstwa 5 - Dodatki" style="swimlane;startSize=32;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;fontFamily=Helvetica;" parent="1" vertex="1">
                     <mxGeometry x="60" y="800" width="1100" height="140" as="geometry"/>
                 </mxCell>
                 <mxCell id="notifications" value="&lt;b&gt;notifications/&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Preferences&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fillColor=#ffffff;strokeColor=#9673a6;fontFamily=Helvetica;" parent="l5" vertex="1">

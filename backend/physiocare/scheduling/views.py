@@ -55,7 +55,7 @@ class TherapistVisitListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsTherapist]
 
     def _upcoming_limit(self):
-        """Optional ?limit=N for dashboard preview (upcoming=1 only). Clamped 1–50."""
+        """Optional ?limit=N for dashboard preview (upcoming=1 only). Clamped 1-50."""
         if self.request.query_params.get('upcoming') != '1':
             return None
         raw = self.request.query_params.get('limit')
@@ -342,7 +342,7 @@ class TherapyTypeListCreateView(generics.ListCreateAPIView):
             {
                 'error': {
                     'code': 'THERAPY_TYPES_FIXED',
-                    'message': 'Typy wizyt są stałe — wybierz z proponowanej listy.',
+                    'message': 'Typy wizyt są stałe - wybierz z proponowanej listy.',
                 },
             },
             status=status.HTTP_405_METHOD_NOT_ALLOWED,

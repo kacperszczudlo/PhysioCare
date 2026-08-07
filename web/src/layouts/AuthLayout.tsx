@@ -15,7 +15,7 @@ export function AuthLayout() {
       <aside className="auth-layout__aside" aria-hidden="true">
         <p className="auth-layout__aside-kicker">Gabinet w porządku</p>
         <p className="auth-layout__aside-copy">
-          Harmonogram, karty pacjentów i ćwiczenia — w jednym spokojnym panelu.
+          Harmonogram, karty pacjentów i ćwiczenia - w jednym spokojnym panelu.
         </p>
       </aside>
     </div>

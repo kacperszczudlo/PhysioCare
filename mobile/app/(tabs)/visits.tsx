@@ -87,11 +87,9 @@ export default function VisitsScreen() {
               title={tab === 'upcoming' ? 'Brak nadchodzących wizyt' : 'Brak historii wizyt'}
               description={
                 tab === 'upcoming'
-                  ? 'Wyślij zgłoszenie — fizjoterapeuta zatwierdzi termin.'
+                  ? 'Wyślij zgłoszenie przyciskiem powyżej - fizjoterapeuta zatwierdzi termin.'
                   : undefined
               }
-              actionLabel={tab === 'upcoming' ? 'Umów wizytę' : undefined}
-              onAction={tab === 'upcoming' ? () => router.push('/visit/request') : undefined}
             />
           ) : (
             visits.map((visit) => (

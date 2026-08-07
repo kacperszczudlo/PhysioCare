@@ -1,4 +1,4 @@
-# Przypadki użycia — PhysioCare
+# Przypadki użycia - PhysioCare
 
 Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
@@ -12,7 +12,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-01 — Logowanie użytkownika
+## UC-01 - Logowanie użytkownika
 
 | Pole | Wartość |
 |------|---------|
@@ -25,7 +25,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-02 — Rejestracja pacjenta
+## UC-02 - Rejestracja pacjenta
 
 | Pole | Wartość |
 |------|---------|
@@ -38,7 +38,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-03 — Rejestracja fizjoterapeuty
+## UC-03 - Rejestracja fizjoterapeuty
 
 | Pole | Wartość |
 |------|---------|
@@ -49,7 +49,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-04 — Reset hasła
+## UC-04 - Reset hasła
 
 | Pole | Wartość |
 |------|---------|
@@ -58,7 +58,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-05 — Przegląd pulpitu pacjenta
+## UC-05 - Przegląd pulpitu pacjenta
 
 | Pole | Wartość |
 |------|---------|
@@ -68,7 +68,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-06 — Oznaczenie wykonania ćwiczenia (compliance)
+## UC-06 - Oznaczenie wykonania ćwiczenia (compliance)
 
 | Pole | Wartość |
 |------|---------|
@@ -79,7 +79,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-07 — Przegląd i zarządzanie wizytami (pacjent)
+## UC-07 - Przegląd i zarządzanie wizytami (pacjent)
 
 | Pole | Wartość |
 |------|---------|
@@ -89,7 +89,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-08 — Pobranie dokumentacji medycznej
+## UC-08 - Pobranie dokumentacji medycznej
 
 | Pole | Wartość |
 |------|---------|
@@ -99,16 +99,16 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-09 — Zarządzanie zgodami i danymi osobowymi
+## UC-09 - Zarządzanie zgodami i danymi osobowymi
 
 | Pole | Wartość |
 |------|---------|
 | Aktor | Pacjent |
-| Przebieg | 1. Zgody wymagane — tylko podgląd daty. 2. Zgody opcjonalne — przełączniki. 3. Eksport danych / wniosek o usunięcie konta. |
+| Przebieg | 1. Zgody wymagane - tylko podgląd daty. 2. Zgody opcjonalne - przełączniki. 3. Eksport danych / wniosek o usunięcie konta. |
 
 ---
 
-## UC-10 — Przegląd pulpitu terapeuty
+## UC-10 - Przegląd pulpitu terapeuty
 
 | Pole | Wartość |
 |------|---------|
@@ -117,7 +117,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-11 — Zarządzanie harmonogramem
+## UC-11 - Zarządzanie harmonogramem
 
 | Pole | Wartość |
 |------|---------|
@@ -127,7 +127,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-12 — Karta pacjenta i epizody leczenia
+## UC-12 - Karta pacjenta i epizody leczenia
 
 | Pole | Wartość |
 |------|---------|
@@ -137,7 +137,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-13 — Mapa ciała (Diagnostic Mapper)
+## UC-13 - Mapa ciała (Diagnostic Mapper)
 
 | Pole | Wartość |
 |------|---------|
@@ -146,7 +146,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-14 — Zarządzanie wizytą z karty pacjenta
+## UC-14 - Zarządzanie wizytą z karty pacjenta
 
 | Pole | Wartość |
 |------|---------|
@@ -155,7 +155,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-15 — Baza ćwiczeń i przypisanie
+## UC-15 - Baza ćwiczeń i przypisanie
 
 | Pole | Wartość |
 |------|---------|
@@ -164,7 +164,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-16 — Profil fizjoterapeuty
+## UC-16 - Profil fizjoterapeuty
 
 | Pole | Wartość |
 |------|---------|
@@ -173,7 +173,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-17 — Podgląd profilu terapeuty (pacjent)
+## UC-17 - Podgląd profilu terapeuty (pacjent)
 
 | Pole | Wartość |
 |------|---------|
@@ -182,7 +182,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-18 — Preferencje powiadomień
+## UC-18 - Preferencje powiadomień
 
 | Pole | Wartość |
 |------|---------|
@@ -195,7 +195,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 | UC | Mobile | Web | API | BD |
 |----|--------|-----|-----|-----|
-| UC-01–04 | ✓ | ✓ | accounts | users |
-| UC-05–09 | ✓ | — | patients, privacy | profiles, consents |
-| UC-10–16 | — | ✓ | treatment, scheduling, exercises | episodes, visits |
-| UC-17–18 | ✓ | — | therapists, notifications | profiles, prefs |
+| UC-01-04 | ✓ | ✓ | accounts | users |
+| UC-05-09 | ✓ | - | patients, privacy | profiles, consents |
+| UC-10-16 | - | ✓ | treatment, scheduling, exercises | episodes, visits |
+| UC-17-18 | ✓ | - | therapists, notifications | profiles, prefs |

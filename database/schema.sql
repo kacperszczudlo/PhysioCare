@@ -1,4 +1,4 @@
--- PhysioCare — auto-generated from Django migrations
+-- PhysioCare - auto-generated from Django migrations
 -- Generated: 2026-08-07T21:23:26Z
 -- Do not edit manually. Run: python scripts/sync_schema_sql.py
 

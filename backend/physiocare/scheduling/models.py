@@ -109,4 +109,4 @@ class Visit(TimestampedModel):
         ]
 
     def __str__(self):
-        return f'Wizyta {self.start_at} — {self.patient}'
+        return f'Wizyta {self.start_at} - {self.patient}'

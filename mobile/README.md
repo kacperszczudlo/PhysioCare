@@ -1,8 +1,8 @@
-# PhysioCare Mobile — aplikacja pacjenta
+# PhysioCare Mobile - aplikacja pacjenta
 
 Expo SDK **54** (React Native) + TypeScript. Komunikacja z backendem przez REST (`/api/v1`) i JWT Bearer (SecureStore / localStorage na web).
 
-> SDK 54 — zgodne ze sklepowym **Expo Go**.  
+> SDK 54 - zgodne ze sklepowym **Expo Go**.  
 > „Aktualne” Expo Go ze sklepu **nie** obsługuje SDK 56/57 (nie są jeszcze w Play/App Store).
 
 ## Uruchomienie
@@ -23,7 +23,7 @@ Skopiuj `.env.example` → `.env` i ustaw `EXPO_PUBLIC_API_BASE_URL`:
 | Android emulator         | `http://10.0.2.2:8000/api/v1`  |
 | Telefon (Expo Go)        | `http://<IP-LAN>:8000/api/v1`  |
 
-Na Windowsie zawsze `npm.cmd` (nie `npm`) — ExecutionPolicy blokuje `npm.ps1`.
+Na Windowsie zawsze `npm.cmd` (nie `npm`) - ExecutionPolicy blokuje `npm.ps1`.
 
 ## Skrypty
 
@@ -47,7 +47,7 @@ app/                 # Expo Router (auth + tabs + stack)
 src/
   api/               # client + auth + patient endpoints
   auth/              # AuthProvider (Bearer + SecureStore)
-  network/           # NetInfo — status offline / online
+  network/           # NetInfo - status offline / online
   components/        # Button, Field, AsyncState, OfflineBanner…
   theme/             # tokeny kolorystyczne (olive clinic)
 ```

@@ -265,7 +265,7 @@ export default function RegisterScreen() {
         </View>
 
         <Link href="/(auth)/login" style={styles.link}>
-          Mam już konto — zaloguj się
+          Mam już konto - zaloguj się
         </Link>
       </ScrollView>
     </KeyboardAvoidingView>

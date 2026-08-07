@@ -310,7 +310,7 @@ export function VisitFormModal({
           ? 'Pacjent zgłosił termin. Możesz skorygować szczegóły i zatwierdzić albo odrzucić zgłoszenie.'
           : isEdit
             ? 'Zmień typ, godzinę, przygotowanie lub adres wizyty.'
-            : 'Wybierz typ wizyty klikając kafelek — przy każdej wizycie osobno.'
+            : 'Wybierz typ wizyty klikając kafelek - przy każdej wizycie osobno.'
       }
       size="lg"
       onClose={onClose}

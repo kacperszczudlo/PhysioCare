@@ -25,7 +25,7 @@ const KIND_ORDER: CategoryKind[] = ['TYPE', 'REGION', 'MUSCLE', 'INJURY']
 const KIND_SECTION_LABELS: Record<CategoryKind, { title: string; hint: string }> = {
   TYPE: {
     title: 'Typ ćwiczenia',
-    hint: 'Cel interwencji — np. wzmacnianie, mobilizacja, edukacja.',
+    hint: 'Cel interwencji - np. wzmacnianie, mobilizacja, edukacja.',
   },
   REGION: {
     title: 'Okolica ciała',
@@ -160,7 +160,7 @@ export function CreateExerciseModal({
     }
     if (next.size > MAX_FILE_BYTES) {
       setFile(null)
-      setFileError('Plik jest za duży — maksymalnie 80 MB.')
+      setFileError('Plik jest za duży - maksymalnie 80 MB.')
       return
     }
     setFile(next)
@@ -258,8 +258,8 @@ export function CreateExerciseModal({
       title={isEdit ? 'Edytuj ćwiczenie' : 'Nowe ćwiczenie'}
       description={
         isEdit
-          ? 'Zmień opis, kategorie albo podmień materiał — pacjenci zobaczą aktualną wersję.'
-          : 'Opisz ruch jasnym językiem i dołącz wideo lub PDF — pacjent zobaczy to w aplikacji.'
+          ? 'Zmień opis, kategorie albo podmień materiał - pacjenci zobaczą aktualną wersję.'
+          : 'Opisz ruch jasnym językiem i dołącz wideo lub PDF - pacjent zobaczy to w aplikacji.'
       }
       onClose={onClose}
     >
@@ -275,7 +275,7 @@ export function CreateExerciseModal({
             name="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="np. Mostek biodrowy — wersja podstawowa"
+            placeholder="np. Mostek biodrowy - wersja podstawowa"
             required
             autoFocus
           />
@@ -293,7 +293,7 @@ export function CreateExerciseModal({
               }
             />
             <span className="ui-field__hint">
-              Krótko i konkretnie — pacjent czyta to na telefonie przed ćwiczeniem.
+              Krótko i konkretnie - pacjent czyta to na telefonie przed ćwiczeniem.
             </span>
           </label>
         </section>
@@ -402,7 +402,7 @@ export function CreateExerciseModal({
           <section className="ex-create__section" aria-labelledby="ex-create-cats">
             <div className="ex-create__section-head">
               <h3 id="ex-create-cats">Kategorie</h3>
-              <p>Oznacz typ, okolicę, mięsień i ewentualne wskazanie — ułatwia filtrowanie w katalogu.</p>
+              <p>Oznacz typ, okolicę, mięsień i ewentualne wskazanie - ułatwia filtrowanie w katalogu.</p>
             </div>
             {KIND_ORDER.map((kind) => {
               const list = groupedCategories[kind]

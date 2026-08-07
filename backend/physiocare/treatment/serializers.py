@@ -69,7 +69,7 @@ class BodyAreaPainSerializer(serializers.ModelSerializer):
             'min_value': 'Skala VAS musi być liczbą od 0 do 10.',
             'max_value': 'Skala VAS musi być liczbą od 0 do 10.',
             'invalid': 'Skala VAS musi być liczbą od 0 do 10.',
-            'required': 'Podaj natężenie bólu (VAS 0–10).',
+            'required': 'Podaj natężenie bólu (VAS 0-10).',
         },
     )
     body_region = serializers.CharField(

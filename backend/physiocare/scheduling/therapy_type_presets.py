@@ -1,4 +1,4 @@
-"""Proponowane typy wizyt — katalog startowy dla terapeuty.
+"""Proponowane typy wizyt - katalog startowy dla terapeuty.
 
 Grupy:
 - kind: główny typ wizyty (czas / charakter spotkania)
@@ -13,14 +13,14 @@ THERAPY_TYPE_PRESETS = [
         'Wizyta konsultacyjna',
         '#2F6FED',
         60,
-        'Pierwsza wizyta / diagnostyczna. Wywiad, badanie funkcjonalne, plan leczenia (45–60 min).',
+        'Pierwsza wizyta / diagnostyczna. Wywiad, badanie funkcjonalne, plan leczenia (45-60 min).',
     ),
     (
         'kind',
         'Wizyta terapeutyczna',
         '#4A6B28',
         45,
-        'Kolejna / robocza. Terapia manualna, kinezyterapia, praca z powięziami (30–45 min).',
+        'Kolejna / robocza. Terapia manualna, kinezyterapia, praca z powięziami (30-45 min).',
     ),
     (
         'kind',
@@ -41,7 +41,7 @@ THERAPY_TYPE_PRESETS = [
         'Wizyta domowa',
         '#7C3AED',
         60,
-        'W miejscu zamieszkania pacjenta — m.in. po urazach/operacjach bez dojazdu do gabinetu.',
+        'W miejscu zamieszkania pacjenta - m.in. po urazach/operacjach bez dojazdu do gabinetu.',
     ),
     (
         'profile',
@@ -55,7 +55,7 @@ THERAPY_TYPE_PRESETS = [
         'Neurologiczna',
         '#1D4ED8',
         45,
-        'Po udarach, SM, choroba Parkinsona — często PNF / NDT-Bobath.',
+        'Po udarach, SM, choroba Parkinsona - często PNF / NDT-Bobath.',
     ),
     (
         'profile',

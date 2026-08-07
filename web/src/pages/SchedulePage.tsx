@@ -199,7 +199,7 @@ export function SchedulePage() {
     <section className="schedule-page">
       <PageHeader
         title="Harmonogram"
-        description="Widok dzienny — kliknij wolny slot, aby dodać wizytę, przeciągnij blok, aby zmienić godzinę, lub Edytuj, aby zmienić treść wizyty. Zgłoszenia pacjentów widać jako bloki „Do zatwierdzenia”."
+        description="Widok dzienny - kliknij wolny slot, aby dodać wizytę, przeciągnij blok, aby zmienić godzinę, lub Edytuj, aby zmienić treść wizyty. Zgłoszenia pacjentów widać jako bloki „Do zatwierdzenia”."
         actions={
           <Button type="button" onClick={() => openCreate(60)}>
             + Nowa wizyta
@@ -220,7 +220,7 @@ export function SchedulePage() {
             <p className="schedule-pending-banner__meta">
               {pendingOnDay.length > 0
                 ? 'Widać je na kalendarzu poniżej ze statusem „Do zatwierdzenia”.'
-                : 'Najbliższe zgłoszenie otworzyło odpowiedni dzień — zatwierdź na kalendarzu lub z listy.'}
+                : 'Najbliższe zgłoszenie otworzyło odpowiedni dzień - zatwierdź na kalendarzu lub z listy.'}
             </p>
           </div>
           <Button
@@ -246,7 +246,7 @@ export function SchedulePage() {
                     {visit.patient_first_name} {visit.patient_last_name} · {visit.therapy_type_name}
                   </p>
                   <p className="schedule-pending-item__meta">
-                    {formatPendingWhen(visit.start_at)} · {formatTime(new Date(visit.start_at))}–
+                    {formatPendingWhen(visit.start_at)} · {formatTime(new Date(visit.start_at))}-
                     {formatTime(new Date(visit.end_at))}
                     {onThisDay ? ' · na tym dniu' : ''}
                   </p>

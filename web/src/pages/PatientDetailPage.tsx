@@ -275,7 +275,7 @@ export function PatientDetailPage() {
               }}
               error={newIcd10Error ?? undefined}
               placeholder="np. M54.5"
-              hint="Opcjonalnie — format litery + 2 cyfry, np. M54.5"
+              hint="Opcjonalnie - format litery + 2 cyfry, np. M54.5"
             />
             <label className="ui-field">
               <span className="ui-field__label">Opis wstępny</span>
@@ -311,7 +311,7 @@ export function PatientDetailPage() {
                       }
                     }}
                     error={icd10Error ?? undefined}
-                    hint="Opcjonalnie — format litery + 2 cyfry, np. M54.5"
+                    hint="Opcjonalnie - format litery + 2 cyfry, np. M54.5"
                   />
                   <label className="ui-field">
                     <span className="ui-field__label">Status</span>

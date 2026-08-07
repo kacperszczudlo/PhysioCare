@@ -1,4 +1,4 @@
-# Wdrożenie — PhysioCare (Faza 6.5)
+# Wdrożenie - PhysioCare (Faza 6.5)
 
 Przewodnik demo / staging. Lokalny rozwój pozostaje w root `README.md`.
 
@@ -26,12 +26,12 @@ Skopiuj z `.env.example`, w szczególności:
 
 - `DJANGO_SECRET_KEY` (silny, unikalny)
 - `DJANGO_DEBUG=false`
-- `DJANGO_ALLOWED_HOSTS` — host publiczny
+- `DJANGO_ALLOWED_HOSTS` - host publiczny
 - `DJANGO_SECURE_COOKIES=true`, `DJANGO_SECURE_SSL_REDIRECT=true`
 - `POSTGRES_*` / `DATABASE_URL`
 - `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS`, `FRONTEND_URL`
 - `LOG_FORMAT=json`
-- `MEDIA_ROOT` — trwały volume
+- `MEDIA_ROOT` - trwały volume
 
 ### Kroki
 

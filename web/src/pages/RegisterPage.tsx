@@ -151,7 +151,7 @@ export function RegisterPage() {
     <div className="auth-form">
       <header className="auth-form__header">
         <h1>Rejestracja terapeuty</h1>
-        <p>Konto z numerem PWZFz — dostęp do panelu gabinetu.</p>
+        <p>Konto z numerem PWZFz - dostęp do panelu gabinetu.</p>
       </header>
 
       <form className="auth-form__body" onSubmit={onSubmit} noValidate>

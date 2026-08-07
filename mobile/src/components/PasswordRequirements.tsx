@@ -24,7 +24,7 @@ export function PasswordRequirements({
             </Text>
             <Text style={[styles.label, { color }]}>
               {req.label}
-              <Text style={styles.srOnly}>{req.met ? ' — spełnione' : ' — niespełnione'}</Text>
+              <Text style={styles.srOnly}>{req.met ? ' - spełnione' : ' - niespełnione'}</Text>
             </Text>
           </View>
         )

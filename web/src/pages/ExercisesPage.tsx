@@ -136,7 +136,7 @@ export function ExercisesPage() {
     <section className="exercises-page">
       <PageHeader
         title="Baza ćwiczeń"
-        description="Katalog wideo i PDF — filtruj po typie, okolicy, mięśniu i kontuzji, potem wysyłaj pacjentom."
+        description="Katalog wideo i PDF - filtruj po typie, okolicy, mięśniu i kontuzji, potem wysyłaj pacjentom."
         actions={
           <Button type="button" onClick={() => setCreateOpen(true)}>
             + Dodaj ćwiczenie
@@ -235,7 +235,7 @@ export function ExercisesPage() {
       {!loading && !error && exercises.length === 0 ? (
         <EmptyState
           title="Brak ćwiczeń"
-          description="Dodaj pierwsze ćwiczenie z krótką instrukcją i plikiem MP4 lub PDF — pacjent zobaczy je w aplikacji."
+          description="Dodaj pierwsze ćwiczenie z krótką instrukcją i plikiem MP4 lub PDF - pacjent zobaczy je w aplikacji."
         />
       ) : null}
 
@@ -330,7 +330,7 @@ export function ExercisesPage() {
 
           <div className="exercises-pagination">
             <p className="exercises-pagination__meta">
-              {rangeStart}–{rangeEnd} z {totalCount}
+              {rangeStart}-{rangeEnd} z {totalCount}
             </p>
             <div className="exercises-pagination__controls">
               <Button

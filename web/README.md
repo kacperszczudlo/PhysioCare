@@ -1,4 +1,4 @@
-# PhysioCare Web — panel fizjoterapeuty
+# PhysioCare Web - panel fizjoterapeuty
 
 React 19 + Vite + TypeScript. Komunikacja z backendem przez REST (`/api/v1`) i cookies JWT (`credentials: 'include'`).
 
@@ -39,7 +39,7 @@ src/
   styles/       # Tokeny OKLCH + global CSS
 ```
 
-## Status (Faza 4 — domknięta)
+## Status (Faza 4 - domknięta)
 
 - **4.1** Szkielet + routing + apiClient
 - **4.2** Auth (login / rejestracja PWZFz / reset)

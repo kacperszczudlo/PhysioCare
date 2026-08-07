@@ -1,4 +1,4 @@
-# Plan realizacji — PhysioCare
+# Plan realizacji - PhysioCare
 
 Plan dostosowany do wymagań prowadzącego i specyfiki projektu (web + mobile + backend w jednym repozytorium).
 
@@ -9,7 +9,7 @@ PhysioCare/
 ├── backend/          # Django + DRF
 ├── web/              # React (panel fizjoterapeuty)
 ├── mobile/           # React Native / Expo (pacjent)
-├── database/         # schema.sql — referencja schematu PostgreSQL
+├── database/         # schema.sql - referencja schematu PostgreSQL
 ├── docs/             # dokumentacja, diagramy, API
 ├── .env.example
 └── README.md
@@ -21,7 +21,7 @@ Współpraca komponentów: **web** i **mobile** korzystają z tego samego **REST
 
 ## Fazy i kamienie milowe
 
-### Faza 0 — Fundament repozytorium (tydzień 1)
+### Faza 0 - Fundament repozytorium (tydzień 1)
 
 | # | Zadanie | Deliverable |
 |---|---------|-------------|
@@ -32,11 +32,11 @@ Współpraca komponentów: **web** i **mobile** korzystają z tego samego **REST
 | 0.5 | README + `.env.example` | Instrukcja uruchomienia (szkielet) |
 | 0.6 | **Commit inicjalizacyjny** | Tylko docs + struktura katalogów |
 
-> Uwaga prowadzącego: zmiany kodu po utworzeniu Kamieni Milowych — ustal z prowadzącym moment startu implementacji.
+> Uwaga prowadzącego: zmiany kodu po utworzeniu Kamieni Milowych - ustal z prowadzącym moment startu implementacji.
 
 ---
 
-### Faza 1 — Backend: szkielet i baza (tydzień 2–3)
+### Faza 1 - Backend: szkielet i baza (tydzień 2-3)
 
 | # | Zadanie | Deliverable |
 |---|---------|-------------|
@@ -49,7 +49,7 @@ Współpraca komponentów: **web** i **mobile** korzystają z tego samego **REST
 
 ---
 
-### Faza 2 — API i autoryzacja (tydzień 4–5)
+### Faza 2 - API i autoryzacja (tydzień 4-5)
 
 | # | Zadanie | Deliverable |
 |---|---------|-------------|
@@ -62,7 +62,7 @@ Współpraca komponentów: **web** i **mobile** korzystają z tego samego **REST
 
 ---
 
-### Faza 3 — Testy backendu (tydzień 5)
+### Faza 3 - Testy backendu (tydzień 5)
 
 | # | Zadanie | Deliverable |
 |---|---------|-------------|
@@ -73,7 +73,7 @@ Współpraca komponentów: **web** i **mobile** korzystają z tego samego **REST
 
 ---
 
-### Faza 4 — Aplikacja webowa (tydzień 6–8)
+### Faza 4 - Aplikacja webowa (tydzień 6-8)
 
 | # | Zadanie | Deliverable |
 |---|---------|-------------|
@@ -86,11 +86,11 @@ Współpraca komponentów: **web** i **mobile** korzystają z tego samego **REST
 | 4.7 | Integracja z API (loading / error / empty) | Wszystkie moduły ✓ |
 
 > **Status Faza 4:** zamknięta na branchu `feat/web` (web panel terapeuty).  
-> **Status Faza 5:** deliverable 5.1–5.7 na branchu `feat/mobile` (Expo — pacjent).
+> **Status Faza 5:** deliverable 5.1-5.7 na branchu `feat/mobile` (Expo - pacjent).
 
 ---
 
-### Faza 5 — Aplikacja mobilna (tydzień 9–11)
+### Faza 5 - Aplikacja mobilna (tydzień 9-11)
 
 | # | Zadanie | Deliverable |
 |---|---------|-------------|
@@ -102,11 +102,11 @@ Współpraca komponentów: **web** i **mobile** korzystają z tego samego **REST
 | 5.6 | Pod-widoki: szczegóły wizyty, profil terapeuty | Stack |
 | 5.7 | Integracja z API | Pełny flow pacjenta |
 
-> Po domknięciu 5.1–5.7: auth Bearer + SecureStore, ekrany UC-01–09 / 17–18.
+> Po domknięciu 5.1-5.7: auth Bearer + SecureStore, ekrany UC-01-09 / 17-18.
 
 ---
 
-### Faza 6 — Jakość, monitoring, finalizacja (tydzień 12–14)
+### Faza 6 - Jakość, monitoring, finalizacja (tydzień 12-14)
 
 | # | Zadanie | Deliverable |
 |---|---------|-------------|
@@ -132,17 +132,17 @@ Współpraca komponentów: **web** i **mobile** korzystają z tego samego **REST
 | 4. README | Faza 0.5, aktualizacja Faza 6.6 |
 | 5. ERD | Faza 0.3 |
 | 6. Use case | Faza 0.4 |
-| 7. Logika biznesowa | Faza 1–2 (serwisy Django) |
+| 7. Logika biznesowa | Faza 1-2 (serwisy Django) |
 | 8. REST API | Faza 2 |
 | 9. Integracja BD | Faza 1 |
-| 10. Auth | Faza 2.1–2.2 |
+| 10. Auth | Faza 2.1-2.2 |
 | 11. Testy endpointów | Faza 3 + `docs/api.md` |
-| 12. UI / makiety | Mockup + Faza 4–5 |
+| 12. UI / makiety | Mockup + Faza 4-5 |
 | 13. Widoki | Faza 4 + 5 |
-| 14. Integracja frontend–API | Faza 4.7 + 5.7 |
+| 14. Integracja frontend-API | Faza 4.7 + 5.7 |
 | 15. Min. 5 testów | Faza 3 |
 | 16. Refaktoryzacja | Faza 6.1 |
-| 17–18. Monitoring i logi | Faza 6.2–6.3 |
+| 17-18. Monitoring i logi | Faza 6.2-6.3 |
 | 19. Wersja finalna E2E | Faza 6.4 |
 | 20. Dokumentacja | Faza 6.6 |
 | 21. Prezentacja | Faza 6.7 |
@@ -163,7 +163,7 @@ flowchart LR
     D --> G
 ```
 
-**Zasada:** backend i kontrakt API przed równoległą pracą nad web i mobile — oba klienty korzystają z tych samych endpointów i typów odpowiedzi.
+**Zasada:** backend i kontrakt API przed równoległą pracą nad web i mobile - oba klienty korzystają z tych samych endpointów i typów odpowiedzi.
 
 ---
 

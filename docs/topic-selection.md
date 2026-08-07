@@ -1,4 +1,4 @@
-# Wybór tematu — PhysioCare
+# Wybór tematu - PhysioCare
 
 > Dokument zgodny z zatwierdzonym formularzem zgłoszenia tematu pracy dyplomowej (rok akademicki 2026/2027).
 
@@ -64,11 +64,11 @@ System ma umożliwiać zarządzanie harmonogramem wizyt (z uwzględnieniem czasu
 
 - Dokumentacja Django / DRF / React / Expo
 - OWASP ASVS (bezpieczeństwo API i danych medycznych)
-- RODO — przetwarzanie danych zdrowotnych (zgody, eksport, usunięcie konta)
+- RODO - przetwarzanie danych zdrowotnych (zgody, eksport, usunięcie konta)
 - Mockup UI: `mockup_systemu_fizjoterapii.tsx` (referencja wizualna)
 
 ## Ograniczenia MVP (świadome)
 
-- Powiadomienia push/SMS — preferencje w bazie; wysyłka w pierwszej wersji jako stub lub e-mail
-- Oceny fizjoterapeuty — widok w mobile; pełny moduł opinii opcjonalny po MVP
-- Analityka terapii — podstawowe widgety na pulpicie; zaawansowane raporty poza zakresem v1
+- Powiadomienia push/SMS - preferencje w bazie; wysyłka w pierwszej wersji jako stub lub e-mail
+- Oceny fizjoterapeuty - widok w mobile; pełny moduł opinii opcjonalny po MVP
+- Analityka terapii - podstawowe widgety na pulpicie; zaawansowane raporty poza zakresem v1

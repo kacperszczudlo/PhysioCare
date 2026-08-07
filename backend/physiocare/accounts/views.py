@@ -236,7 +236,7 @@ class PasswordResetRequestView(APIView):
             reset_url = f'{settings.FRONTEND_URL}/reset?token={raw_token}'
             from django.core.mail import send_mail
             send_mail(
-                subject='PhysioCare — reset hasła',
+                subject='PhysioCare - reset hasła',
                 message=f'Użyj linku w ciągu 30 minut: {reset_url}',
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],

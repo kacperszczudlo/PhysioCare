@@ -22,7 +22,7 @@ LAST_NAME_INVALID = (
 )
 
 ADDRESS_TOO_LONG = 'Adres może mieć co najwyżej 300 znaków.'
-ADDRESS_TOO_SHORT = 'Adres jest zbyt krótki — podaj ulicę i miejscowość.'
+ADDRESS_TOO_SHORT = 'Adres jest zbyt krótki - podaj ulicę i miejscowość.'
 BIO_TOO_LONG = 'Opis profilu może mieć co najwyżej 2000 znaków.'
 COURSE_REQUIRED = 'Nazwa kursu nie może być pusta.'
 COURSE_TOO_LONG = 'Nazwa kursu może mieć co najwyżej 200 znaków.'

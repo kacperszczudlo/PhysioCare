@@ -34,7 +34,7 @@ export function formatTimeRange(startIso: string, endIso: string): string {
     hour: '2-digit',
     minute: '2-digit',
   })
-  return `${fmt.format(start)}–${fmt.format(end)}`
+  return `${fmt.format(start)}-${fmt.format(end)}`
 }
 
 export function todayISODate(): string {

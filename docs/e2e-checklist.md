@@ -1,4 +1,4 @@
-# Checklist E2E — krytyczne ścieżki PhysioCare
+# Checklist E2E - krytyczne ścieżki PhysioCare
 
 Manualna / półautomatyczna weryfikacja przed demem (Faza 6.4).  
 Automatyczne wsparcie: Postman (`docs/postman/`), pytest backend.
@@ -13,10 +13,10 @@ Automatyczne wsparcie: Postman (`docs/postman/`), pytest backend.
 
 ## Backend API (smoke)
 
-- [ ] Collection Runner w Postmanie (`docs/postman/PhysioCare.json`) — happy pathy UC bez błędów
-- [ ] `python scripts/run_tests.py` — pytest zielony
+- [ ] Collection Runner w Postmanie (`docs/postman/PhysioCare.json`) - happy pathy UC bez błędów
+- [ ] `python scripts/run_tests.py` - pytest zielony
 
-## Web — fizjoterapeuta
+## Web - fizjoterapeuta
 
 | # | Ścieżka | Oczekiwany rezultat |
 |---|---------|---------------------|
@@ -30,7 +30,7 @@ Automatyczne wsparcie: Postman (`docs/postman/`), pytest backend.
 | W8 | Sesja wygasła | Refresh cookie / redirect na login bez „wiszącego” UI |
 | W9 | Stany UI | Loading / empty / error widoczne przy braku danych i błędzie API |
 
-## Mobile — pacjent
+## Mobile - pacjent
 
 | # | Ścieżka | Oczekiwany rezultat |
 |---|---------|---------------------|
@@ -64,7 +64,7 @@ cd web; npm run lint; npm run format:check; npm run build
 cd mobile; npm run lint; npm run format:check
 ```
 
-- [ ] Ruff / ESLint / Prettier / pytest / build web — zielone
+- [ ] Ruff / ESLint / Prettier / pytest / build web - zielone
 
 ## Wynik demo
 

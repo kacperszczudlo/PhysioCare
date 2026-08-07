@@ -187,7 +187,7 @@ export default function VisitDetailScreen() {
               <Text style={styles.muted}>Otwórz w Google Maps</Text>
             </Pressable>
           ) : (
-            <Text style={styles.body}>—</Text>
+            <Text style={styles.body}>-</Text>
           )}
           {visit.patient_note ? (
             <>

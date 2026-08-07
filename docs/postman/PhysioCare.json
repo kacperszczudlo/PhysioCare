@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "PhysioCare API",
-    "description": "Pełna kolekcja kontraktu REST PhysioCare (`/api/v1`).\n\nPokrywa UC-01–UC-18: happy path + wyjątki (400/401/403/409).\n\n**Auth:** JWT w cookies `access_token` / `refresh_token` (httpOnly). Kolekcja dodatkowo ustawia `{{access_token}}` z jar cookies (gdy dostępne) i wysyła `Authorization: Bearer`.\n\n**Kolejność Collection Runner:** folder `00 Setup`, potem pozostałe foldery.\n\nDokumentacja: `docs/postman-testing.md`, kontrakt: `docs/api.md`.",
+    "description": "Pełna kolekcja kontraktu REST PhysioCare (`/api/v1`).\n\nPokrywa UC-01-UC-18: happy path + wyjątki (400/401/403/409).\n\n**Auth:** JWT w cookies `access_token` / `refresh_token` (httpOnly). Kolekcja dodatkowo ustawia `{{access_token}}` z jar cookies (gdy dostępne) i wysyła `Authorization: Bearer`.\n\n**Kolejność Collection Runner:** folder `00 Setup`, potem pozostałe foldery.\n\nDokumentacja: `docs/postman-testing.md`, kontrakt: `docs/api.md`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -154,7 +154,7 @@
                 "therapist"
               ]
             },
-            "description": "UC-03 — tworzy User(THERAPIST) + TherapistProfile. Tokeny w cookies httpOnly.",
+            "description": "UC-03 - tworzy User(THERAPIST) + TherapistProfile. Tokeny w cookies httpOnly.",
             "auth": {
               "type": "noauth"
             },
@@ -194,7 +194,7 @@
           ]
         },
         {
-          "name": "UC-03 Register therapist — missing PWZF declaration (400)",
+          "name": "UC-03 Register therapist - missing PWZF declaration (400)",
           "request": {
             "method": "POST",
             "header": [
@@ -249,7 +249,7 @@
           ]
         },
         {
-          "name": "UC-03 Register therapist — duplicate PWZF / email (400/409)",
+          "name": "UC-03 Register therapist - duplicate PWZF / email (400/409)",
           "request": {
             "method": "POST",
             "header": [
@@ -315,7 +315,7 @@
                 "login"
               ]
             },
-            "description": "UC-01 — JWT w cookies access_token / refresh_token.",
+            "description": "UC-01 - JWT w cookies access_token / refresh_token.",
             "auth": {
               "type": "noauth"
             },
@@ -418,7 +418,7 @@
                 "patient"
               ]
             },
-            "description": "UC-02 — wymaga therapist_id + zgód terms/medical_data.",
+            "description": "UC-02 - wymaga therapist_id + zgód terms/medical_data.",
             "auth": {
               "type": "noauth"
             },
@@ -458,7 +458,7 @@
           ]
         },
         {
-          "name": "UC-02 Register patient — missing consents (400)",
+          "name": "UC-02 Register patient - missing consents (400)",
           "request": {
             "method": "POST",
             "header": [
@@ -513,7 +513,7 @@
           ]
         },
         {
-          "name": "UC-02 Register patient — email taken (400)",
+          "name": "UC-02 Register patient - email taken (400)",
           "request": {
             "method": "POST",
             "header": [
@@ -619,7 +619,7 @@
           ]
         },
         {
-          "name": "UC-01 Login — wrong password (401)",
+          "name": "UC-01 Login - wrong password (401)",
           "request": {
             "method": "POST",
             "header": [
@@ -776,7 +776,7 @@
           ]
         },
         {
-          "name": "UC-04 Password reset confirm — invalid token (400)",
+          "name": "UC-04 Password reset confirm - invalid token (400)",
           "request": {
             "method": "POST",
             "header": [
@@ -796,7 +796,7 @@
                 "confirm"
               ]
             },
-            "description": "AUTH_002 — token nieprawidłowy/wygasły.",
+            "description": "AUTH_002 - token nieprawidłowy/wygasły.",
             "auth": {
               "type": "noauth"
             },
@@ -893,7 +893,7 @@
     },
     {
       "name": "UC-10 Therapist dashboard",
-      "description": "Pulpit terapeuty — widgety.",
+      "description": "Pulpit terapeuty - widgety.",
       "item": [
         {
           "name": "GET dashboard stats",
@@ -959,7 +959,7 @@
                 "stats"
               ]
             },
-            "description": "Po przełączeniu na token pacjenta — zła rola.",
+            "description": "Po przełączeniu na token pacjenta - zła rola.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -1113,7 +1113,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"icd10_code\": \"M54.5\",\n  \"status\": \"IN_PROGRESS\",\n  \"summary_note\": \"Ból lędźwiowy — epizod start\"\n}",
+              "raw": "{\n  \"icd10_code\": \"M54.5\",\n  \"status\": \"IN_PROGRESS\",\n  \"summary_note\": \"Ból lędźwiowy - epizod start\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1453,7 +1453,7 @@
           ]
         },
         {
-          "name": "Create body-pain — VAS out of range (400)",
+          "name": "Create body-pain - VAS out of range (400)",
           "request": {
             "method": "POST",
             "header": [
@@ -1674,7 +1674,7 @@
           ]
         },
         {
-          "name": "Create visit — overlap (400)",
+          "name": "Create visit - overlap (400)",
           "request": {
             "method": "POST",
             "header": [
@@ -2538,7 +2538,7 @@
           ]
         },
         {
-          "name": "Completion — foreign assignment (400)",
+          "name": "Completion - foreign assignment (400)",
           "request": {
             "method": "POST",
             "header": [

@@ -41,7 +41,7 @@ class TreatmentEpisode(TimestampedModel):
         ]
 
     def __str__(self):
-        return f'Epizod {self.id} — {self.patient}'
+        return f'Epizod {self.id} - {self.patient}'
 
 
 class BodyAreaPain(UUIDModel):

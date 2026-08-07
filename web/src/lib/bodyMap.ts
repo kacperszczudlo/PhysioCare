@@ -172,7 +172,7 @@ export const REGION_TARGETS: Record<string, TreatmentTargetDef[]> = {
     { id: 'SCALP', label: 'Skóra głowy / powięź', kind: 'SOFT' },
   ],
   neck: [
-    { id: 'C_SPINE', label: 'Kręgosłup szyjny (C1–C7)', kind: 'JOINT' },
+    { id: 'C_SPINE', label: 'Kręgosłup szyjny (C1-C7)', kind: 'JOINT' },
     { id: 'SCM', label: 'M. mostkowo-obojczykowo-sutkowy', kind: 'MUSCLE' },
     { id: 'UPPER_TRAP', label: 'M. czworoboczny (góra)', kind: 'MUSCLE' },
     { id: 'LEVATOR_SCAP', label: 'M. dźwigacz łopatki', kind: 'MUSCLE' },

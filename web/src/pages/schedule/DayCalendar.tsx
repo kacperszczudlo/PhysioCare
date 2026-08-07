@@ -197,7 +197,7 @@ export function DayCalendar({
         ref={gridRef}
         className="day-cal__track"
         role="grid"
-        aria-label={`Harmonogram ${DAY_START_HOUR}:00–${DAY_END_HOUR}:00`}
+        aria-label={`Harmonogram ${DAY_START_HOUR}:00-${DAY_END_HOUR}:00`}
         onClick={handleGridClick}
       >
         <div className="day-cal__lane">
@@ -247,7 +247,7 @@ export function DayCalendar({
               >
                 <div className="day-cal__event-body">
                   <p className="day-cal__event-time">
-                    {formatTime(displayStart)} – {formatTime(displayEnd)}
+                    {formatTime(displayStart)} - {formatTime(displayEnd)}
                     {isPending ? (
                       <span className="day-cal__event-badge">Do zatwierdzenia</span>
                     ) : null}

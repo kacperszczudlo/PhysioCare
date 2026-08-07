@@ -242,7 +242,7 @@ export function DiagnosticMapper({ episodeId }: DiagnosticMapperProps) {
 
       <div className="diag-map__layout">
         <div className="diag-map__canvas-wrap">
-          <div className="diag-map__model" aria-label={side === 'FRONT' ? 'Sylwetka — przód' : 'Sylwetka — tył'}>
+          <div className="diag-map__model" aria-label={side === 'FRONT' ? 'Sylwetka - przód' : 'Sylwetka - tył'}>
             <Body
               data={highlightData}
               onClick={onMuscleClick}

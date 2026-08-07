@@ -201,7 +201,7 @@ export default function ExerciseDetailScreen() {
             </SectionCard>
 
             <Text style={styles.period}>
-              Okres: {item.start_date} – {item.end_date}
+              Okres: {item.start_date} - {item.end_date}
             </Text>
           </>
         )}

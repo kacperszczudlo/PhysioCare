@@ -1,6 +1,6 @@
 # PhysioCare
 
-System wspomagania zarządzania gabinetem fizjoterapeutycznym — aplikacja webowa (fizjoterapeuta), mobilna (pacjent) i wspólny backend REST API.
+System wspomagania zarządzania gabinetem fizjoterapeutycznym - aplikacja webowa (fizjoterapeuta), mobilna (pacjent) i wspólny backend REST API.
 
 ## Opis
 
@@ -19,7 +19,7 @@ PhysioCare umożliwia:
 | Mobile | React Native (Expo), TypeScript |
 | Auth | JWT (access + refresh) |
 
-Zgodnie z zatwierdzonym tematem pracy — szczegóły w [docs/topic-selection.md](docs/topic-selection.md).
+Zgodnie z zatwierdzonym tematem pracy - szczegóły w [docs/topic-selection.md](docs/topic-selection.md).
 
 ## Struktura repozytorium
 
@@ -28,7 +28,7 @@ PhysioCare/
 ├── backend/          # Django + DRF (do inicjalizacji w Fazie 1)
 ├── web/              # Panel fizjoterapeuty (React)
 ├── mobile/           # Aplikacja pacjenta (Expo)
-├── database/         # schema.sql — referencja schematu
+├── database/         # schema.sql - referencja schematu
 ├── docs/             # Dokumentacja, diagramy, API
 ├── .env.example      # Zmienne środowiskowe (szablon)
 └── README.md
@@ -56,10 +56,10 @@ PhysioCare/
 
 Otwórz pliki `.drawio` w [diagrams.net](https://app.diagrams.net) lub rozszerzeniu Draw.io w VS Code/Cursor:
 
-- `docs/diagrams/erd.drawio` — model danych
-- `docs/diagrams/architecture.drawio` — kontenery systemu
-- `docs/diagrams/module-dependencies.drawio` — moduły Django
-- `docs/diagrams/use-cases.drawio` — przypadki użycia
+- `docs/diagrams/erd.drawio` - model danych
+- `docs/diagrams/architecture.drawio` - kontenery systemu
+- `docs/diagrams/module-dependencies.drawio` - moduły Django
+- `docs/diagrams/use-cases.drawio` - przypadki użycia
 
 ## Uruchomienie lokalne
 
@@ -67,7 +67,7 @@ Otwórz pliki `.drawio` w [diagrams.net](https://app.diagrams.net) lub rozszerze
 
 - Python 3.12+
 - PostgreSQL 16+ (+ rozszerzenie `btree_gist` / Stack Builder → *PostgreSQL Database Server Contrib*)
-- Node.js 20 LTS (web/mobile — Faza 4+)
+- Node.js 20 LTS (web/mobile - Faza 4+)
 - (Mobile) Expo CLI
 - (Windows) PowerShell 5.1+; binaria `psql` / `pg_dump` w PATH lub w `C:\Program Files\PostgreSQL\<wersja>\bin`
 
@@ -112,18 +112,18 @@ python scripts/sync_schema_sql.py
 ### Jakość kodu (lint / format)
 
 ```powershell
-# Backend — Ruff (z katalogu `backend/`, venv aktywny)
+# Backend - Ruff (z katalogu `backend/`, venv aktywny)
 pip install -r requirements.txt
 ruff check physiocare tests
 ruff format --check physiocare tests
 
-# Web — ESLint + Prettier (+ Oxlint)
+# Web - ESLint + Prettier (+ Oxlint)
 cd web
 npm install
 npm run lint
 npm run format:check
 
-# Mobile — ESLint + Prettier + tsc
+# Mobile - ESLint + Prettier + tsc
 cd mobile
 npm install
 npm run lint
@@ -144,7 +144,7 @@ Raporty:
 - `backend/reports/pytest-report.html`
 - `backend/reports/coverage/index.html`
 
-**2) Kolekcja Postman** — import `docs/postman/PhysioCare.json`, `baseUrl=http://localhost:8000/api/v1`, Cookie Jar ON. URL-e ze slashami na końcu.
+**2) Kolekcja Postman** - import `docs/postman/PhysioCare.json`, `baseUrl=http://localhost:8000/api/v1`, Cookie Jar ON. URL-e ze slashami na końcu.
 
 ### Web
 
@@ -162,7 +162,7 @@ npm install
 npx expo start
 ```
 
-### Skrypty (`scripts/`) — Python
+### Skrypty (`scripts/`) - Python
 
 | Skrypt | Opis |
 |--------|------|
@@ -177,18 +177,18 @@ Uruchamianie (zawsze z roota repo):
 python scripts/<nazwa>.py
 ```
 
-Na Windows nie odpalaj dwuklikiem — użyj PowerShell / terminala Cursor.
+Na Windows nie odpalaj dwuklikiem - użyj PowerShell / terminala Cursor.
 ## Mockup UI
 
-Referencja wizualna ekranów: plik `mockup_systemu_fizjoterapii.tsx` (poza repo — lokalny prototyp).
+Referencja wizualna ekranów: plik `mockup_systemu_fizjoterapii.tsx` (poza repo - lokalny prototyp).
 
 ## Status projektu
 
-**Faza 0–3** — dokumentacja, modele, REST API, Postman, testy backendu.  
-**Faza 4 (branch `feat/web`)** — panel webowy terapeuty: auth, pulpit, harmonogram, pacjenci, ćwiczenia, profil (4.1–4.7).  
-**Faza 5 (branch `feat/mobile`)** — aplikacja mobilna pacjenta (Expo): auth RODO, pulpit, wizyty, profil, stack szczegółów (5.1–5.7).  
-**Faza 6 (branch `feat/refactor`)** — Ruff / ESLint / Prettier, monitoring (logi JSON + latency), checklist E2E, przewodnik wdrożenia, konspekt prezentacji.
+**Faza 0-3** - dokumentacja, modele, REST API, Postman, testy backendu.  
+**Faza 4 (branch `feat/web`)** - panel webowy terapeuty: auth, pulpit, harmonogram, pacjenci, ćwiczenia, profil (4.1-4.7).  
+**Faza 5 (branch `feat/mobile`)** - aplikacja mobilna pacjenta (Expo): auth RODO, pulpit, wizyty, profil, stack szczegółów (5.1-5.7).  
+**Faza 6 (branch `feat/refactor`)** - Ruff / ESLint / Prettier, monitoring (logi JSON + latency), checklist E2E, przewodnik wdrożenia, konspekt prezentacji.
 
 ## Licencja
 
-Projekt inżynierski — ATAR, kierunek Informatyka, rok akademicki 2026/2027.
+Projekt inżynierski - ATAR, kierunek Informatyka, rok akademicki 2026/2027.

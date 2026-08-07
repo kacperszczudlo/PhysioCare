@@ -149,7 +149,7 @@ export function AssignExerciseModal({
 
       {!loadingMeta && patients.length === 0 ? (
         <p className="exercises-empty" role="status">
-          Brak pacjentów — nie ma komu przypisać ćwiczenia.
+          Brak pacjentów - nie ma komu przypisać ćwiczenia.
         </p>
       ) : null}
 

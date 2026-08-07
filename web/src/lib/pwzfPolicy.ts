@@ -1,6 +1,6 @@
 export const PWZF_MESSAGES = {
   required: 'Podaj numer PWZFz.',
-  invalid: 'Podaj prawidłowy numer PWZFz — dokładnie 5 cyfr (np. 12345).',
+  invalid: 'Podaj prawidłowy numer PWZFz - dokładnie 5 cyfr (np. 12345).',
   tooLong: 'Numer PWZFz może mieć co najwyżej 20 znaków.',
 } as const
 

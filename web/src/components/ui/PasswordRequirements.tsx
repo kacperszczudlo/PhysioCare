@@ -26,7 +26,7 @@ export function PasswordRequirements({
             <span>
               {req.label}
               <span className="sr-only">
-                {req.met ? ' — spełnione' : ' — niespełnione'}
+                {req.met ? ' - spełnione' : ' - niespełnione'}
               </span>
             </span>
           </li>

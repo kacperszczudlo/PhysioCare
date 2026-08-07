@@ -1,6 +1,6 @@
-# REST API — PhysioCare (szkic kontraktu)
+# REST API - PhysioCare (szkic kontraktu)
 
-> Wersja dokumentu: **0.3 (Faza 2 — implementacja)**.  
+> Wersja dokumentu: **0.3 (Faza 2 - implementacja)**.  
 > Kolekcja Postman: [`postman/PhysioCare.json`](postman/PhysioCare.json) · przewodnik testów: [`postman-testing.md`](postman-testing.md).
 
 **Base URL:** `http://localhost:8000/api/v1`  
@@ -16,7 +16,7 @@ Login / rejestracja / refresh zwracają też `access` + `refresh` w JSON (dla mo
 | Daty | ISO 8601 (`2026-06-09T14:30:00+02:00`) |
 | Błędy | `{ "error": { "code": "...", "message": "...", "details": {} } }` |
 | Paginacja | `?page=1&page_size=20` → `{ "count", "next", "previous", "results" }` |
-| Role | `PATIENT` \| `THERAPIST` — egzekwowane per endpoint |
+| Role | `PATIENT` \| `THERAPIST` - egzekwowane per endpoint |
 
 ## Kody HTTP (wybrane)
 
@@ -52,7 +52,7 @@ Login / rejestracja / refresh zwracają też `access` + `refresh` w JSON (dla mo
 }
 ```
 
-**201** — `{ "user": { "id", "email", "role", "first_name", "last_name" } }` + cookies JWT.  
+**201** - `{ "user": { "id", "email", "role", "first_name", "last_name" } }` + cookies JWT.  
 `therapist_id` = UUID `TherapistProfile` (nie User).
 
 ### POST `/auth/register/therapist`
@@ -74,12 +74,12 @@ Login / rejestracja / refresh zwracają też `access` + `refresh` w JSON (dla mo
 { "email": "...", "password": "..." }
 ```
 
-**200** — `{ "user": {...}, "access": "<jwt>", "refresh": "<jwt>" }` + cookies JWT.  
+**200** - `{ "user": {...}, "access": "<jwt>", "refresh": "<jwt>" }` + cookies JWT.  
 Mobile zapisuje `access`/`refresh` (np. SecureStore) i wysyła `Authorization: Bearer`.
 
 ### POST `/auth/logout`
 
-Czyści cookies `access_token` / `refresh_token`. **200** — `{ "detail": "Wylogowano." }`.
+Czyści cookies `access_token` / `refresh_token`. **200** - `{ "detail": "Wylogowano." }`.
 
 ### POST `/auth/refresh`
 
@@ -88,7 +88,7 @@ Czyści cookies `access_token` / `refresh_token`. **200** — `{ "detail": "Wylo
 ```
 
 Cookie `refresh_token` też jest akceptowane (body opcjonalne).  
-**200** — `{ "detail", "access", "refresh" }` + odświeżone cookies.
+**200** - `{ "detail", "access", "refresh" }` + odświeżone cookies.
 ### POST `/auth/password-reset/request`
 
 ```json
@@ -103,11 +103,11 @@ Cookie `refresh_token` też jest akceptowane (body opcjonalne).
 
 ### POST `/auth/password-change`
 
-Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło zmienione.
+Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** - hasło zmienione.
 
 ---
 
-## Pacjent — profil (`/me/`)
+## Pacjent - profil (`/me/`)
 
 | Metoda | Endpoint | Opis |
 |--------|----------|------|
@@ -177,8 +177,8 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 }
 ```
 
-`body_region` — slug mięśnia/regionu z modelu anatomicznego (np. `left-lower-back`, `right-quadriceps`).  
-`treatment_targets` — opcjonalne cele leczenia (staw / mięsień / kość / tkanka) dla wybranego regionu.
+`body_region` - slug mięśnia/regionu z modelu anatomicznego (np. `left-lower-back`, `right-quadriceps`).  
+`treatment_targets` - opcjonalne cele leczenia (staw / mięsień / kość / tkanka) dla wybranego regionu.
 
 ---
 
@@ -186,7 +186,7 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 
 | Metoda | Endpoint | Rola | Opis |
 |--------|----------|------|------|
-| GET | `/therapist/exercises` | THERAPIST | Katalog — filtry poniżej; paginacja `?page=` (domyślnie 20) |
+| GET | `/therapist/exercises` | THERAPIST | Katalog - filtry poniżej; paginacja `?page=` (domyślnie 20) |
 | GET | `/therapist/exercises/{id}` | THERAPIST | Szczegóły ćwiczenia |
 | GET | `/therapist/exercise-categories` | THERAPIST | Lista kategorii (`?kind=TYPE\|REGION\|MUSCLE\|INJURY`) |
 | POST | `/therapist/exercises` | THERAPIST | Upload metadanych + plik |
@@ -203,7 +203,7 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 
 | Param | Znaczenie |
 |-------|-----------|
-| `type` | Typ ćwiczenia — slug lub UUID (`strengthening`, `stretching`, `mobilization`, `education`…) |
+| `type` | Typ ćwiczenia - slug lub UUID (`strengthening`, `stretching`, `mobilization`, `education`…) |
 | `region` | Okolica ciała (`knee`, `lumbar`, `shoulder`…) |
 | `muscle` | Mięsień / grupa (`quadriceps`, `gluteals`…) |
 | `injury` | Kontuzja / wskazanie (`acl_rehab`, `lbp`…) |
@@ -235,12 +235,12 @@ Wymiary `type` / `region` / `muscle` / `injury` łączone są **AND** (ćwiczeni
 | Metoda | Endpoint | Opis |
 |--------|----------|------|
 | GET | `/me/documents` | Lista PDF pacjenta |
-| GET | `/{id}/download` | Pobranie (auth) — ścieżka faktyczna w URLconf |
+| GET | `/{id}/download` | Pobranie (auth) - ścieżka faktyczna w URLconf |
 | POST | `/therapist/documents` | Upload przez terapeutę (`multipart`) |
 
 ---
 
-## Terapeuta — profil i statystyki
+## Terapeuta - profil i statystyki
 
 | Metoda | Endpoint | Opis |
 |--------|----------|------|

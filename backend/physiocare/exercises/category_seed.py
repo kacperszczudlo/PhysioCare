@@ -1,6 +1,6 @@
 """Canonical exercise category taxonomy (kinds + slugs).
 
-Used by migrations and tests. Keep slugs stable — API filters depend on them.
+Used by migrations and tests. Keep slugs stable - API filters depend on them.
 Kind values match CategoryKind on ExerciseCategory.
 """
 

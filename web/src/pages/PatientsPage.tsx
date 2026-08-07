@@ -115,7 +115,7 @@ export function PatientsPage() {
                   </span>
                 </span>
                 <span className="patients-row__meta">{patient.email}</span>
-                <span className="patients-row__meta">{patient.phone || '—'}</span>
+                <span className="patients-row__meta">{patient.phone || '-'}</span>
               </Link>
             </li>
           ))}

@@ -40,7 +40,7 @@ def main() -> None:
         )
         stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         header = (
-            "-- PhysioCare — auto-generated from Django migrations\n"
+            "-- PhysioCare - auto-generated from Django migrations\n"
             f"-- Generated: {stamp}\n"
             "-- Do not edit manually. Run: python scripts/sync_schema_sql.py\n"
             "\n"

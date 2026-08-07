@@ -53,7 +53,7 @@ export function getLastNameError(value: string): string | null {
 }
 
 export const FIELD_MESSAGES = {
-  addressTooShort: 'Adres jest zbyt krótki — podaj ulicę i miejscowość.',
+  addressTooShort: 'Adres jest zbyt krótki - podaj ulicę i miejscowość.',
   addressTooLong: 'Adres może mieć co najwyżej 300 znaków.',
   bioTooLong: 'Opis profilu może mieć co najwyżej 2000 znaków.',
   courseRequired: 'Nazwa kursu nie może być pusta.',
