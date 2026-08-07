@@ -53,6 +53,8 @@ export function addMinutesISO(iso: string, minutes: number): string {
 
 export function visitStatusLabel(status: string): string {
   switch (status) {
+    case 'PENDING_APPROVAL':
+      return 'Oczekuje na zatwierdzenie'
     case 'SCHEDULED':
       return 'Zaplanowana'
     case 'COMPLETED':

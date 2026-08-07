@@ -27,6 +27,7 @@ interface VisitFormModalProps {
   onClose: () => void
   onCreated: () => void
   onUpdated?: (visit: Visit) => void
+  onRejected?: (visit: Visit) => void
 }
 
 const GROUP_ORDER: TherapyTypePreset['group'][] = ['kind', 'profile']
@@ -53,8 +54,10 @@ export function VisitFormModal({
   onClose,
   onCreated,
   onUpdated,
+  onRejected,
 }: VisitFormModalProps) {
   const isEdit = visit != null
+  const isPending = visit?.status === 'PENDING_APPROVAL'
 
   const [patients, setPatients] = useState<PatientSummary[]>([])
   const [options, setOptions] = useState<VisitTypeOption[]>([])
@@ -205,7 +208,18 @@ export function VisitFormModal({
 
     setBusy(true)
     try {
-      if (visit) {
+      if (visit && isPending) {
+        const payload: VisitUpdatePayload = {
+          therapy_type_id: therapyTypeId,
+          start_at: toIsoLocal(start),
+          end_at: toIsoLocal(end),
+          prep_instructions: prep.trim(),
+          location_address: location.trim(),
+        }
+        const updated = await schedulingApi.approveVisit(visit.id, payload)
+        onUpdated?.(updated)
+        onClose()
+      } else if (visit) {
         const payload: VisitUpdatePayload = {
           therapy_type_id: therapyTypeId,
           start_at: toIsoLocal(start),
@@ -232,10 +246,29 @@ export function VisitFormModal({
       setError(
         err instanceof ApiError
           ? err.message
-          : isEdit
-            ? 'Nie udało się zapisać zmian wizyty.'
-            : 'Nie udało się utworzyć wizyty.',
+          : isPending
+            ? 'Nie udało się zatwierdzić zgłoszenia.'
+            : isEdit
+              ? 'Nie udało się zapisać zmian wizyty.'
+              : 'Nie udało się utworzyć wizyty.',
       )
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function onReject() {
+    if (!visit || !isPending) {
+      return
+    }
+    setBusy(true)
+    setError(null)
+    try {
+      const updated = await schedulingApi.rejectVisit(visit.id)
+      onRejected?.(updated)
+      onClose()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Nie udało się odrzucić zgłoszenia.')
     } finally {
       setBusy(false)
     }
@@ -269,11 +302,13 @@ export function VisitFormModal({
   return (
     <Modal
       open={open}
-      title={isEdit ? 'Edytuj wizytę' : 'Nowa wizyta'}
+      title={isPending ? 'Zgłoszenie wizyty' : isEdit ? 'Edytuj wizytę' : 'Nowa wizyta'}
       description={
-        isEdit
-          ? 'Zmień typ, godzinę, przygotowanie lub adres wizyty.'
-          : 'Wybierz typ wizyty klikając kafelek — przy każdej wizycie osobno.'
+        isPending
+          ? 'Pacjent zgłosił termin. Możesz skorygować szczegóły i zatwierdzić albo odrzucić zgłoszenie.'
+          : isEdit
+            ? 'Zmień typ, godzinę, przygotowanie lub adres wizyty.'
+            : 'Wybierz typ wizyty klikając kafelek — przy każdej wizycie osobno.'
       }
       size="lg"
       onClose={onClose}
@@ -360,6 +395,15 @@ export function VisitFormModal({
             hint={endPreview ? `Koniec: ${endPreview}` : undefined}
           />
 
+          {visit?.patient_note ? (
+            <div className="ui-field">
+              <span className="ui-field__label">Notatka pacjenta</span>
+              <p className="schedule-muted" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                {visit.patient_note}
+              </p>
+            </div>
+          ) : null}
+
           <label className="ui-field">
             <span className="ui-field__label">Przygotowanie pacjenta</span>
             <textarea
@@ -394,8 +438,13 @@ export function VisitFormModal({
             <Button type="button" variant="secondary" onClick={onClose} disabled={busy}>
               Anuluj
             </Button>
+            {isPending ? (
+              <Button type="button" variant="secondary" onClick={() => void onReject()} disabled={busy}>
+                Odrzuć
+              </Button>
+            ) : null}
             <Button type="submit" loading={busy} disabled={!therapyTypeId}>
-              {isEdit ? 'Zapisz zmiany' : 'Zapisz wizytę'}
+              {isPending ? 'Zatwierdź' : isEdit ? 'Zapisz zmiany' : 'Zapisz wizytę'}
             </Button>
           </div>
         </form>

@@ -1,6 +1,11 @@
 export type UserRole = 'PATIENT' | 'THERAPIST'
 
-export type VisitStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
+export type VisitStatus =
+  | 'PENDING_APPROVAL'
+  | 'SCHEDULED'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'NO_SHOW'
 
 export interface User {
   id: string
@@ -91,6 +96,7 @@ export interface Visit {
   status: VisitStatus
   location_address: string
   prep_instructions: string
+  patient_note: string
   cancel_reason: string
   created_at: string
 }

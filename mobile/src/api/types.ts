@@ -1,6 +1,11 @@
 export type UserRole = 'PATIENT' | 'THERAPIST'
 
-export type VisitStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
+export type VisitStatus =
+  | 'PENDING_APPROVAL'
+  | 'SCHEDULED'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'NO_SHOW'
 
 export type MediaType = 'VIDEO' | 'PDF'
 
@@ -84,8 +89,24 @@ export interface Visit {
   status: VisitStatus
   location_address: string
   prep_instructions: string
+  patient_note: string
   cancel_reason: string
   created_at: string
+}
+
+export interface TherapyType {
+  id: string
+  name: string
+  color_hex: string
+  duration_min: number
+  created_at: string
+}
+
+export interface VisitRequestPayload {
+  therapy_type_id: string
+  start_at: string
+  end_at: string
+  patient_note?: string
 }
 
 export interface TodayExercise {

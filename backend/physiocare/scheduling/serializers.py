@@ -1,9 +1,10 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from patients.models import PatientProfile
 from treatment.models import TreatmentEpisode
 
-from .models import TherapyType, Visit
+from .models import TherapyType, Visit, VisitStatus
 
 
 class TherapyTypeSerializer(serializers.ModelSerializer):
@@ -57,14 +58,14 @@ class VisitSerializer(serializers.ModelSerializer):
             'therapist_first_name', 'therapist_last_name',
             'therapy_type_name', 'therapy_type_color', 'therapy_type_duration_min',
             'start_at', 'end_at', 'status', 'location_address',
-            'prep_instructions', 'cancel_reason', 'created_at',
+            'prep_instructions', 'patient_note', 'cancel_reason', 'created_at',
         ]
         read_only_fields = [
             'id', 'patient', 'therapist', 'episode', 'therapy_type',
             'patient_first_name', 'patient_last_name',
             'therapist_first_name', 'therapist_last_name',
             'therapy_type_name', 'therapy_type_color', 'therapy_type_duration_min',
-            'created_at',
+            'patient_note', 'created_at',
         ]
 
     def validate_therapy_type_id(self, therapy_type):
@@ -135,10 +136,101 @@ class VisitCreateSerializer(serializers.ModelSerializer):
         )
 
 
+class PatientVisitRequestSerializer(serializers.ModelSerializer):
+    therapy_type_id = serializers.UUIDField(write_only=True)
+    patient_note = serializers.CharField(required=False, allow_blank=True)
+
+    class Meta:
+        model = Visit
+        fields = ['therapy_type_id', 'start_at', 'end_at', 'patient_note']
+
+    def validate(self, attrs):
+        patient = self.context['patient']
+        therapist = patient.therapist
+        if therapist is None:
+            raise serializers.ValidationError(
+                {'detail': 'Pacjent nie ma przypisanego terapeuty.'}
+            )
+
+        therapy_type_id = attrs['therapy_type_id']
+        if not TherapyType.objects.filter(pk=therapy_type_id, therapist=therapist).exists():
+            raise serializers.ValidationError(
+                {'therapy_type_id': 'Typ terapii nie należy do Twojego terapeuty.'}
+            )
+
+        start_at = attrs['start_at']
+        end_at = attrs['end_at']
+        if end_at <= start_at:
+            raise serializers.ValidationError(
+                {'end_at': 'Koniec wizyty musi być po rozpoczęciu.'}
+            )
+        if start_at < timezone.now():
+            raise serializers.ValidationError(
+                {'start_at': 'Termin zgłoszenia musi być w przyszłości.'}
+            )
+
+        attrs['therapist'] = therapist
+        return attrs
+
+    def create(self, validated_data):
+        patient = self.context['patient']
+        therapist = validated_data.pop('therapist')
+        therapy_type_id = validated_data.pop('therapy_type_id')
+        return Visit.objects.create(
+            patient=patient,
+            therapist=therapist,
+            therapy_type_id=therapy_type_id,
+            status=VisitStatus.PENDING_APPROVAL,
+            location_address=therapist.location_address or '',
+            **validated_data,
+        )
+
+
+class VisitApproveSerializer(serializers.Serializer):
+    therapy_type_id = serializers.UUIDField(required=False)
+    start_at = serializers.DateTimeField(required=False)
+    end_at = serializers.DateTimeField(required=False)
+    prep_instructions = serializers.CharField(required=False, allow_blank=True)
+    location_address = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        visit = self.context['visit']
+        therapy_type_id = attrs.get('therapy_type_id')
+        if therapy_type_id is not None and not TherapyType.objects.filter(
+            pk=therapy_type_id,
+            therapist_id=visit.therapist_id,
+        ).exists():
+            raise serializers.ValidationError(
+                {'therapy_type_id': 'Typ terapii nie należy do tego terapeuty.'}
+            )
+
+        start_at = attrs.get('start_at', visit.start_at)
+        end_at = attrs.get('end_at', visit.end_at)
+        if end_at <= start_at:
+            raise serializers.ValidationError(
+                {'end_at': 'Koniec wizyty musi być po rozpoczęciu.'}
+            )
+        return attrs
+
+
 class VisitRescheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Visit
         fields = ['start_at', 'end_at']
+
+    def validate(self, attrs):
+        visit = self.instance
+        if visit.status not in (VisitStatus.SCHEDULED, VisitStatus.PENDING_APPROVAL):
+            raise serializers.ValidationError(
+                {'detail': 'Można zmieniać termin tylko wizyt zaplanowanych lub oczekujących.'}
+            )
+        start_at = attrs.get('start_at', visit.start_at)
+        end_at = attrs.get('end_at', visit.end_at)
+        if end_at <= start_at:
+            raise serializers.ValidationError(
+                {'end_at': 'Koniec wizyty musi być po rozpoczęciu.'}
+            )
+        return attrs
 
 
 class VisitCancelSerializer(serializers.Serializer):

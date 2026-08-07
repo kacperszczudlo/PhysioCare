@@ -36,6 +36,10 @@ function RootNavigator() {
             options={{ headerShown: true, title: 'Szczegóły wizyty', presentation: 'card' }}
           />
           <Stack.Screen
+            name="visit/request"
+            options={{ headerShown: true, title: 'Umów wizytę', presentation: 'card' }}
+          />
+          <Stack.Screen
             name="exercise/[id]"
             options={{ headerShown: true, title: 'Ćwiczenie', presentation: 'card' }}
           />

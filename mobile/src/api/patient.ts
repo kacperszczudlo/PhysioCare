@@ -7,8 +7,10 @@ import type {
   Paginated,
   PatientProfile,
   TherapistPublic,
+  TherapyType,
   TodayExercise,
   Visit,
+  VisitRequestPayload,
 } from './types'
 
 function unwrapList<T>(data: T[] | Paginated<T>): T[] {
@@ -58,6 +60,15 @@ export const patientApi = {
 
   getVisit(id: string) {
     return api.get<Visit>(`/visits/${id}/`)
+  },
+
+  requestVisit(payload: VisitRequestPayload) {
+    return api.post<Visit>('/me/visits/', payload)
+  },
+
+  async getTherapyTypes() {
+    const data = await api.get<TherapyType[] | Paginated<TherapyType>>('/me/therapy-types/')
+    return unwrapList(data)
   },
 
   rescheduleVisit(id: string, payload: { start_at: string; end_at: string }) {

@@ -32,6 +32,8 @@ interface DayCalendarProps {
   onSlotClick: (minutesFromStart: number) => void
   onEditVisit: (visit: Visit) => void
   onCancelVisit: (visit: Visit) => void
+  onApproveVisit?: (visit: Visit) => void
+  onRejectVisit?: (visit: Visit) => void
   onError: (message: string | null) => void
 }
 
@@ -50,6 +52,8 @@ export function DayCalendar({
   onSlotClick,
   onEditVisit,
   onCancelVisit,
+  onApproveVisit,
+  onRejectVisit,
   onError,
 }: DayCalendarProps) {
   const gridRef = useRef<HTMLDivElement>(null)
@@ -211,6 +215,7 @@ export function DayCalendar({
             const start = new Date(visit.start_at)
             const end = new Date(visit.end_at)
             const isDragging = drag?.visitId === visit.id
+            const isPending = visit.status === 'PENDING_APPROVAL'
             const topMinutes = isDragging ? drag.currentMinutes : minutesFromDayStart(start, day)
             const durationMin = Math.max((end.getTime() - start.getTime()) / 60_000, SNAP_MINUTES)
             const color = visit.therapy_type_color || '#4a6b28'
@@ -222,6 +227,7 @@ export function DayCalendar({
                 key={visit.id}
                 className={[
                   'day-cal__event',
+                  isPending ? 'day-cal__event--pending' : '',
                   savingId === visit.id ? 'day-cal__event--saving' : '',
                   isDragging ? 'day-cal__event--dragging' : '',
                 ]
@@ -229,19 +235,55 @@ export function DayCalendar({
                   .join(' ')}
                 style={{
                   top: topMinutes * PX_PER_MINUTE,
-                  height: Math.max(durationMin * PX_PER_MINUTE, 32),
-                  background: color,
+                  height: Math.max(durationMin * PX_PER_MINUTE, isPending ? 68 : 56),
+                  backgroundColor: color,
                 }}
+                aria-label={
+                  isPending
+                    ? `Zgłoszenie: ${visit.patient_first_name} ${visit.patient_last_name}, ${visit.therapy_type_name}`
+                    : undefined
+                }
                 onPointerDown={(event) => beginDrag(visit, event)}
               >
-                <p className="day-cal__event-time">
-                  {formatTime(displayStart)} – {formatTime(displayEnd)}
-                </p>
-                <p className="day-cal__event-title">
-                  {visit.patient_first_name} {visit.patient_last_name}
-                </p>
-                <p className="day-cal__event-meta">{visit.therapy_type_name}</p>
+                <div className="day-cal__event-body">
+                  <p className="day-cal__event-time">
+                    {formatTime(displayStart)} – {formatTime(displayEnd)}
+                    {isPending ? (
+                      <span className="day-cal__event-badge">Do zatwierdzenia</span>
+                    ) : null}
+                  </p>
+                  <p className="day-cal__event-title">
+                    {visit.patient_first_name} {visit.patient_last_name}
+                  </p>
+                  <p className="day-cal__event-meta">{visit.therapy_type_name}</p>
+                </div>
                 <div className="day-cal__event-actions">
+                  {isPending ? (
+                    <>
+                      <button
+                        type="button"
+                        className="day-cal__event-action day-cal__event-action--primary"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onApproveVisit?.(visit)
+                        }}
+                        onPointerDown={(event) => event.stopPropagation()}
+                      >
+                        Zatwierdź
+                      </button>
+                      <button
+                        type="button"
+                        className="day-cal__event-action"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onRejectVisit?.(visit)
+                        }}
+                        onPointerDown={(event) => event.stopPropagation()}
+                      >
+                        Odrzuć
+                      </button>
+                    </>
+                  ) : null}
                   <button
                     type="button"
                     className="day-cal__event-action"
@@ -251,19 +293,21 @@ export function DayCalendar({
                     }}
                     onPointerDown={(event) => event.stopPropagation()}
                   >
-                    Edytuj
+                    {isPending ? 'Szczegóły' : 'Edytuj'}
                   </button>
-                  <button
-                    type="button"
-                    className="day-cal__event-action"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      onCancelVisit(visit)
-                    }}
-                    onPointerDown={(event) => event.stopPropagation()}
-                  >
-                    Odwołaj
-                  </button>
+                  {!isPending ? (
+                    <button
+                      type="button"
+                      className="day-cal__event-action"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onCancelVisit(visit)
+                      }}
+                      onPointerDown={(event) => event.stopPropagation()}
+                    >
+                      Odwołaj
+                    </button>
+                  ) : null}
                 </div>
               </article>
             )

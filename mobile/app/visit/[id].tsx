@@ -68,30 +68,42 @@ export default function VisitDetailScreen() {
   }
 
   function confirmCancel() {
-    Alert.alert('Odwołać wizytę?', 'Tej operacji nie można cofnąć z poziomu aplikacji.', [
-      { text: 'Anuluj', style: 'cancel' },
-      {
-        text: 'Odwołaj',
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            if (!visit) {
-              return
-            }
-            setBusy(true)
-            setError(null)
-            try {
-              const updated = await patientApi.cancelVisit(visit.id, cancelReason.trim())
-              setVisit(updated)
-            } catch (err) {
-              setError(getErrorMessage(err, 'Nie udało się odwołać wizyty.'))
-            } finally {
-              setBusy(false)
-            }
-          })()
+    const pending = visit?.status === 'PENDING_APPROVAL'
+    Alert.alert(
+      pending ? 'Wycofać zgłoszenie?' : 'Odwołać wizytę?',
+      'Tej operacji nie można cofnąć z poziomu aplikacji.',
+      [
+        { text: 'Anuluj', style: 'cancel' },
+        {
+          text: pending ? 'Wycofaj' : 'Odwołaj',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              if (!visit) {
+                return
+              }
+              setBusy(true)
+              setError(null)
+              try {
+                const updated = await patientApi.cancelVisit(visit.id, cancelReason.trim())
+                setVisit(updated)
+              } catch (err) {
+                setError(
+                  getErrorMessage(
+                    err,
+                    pending
+                      ? 'Nie udało się wycofać zgłoszenia.'
+                      : 'Nie udało się odwołać wizyty.',
+                  ),
+                )
+              } finally {
+                setBusy(false)
+              }
+            })()
+          },
         },
-      },
-    ])
+      ],
+    )
   }
 
   if (loading) {
@@ -106,7 +118,8 @@ export default function VisitDetailScreen() {
     )
   }
 
-  const canManage = visit.status === 'SCHEDULED'
+  const isPending = visit.status === 'PENDING_APPROVAL'
+  const canManage = visit.status === 'SCHEDULED' || isPending
 
   return (
     <>
@@ -117,6 +130,12 @@ export default function VisitDetailScreen() {
         <SectionCard>
           <Text style={styles.title}>{visit.therapy_type_name}</Text>
           <Text style={styles.meta}>{visitStatusLabel(visit.status)}</Text>
+          {isPending ? (
+            <Text style={styles.muted}>
+              Zgłoszenie czeka na zatwierdzenie przez terapeutę. Możesz zmienić termin albo je
+              wycofać.
+            </Text>
+          ) : null}
           <Text style={styles.body}>{formatDateTime(visit.start_at)}</Text>
           <Text style={styles.muted}>{formatTimeRange(visit.start_at, visit.end_at)}</Text>
         </SectionCard>
@@ -147,6 +166,12 @@ export default function VisitDetailScreen() {
           ) : (
             <Text style={styles.body}>—</Text>
           )}
+          {visit.patient_note ? (
+            <>
+              <Text style={styles.section}>Twoja notatka</Text>
+              <Text style={styles.body}>{visit.patient_note}</Text>
+            </>
+          ) : null}
           <Text style={styles.section}>Przygotowanie</Text>
           <Text style={styles.body}>{visit.prep_instructions || 'Brak instrukcji.'}</Text>
           {visit.cancel_reason ? (
@@ -159,14 +184,17 @@ export default function VisitDetailScreen() {
 
         {canManage ? (
           <SectionCard>
-            <Button title="Zmień termin" onPress={() => setRescheduleOpen(true)} />
+            <Button
+              title={isPending ? 'Zmień proponowany termin' : 'Zmień termin'}
+              onPress={() => setRescheduleOpen(true)}
+            />
             <Field
-              label="Powód odwołania (opcjonalnie)"
+              label={isPending ? 'Powód wycofania (opcjonalnie)' : 'Powód odwołania (opcjonalnie)'}
               value={cancelReason}
               onChangeText={setCancelReason}
             />
             <Button
-              title="Odwołaj wizytę"
+              title={isPending ? 'Wycofaj zgłoszenie' : 'Odwołaj wizytę'}
               variant="danger"
               loading={busy}
               onPress={confirmCancel}

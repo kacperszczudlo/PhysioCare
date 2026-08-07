@@ -1,14 +1,17 @@
 from django.urls import path
 
 from .views import (
-    MeVisitListView,
+    MeTherapyTypeListView,
+    MeVisitListCreateView,
     TherapistVisitDetailView,
     TherapistVisitListCreateView,
     TherapyTypeListCreateView,
     TherapyTypePresetListView,
     TherapyTypeSeedPresetsView,
+    VisitApproveView,
     VisitCancelView,
     VisitDetailView,
+    VisitRejectView,
     VisitRescheduleView,
 )
 
@@ -22,6 +25,16 @@ urlpatterns = [
         'therapist/visits/<uuid:pk>/',
         TherapistVisitDetailView.as_view(),
         name='therapist-visit-detail',
+    ),
+    path(
+        'therapist/visits/<uuid:pk>/approve/',
+        VisitApproveView.as_view(),
+        name='therapist-visit-approve',
+    ),
+    path(
+        'therapist/visits/<uuid:pk>/reject/',
+        VisitRejectView.as_view(),
+        name='therapist-visit-reject',
     ),
     path(
         'therapist/therapy-types/',
@@ -48,5 +61,6 @@ urlpatterns = [
 ]
 
 me_urlpatterns = [
-    path('visits/', MeVisitListView.as_view(), name='me-visits'),
+    path('visits/', MeVisitListCreateView.as_view(), name='me-visits'),
+    path('therapy-types/', MeTherapyTypeListView.as_view(), name='me-therapy-types'),
 ]

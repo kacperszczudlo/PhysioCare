@@ -43,6 +43,18 @@ export const schedulingApi = {
     return api.post<Visit>(`/visits/${id}/cancel/`, { cancel_reason })
   },
 
+  listPendingVisits() {
+    return listResults<Visit>('/therapist/visits/?pending=1')
+  },
+
+  approveVisit(id: string, payload: VisitUpdatePayload = {}) {
+    return api.post<Visit>(`/therapist/visits/${id}/approve/`, payload)
+  },
+
+  rejectVisit(id: string, cancel_reason = '') {
+    return api.post<Visit>(`/therapist/visits/${id}/reject/`, { cancel_reason })
+  },
+
   listTherapyTypes() {
     return listResults<TherapyType>('/therapist/therapy-types/')
   },
