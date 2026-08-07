@@ -6,6 +6,7 @@ import type { CategoryKind, Exercise, ExerciseCategory, MediaType } from '@/api/
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
+import { getExerciseTitleError } from '@/lib/fieldPolicy'
 import './CreateExerciseModal.css'
 
 interface CreateExerciseModalProps {
@@ -195,8 +196,9 @@ export function CreateExerciseModal({
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    if (!title.trim()) {
-      setError('Podaj tytuł ćwiczenia.')
+    const titleError = getExerciseTitleError(title)
+    if (titleError) {
+      setError(titleError)
       return
     }
     if (!isEdit && (!file || !mediaType)) {

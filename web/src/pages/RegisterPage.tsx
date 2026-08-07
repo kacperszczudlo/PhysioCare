@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { PasswordRequirements } from '@/components/ui/PasswordRequirements'
 import { getEmailError } from '@/lib/emailPolicy'
+import { getFirstNameError, getLastNameError } from '@/lib/fieldPolicy'
 import {
   getPasswordError,
   getPasswordRequirements,
   PASSWORD_MESSAGES,
   passwordsMatch,
 } from '@/lib/passwordPolicy'
+import { getPwzfError, normalizePwzf } from '@/lib/pwzfPolicy'
 import './auth-forms.css'
 
 export function RegisterPage() {
@@ -28,6 +30,8 @@ export function RegisterPage() {
   const [declaration, setDeclaration] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<{
+    firstName?: string
+    lastName?: string
     email?: string
     pwzf?: string
     password?: string
@@ -41,28 +45,27 @@ export function RegisterPage() {
   const passwordRequirements = getPasswordRequirements(password, passwordHints)
   const showRequirementErrors = submitted || passwordTouched
 
-  function getPwzfError(value: string): string | null {
-    const normalized = value.trim()
-    if (!normalized) {
-      return 'Podaj numer PWZFz.'
-    }
-    if (normalized.length > 20) {
-      return 'Numer PWZFz może mieć co najwyżej 20 znaków.'
-    }
-    return null
-  }
-
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
     setSubmitted(true)
 
     const nextFieldErrors: {
+      firstName?: string
+      lastName?: string
       email?: string
       pwzf?: string
       password?: string
       confirmPassword?: string
     } = {}
+    const firstNameError = getFirstNameError(firstName)
+    if (firstNameError) {
+      nextFieldErrors.firstName = firstNameError
+    }
+    const lastNameError = getLastNameError(lastName)
+    if (lastNameError) {
+      nextFieldErrors.lastName = lastNameError
+    }
     const emailError = getEmailError(email)
     if (emailError) {
       nextFieldErrors.email = emailError
@@ -86,6 +89,8 @@ export function RegisterPage() {
     }
 
     if (
+      nextFieldErrors.firstName ||
+      nextFieldErrors.lastName ||
       nextFieldErrors.email ||
       nextFieldErrors.pwzf ||
       nextFieldErrors.password ||
@@ -103,16 +108,26 @@ export function RegisterPage() {
         password,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
-        pwzf_number: pwzf.trim(),
+        pwzf_number: normalizePwzf(pwzf),
         pwzf_declaration: true,
       })
       navigate('/', { replace: true })
     } catch (err) {
+      const apiFirstNameError = getFieldError(err, 'first_name')
+      const apiLastNameError = getFieldError(err, 'last_name')
       const apiEmailError = getFieldError(err, 'email')
       const apiPwzfError = getFieldError(err, 'pwzf_number')
       const apiPasswordError = getFieldError(err, 'password')
-      if (apiEmailError || apiPwzfError || apiPasswordError) {
+      if (
+        apiFirstNameError ||
+        apiLastNameError ||
+        apiEmailError ||
+        apiPwzfError ||
+        apiPasswordError
+      ) {
         setFieldErrors({
+          firstName: apiFirstNameError ?? undefined,
+          lastName: apiLastNameError ?? undefined,
           email: apiEmailError ?? undefined,
           pwzf: apiPwzfError ?? undefined,
           password: apiPasswordError ?? undefined,
@@ -147,7 +162,13 @@ export function RegisterPage() {
             autoComplete="given-name"
             required
             value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
+            onChange={(e) => {
+              setFirstName(e.target.value)
+              if (fieldErrors.firstName) {
+                setFieldErrors((prev) => ({ ...prev, firstName: undefined }))
+              }
+            }}
+            error={fieldErrors.firstName}
           />
           <Field
             label="Nazwisko"
@@ -155,7 +176,13 @@ export function RegisterPage() {
             autoComplete="family-name"
             required
             value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
+            onChange={(e) => {
+              setLastName(e.target.value)
+              if (fieldErrors.lastName) {
+                setFieldErrors((prev) => ({ ...prev, lastName: undefined }))
+              }
+            }}
+            error={fieldErrors.lastName}
           />
         </div>
         <Field
@@ -177,6 +204,7 @@ export function RegisterPage() {
           label="Numer PWZFz"
           name="pwzf_number"
           required
+          inputMode="numeric"
           maxLength={20}
           value={pwzf}
           onChange={(e) => {
@@ -186,7 +214,6 @@ export function RegisterPage() {
             }
           }}
           error={fieldErrors.pwzf}
-          hint="Numer prawa wykonywania zawodu fizjoterapeuty (max. 20 znaków)"
         />
 
         <div className="auth-form__password">

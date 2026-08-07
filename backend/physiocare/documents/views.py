@@ -1,12 +1,18 @@
 import os
 
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import FileResponse, Http404
 from rest_framework import generics, parsers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.field_policies import (
+    DOCUMENT_TITLE_REQUIRED,
+    DOCUMENT_TITLE_TOO_LONG,
+    normalize_optional_text,
+)
 from core.mixins import PatientSelfMixin, user_can_access_patient
 from core.permissions import IsPatient, IsTherapist
 from core.storage import save_upload
@@ -44,6 +50,27 @@ class TherapistDocumentUploadView(generics.CreateAPIView):
         if patient is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        raw_title = request.data.get('title', uploaded.name)
+        try:
+            title = normalize_optional_text(
+                raw_title,
+                max_length=200,
+                too_long_message=DOCUMENT_TITLE_TOO_LONG,
+                allow_blank=False,
+                required_message=DOCUMENT_TITLE_REQUIRED,
+            )
+        except DjangoValidationError as exc:
+            return Response(
+                {
+                    'error': {
+                        'code': 'VALIDATION',
+                        'message': exc.messages[0],
+                        'details': {'title': list(exc.messages)},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         file_url = save_upload(uploaded, subdir='documents')
         visit_id = request.data.get('visit_id') or None
         episode_id = request.data.get('episode_id') or None
@@ -77,7 +104,7 @@ class TherapistDocumentUploadView(generics.CreateAPIView):
         document = MedicalDocument.objects.create(
             patient=patient,
             uploaded_by=request.user,
-            title=request.data.get('title', uploaded.name),
+            title=title,
             file_url=file_url,
             mime_type=getattr(uploaded, 'content_type', 'application/pdf'),
             visit_id=visit_id,

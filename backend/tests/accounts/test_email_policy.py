@@ -79,7 +79,7 @@ def test_therapist_register_rejects_invalid_email():
             'password': 'SecurePass123!',
             'first_name': 'Anna',
             'last_name': 'Nowak',
-            'pwzf_number': 'PWZF-2001',
+            'pwzf_number': '82001',
             'pwzf_declaration': True,
         }
     )
@@ -95,14 +95,14 @@ def test_password_reset_request_rejects_invalid_email():
 
 
 @pytest.mark.django_db
-def test_therapist_register_pwzf_max_length_is_polish():
+def test_therapist_register_pwzf_format_is_polish():
     serializer = TherapistRegistrationSerializer(
         data={
             'email': 'ok.therapist@physiocare.test',
             'password': 'SecurePass123!',
             'first_name': 'Anna',
             'last_name': 'Nowak',
-            'pwzf_number': 'X' * 21,
+            'pwzf_number': '12',
             'pwzf_declaration': True,
         }
     )
@@ -110,5 +110,5 @@ def test_therapist_register_pwzf_max_length_is_polish():
     assert not serializer.is_valid()
     assert 'pwzf_number' in serializer.errors
     message = str(serializer.errors['pwzf_number'])
-    assert '20' in message
+    assert '5' in message
     assert 'Ensure this field' not in message

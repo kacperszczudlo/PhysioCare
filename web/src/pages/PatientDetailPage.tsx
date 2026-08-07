@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { EPISODE_STATUS_LABELS } from '@/lib/bodyMap'
+import { FIELD_MESSAGES, getIcd10Error } from '@/lib/fieldPolicy'
 import { DiagnosticMapper } from '@/pages/patients/DiagnosticMapper'
 import { PatientAssignments } from '@/pages/patients/PatientAssignments'
 import './PatientDetailPage.css'
@@ -37,6 +38,9 @@ export function PatientDetailPage() {
   const [noteContent, setNoteContent] = useState('')
   const [newIcd10, setNewIcd10] = useState('')
   const [newSummary, setNewSummary] = useState('')
+  const [icd10Error, setIcd10Error] = useState<string | null>(null)
+  const [newIcd10Error, setNewIcd10Error] = useState<string | null>(null)
+  const [noteError, setNoteError] = useState<string | null>(null)
 
   const selected = episodes.find((episode) => episode.id === selectedId) ?? null
 
@@ -107,11 +111,17 @@ export function PatientDetailPage() {
 
   async function createEpisode(event: FormEvent) {
     event.preventDefault()
+    const icdError = getIcd10Error(newIcd10)
+    if (icdError) {
+      setNewIcd10Error(icdError)
+      return
+    }
+    setNewIcd10Error(null)
     setBusy(true)
     setError(null)
     try {
       const created = await treatmentApi.createEpisode(patientId, {
-        icd10_code: newIcd10.trim(),
+        icd10_code: newIcd10.trim().toUpperCase(),
         summary_note: newSummary.trim(),
         status: 'IN_PROGRESS',
       })
@@ -131,11 +141,17 @@ export function PatientDetailPage() {
     if (!selected) {
       return
     }
+    const icdError = getIcd10Error(icd10)
+    if (icdError) {
+      setIcd10Error(icdError)
+      return
+    }
+    setIcd10Error(null)
     setBusy(true)
     setError(null)
     try {
       const updated = await treatmentApi.updateEpisode(selected.id, {
-        icd10_code: icd10.trim(),
+        icd10_code: icd10.trim().toUpperCase(),
         summary_note: summary.trim(),
         status,
         ended_at:
@@ -153,9 +169,14 @@ export function PatientDetailPage() {
 
   async function addNote(event: FormEvent) {
     event.preventDefault()
-    if (!selected || !noteContent.trim()) {
+    if (!selected) {
       return
     }
+    if (!noteContent.trim()) {
+      setNoteError(FIELD_MESSAGES.noteRequired)
+      return
+    }
+    setNoteError(null)
     setBusy(true)
     setError(null)
     try {
@@ -246,8 +267,15 @@ export function PatientDetailPage() {
               label="ICD-10"
               name="new_icd10"
               value={newIcd10}
-              onChange={(e) => setNewIcd10(e.target.value)}
+              onChange={(e) => {
+                setNewIcd10(e.target.value)
+                if (newIcd10Error) {
+                  setNewIcd10Error(null)
+                }
+              }}
+              error={newIcd10Error ?? undefined}
               placeholder="np. M54.5"
+              hint="Opcjonalnie — format litery + 2 cyfry, np. M54.5"
             />
             <label className="ui-field">
               <span className="ui-field__label">Opis wstępny</span>
@@ -276,7 +304,14 @@ export function PatientDetailPage() {
                     label="ICD-10"
                     name="icd10"
                     value={icd10}
-                    onChange={(e) => setIcd10(e.target.value)}
+                    onChange={(e) => {
+                      setIcd10(e.target.value)
+                      if (icd10Error) {
+                        setIcd10Error(null)
+                      }
+                    }}
+                    error={icd10Error ?? undefined}
+                    hint="Opcjonalnie — format litery + 2 cyfry, np. M54.5"
                   />
                   <label className="ui-field">
                     <span className="ui-field__label">Status</span>
@@ -317,10 +352,21 @@ export function PatientDetailPage() {
                     <textarea
                       className="patient-textarea"
                       value={noteContent}
-                      onChange={(e) => setNoteContent(e.target.value)}
+                      onChange={(e) => {
+                        setNoteContent(e.target.value)
+                        if (noteError) {
+                          setNoteError(null)
+                        }
+                      }}
                       rows={3}
                       required
+                      aria-invalid={noteError ? true : undefined}
                     />
+                    {noteError ? (
+                      <span className="ui-field__error" role="alert">
+                        {noteError}
+                      </span>
+                    ) : null}
                   </label>
                   <Button type="submit" size="sm" loading={busy}>
                     Dodaj notatkę

@@ -1,6 +1,18 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework import serializers
 
+from core.field_policies import (
+    ADDRESS_TOO_LONG,
+    CANCEL_REASON_TOO_LONG,
+    NOTE_TOO_LONG,
+    PREP_TOO_LONG,
+    normalize_and_validate_address,
+    normalize_and_validate_color_hex,
+    normalize_and_validate_duration_min,
+    normalize_and_validate_therapy_name,
+    normalize_optional_text,
+)
 from patients.models import PatientProfile
 from treatment.models import TreatmentEpisode
 
@@ -12,6 +24,24 @@ class TherapyTypeSerializer(serializers.ModelSerializer):
         model = TherapyType
         fields = ['id', 'name', 'color_hex', 'duration_min', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+    def validate_name(self, value):
+        try:
+            return normalize_and_validate_therapy_name(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def validate_color_hex(self, value):
+        try:
+            return normalize_and_validate_color_hex(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def validate_duration_min(self, value):
+        try:
+            return normalize_and_validate_duration_min(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
 
 
 class VisitSerializer(serializers.ModelSerializer):
@@ -79,6 +109,31 @@ class VisitSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Typ terapii nie należy do tego terapeuty.')
         return therapy_type
 
+    def validate_location_address(self, value):
+        try:
+            return normalize_and_validate_address(value, allow_blank=True)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def validate_prep_instructions(self, value):
+        try:
+            return normalize_optional_text(
+                value,
+                max_length=2000,
+                too_long_message=PREP_TOO_LONG,
+            )
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def validate(self, attrs):
+        start_at = attrs.get('start_at', getattr(self.instance, 'start_at', None))
+        end_at = attrs.get('end_at', getattr(self.instance, 'end_at', None))
+        if start_at is not None and end_at is not None and end_at <= start_at:
+            raise serializers.ValidationError(
+                {'end_at': 'Koniec wizyty musi być po rozpoczęciu.'}
+            )
+        return attrs
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if not (data.get('location_address') or '').strip():
@@ -90,6 +145,11 @@ class VisitCreateSerializer(serializers.ModelSerializer):
     patient_id = serializers.UUIDField(write_only=True)
     episode_id = serializers.UUIDField(required=False, allow_null=True, write_only=True)
     therapy_type_id = serializers.UUIDField(write_only=True)
+    prep_instructions = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        error_messages={'max_length': PREP_TOO_LONG},
+    )
 
     class Meta:
         model = Visit
@@ -97,6 +157,16 @@ class VisitCreateSerializer(serializers.ModelSerializer):
             'patient_id', 'episode_id', 'therapy_type_id',
             'start_at', 'end_at', 'prep_instructions',
         ]
+
+    def validate_prep_instructions(self, value):
+        try:
+            return normalize_optional_text(
+                value,
+                max_length=2000,
+                too_long_message=PREP_TOO_LONG,
+            )
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
 
     def validate(self, attrs):
         therapist = self.context['therapist']
@@ -123,6 +193,13 @@ class VisitCreateSerializer(serializers.ModelSerializer):
                 {'episode_id': 'Epizod nie należy do wskazanego pacjenta.'}
             )
 
+        start_at = attrs.get('start_at')
+        end_at = attrs.get('end_at')
+        if start_at is not None and end_at is not None and end_at <= start_at:
+            raise serializers.ValidationError(
+                {'end_at': 'Koniec wizyty musi być po rozpoczęciu.'}
+            )
+
         return attrs
 
     def create(self, validated_data):
@@ -142,11 +219,25 @@ class VisitCreateSerializer(serializers.ModelSerializer):
 
 class PatientVisitRequestSerializer(serializers.ModelSerializer):
     therapy_type_id = serializers.UUIDField(write_only=True)
-    patient_note = serializers.CharField(required=False, allow_blank=True)
+    patient_note = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        error_messages={'max_length': NOTE_TOO_LONG},
+    )
 
     class Meta:
         model = Visit
         fields = ['therapy_type_id', 'start_at', 'end_at', 'patient_note']
+
+    def validate_patient_note(self, value):
+        try:
+            return normalize_optional_text(
+                value,
+                max_length=5000,
+                too_long_message=NOTE_TOO_LONG,
+            )
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
 
     def validate(self, attrs):
         patient = self.context['patient']
@@ -194,8 +285,32 @@ class VisitApproveSerializer(serializers.Serializer):
     therapy_type_id = serializers.UUIDField(required=False)
     start_at = serializers.DateTimeField(required=False)
     end_at = serializers.DateTimeField(required=False)
-    prep_instructions = serializers.CharField(required=False, allow_blank=True)
-    location_address = serializers.CharField(required=False, allow_blank=True)
+    prep_instructions = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        error_messages={'max_length': PREP_TOO_LONG},
+    )
+    location_address = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        error_messages={'max_length': ADDRESS_TOO_LONG},
+    )
+
+    def validate_prep_instructions(self, value):
+        try:
+            return normalize_optional_text(
+                value,
+                max_length=2000,
+                too_long_message=PREP_TOO_LONG,
+            )
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def validate_location_address(self, value):
+        try:
+            return normalize_and_validate_address(value, allow_blank=True)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
 
     def validate(self, attrs):
         visit = self.context['visit']
@@ -238,4 +353,18 @@ class VisitRescheduleSerializer(serializers.ModelSerializer):
 
 
 class VisitCancelSerializer(serializers.Serializer):
-    cancel_reason = serializers.CharField(required=False, allow_blank=True)
+    cancel_reason = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        error_messages={'max_length': CANCEL_REASON_TOO_LONG},
+    )
+
+    def validate_cancel_reason(self, value):
+        try:
+            return normalize_optional_text(
+                value,
+                max_length=500,
+                too_long_message=CANCEL_REASON_TOO_LONG,
+            )
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc

@@ -10,6 +10,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
+import { PasswordRequirements } from '@/components/PasswordRequirements'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
 import {
   consentLabel,
@@ -17,6 +18,7 @@ import {
   formatDate,
   isRequiredConsent,
 } from '@/lib/format'
+import { getPasswordError, getPasswordRequirements } from '@/lib/passwordPolicy'
 import { colors, space, typography } from '@/theme/tokens'
 
 type FeedbackKind = 'notifications' | 'consents' | 'privacy' | 'password'
@@ -83,9 +85,20 @@ export default function SettingsScreen() {
   }, [prefs])
 
   async function changePassword() {
-    setPwdLoading(true)
     setError(null)
     setFeedback(null)
+
+    if (!currentPassword.trim()) {
+      setError('Podaj obecne hasło.')
+      return
+    }
+    const passwordError = getPasswordError(newPassword)
+    if (passwordError) {
+      setError(passwordError)
+      return
+    }
+
+    setPwdLoading(true)
     try {
       const { detail } = await authApi.changePassword(currentPassword, newPassword)
       showSuccess('password', detail || 'Hasło zostało zmienione.')
@@ -257,6 +270,10 @@ export default function SettingsScreen() {
           value={newPassword}
           onChangeText={setNewPassword}
           secureTextEntry
+        />
+        <PasswordRequirements
+          requirements={getPasswordRequirements(newPassword)}
+          showErrors={newPassword.length > 0}
         />
         <Button title="Zmień hasło" loading={pwdLoading} onPress={() => void changePassword()} />
         {feedback?.kind === 'password' ? <SuccessBanner message={feedback.message} /> : null}

@@ -1,13 +1,26 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 
 import { authApi, therapistApi } from '@/api/auth'
-import { getErrorMessage } from '@/api/client'
+import { getErrorMessage, getFieldError } from '@/api/client'
 import type { TherapistProfile } from '@/api/types'
 import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
+import { PasswordRequirements } from '@/components/ui/PasswordRequirements'
+import {
+  getAddressError,
+  getBioError,
+  getCourseError,
+} from '@/lib/fieldPolicy'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
+import {
+  getPasswordError,
+  getPasswordRequirements,
+  PASSWORD_MESSAGES,
+  passwordsMatch,
+} from '@/lib/passwordPolicy'
+import { formatPhoneForApi, getPhoneError } from '@/lib/phonePolicy'
 import './ProfilePage.css'
 
 export function ProfilePage() {
@@ -22,6 +35,12 @@ export function ProfilePage() {
   const [newCourse, setNewCourse] = useState('')
   const [profileBusy, setProfileBusy] = useState(false)
   const [profileMessage, setProfileMessage] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<{
+    phone?: string
+    locationAddress?: string
+    bio?: string
+    newCourse?: string
+  }>({})
 
   const [avatarBusy, setAvatarBusy] = useState(false)
   const [avatarMessage, setAvatarMessage] = useState<string | null>(null)
@@ -35,9 +54,12 @@ export function ProfilePage() {
   const [passwordBusy, setPasswordBusy] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null)
+  const [passwordTouched, setPasswordTouched] = useState(false)
   const [copyMessage, setCopyMessage] = useState<string | null>(null)
   const [copyError, setCopyError] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
+
+  const passwordRequirements = getPasswordRequirements(newPassword)
 
   useEffect(() => {
     let cancelled = false
@@ -82,12 +104,14 @@ export function ProfilePage() {
   }, [previewUrl])
 
   function addCourse() {
-    const value = newCourse.trim()
-    if (!value) {
+    const courseError = getCourseError(newCourse)
+    if (courseError) {
+      setFieldErrors((prev) => ({ ...prev, newCourse: courseError }))
       return
     }
-    setCourses((prev) => [...prev, value])
+    setCourses((prev) => [...prev, newCourse.trim()])
     setNewCourse('')
+    setFieldErrors((prev) => ({ ...prev, newCourse: undefined }))
   }
 
   function removeCourse(index: number) {
@@ -110,19 +134,42 @@ export function ProfilePage() {
 
   async function onSaveProfile(event: FormEvent) {
     event.preventDefault()
-    setProfileBusy(true)
     setProfileMessage(null)
     setError(null)
+
+    const nextErrors = {
+      phone: getPhoneError(phone) ?? undefined,
+      locationAddress: getAddressError(locationAddress) ?? undefined,
+      bio: getBioError(bio) ?? undefined,
+    }
+    if (nextErrors.phone || nextErrors.locationAddress || nextErrors.bio) {
+      setFieldErrors((prev) => ({ ...prev, ...nextErrors }))
+      return
+    }
+
+    setFieldErrors({})
+    setProfileBusy(true)
     try {
       const updated = await therapistApi.updateProfile({
-        phone: phone.trim(),
+        phone: formatPhoneForApi(phone),
         location_address: locationAddress.trim(),
         bio: bio.trim(),
         courses,
       })
       setProfile(updated)
+      setPhone(updated.phone ?? '')
       setProfileMessage('Dane profilu zostały zapisane.')
     } catch (err) {
+      const apiPhone = getFieldError(err, 'phone')
+      const apiAddress = getFieldError(err, 'location_address')
+      const apiBio = getFieldError(err, 'bio')
+      if (apiPhone || apiAddress || apiBio) {
+        setFieldErrors({
+          phone: apiPhone ?? undefined,
+          locationAddress: apiAddress ?? undefined,
+          bio: apiBio ?? undefined,
+        })
+      }
       setError(getErrorMessage(err, 'Nie udało się zapisać profilu.'))
     } finally {
       setProfileBusy(false)
@@ -173,12 +220,17 @@ export function ProfilePage() {
     setPasswordError(null)
     setPasswordMessage(null)
 
-    if (newPassword !== confirmPassword) {
-      setPasswordError('Nowe hasła nie są identyczne.')
+    if (!currentPassword.trim()) {
+      setPasswordError('Podaj obecne hasło.')
       return
     }
-    if (newPassword.length < 8) {
-      setPasswordError('Nowe hasło musi mieć co najmniej 8 znaków.')
+    const newPasswordError = getPasswordError(newPassword)
+    if (newPasswordError) {
+      setPasswordError(newPasswordError)
+      return
+    }
+    if (!passwordsMatch(newPassword, confirmPassword)) {
+      setPasswordError(PASSWORD_MESSAGES.mismatch)
       return
     }
 
@@ -189,6 +241,7 @@ export function ProfilePage() {
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
+      setPasswordTouched(false)
     } catch (err) {
       setPasswordError(getErrorMessage(err, 'Nie udało się zmienić hasła.'))
     } finally {
@@ -286,26 +339,58 @@ export function ProfilePage() {
           <Field
             label="Telefon"
             name="phone"
+            type="tel"
+            inputMode="tel"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => {
+              setPhone(e.target.value)
+              if (fieldErrors.phone) {
+                setFieldErrors((prev) => ({ ...prev, phone: undefined }))
+              }
+            }}
+            error={fieldErrors.phone}
+            hint="Polski numer: 9 cyfr, opcjonalnie z +48"
+            placeholder="np. 512 345 678"
           />
           <Field
             label="Adres / lokalizacja gabinetu"
             name="location_address"
             value={locationAddress}
-            onChange={(e) => setLocationAddress(e.target.value)}
+            onChange={(e) => {
+              setLocationAddress(e.target.value)
+              if (fieldErrors.locationAddress) {
+                setFieldErrors((prev) => ({ ...prev, locationAddress: undefined }))
+              }
+            }}
+            error={fieldErrors.locationAddress}
             placeholder="np. ul. Kwiatowa 12, 00-001 Warszawa"
             hint="Widoczny dla pacjentów przy wizycie — kliknięcie otwiera mapę."
           />
           <label className="ui-field">
             <span className="ui-field__label">Biogram</span>
             <textarea
-              className="profile-textarea"
+              className={
+                fieldErrors.bio
+                  ? 'profile-textarea profile-textarea--error'
+                  : 'profile-textarea'
+              }
               value={bio}
-              onChange={(e) => setBio(e.target.value)}
+              onChange={(e) => {
+                setBio(e.target.value)
+                if (fieldErrors.bio) {
+                  setFieldErrors((prev) => ({ ...prev, bio: undefined }))
+                }
+              }}
               rows={5}
+              maxLength={2000}
               placeholder="Krótki opis doświadczenia i specjalizacji…"
+              aria-invalid={fieldErrors.bio ? true : undefined}
             />
+            {fieldErrors.bio ? (
+              <span className="ui-field__error" role="alert">
+                {fieldErrors.bio}
+              </span>
+            ) : null}
           </label>
 
           <div className="profile-courses">
@@ -334,7 +419,13 @@ export function ProfilePage() {
                 label="Nowy kurs"
                 name="new_course"
                 value={newCourse}
-                onChange={(e) => setNewCourse(e.target.value)}
+                onChange={(e) => {
+                  setNewCourse(e.target.value)
+                  if (fieldErrors.newCourse) {
+                    setFieldErrors((prev) => ({ ...prev, newCourse: undefined }))
+                  }
+                }}
+                error={fieldErrors.newCourse}
                 placeholder="np. Terapia manualna — kurs podstawowy"
               />
               <Button type="button" variant="secondary" size="sm" onClick={addCourse}>
@@ -366,8 +457,16 @@ export function ProfilePage() {
             type="password"
             autoComplete="new-password"
             value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
+            onChange={(e) => {
+              setNewPassword(e.target.value)
+              setPasswordTouched(true)
+            }}
+            onBlur={() => setPasswordTouched(true)}
             required
+          />
+          <PasswordRequirements
+            requirements={passwordRequirements}
+            showErrors={passwordTouched}
           />
           <Field
             label="Powtórz nowe hasło"

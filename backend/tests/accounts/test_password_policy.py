@@ -26,7 +26,7 @@ def test_therapist_register_rejects_weak_password(password, expected_fragment):
             'password': password,
             'first_name': 'Anna',
             'last_name': 'Kowalska',
-            'pwzf_number': 'PWZF-1001',
+            'pwzf_number': '81001',
             'pwzf_declaration': True,
         }
     )
@@ -44,7 +44,7 @@ def test_therapist_register_rejects_password_similar_to_email():
             'password': 'jan.nowak',
             'first_name': 'Jan',
             'last_name': 'Nowak',
-            'pwzf_number': 'PWZF-1002',
+            'pwzf_number': '81002',
             'pwzf_declaration': True,
         }
     )
@@ -62,7 +62,7 @@ def test_therapist_register_accepts_strong_password():
             'password': 'SecurePass123!',
             'first_name': 'Ewa',
             'last_name': 'Lis',
-            'pwzf_number': 'PWZF-1003',
+            'pwzf_number': '81003',
             'pwzf_declaration': True,
         }
     )

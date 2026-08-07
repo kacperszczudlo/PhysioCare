@@ -1,4 +1,14 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
+
+from core.field_policies import (
+    ADDRESS_TOO_LONG,
+    BIO_TOO_LONG,
+    normalize_and_validate_address,
+    normalize_and_validate_bio,
+    normalize_and_validate_courses,
+)
+from core.phone_policy import PHONE_FIELD_ERRORS, normalize_and_validate_phone
 
 from .models import TherapistProfile
 
@@ -19,9 +29,52 @@ class TherapistProfileSerializer(serializers.ModelSerializer):
 
 
 class TherapistProfileUpdateSerializer(serializers.ModelSerializer):
+    phone = serializers.CharField(
+        max_length=20,
+        required=False,
+        allow_blank=True,
+        error_messages=PHONE_FIELD_ERRORS,
+    )
+    location_address = serializers.CharField(
+        max_length=300,
+        required=False,
+        allow_blank=True,
+        error_messages={'max_length': ADDRESS_TOO_LONG},
+    )
+    bio = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        error_messages={'max_length': BIO_TOO_LONG},
+    )
+    courses = serializers.JSONField(required=False)
+
     class Meta:
         model = TherapistProfile
         fields = ['phone', 'location_address', 'bio', 'courses']
+
+    def validate_phone(self, value):
+        try:
+            return normalize_and_validate_phone(value, allow_blank=True)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def validate_location_address(self, value):
+        try:
+            return normalize_and_validate_address(value, allow_blank=True)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def validate_bio(self, value):
+        try:
+            return normalize_and_validate_bio(value, allow_blank=True)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def validate_courses(self, value):
+        try:
+            return normalize_and_validate_courses(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
 
 
 class TherapistPublicSerializer(serializers.ModelSerializer):

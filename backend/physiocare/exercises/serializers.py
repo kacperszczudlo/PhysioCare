@@ -1,6 +1,14 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework import serializers
 
+from core.field_policies import (
+    DOSAGE_TOO_LONG,
+    INSTRUCTION_TOO_LONG,
+    normalize_and_validate_dosage,
+    normalize_and_validate_exercise_title,
+    normalize_optional_text,
+)
 from patients.models import PatientProfile
 from treatment.models import TreatmentEpisode
 
@@ -60,10 +68,28 @@ class ExerciseCreateSerializer(serializers.ModelSerializer):
         queryset=ExerciseCategory.objects.all(),
         required=False,
     )
+    title = serializers.CharField(max_length=200)
+    instruction = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = Exercise
         fields = ['title', 'media_type', 'instruction', 'categories']
+
+    def validate_title(self, value):
+        try:
+            return normalize_and_validate_exercise_title(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def validate_instruction(self, value):
+        try:
+            return normalize_optional_text(
+                value,
+                max_length=5000,
+                too_long_message=INSTRUCTION_TOO_LONG,
+            )
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
 
     def create(self, validated_data):
         categories = validated_data.pop('categories', [])
@@ -83,10 +109,28 @@ class ExerciseUpdateSerializer(serializers.ModelSerializer):
         queryset=ExerciseCategory.objects.all(),
         required=False,
     )
+    title = serializers.CharField(max_length=200, required=False)
+    instruction = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = Exercise
         fields = ['title', 'media_type', 'instruction', 'categories']
+
+    def validate_title(self, value):
+        try:
+            return normalize_and_validate_exercise_title(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def validate_instruction(self, value):
+        try:
+            return normalize_optional_text(
+                value,
+                max_length=5000,
+                too_long_message=INSTRUCTION_TOO_LONG,
+            )
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
 
     def update(self, instance, validated_data):
         categories = validated_data.pop('categories', serializers.empty)
@@ -124,6 +168,10 @@ class ExerciseAssignmentCreateSerializer(serializers.ModelSerializer):
     exercise_id = serializers.UUIDField(write_only=True)
     patient_id = serializers.UUIDField(write_only=True)
     episode_id = serializers.UUIDField(required=False, allow_null=True, write_only=True)
+    dosage = serializers.CharField(
+        max_length=100,
+        error_messages={'max_length': DOSAGE_TOO_LONG},
+    )
 
     class Meta:
         model = ExerciseAssignment
@@ -131,6 +179,12 @@ class ExerciseAssignmentCreateSerializer(serializers.ModelSerializer):
             'exercise_id', 'patient_id', 'episode_id',
             'dosage', 'start_date', 'end_date',
         ]
+
+    def validate_dosage(self, value):
+        try:
+            return normalize_and_validate_dosage(value, allow_blank=False)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
 
     def validate(self, attrs):
         therapist = self.context['therapist']
@@ -184,10 +238,21 @@ class ExerciseAssignmentCreateSerializer(serializers.ModelSerializer):
 
 class ExerciseAssignmentUpdateSerializer(serializers.ModelSerializer):
     episode_id = serializers.UUIDField(required=False, allow_null=True)
+    dosage = serializers.CharField(
+        max_length=100,
+        required=False,
+        error_messages={'max_length': DOSAGE_TOO_LONG},
+    )
 
     class Meta:
         model = ExerciseAssignment
         fields = ['dosage', 'start_date', 'end_date', 'episode_id']
+
+    def validate_dosage(self, value):
+        try:
+            return normalize_and_validate_dosage(value, allow_blank=False)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
 
     def validate(self, attrs):
         start = attrs.get('start_date', getattr(self.instance, 'start_date', None))

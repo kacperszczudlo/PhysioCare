@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native'
 
-import { getErrorMessage } from '@/api/client'
+import { getErrorMessage, getFieldError } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { MedicalDocument, PatientProfile } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
@@ -21,6 +21,8 @@ import { Field } from '@/components/Field'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
 import { formatDate } from '@/lib/format'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
+import { getPeselError } from '@/lib/peselPolicy'
+import { formatPhoneForApi, getPhoneError } from '@/lib/phonePolicy'
 import { colors, space, typography } from '@/theme/tokens'
 
 type FeedbackKind = 'avatar' | 'profile'
@@ -32,6 +34,7 @@ export default function ProfileScreen() {
   const [docs, setDocs] = useState<MedicalDocument[]>([])
   const [phone, setPhone] = useState('')
   const [pesel, setPesel] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<{ phone?: string; pesel?: string }>({})
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -79,14 +82,37 @@ export default function ProfileScreen() {
     setSaving(true)
     setError(null)
     setFeedback(null)
+
+    const phoneError = getPhoneError(phone)
+    const peselError = getPeselError(pesel)
+    if (phoneError || peselError) {
+      setFieldErrors({
+        phone: phoneError ?? undefined,
+        pesel: peselError ?? undefined,
+      })
+      setSaving(false)
+      return
+    }
+
+    setFieldErrors({})
     try {
       const updated = await patientApi.updateProfile({
-        phone: phone.trim(),
+        phone: formatPhoneForApi(phone),
         pesel: pesel.trim() || null,
       })
       setProfile(updated)
+      setPhone(updated.phone ?? '')
+      setPesel(updated.pesel ?? '')
       showSuccess('profile', 'Dane profilu zostały zapisane.')
     } catch (err) {
+      const apiPhone = getFieldError(err, 'phone')
+      const apiPesel = getFieldError(err, 'pesel')
+      if (apiPhone || apiPesel) {
+        setFieldErrors({
+          phone: apiPhone ?? undefined,
+          pesel: apiPesel ?? undefined,
+        })
+      }
       setError(getErrorMessage(err, 'Nie udało się zapisać profilu.'))
     } finally {
       setSaving(false)
@@ -187,8 +213,33 @@ export default function ProfileScreen() {
       <SectionCard>
         <Text style={styles.sectionTitle}>Dane kontaktowe</Text>
         <Text style={styles.muted}>{profile?.email}</Text>
-        <Field label="Telefon" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-        <Field label="PESEL" value={pesel} onChangeText={setPesel} keyboardType="number-pad" />
+        <Field
+          label="Telefon"
+          value={phone}
+          onChangeText={(value) => {
+            setPhone(value)
+            if (fieldErrors.phone) {
+              setFieldErrors((prev) => ({ ...prev, phone: undefined }))
+            }
+          }}
+          keyboardType="phone-pad"
+          error={fieldErrors.phone}
+          hint="9 cyfr, opcjonalnie z +48"
+        />
+        <Field
+          label="PESEL"
+          value={pesel}
+          onChangeText={(value) => {
+            setPesel(value)
+            if (fieldErrors.pesel) {
+              setFieldErrors((prev) => ({ ...prev, pesel: undefined }))
+            }
+          }}
+          keyboardType="number-pad"
+          maxLength={11}
+          error={fieldErrors.pesel}
+          hint="11 cyfr z poprawną sumą kontrolną"
+        />
         <Button title="Zapisz dane" loading={saving} onPress={() => void saveProfile()} />
         {feedback?.kind === 'profile' ? <SuccessBanner message={feedback.message} /> : null}
         {profile?.therapist ? (

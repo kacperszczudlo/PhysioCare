@@ -16,6 +16,7 @@ import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { PasswordRequirements } from '@/components/PasswordRequirements'
 import { getEmailError } from '@/lib/emailPolicy'
+import { getFirstNameError, getLastNameError } from '@/lib/fieldPolicy'
 import { getPasswordError, getPasswordRequirements } from '@/lib/passwordPolicy'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
@@ -32,8 +33,11 @@ export default function RegisterScreen() {
   const [medical, setMedical] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<{
+    firstName?: string
+    lastName?: string
     email?: string
     password?: string
+    therapistId?: string
   }>({})
   const [passwordTouched, setPasswordTouched] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -64,7 +68,21 @@ export default function RegisterScreen() {
       return
     }
 
-    const nextFieldErrors: { email?: string; password?: string } = {}
+    const nextFieldErrors: {
+      firstName?: string
+      lastName?: string
+      email?: string
+      password?: string
+      therapistId?: string
+    } = {}
+    const firstNameError = getFirstNameError(firstName)
+    if (firstNameError) {
+      nextFieldErrors.firstName = firstNameError
+    }
+    const lastNameError = getLastNameError(lastName)
+    if (lastNameError) {
+      nextFieldErrors.lastName = lastNameError
+    }
     const emailError = getEmailError(email)
     if (emailError) {
       nextFieldErrors.email = emailError
@@ -73,14 +91,23 @@ export default function RegisterScreen() {
     if (passwordError) {
       nextFieldErrors.password = passwordError
     }
-
-    if (!firstName.trim() || !lastName.trim() || !therapistId.trim()) {
-      setFieldErrors(nextFieldErrors)
-      setError('Uzupełnij formularz i zaznacz wymagane zgody RODO.')
-      return
+    if (!therapistId.trim()) {
+      nextFieldErrors.therapistId = 'Podaj kod terapeuty.'
+    } else if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        therapistId.trim(),
+      )
+    ) {
+      nextFieldErrors.therapistId = 'Podaj prawidłowy kod terapeuty (UUID z panelu terapeuty).'
     }
 
-    if (nextFieldErrors.email || nextFieldErrors.password) {
+    if (
+      nextFieldErrors.firstName ||
+      nextFieldErrors.lastName ||
+      nextFieldErrors.email ||
+      nextFieldErrors.password ||
+      nextFieldErrors.therapistId
+    ) {
       setFieldErrors(nextFieldErrors)
       return
     }
@@ -98,12 +125,24 @@ export default function RegisterScreen() {
       })
       router.replace('/(tabs)')
     } catch (err) {
+      const apiFirstNameError = getFieldError(err, 'first_name')
+      const apiLastNameError = getFieldError(err, 'last_name')
       const apiEmailError = getFieldError(err, 'email')
       const apiPasswordError = getFieldError(err, 'password')
-      if (apiEmailError || apiPasswordError) {
+      const apiTherapistError = getFieldError(err, 'therapist_id')
+      if (
+        apiFirstNameError ||
+        apiLastNameError ||
+        apiEmailError ||
+        apiPasswordError ||
+        apiTherapistError
+      ) {
         setFieldErrors({
+          firstName: apiFirstNameError ?? undefined,
+          lastName: apiLastNameError ?? undefined,
           email: apiEmailError ?? undefined,
           password: apiPasswordError ?? undefined,
+          therapistId: apiTherapistError ?? undefined,
         })
       }
       const message = getErrorMessage(err, 'Rejestracja nie powiodła się.')
@@ -132,14 +171,26 @@ export default function RegisterScreen() {
           <Field
             label="Imię"
             value={firstName}
-            onChangeText={setFirstName}
+            onChangeText={(value) => {
+              setFirstName(value)
+              if (fieldErrors.firstName) {
+                setFieldErrors((prev) => ({ ...prev, firstName: undefined }))
+              }
+            }}
             autoComplete="given-name"
+            error={fieldErrors.firstName}
           />
           <Field
             label="Nazwisko"
             value={lastName}
-            onChangeText={setLastName}
+            onChangeText={(value) => {
+              setLastName(value)
+              if (fieldErrors.lastName) {
+                setFieldErrors((prev) => ({ ...prev, lastName: undefined }))
+              }
+            }}
             autoComplete="family-name"
+            error={fieldErrors.lastName}
           />
           <Field
             label="E-mail"
@@ -176,9 +227,15 @@ export default function RegisterScreen() {
           <Field
             label="Kod terapeuty"
             value={therapistId}
-            onChangeText={setTherapistId}
+            onChangeText={(value) => {
+              setTherapistId(value)
+              if (fieldErrors.therapistId) {
+                setFieldErrors((prev) => ({ ...prev, therapistId: undefined }))
+              }
+            }}
             autoCapitalize="none"
             autoCorrect={false}
+            error={fieldErrors.therapistId}
             hint="Kod z panelu webowego terapeuty: Profil → „Kod dla pacjenta” (Kopiuj kod)."
           />
 

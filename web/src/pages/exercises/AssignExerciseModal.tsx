@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { DateCarousel } from '@/components/ui/DateCarousel'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
+import { getDosageError } from '@/lib/fieldPolicy'
 import { toDateInputValue } from '@/lib/scheduleTime'
 
 interface AssignExerciseModalProps {
@@ -110,6 +111,11 @@ export function AssignExerciseModal({
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
     if (!exercise || !patientId) {
+      return
+    }
+    const dosageError = getDosageError(dosage)
+    if (dosageError) {
+      setError(dosageError)
       return
     }
     setBusy(true)

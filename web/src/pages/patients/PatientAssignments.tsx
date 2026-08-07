@@ -9,6 +9,7 @@ import { DateCarousel } from '@/components/ui/DateCarousel'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
+import { getDosageError } from '@/lib/fieldPolicy'
 import { addDays, parseDateInput, toDateInputValue } from '@/lib/scheduleTime'
 import './PatientAssignments.css'
 
@@ -80,6 +81,11 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
   async function onSave(event: FormEvent) {
     event.preventDefault()
     if (!editTarget) {
+      return
+    }
+    const dosageError = getDosageError(dosage)
+    if (dosageError) {
+      setFormError(dosageError)
       return
     }
     setBusy(true)
