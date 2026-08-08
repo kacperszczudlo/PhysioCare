@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet } from 'react-router-dom'
 
 import { useAuth } from '@/auth/AuthContext'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
@@ -27,7 +27,7 @@ export function AppLayout() {
   return (
     <div className="app-shell">
       <aside className="app-shell__sidebar" aria-label="Nawigacja główna">
-        <div className="app-shell__brand">
+        <Link to="/" className="app-shell__brand" aria-label="PhysioCare — Pulpit">
           <img
             className="app-shell__mark"
             src="/brand/sygnet.png"
@@ -39,7 +39,7 @@ export function AppLayout() {
             <p className="app-shell__product">PhysioCare</p>
             <p className="app-shell__product-sub">Panel fizjoterapeuty</p>
           </div>
-        </div>
+        </Link>
 
         <nav className="app-shell__nav">
           {NAV.map((item) => (

@@ -22,6 +22,18 @@
   align-items: center;
   gap: var(--space-3);
   flex-shrink: 0;
+  text-decoration: none;
+  color: inherit;
+  border-radius: var(--radius-md, 0.5rem);
+  outline: none;
+}
+
+.app-shell__brand:hover .app-shell__product {
+  color: var(--color-primary);
+}
+
+.app-shell__brand:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-primary);
 }
 
 .app-shell__mark {
