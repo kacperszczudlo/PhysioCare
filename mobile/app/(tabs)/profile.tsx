@@ -19,7 +19,7 @@ import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { PhoneField } from '@/components/PhoneField'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
 import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
-import { resolveMediaUrl } from '@/lib/mediaUrl'
+import { useAuthenticatedMediaSource } from '@/lib/authMedia'
 import { getPeselError } from '@/lib/peselPolicy'
 import { formatPhoneForApi, getPhoneError, parseStoredPhone } from '@/lib/phonePolicy'
 import { colors, space, typography } from '@/theme/tokens'
@@ -40,6 +40,7 @@ export default function ProfileScreen() {
   const [avatarLoading, setAvatarLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<{ kind: FeedbackKind; message: string } | null>(null)
+  const { source: avatarSource } = useAuthenticatedMediaSource(profile?.avatar_url)
 
   const showSuccess = useCallback((kind: FeedbackKind, message: string) => {
     setError(null)
@@ -186,9 +187,9 @@ export default function ProfileScreen() {
       <SectionCard>
         <Text style={styles.sectionTitle}>Zdjęcie profilowe</Text>
         <View style={styles.avatarRow}>
-          {resolveMediaUrl(profile?.avatar_url) ? (
+          {avatarSource ? (
             <Image
-              source={{ uri: resolveMediaUrl(profile?.avatar_url)! }}
+              source={avatarSource}
               style={styles.avatar}
               accessibilityIgnoresInvertColors
             />

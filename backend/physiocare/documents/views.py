@@ -127,4 +127,11 @@ class DocumentDownloadView(APIView):
         path = os.path.join(str(settings.MEDIA_ROOT), relative)
         if not os.path.isfile(path):
             raise Http404
-        return FileResponse(open(path, 'rb'), content_type=document.mime_type, as_attachment=True)
+        response = FileResponse(
+            open(path, 'rb'),
+            content_type=document.mime_type,
+            as_attachment=True,
+        )
+        response['X-Content-Type-Options'] = 'nosniff'
+        response['Cache-Control'] = 'private, no-store'
+        return response

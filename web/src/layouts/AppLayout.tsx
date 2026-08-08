@@ -1,7 +1,7 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 
 import { useAuth } from '@/auth/AuthContext'
-import { resolveMediaUrl } from '@/lib/mediaUrl'
+import { AuthMediaImg } from '@/components/AuthMedia'
 import './AppLayout.css'
 
 const NAV: ReadonlyArray<{ to: string; label: string; end?: boolean }> = [
@@ -22,7 +22,6 @@ export function AppLayout() {
   const { user } = useAuth()
   const displayName =
     [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || 'Fizjoterapeuta'
-  const avatarSrc = resolveMediaUrl(user?.avatar_url)
 
   return (
     <div className="app-shell">
@@ -58,8 +57,11 @@ export function AppLayout() {
 
         <div className="app-shell__footer">
           <NavLink to="/profile" className="app-shell__identity" aria-label={`Profil: ${displayName}`}>
-            {avatarSrc ? (
-              <img className="app-shell__avatar" src={avatarSrc} alt="" width={40} height={40} />
+            {user?.avatar_url ? (
+              <AuthMediaImg
+                path={user.avatar_url}
+                className="app-shell__avatar"
+              />
             ) : (
               <span className="app-shell__avatar app-shell__avatar--fallback" aria-hidden="true">
                 {initials(user?.first_name, user?.last_name)}

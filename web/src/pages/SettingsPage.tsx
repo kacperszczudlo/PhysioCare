@@ -9,7 +9,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { PasswordRequirements } from '@/components/ui/PasswordRequirements'
-import { resolveMediaUrl } from '@/lib/mediaUrl'
+import { AuthMediaImg } from '@/components/AuthMedia'
 import {
   getPasswordError,
   getPasswordRequirements,
@@ -37,7 +37,6 @@ export function SettingsPage() {
   const passwordRequirements = getPasswordRequirements(newPassword)
   const displayName =
     [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || 'Konto'
-  const avatarSrc = resolveMediaUrl(user?.avatar_url)
 
   async function onChangePassword(event: FormEvent) {
     event.preventDefault()
@@ -89,13 +88,10 @@ export function SettingsPage() {
             </header>
 
             <div className="settings-identity">
-              {avatarSrc ? (
-                <img
+              {user?.avatar_url ? (
+                <AuthMediaImg
+                  path={user.avatar_url}
                   className="settings-identity__avatar"
-                  src={avatarSrc}
-                  alt=""
-                  width={56}
-                  height={56}
                 />
               ) : (
                 <span className="settings-identity__avatar settings-identity__avatar--fallback" aria-hidden="true">

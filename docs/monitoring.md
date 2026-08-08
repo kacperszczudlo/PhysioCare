@@ -98,6 +98,28 @@ Sprawdź w odpowiedzi nagłówki `X-Request-ID` i `X-Response-Time-Ms`, a w kons
 - Przekieruj stdout kontenera / procesu do agregatora (Railway logs, journald, Loki, CloudWatch)
 - Filtruj po `request_id` przy zgłoszeniu błędu od użytkownika (klient może odesłać wartość z nagłówka)
 
+## Alerting (Sentry)
+
+Ustaw `SENTRY_DSN` w środowisku produkcyjnym / staging. SDK inicjuje się w `settings.py` tylko gdy DSN jest niepusty:
+
+| Zmienna | Opis |
+|---------|------|
+| `SENTRY_DSN` | DSN projektu Sentry |
+| `SENTRY_ENVIRONMENT` | np. `staging` / `production` |
+| `SENTRY_TRACES_SAMPLE_RATE` | domyślnie `0.1` |
+
+Bez DSN błędy nadal trafiają do strukturalnych logów (`physiocare.api` / `physiocare.auth`) — skonfiguruj alert hostingu na spike ERROR / 5xx.
+
+## Shared cache (Redis)
+
+Rate limiting DRF korzysta z Django cache. Przy wielu workerach Gunicorn ustaw:
+
+```env
+REDIS_URL=redis://127.0.0.1:6379/1
+```
+
+Bez Redis używany jest LocMem (OK na 1 worker / lokalnie).
+
 ## Powiązane pliki
 
 | Plik | Rola |
@@ -105,5 +127,7 @@ Sprawdź w odpowiedzi nagłówki `X-Request-ID` i `X-Response-Time-Ms`, a w kons
 | `backend/physiocare/core/middleware.py` | Timing + request log |
 | `backend/physiocare/core/logging_formatters.py` | Formatter JSON |
 | `backend/physiocare/core/exceptions.py` | Logowanie błędów API |
-| `backend/physiocare/physiocare/settings.py` | `LOGGING`, middleware |
+| `backend/physiocare/core/media_views.py` | Auth + ownership dla `/media/` |
+| `backend/physiocare/physiocare/settings.py` | `LOGGING`, Sentry, Redis cache |
 | `backend/tests/core/test_request_timing.py` | Testy nagłówków |
+| `backend/tests/core/test_protected_media.py` | Testy ochrony mediów |

@@ -7,7 +7,7 @@ import type { PatientSummary } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Field } from '@/components/ui/Field'
-import { resolveMediaUrl } from '@/lib/mediaUrl'
+import { AuthMediaImg } from '@/components/AuthMedia'
 import './PatientsPage.css'
 
 export function PatientsPage() {
@@ -100,10 +100,9 @@ export function PatientsPage() {
               <Link className="patients-row" to={`/patients/${patient.id}`}>
                 <span className="patients-row__identity">
                   {patient.avatar_url ? (
-                    <img
+                    <AuthMediaImg
+                      path={patient.avatar_url}
                       className="patients-row__avatar"
-                      src={resolveMediaUrl(patient.avatar_url) ?? undefined}
-                      alt=""
                     />
                   ) : (
                     <span className="patients-row__avatar patients-row__avatar--placeholder" aria-hidden>

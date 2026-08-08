@@ -117,18 +117,15 @@ class LoginView(APIView):
 
         logger.info('Failed login attempt for email=%s', email)
 
-        email_normalized = (email or '').strip()
-        account_exists = (
-            bool(email_normalized)
-            and User.objects.filter(email__iexact=email_normalized).exists()
-        )
-        message = (
-            'Błędne hasło.'
-            if account_exists
-            else 'Nie istnieje konto o takim adresie e-mail.'
-        )
+        # Same message for unknown email and wrong password (no account enumeration).
         return Response(
-            {'error': {'code': 'AUTH_001', 'message': message, 'details': {}}},
+            {
+                'error': {
+                    'code': 'AUTH_001',
+                    'message': 'Nieprawidłowy e-mail lub hasło.',
+                    'details': {},
+                }
+            },
             status=status.HTTP_401_UNAUTHORIZED,
         )
 

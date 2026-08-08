@@ -1,8 +1,7 @@
-from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from core.media_views import ProtectedMediaServeView
 from documents.urls import me_urlpatterns as documents_me_urls
 from exercises.urls import me_urlpatterns as exercises_me_urls
 from notifications.urls import me_urlpatterns as notifications_me_urls
@@ -29,7 +28,6 @@ urlpatterns = [
     path('api/v1/', include('exercises.urls')),
     path('api/v1/', include('documents.urls')),
     path('api/v1/', include('therapists.urls')),
+    # Always authenticated — never use django.conf.urls.static for MEDIA.
+    path('media/<path:path>', ProtectedMediaServeView.as_view(), name='protected-media'),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

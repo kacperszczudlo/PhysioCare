@@ -1,5 +1,5 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
@@ -9,7 +9,7 @@ import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { ExerciseVideoPlayer } from '@/components/ExerciseVideoPlayer'
 import { SectionCard } from '@/components/ScreenHeader'
-import { resolveMediaUrl } from '@/lib/mediaUrl'
+import { downloadAuthenticatedMediaToCache, useAuthenticatedMediaSource } from '@/lib/authMedia'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
 function tagStyleForKind(kind: CategoryKind) {
@@ -51,10 +51,7 @@ export default function ExerciseDetailScreen() {
   const [busy, setBusy] = useState(false)
   const [mediaError, setMediaError] = useState<string | null>(null)
 
-  const mediaUrl = useMemo(
-    () => (item ? resolveMediaUrl(item.exercise_file_url) : null),
-    [item],
-  )
+  const { source: mediaSource } = useAuthenticatedMediaSource(item?.exercise_file_url)
 
   const load = useCallback(async () => {
     if (!id) {
@@ -100,17 +97,29 @@ export default function ExerciseDetailScreen() {
   }
 
   async function openPdf() {
-    if (!mediaUrl) {
+    if (!item?.exercise_file_url) {
       setMediaError('Brak pliku ćwiczenia.')
       return
     }
     setMediaError(null)
-    const supported = await Linking.canOpenURL(mediaUrl)
-    if (!supported) {
-      setMediaError('Nie można otworzyć PDF na urządzeniu.')
-      return
+    try {
+      const localUri = await downloadAuthenticatedMediaToCache(
+        item.exercise_file_url,
+        'exercise.pdf',
+      )
+      if (!localUri) {
+        setMediaError('Nie można pobrać PDF.')
+        return
+      }
+      const supported = await Linking.canOpenURL(localUri)
+      if (!supported) {
+        setMediaError('Nie można otworzyć PDF na urządzeniu.')
+        return
+      }
+      await Linking.openURL(localUri)
+    } catch {
+      setMediaError('Nie udało się otworzyć PDF.')
     }
-    await Linking.openURL(mediaUrl)
   }
 
   if (loading) {
@@ -182,8 +191,8 @@ export default function ExerciseDetailScreen() {
               </View>
 
               {item.exercise_media_type === 'VIDEO' ? (
-                mediaUrl ? (
-                  <ExerciseVideoPlayer uri={mediaUrl} />
+                mediaSource ? (
+                  <ExerciseVideoPlayer source={mediaSource} />
                 ) : (
                   <Text style={styles.mediaError}>Brak pliku wideo.</Text>
                 )

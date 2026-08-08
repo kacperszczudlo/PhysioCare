@@ -10,7 +10,7 @@ import { Field } from '@/components/ui/Field'
 import { AssignExerciseModal } from '@/pages/exercises/AssignExerciseModal'
 import { CreateExerciseModal } from '@/pages/exercises/CreateExerciseModal'
 import { DeleteExerciseModal } from '@/pages/exercises/DeleteExerciseModal'
-import { resolveMediaUrl } from '@/lib/mediaUrl'
+import { AuthMediaPdfLink, AuthMediaVideo } from '@/components/AuthMedia'
 import './ExercisesPage.css'
 
 const KIND_ORDER: CategoryKind[] = ['TYPE', 'REGION', 'MUSCLE', 'INJURY']
@@ -293,29 +293,20 @@ export function ExercisesPage() {
         <>
           <ul className="exercises-grid">
             {exercises.map((exercise) => {
-              const mediaUrl = resolveMediaUrl(exercise.file_url)
               return (
                 <li key={exercise.id} className="exercises-card">
                   <div className="exercises-card__media">
-                    {mediaUrl && exercise.media_type === 'VIDEO' ? (
-                      <video
+                    {exercise.media_type === 'VIDEO' ? (
+                      <AuthMediaVideo
+                        path={exercise.file_url}
                         className="exercises-card__player"
-                        src={mediaUrl}
-                        controls
-                        preload="metadata"
-                        playsInline
                       />
                     ) : null}
-                    {mediaUrl && exercise.media_type === 'PDF' ? (
-                      <a
-                        className="exercises-card__pdf"
-                        href={mediaUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
+                    {exercise.media_type === 'PDF' ? (
+                      <AuthMediaPdfLink path={exercise.file_url} className="exercises-card__pdf">
                         <span className="exercises-card__type exercises-card__type--pdf">PDF</span>
                         <span>Otwórz dokument</span>
-                      </a>
+                      </AuthMediaPdfLink>
                     ) : null}
                   </div>
                   <div className="exercises-card__top">

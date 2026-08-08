@@ -10,7 +10,7 @@ import { useAuth } from '@/auth/AuthContext'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { CreateExerciseModal } from '@/pages/exercises/CreateExerciseModal'
 import { VisitFormModal } from '@/pages/schedule/VisitFormModal'
-import { resolveMediaUrl } from '@/lib/mediaUrl'
+import { AuthMediaImg } from '@/components/AuthMedia'
 import { addDays, formatTime, startOfDay, toDateInputValue } from '@/lib/scheduleTime'
 import './DashboardPage.css'
 
@@ -355,7 +355,6 @@ export function DashboardPage() {
                     const start = new Date(visit.start_at)
                     const duration = visitDurationMin(visit)
                     const name = `${visit.patient_first_name} ${visit.patient_last_name}`.trim()
-                    const avatarSrc = resolveMediaUrl(visit.patient_avatar_url)
                     return (
                       <li key={visit.id}>
                         <Link
@@ -367,11 +366,10 @@ export function DashboardPage() {
                             } as CSSProperties
                           }
                         >
-                          {avatarSrc ? (
-                            <img
+                          {visit.patient_avatar_url ? (
+                            <AuthMediaImg
+                              path={visit.patient_avatar_url}
                               className="dash-visit__avatar"
-                              src={avatarSrc}
-                              alt=""
                             />
                           ) : (
                             <span className="dash-visit__avatar" aria-hidden="true">

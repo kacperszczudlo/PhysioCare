@@ -208,7 +208,8 @@ def serialize_pdf(doc: MedicalDocument) -> dict[str, Any]:
         created_at=doc.created_at,
         therapist_name=therapist_name,
         episode_id=doc.episode_id,
-        file_url=doc.file_url,
+        # Auth-gated download endpoint (not raw /media/ storage path).
+        file_url=f'/api/v1/{doc.id}/download/',
         details={
             'mime_type': doc.mime_type,
             'visit_id': str(doc.visit_id) if doc.visit_id else None,

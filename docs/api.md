@@ -255,8 +255,9 @@ Wymiary `type` / `region` / `muscle` / `injury` łączone są **AND** (ćwiczeni
 | Metoda | Endpoint | Opis |
 |--------|----------|------|
 | GET | `/me/documents` | Lista samych PDF pacjenta (legacy / wąski widok) |
-| GET | `/me/clinical-documents` | Pełna skrzynka: kierowanie, wyroby, odmowy, Recepta na Ruch + PDF |
-| GET | `/{id}/download` | Pobranie (auth) - ścieżka faktyczna w URLconf |
+| GET | `/me/clinical-documents` | Pełna skrzynka: kierowanie, wyroby, odmowy, Recepta na Ruch + PDF (`file_url` dla PDF = `/api/v1/{id}/download/`) |
+| GET | `/{id}/download` | Pobranie (auth + ownership) |
+| GET | `/media/<path>` | Serwowanie plików (JWT + ownership; dokumenty/ćwiczenia/avatary) |
 | POST | `/therapist/documents` | Upload PDF przez terapeutę (`multipart`) |
 
 ---

@@ -15,7 +15,7 @@ import {
   getBioError,
   getCourseError,
 } from '@/lib/fieldPolicy'
-import { resolveMediaUrl } from '@/lib/mediaUrl'
+import { useAuthenticatedMediaUrl } from '@/lib/authMedia'
 import { formatPhoneForApi, getPhoneError, parseStoredPhone } from '@/lib/phonePolicy'
 import './ProfilePage.css'
 
@@ -58,6 +58,7 @@ export function ProfilePage() {
   const [copyMessage, setCopyMessage] = useState<string | null>(null)
   const [copyError, setCopyError] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
+  const { url: remoteAvatarUrl } = useAuthenticatedMediaUrl(profile?.avatar_url)
 
   useEffect(() => {
     let cancelled = false
@@ -243,7 +244,7 @@ export function ProfilePage() {
     )
   }
 
-  const avatarSrc = previewUrl ?? resolveMediaUrl(profile.avatar_url)
+  const avatarSrc = previewUrl ?? remoteAvatarUrl
   const initials = `${profile.first_name?.[0] ?? ''}${profile.last_name?.[0] ?? ''}`.toUpperCase()
   const allowedCapabilities = profile.competences?.capabilities.filter((c) => c.allowed) ?? []
 

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { DateCarousel } from '@/components/ui/DateCarousel'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
-import { resolveMediaUrl } from '@/lib/mediaUrl'
+import { AuthMediaPdfLink, AuthMediaVideo } from '@/components/AuthMedia'
 import { getDosageError } from '@/lib/fieldPolicy'
 import { addDays, parseDateInput, toDateInputValue } from '@/lib/scheduleTime'
 import './PatientAssignments.css'
@@ -151,7 +151,6 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
       {!loading && items.length > 0 ? (
         <ul className="patient-assignments__list">
           {items.map((assignment) => {
-            const mediaUrl = resolveMediaUrl(assignment.exercise_file_url)
             return (
               <li key={assignment.id} className="patient-assignments__item">
                 <div className="patient-assignments__meta">
@@ -176,23 +175,19 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
                   ) : null}
                 </div>
                 <div className="patient-assignments__media">
-                  {mediaUrl && assignment.exercise_media_type === 'VIDEO' ? (
-                    <video
+                  {assignment.exercise_media_type === 'VIDEO' ? (
+                    <AuthMediaVideo
+                      path={assignment.exercise_file_url}
                       className="patient-assignments__player"
-                      src={mediaUrl}
-                      controls
-                      preload="metadata"
                     />
                   ) : null}
-                  {mediaUrl && assignment.exercise_media_type === 'PDF' ? (
-                    <a
+                  {assignment.exercise_media_type === 'PDF' ? (
+                    <AuthMediaPdfLink
+                      path={assignment.exercise_file_url}
                       className="patient-assignments__pdf"
-                      href={mediaUrl}
-                      target="_blank"
-                      rel="noreferrer"
                     >
                       Otwórz PDF
-                    </a>
+                    </AuthMediaPdfLink>
                   ) : null}
                   <div className="patient-assignments__actions">
                     <Button type="button" size="sm" variant="secondary" onClick={() => openEdit(assignment)}>

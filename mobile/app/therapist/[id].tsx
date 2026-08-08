@@ -9,7 +9,7 @@ import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { SectionCard } from '@/components/ScreenHeader'
 import { openAddressInMaps } from '@/lib/maps'
-import { resolveMediaUrl } from '@/lib/mediaUrl'
+import { useAuthenticatedMediaSource } from '@/lib/authMedia'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
 function yearsLabel(years: number): string {
@@ -29,6 +29,7 @@ export default function TherapistPublicScreen() {
   const [error, setError] = useState<string | null>(null)
   const [avatarFailed, setAvatarFailed] = useState(false)
   const [expandedCode, setExpandedCode] = useState<string | null>(null)
+  const { source: avatarSource } = useAuthenticatedMediaSource(therapist?.avatar_url)
 
   const load = useCallback(async () => {
     if (!id) {
@@ -68,9 +69,8 @@ export default function TherapistPublicScreen() {
   }
 
   const fullName = `${therapist.first_name} ${therapist.last_name}`
-  const avatarSrc = resolveMediaUrl(therapist.avatar_url)
   const initials = `${therapist.first_name?.[0] ?? ''}${therapist.last_name?.[0] ?? ''}`.toUpperCase()
-  const showAvatar = Boolean(avatarSrc) && !avatarFailed
+  const showAvatar = Boolean(avatarSource) && !avatarFailed
   const qualification =
     therapist.qualification_label
     ?? therapist.competences?.qualification_label
@@ -91,7 +91,7 @@ export default function TherapistPublicScreen() {
             {showAvatar ? (
               <View style={styles.avatarClip}>
                 <Image
-                  source={{ uri: avatarSrc! }}
+                  source={avatarSource!}
                   style={styles.avatar}
                   resizeMode="cover"
                   onError={() => setAvatarFailed(true)}

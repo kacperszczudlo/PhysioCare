@@ -15,8 +15,8 @@ import { patientApi } from '@/api/patient'
 import type { ClinicalDocumentItem, ClinicalDocumentKind } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { ScreenHeader } from '@/components/ScreenHeader'
+import { downloadAuthenticatedMediaToCache } from '@/lib/authMedia'
 import { formatDate } from '@/lib/format'
-import { resolveMediaUrl } from '@/lib/mediaUrl'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
 type FilterKey = 'all' | ClinicalDocumentKind
@@ -162,9 +162,9 @@ function DocumentCard({
     if (!doc.file_url) {
       return
     }
-    const url = resolveMediaUrl(doc.file_url)
-    if (url) {
-      await Linking.openURL(url)
+    const localUri = await downloadAuthenticatedMediaToCache(doc.file_url, 'clinical.pdf')
+    if (localUri) {
+      await Linking.openURL(localUri)
     }
   }
 
