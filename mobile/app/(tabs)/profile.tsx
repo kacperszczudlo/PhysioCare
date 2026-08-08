@@ -3,8 +3,6 @@ import * as ImagePicker from 'expo-image-picker'
 import { useCallback, useEffect, useState } from 'react'
 import {
   Image,
-  Linking,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Text,
@@ -13,15 +11,14 @@ import {
 
 import { getErrorMessage, getFieldError } from '@/api/client'
 import { patientApi } from '@/api/patient'
-import type { MedicalDocument, PatientProfile } from '@/api/types'
-import { EmptyState, ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
+import type { PatientProfile } from '@/api/types'
+import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { PhoneField } from '@/components/PhoneField'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
 import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
-import { formatDate } from '@/lib/format'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
 import { getPeselError } from '@/lib/peselPolicy'
 import { formatPhoneForApi, getPhoneError, parseStoredPhone } from '@/lib/phonePolicy'
@@ -33,7 +30,6 @@ export default function ProfileScreen() {
   const router = useRouter()
 
   const [profile, setProfile] = useState<PatientProfile | null>(null)
-  const [docs, setDocs] = useState<MedicalDocument[]>([])
   const [phoneCountryCode, setPhoneCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [phoneNational, setPhoneNational] = useState('')
   const [pesel, setPesel] = useState('')
@@ -61,13 +57,12 @@ export default function ProfileScreen() {
   const load = useCallback(async () => {
     setError(null)
     try {
-      const [p, d] = await Promise.all([patientApi.getProfile(), patientApi.getDocuments()])
+      const p = await patientApi.getProfile()
       setProfile(p)
       const parsedPhone = parseStoredPhone(p.phone)
       setPhoneCountryCode(parsedPhone.countryCode)
       setPhoneNational(parsedPhone.nationalNumber)
       setPesel(p.pesel ?? '')
-      setDocs(d)
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się pobrać profilu.'))
     } finally {
@@ -263,31 +258,6 @@ export default function ProfileScreen() {
           />
         ) : null}
       </SectionCard>
-
-      <SectionCard>
-        <Text style={styles.sectionTitle}>Dokumentacja</Text>
-        {docs.length === 0 ? (
-          <EmptyState title="Brak dokumentów" description="PDF-y udostępnione przez terapeutę." />
-        ) : (
-          docs.map((doc) => (
-            <Pressable
-              key={doc.id}
-              onPress={() => {
-                if (doc.file_url) {
-                  void Linking.openURL(doc.file_url)
-                }
-              }}
-              style={styles.docRow}
-            >
-              <View style={{ flex: 1 }}>
-                <Text style={styles.docTitle}>{doc.title}</Text>
-                <Text style={styles.muted}>{formatDate(doc.created_at)}</Text>
-              </View>
-              <Text style={styles.link}>Otwórz</Text>
-            </Pressable>
-          ))
-        )}
-      </SectionCard>
     </KeyboardAwareForm>
   )
 }
@@ -306,12 +276,4 @@ const styles = StyleSheet.create({
   },
   avatarPlaceholder: { alignItems: 'center', justifyContent: 'center' },
   avatarInitials: { fontSize: typography.xl, fontWeight: '800', color: colors.primary },
-  docRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.md,
-    paddingVertical: space.sm,
-  },
-  docTitle: { fontWeight: '600', color: colors.ink },
-  link: { color: colors.primary, fontWeight: '700' },
 })

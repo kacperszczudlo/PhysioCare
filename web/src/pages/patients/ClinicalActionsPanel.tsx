@@ -15,6 +15,7 @@ import type {
 import { EmptyState, ErrorBanner } from '@/components/AsyncState'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
+import { Modal } from '@/components/ui/Modal'
 import './ClinicalActionsPanel.css'
 
 const RECOMMENDATION_LABELS: Record<RecommendationType, string> = {
@@ -34,6 +35,18 @@ const SIDE_LABELS: Record<BodySide, string> = {
 }
 
 type ClinicalTab = 'recommend' | 'device' | 'refusal' | 'recepta'
+
+type DeleteTarget =
+  | { kind: 'recommendation'; id: string; label: string }
+  | { kind: 'device'; id: string; label: string }
+  | { kind: 'refusal'; id: string; label: string }
+  | { kind: 'recepta'; id: string; label: string }
+
+type EditTarget =
+  | { kind: 'recommendation'; item: DiagnosticRecommendation }
+  | { kind: 'device'; item: MedicalDeviceOrder }
+  | { kind: 'refusal'; item: PhysicianOrderRefusal }
+  | { kind: 'recepta'; item: ReceptaNaRuchReferral }
 
 interface ClinicalActionsPanelProps {
   patientId: string
@@ -76,6 +89,28 @@ export function ClinicalActionsPanel({
 
   const [receptaNotes, setReceptaNotes] = useState('')
   const [receptaReady, setReceptaReady] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
+  const [editTarget, setEditTarget] = useState<EditTarget | null>(null)
+  const [editFormError, setEditFormError] = useState<string | null>(null)
+
+  const [editRecType, setEditRecType] = useState<RecommendationType>('SPECIALIST_CONSULTATION')
+  const [editRecSpecialty, setEditRecSpecialty] = useState('')
+  const [editRecArea, setEditRecArea] = useState('')
+  const [editRecJustification, setEditRecJustification] = useState('')
+  const [editRecRedFlags, setEditRecRedFlags] = useState(false)
+  const [editRecFunding, setEditRecFunding] = useState<FundingHint>('NFZ_VIA_DOCTOR')
+
+  const [editDeviceCode, setEditDeviceCode] = useState('')
+  const [editDeviceSide, setEditDeviceSide] = useState<BodySide>('NA')
+  const [editDeviceIcd10, setEditDeviceIcd10] = useState('')
+  const [editDeviceNotes, setEditDeviceNotes] = useState('')
+
+  const [editOrderDesc, setEditOrderDesc] = useState('')
+  const [editRefusalReason, setEditRefusalReason] = useState('')
+  const [editPhysicianNotified, setEditPhysicianNotified] = useState(false)
+
+  const [editReceptaNotes, setEditReceptaNotes] = useState('')
+  const [editReceptaReady, setEditReceptaReady] = useState(true)
 
   const load = useCallback(async () => {
     setError(null)
@@ -107,6 +142,31 @@ export function ClinicalActionsPanel({
   useEffect(() => {
     void load()
   }, [load])
+
+  function openEdit(target: EditTarget) {
+    setEditFormError(null)
+    setEditTarget(target)
+    if (target.kind === 'recommendation') {
+      setEditRecType(target.item.recommendation_type)
+      setEditRecSpecialty(target.item.target_specialty)
+      setEditRecArea(target.item.body_area)
+      setEditRecJustification(target.item.justification)
+      setEditRecRedFlags(target.item.red_flags_noted)
+      setEditRecFunding(target.item.funding_hint)
+    } else if (target.kind === 'device') {
+      setEditDeviceCode(target.item.device_code)
+      setEditDeviceSide(target.item.side)
+      setEditDeviceIcd10(target.item.icd10_code)
+      setEditDeviceNotes(target.item.notes)
+    } else if (target.kind === 'refusal') {
+      setEditOrderDesc(target.item.physician_order_description)
+      setEditRefusalReason(target.item.refusal_reason)
+      setEditPhysicianNotified(target.item.physician_notified)
+    } else {
+      setEditReceptaNotes(target.item.activity_notes)
+      setEditReceptaReady(target.item.readiness_confirmed)
+    }
+  }
 
   async function submitRecommendation(event: FormEvent) {
     event.preventDefault()
@@ -195,6 +255,79 @@ export function ClinicalActionsPanel({
     }
   }
 
+  async function confirmDelete() {
+    if (!deleteTarget) {
+      return
+    }
+    setBusy(true)
+    setError(null)
+    try {
+      if (deleteTarget.kind === 'recommendation') {
+        await treatmentApi.deleteDiagnosticRecommendation(episodeId, deleteTarget.id)
+      } else if (deleteTarget.kind === 'device') {
+        await treatmentApi.deleteDeviceOrder(episodeId, deleteTarget.id)
+      } else if (deleteTarget.kind === 'refusal') {
+        await treatmentApi.deleteOrderRefusal(episodeId, deleteTarget.id)
+      } else {
+        await treatmentApi.deleteReceptaNaRuch(patientId, deleteTarget.id)
+      }
+      setDeleteTarget(null)
+      await load()
+      onEpisodePossiblyUpdated?.()
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nie udało się usunąć dokumentu.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function saveEdit(event: FormEvent) {
+    event.preventDefault()
+    if (!editTarget) {
+      return
+    }
+    setBusy(true)
+    setEditFormError(null)
+    try {
+      if (editTarget.kind === 'recommendation') {
+        await treatmentApi.updateDiagnosticRecommendation(episodeId, editTarget.item.id, {
+          recommendation_type: editRecType,
+          target_specialty: editRecSpecialty.trim(),
+          body_area: editRecArea.trim(),
+          justification: editRecJustification.trim(),
+          red_flags_noted: editRecRedFlags,
+          funding_hint: editRecFunding,
+        })
+      } else if (editTarget.kind === 'device') {
+        await treatmentApi.updateDeviceOrder(episodeId, editTarget.item.id, {
+          device_code: editDeviceCode,
+          side: editDeviceSide,
+          icd10_code: editDeviceIcd10.trim().toUpperCase(),
+          notes: editDeviceNotes.trim(),
+        })
+      } else if (editTarget.kind === 'refusal') {
+        await treatmentApi.updateOrderRefusal(episodeId, editTarget.item.id, {
+          physician_order_description: editOrderDesc.trim(),
+          refusal_reason: editRefusalReason.trim(),
+          physician_notified: editPhysicianNotified,
+        })
+      } else {
+        await treatmentApi.updateReceptaNaRuch(patientId, editTarget.item.id, {
+          readiness_confirmed: editReceptaReady,
+          activity_notes: editReceptaNotes.trim(),
+          episode: episodeId,
+        })
+      }
+      setEditTarget(null)
+      await load()
+      onEpisodePossiblyUpdated?.()
+    } catch (err) {
+      setEditFormError(getErrorMessage(err, 'Nie udało się zapisać zmian.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const allowedDevices = catalog.filter((item) => item.allowed_for_therapist)
 
   const tabs: { id: ClinicalTab; label: string; count: number }[] = [
@@ -205,6 +338,14 @@ export function ClinicalActionsPanel({
   ]
 
   const panelId = `${baseId}-panel-${tab}`
+  const editTitle =
+    editTarget?.kind === 'recommendation'
+      ? 'Edytuj rekomendację'
+      : editTarget?.kind === 'device'
+        ? 'Edytuj zlecenie'
+        : editTarget?.kind === 'refusal'
+          ? 'Edytuj odmowę'
+          : 'Edytuj Receptę na Ruch'
 
   return (
     <section className="clinical-actions" aria-label="Kompetencje kliniczne">
@@ -213,6 +354,7 @@ export function ClinicalActionsPanel({
           <h2>Kompetencje kliniczne</h2>
           <p className="clinical-actions__lead">
             Kierowanie pośrednie, wyroby (e-ZWM), odmowa zlecenia i Recepta na Ruch — bez ordynacji leków.
+            Wystawione wpisy są od razu widoczne pacjentowi w aplikacji (zakładka Dokumentacja).
           </p>
         </div>
       </header>
@@ -336,11 +478,39 @@ export function ClinicalActionsPanel({
                 <li key={item.id} className="clinical-actions__item">
                   <div className="clinical-actions__item-head">
                     <strong>{RECOMMENDATION_LABELS[item.recommendation_type]}</strong>
-                    {item.red_flags_noted ? (
-                      <span className="clinical-actions__badge clinical-actions__badge--warn">
-                        Czerwone flagi
-                      </span>
-                    ) : null}
+                    <div className="clinical-actions__item-actions">
+                      {item.red_flags_noted ? (
+                        <span className="clinical-actions__badge clinical-actions__badge--warn">
+                          Czerwone flagi
+                        </span>
+                      ) : null}
+                      <div className="clinical-actions__item-toolbar">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() => openEdit({ kind: 'recommendation', item })}
+                        >
+                          Edytuj
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() =>
+                            setDeleteTarget({
+                              kind: 'recommendation',
+                              id: item.id,
+                              label: RECOMMENDATION_LABELS[item.recommendation_type],
+                            })
+                          }
+                        >
+                          Usuń
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                   {(item.target_specialty || item.body_area) && (
                     <p className="clinical-actions__meta">
@@ -398,11 +568,12 @@ export function ClinicalActionsPanel({
                   </select>
                 </label>
                 <Field
-                  label="ICD-10 (wymagany do zlecenia)"
+                  label="ICD-10"
                   name="device_icd10"
                   value={deviceIcd10}
                   onChange={(e) => setDeviceIcd10(e.target.value)}
                   placeholder="np. M25.5"
+                  hint="Wymagany do zlecenia"
                   required
                 />
               </div>
@@ -431,7 +602,35 @@ export function ClinicalActionsPanel({
                     <strong>
                       [{item.device_group}] {item.device_name}
                     </strong>
-                    <span className="clinical-actions__badge">{item.status}</span>
+                    <div className="clinical-actions__item-actions">
+                      <span className="clinical-actions__badge">{item.status}</span>
+                      <div className="clinical-actions__item-toolbar">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() => openEdit({ kind: 'device', item })}
+                        >
+                          Edytuj
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() =>
+                            setDeleteTarget({
+                              kind: 'device',
+                              id: item.id,
+                              label: item.device_name,
+                            })
+                          }
+                        >
+                          Usuń
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                   <p className="clinical-actions__meta">
                     {item.icd10_code} · {SIDE_LABELS[item.side]}
@@ -494,15 +693,43 @@ export function ClinicalActionsPanel({
                 <li key={item.id} className="clinical-actions__item">
                   <div className="clinical-actions__item-head">
                     <strong>{item.physician_order_description}</strong>
-                    <span
-                      className={
-                        item.physician_notified
-                          ? 'clinical-actions__badge clinical-actions__badge--ok'
-                          : 'clinical-actions__badge clinical-actions__badge--warn'
-                      }
-                    >
-                      {item.physician_notified ? 'Lekarz powiadomiony' : 'Do powiadomienia'}
-                    </span>
+                    <div className="clinical-actions__item-actions">
+                      <span
+                        className={
+                          item.physician_notified
+                            ? 'clinical-actions__badge clinical-actions__badge--ok'
+                            : 'clinical-actions__badge clinical-actions__badge--warn'
+                        }
+                      >
+                        {item.physician_notified ? 'Lekarz powiadomiony' : 'Do powiadomienia'}
+                      </span>
+                      <div className="clinical-actions__item-toolbar">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() => openEdit({ kind: 'refusal', item })}
+                        >
+                          Edytuj
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() =>
+                            setDeleteTarget({
+                              kind: 'refusal',
+                              id: item.id,
+                              label: item.physician_order_description.slice(0, 80),
+                            })
+                          }
+                        >
+                          Usuń
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                   <p>{item.refusal_reason}</p>
                 </li>
@@ -552,7 +779,35 @@ export function ClinicalActionsPanel({
                 <li key={item.id} className="clinical-actions__item">
                   <div className="clinical-actions__item-head">
                     <strong>Recepta na Ruch</strong>
-                    <span className="clinical-actions__badge">{item.status}</span>
+                    <div className="clinical-actions__item-actions">
+                      <span className="clinical-actions__badge">{item.status}</span>
+                      <div className="clinical-actions__item-toolbar">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() => openEdit({ kind: 'recepta', item })}
+                        >
+                          Edytuj
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled={busy}
+                          onClick={() =>
+                            setDeleteTarget({
+                              kind: 'recepta',
+                              id: item.id,
+                              label: 'Recepta na Ruch',
+                            })
+                          }
+                        >
+                          Usuń
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                   <p>{item.activity_notes || 'Bez notatki'}</p>
                 </li>
@@ -561,6 +816,231 @@ export function ClinicalActionsPanel({
           </>
         ) : null}
       </div>
+
+      <Modal
+        open={editTarget !== null}
+        title={editTitle}
+        description="Zmiany będą od razu widoczne w Dokumentacji pacjenta."
+        onClose={() => setEditTarget(null)}
+      >
+        <form className="ui-modal__form" onSubmit={(e) => void saveEdit(e)}>
+          {editTarget?.kind === 'recommendation' ? (
+            <>
+              <label className="ui-field">
+                <span className="ui-field__label">Typ</span>
+                <select
+                  className="patient-select"
+                  value={editRecType}
+                  onChange={(e) => setEditRecType(e.target.value as RecommendationType)}
+                >
+                  {(Object.keys(RECOMMENDATION_LABELS) as RecommendationType[]).map((key) => (
+                    <option key={key} value={key}>
+                      {RECOMMENDATION_LABELS[key]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <Field
+                label="Specjalizacja / cel"
+                name="edit_rec_specialty"
+                value={editRecSpecialty}
+                onChange={(e) => setEditRecSpecialty(e.target.value)}
+              />
+              <Field
+                label="Obszar ciała"
+                name="edit_rec_area"
+                value={editRecArea}
+                onChange={(e) => setEditRecArea(e.target.value)}
+              />
+              <label className="ui-field">
+                <span className="ui-field__label">Uzasadnienie</span>
+                <textarea
+                  className="patient-textarea"
+                  value={editRecJustification}
+                  onChange={(e) => setEditRecJustification(e.target.value)}
+                  rows={3}
+                  required
+                />
+              </label>
+              <label className="ui-field">
+                <span className="ui-field__label">Finansowanie</span>
+                <select
+                  className="patient-select"
+                  value={editRecFunding}
+                  onChange={(e) => setEditRecFunding(e.target.value as FundingHint)}
+                >
+                  <option value="NFZ_VIA_DOCTOR">NFZ — skierowanie wystawia lekarz</option>
+                  <option value="PRIVATE">Ścieżka prywatna</option>
+                  <option value="NOT_APPLICABLE">Nie dotyczy</option>
+                </select>
+              </label>
+              <label className="clinical-actions__check">
+                <input
+                  type="checkbox"
+                  checked={editRecRedFlags}
+                  onChange={(e) => setEditRecRedFlags(e.target.checked)}
+                />
+                Czerwone flagi
+              </label>
+            </>
+          ) : null}
+
+          {editTarget?.kind === 'device' ? (
+            <>
+              <label className="ui-field">
+                <span className="ui-field__label">Wyrób</span>
+                <select
+                  className="patient-select"
+                  value={editDeviceCode}
+                  onChange={(e) => setEditDeviceCode(e.target.value)}
+                  required
+                >
+                  {allowedDevices.map((item) => (
+                    <option key={item.code} value={item.code}>
+                      [{item.group}] {item.name}
+                    </option>
+                  ))}
+                  {!allowedDevices.some((item) => item.code === editDeviceCode) && editDeviceCode ? (
+                    <option value={editDeviceCode}>{editDeviceCode} (obecny)</option>
+                  ) : null}
+                </select>
+              </label>
+              <label className="ui-field">
+                <span className="ui-field__label">Strona</span>
+                <select
+                  className="patient-select"
+                  value={editDeviceSide}
+                  onChange={(e) => setEditDeviceSide(e.target.value as BodySide)}
+                >
+                  {(Object.keys(SIDE_LABELS) as BodySide[]).map((key) => (
+                    <option key={key} value={key}>
+                      {SIDE_LABELS[key]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <Field
+                label="ICD-10"
+                name="edit_device_icd10"
+                value={editDeviceIcd10}
+                onChange={(e) => setEditDeviceIcd10(e.target.value)}
+                required
+              />
+              <label className="ui-field">
+                <span className="ui-field__label">Notatka</span>
+                <textarea
+                  className="patient-textarea"
+                  value={editDeviceNotes}
+                  onChange={(e) => setEditDeviceNotes(e.target.value)}
+                  rows={2}
+                />
+              </label>
+            </>
+          ) : null}
+
+          {editTarget?.kind === 'refusal' ? (
+            <>
+              <label className="ui-field">
+                <span className="ui-field__label">Zlecenie lekarskie</span>
+                <textarea
+                  className="patient-textarea"
+                  value={editOrderDesc}
+                  onChange={(e) => setEditOrderDesc(e.target.value)}
+                  rows={2}
+                  required
+                />
+              </label>
+              <label className="ui-field">
+                <span className="ui-field__label">Uzasadnienie odmowy</span>
+                <textarea
+                  className="patient-textarea"
+                  value={editRefusalReason}
+                  onChange={(e) => setEditRefusalReason(e.target.value)}
+                  rows={3}
+                  required
+                />
+              </label>
+              <label className="clinical-actions__check">
+                <input
+                  type="checkbox"
+                  checked={editPhysicianNotified}
+                  onChange={(e) => setEditPhysicianNotified(e.target.checked)}
+                />
+                Poinformowano lekarza zlecającego
+              </label>
+            </>
+          ) : null}
+
+          {editTarget?.kind === 'recepta' ? (
+            <>
+              <label className="ui-field">
+                <span className="ui-field__label">Notatka z oceny aktywności</span>
+                <textarea
+                  className="patient-textarea"
+                  value={editReceptaNotes}
+                  onChange={(e) => setEditReceptaNotes(e.target.value)}
+                  rows={2}
+                />
+              </label>
+              <label className="clinical-actions__check">
+                <input
+                  type="checkbox"
+                  checked={editReceptaReady}
+                  onChange={(e) => setEditReceptaReady(e.target.checked)}
+                  required
+                />
+                Potwierdzam weryfikację gotowości do wysiłku
+              </label>
+            </>
+          ) : null}
+
+          {editFormError ? (
+            <p className="ui-modal__error" role="alert">
+              {editFormError}
+            </p>
+          ) : null}
+          <div className="ui-modal__actions">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setEditTarget(null)}
+              disabled={busy}
+            >
+              Anuluj
+            </Button>
+            <Button type="submit" loading={busy}>
+              Zapisz zmiany
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        open={deleteTarget !== null}
+        title="Usuń dokument"
+        description={
+          deleteTarget
+            ? `„${deleteTarget.label}” zniknie z karty pacjenta i z zakładki Dokumentacja w aplikacji pacjenta.`
+            : undefined
+        }
+        onClose={() => setDeleteTarget(null)}
+      >
+        <div className="ui-modal__form">
+          <div className="ui-modal__actions">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setDeleteTarget(null)}
+              disabled={busy}
+            >
+              Anuluj
+            </Button>
+            <Button type="button" onClick={() => void confirmDelete()} loading={busy}>
+              Usuń
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </section>
   )
 }

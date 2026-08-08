@@ -146,6 +146,27 @@ export interface MedicalDocument {
   created_at: string
 }
 
+export type ClinicalDocumentKind =
+  | 'recommendation'
+  | 'device_order'
+  | 'refusal'
+  | 'recepta_na_ruch'
+  | 'pdf'
+
+export interface ClinicalDocumentItem {
+  id: string
+  kind: ClinicalDocumentKind
+  kind_label: string
+  title: string
+  summary: string
+  created_at: string
+  therapist_name: string
+  episode_id: string | null
+  status: string | null
+  file_url: string | null
+  details: Record<string, unknown>
+}
+
 export interface CompetenceCapability {
   code: string
   allowed: boolean

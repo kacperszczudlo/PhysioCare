@@ -132,6 +132,28 @@ export const treatmentApi = {
     )
   },
 
+  deleteDiagnosticRecommendation(episodeId: string, id: string) {
+    return api.delete<void>(`/episodes/${episodeId}/diagnostic-recommendations/${id}/`)
+  },
+
+  updateDiagnosticRecommendation(
+    episodeId: string,
+    id: string,
+    payload: {
+      recommendation_type?: RecommendationType
+      target_specialty?: string
+      body_area?: string
+      justification?: string
+      red_flags_noted?: boolean
+      funding_hint?: FundingHint
+    },
+  ) {
+    return api.patch<DiagnosticRecommendation>(
+      `/episodes/${episodeId}/diagnostic-recommendations/${id}/`,
+      payload,
+    )
+  },
+
   listDeviceOrders(episodeId: string) {
     return listResults<MedicalDeviceOrder>(`/episodes/${episodeId}/device-orders/`)
   },
@@ -149,6 +171,25 @@ export const treatmentApi = {
     return api.post<MedicalDeviceOrder>(`/episodes/${episodeId}/device-orders/`, payload)
   },
 
+  deleteDeviceOrder(episodeId: string, id: string) {
+    return api.delete<void>(`/episodes/${episodeId}/device-orders/${id}/`)
+  },
+
+  updateDeviceOrder(
+    episodeId: string,
+    id: string,
+    payload: {
+      device_code?: string
+      side?: BodySide
+      quantity?: number
+      icd10_code?: string
+      notes?: string
+      status?: string
+    },
+  ) {
+    return api.patch<MedicalDeviceOrder>(`/episodes/${episodeId}/device-orders/${id}/`, payload)
+  },
+
   listOrderRefusals(episodeId: string) {
     return listResults<PhysicianOrderRefusal>(`/episodes/${episodeId}/order-refusals/`)
   },
@@ -164,6 +205,25 @@ export const treatmentApi = {
     return api.post<PhysicianOrderRefusal>(`/episodes/${episodeId}/order-refusals/`, payload)
   },
 
+  deleteOrderRefusal(episodeId: string, id: string) {
+    return api.delete<void>(`/episodes/${episodeId}/order-refusals/${id}/`)
+  },
+
+  updateOrderRefusal(
+    episodeId: string,
+    id: string,
+    payload: {
+      physician_order_description?: string
+      refusal_reason?: string
+      physician_notified?: boolean
+    },
+  ) {
+    return api.patch<PhysicianOrderRefusal>(
+      `/episodes/${episodeId}/order-refusals/${id}/`,
+      payload,
+    )
+  },
+
   listReceptaNaRuch(patientId: string) {
     return listResults<ReceptaNaRuchReferral>(`/patients/${patientId}/recepta-na-ruch/`)
   },
@@ -177,6 +237,26 @@ export const treatmentApi = {
     },
   ) {
     return api.post<ReceptaNaRuchReferral>(`/patients/${patientId}/recepta-na-ruch/`, payload)
+  },
+
+  deleteReceptaNaRuch(patientId: string, id: string) {
+    return api.delete<void>(`/patients/${patientId}/recepta-na-ruch/${id}/`)
+  },
+
+  updateReceptaNaRuch(
+    patientId: string,
+    id: string,
+    payload: {
+      readiness_confirmed?: boolean
+      activity_notes?: string
+      episode?: string | null
+      status?: string
+    },
+  ) {
+    return api.patch<ReceptaNaRuchReferral>(
+      `/patients/${patientId}/recepta-na-ruch/${id}/`,
+      payload,
+    )
   },
 
   getMedicalDeviceCatalog() {

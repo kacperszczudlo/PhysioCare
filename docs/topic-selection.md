@@ -36,7 +36,8 @@ System ma umożliwiać zarządzanie harmonogramem wizyt (z uwzględnieniem czasu
 | Autoryzacja | Logowanie, rejestracja z zgodami RODO, reset hasła |
 | Pulpit | Najbliższa wizyta, zalecenia na dziś (compliance), skrót do historii |
 | Wizyty | Nadchodzące / zakończone, szczegóły, zmiana terminu, odwołanie |
-| Profil | Dane kontaktowe, dokumentacja PDF, preferencje powiadomień, zgody RODO |
+| Profil | Dane kontaktowe, preferencje powiadomień, zgody RODO |
+| Dokumentacja | Kierowanie, wyroby, Recepta na Ruch, odmowy i PDF — widoczne po wystawieniu przez terapeutę |
 | Pod-widoki | Szczegóły wizyty, profil fizjoterapeuty |
 
 ### Wspólne (backend)

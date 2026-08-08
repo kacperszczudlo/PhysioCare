@@ -276,13 +276,21 @@ class DiagnosticRecommendationSerializer(serializers.ModelSerializer):
             )
 
         rec_type = attrs.get('recommendation_type')
+        if rec_type is None and self.instance is not None:
+            rec_type = self.instance.recommendation_type
+
+        funding = attrs.get('funding_hint')
+        if funding is None and self.instance is not None:
+            funding = self.instance.funding_hint
+        if funding is None:
+            funding = FundingHint.NFZ_VIA_DOCTOR
+
         # Formalne skierowanie NFZ na obrazowanie — zawsze niedozwolone w aplikacji.
         if rec_type in (
             RecommendationType.IMAGING_MRI,
             RecommendationType.IMAGING_CT,
             RecommendationType.IMAGING_RTG,
         ):
-            funding = attrs.get('funding_hint', FundingHint.NFZ_VIA_DOCTOR)
             if rec_type == RecommendationType.IMAGING_RTG:
                 attrs['funding_hint'] = FundingHint.NFZ_VIA_DOCTOR
             elif funding == FundingHint.PRIVATE and rec_type == RecommendationType.IMAGING_MRI:
@@ -335,7 +343,11 @@ class MedicalDeviceOrderSerializer(serializers.ModelSerializer):
         therapist = request.user.therapist_profile
         snapshot = snapshot_for_therapist(therapist)
 
-        device = get_device(attrs.get('device_code', ''))
+        device_code = attrs.get('device_code')
+        if device_code is None and self.instance is not None:
+            device_code = self.instance.device_code
+
+        device = get_device(device_code or '')
         if device is None:
             raise serializers.ValidationError({
                 'device_code': 'Nieznany kod wyrobu. Wybierz pozycję z katalogu.',
@@ -417,7 +429,10 @@ class ReceptaNaRuchReferralSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
-        if not attrs.get('readiness_confirmed', False):
+        confirmed = attrs.get('readiness_confirmed')
+        if confirmed is None and self.instance is not None:
+            confirmed = self.instance.readiness_confirmed
+        if not confirmed:
             raise serializers.ValidationError({
                 'readiness_confirmed': (
                     'Potwierdź weryfikację gotowości do wysiłku '

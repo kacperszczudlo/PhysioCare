@@ -7,7 +7,7 @@ System wspomagania zarządzania gabinetem fizjoterapeutycznym - aplikacja webowa
 PhysioCare umożliwia:
 
 - **Fizjoterapeucie (web):** harmonogram wizyt, karta pacjenta z epizodami leczenia, mapa ciała (VAS), baza ćwiczeń, dokumentacja.
-- **Pacjentowi (mobile):** przegląd wizyt, realizacja ćwiczeń domowych (compliance), dokumenty PDF, zgody RODO.
+- **Pacjentowi (mobile):** przegląd wizyt, realizacja ćwiczeń domowych (compliance), dokumentacja kliniczna (kierowanie, wyroby, Recepta na Ruch), zgody RODO.
 
 ## Stos technologiczny
 

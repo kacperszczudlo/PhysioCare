@@ -1,5 +1,7 @@
 import { api } from './client'
 import type {
+  ClinicalDocumentItem,
+  ClinicalDocumentKind,
   Consent,
   ExerciseCompletion,
   MedicalDocument,
@@ -95,6 +97,14 @@ export const patientApi = {
   async getDocuments() {
     const data = await api.get<MedicalDocument[] | Paginated<MedicalDocument>>('/me/documents/')
     return unwrapList(data)
+  },
+
+  async getClinicalDocuments(kind?: ClinicalDocumentKind) {
+    const query = kind ? `?kind=${kind}` : ''
+    const data = await api.get<{ count: number; results: ClinicalDocumentItem[] }>(
+      `/me/clinical-documents/${query}`,
+    )
+    return data.results
   },
 
   getTherapistPublic(id: string) {

@@ -164,6 +164,26 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** - hasło z
 | DELETE | `/episodes/{id}/body-pain/{entry_id}` | THERAPIST | Usunięcie wpisu |
 | POST | `/episodes/{id}/notes` | THERAPIST | Notatka z wizyty |
 | GET | `/episodes/{id}/notes` | THERAPIST | Lista notatek epizodu |
+| GET/POST | `/episodes/{id}/diagnostic-recommendations` | THERAPIST | Kierowanie pośrednie (opinia) |
+| PATCH/DELETE | `/episodes/{id}/diagnostic-recommendations/{item_id}` | THERAPIST | Edycja / usunięcie kierowania |
+| GET/POST | `/episodes/{id}/device-orders` | THERAPIST | Zlecenia wyrobów (e-ZWM model) |
+| PATCH/DELETE | `/episodes/{id}/device-orders/{item_id}` | THERAPIST | Edycja / usunięcie zlecenia |
+| GET/POST | `/episodes/{id}/order-refusals` | THERAPIST | Odmowa zlecenia lekarskiego |
+| PATCH/DELETE | `/episodes/{id}/order-refusals/{item_id}` | THERAPIST | Edycja / usunięcie odmowy |
+| GET/POST | `/patients/{id}/recepta-na-ruch` | THERAPIST | Skierowanie Recepta na Ruch |
+| PATCH/DELETE | `/patients/{id}/recepta-na-ruch/{item_id}` | THERAPIST | Edycja / usunięcie skierowania |
+| GET | `/medical-devices/catalog` | THERAPIST | Katalog wyrobów + kompetencje |
+| GET | `/me/clinical-documents` | PATIENT | Skrzynka dokumentacji pacjenta |
+
+**Dokumentacja pacjenta** (`GET /me/clinical-documents`):
+
+Wystawienie przez terapeutę udostępnia wpis pacjentowi automatycznie (bez osobnego uploadu).
+
+| Param | Znaczenie |
+|-------|-----------|
+| `kind` | Opcjonalnie: `recommendation` \| `device_order` \| `refusal` \| `recepta_na_ruch` \| `pdf` |
+
+Odpowiedź: `{ count, results[] }` gdzie każdy element ma `id`, `kind`, `kind_label`, `title`, `summary`, `created_at`, `therapist_name`, `episode_id`, `status`, `file_url` (PDF), `details`. Wyroby i Recepta na Ruch tylko ze statusem `ISSUED`.
 
 **Body pain:**
 
@@ -234,9 +254,10 @@ Wymiary `type` / `region` / `muscle` / `injury` łączone są **AND** (ćwiczeni
 
 | Metoda | Endpoint | Opis |
 |--------|----------|------|
-| GET | `/me/documents` | Lista PDF pacjenta |
+| GET | `/me/documents` | Lista samych PDF pacjenta (legacy / wąski widok) |
+| GET | `/me/clinical-documents` | Pełna skrzynka: kierowanie, wyroby, odmowy, Recepta na Ruch + PDF |
 | GET | `/{id}/download` | Pobranie (auth) - ścieżka faktyczna w URLconf |
-| POST | `/therapist/documents` | Upload przez terapeutę (`multipart`) |
+| POST | `/therapist/documents` | Upload PDF przez terapeutę (`multipart`) |
 
 ---
 

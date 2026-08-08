@@ -35,13 +35,14 @@ Automatyczne wsparcie: Postman (`docs/postman/`), pytest backend.
 | # | Ścieżka | Oczekiwany rezultat |
 |---|---------|---------------------|
 | M1 | Rejestracja + zgody RODO + kod terapeuty | Konto pacjenta powiązane z terapeutą, token w SecureStore |
-| M2 | Logowanie | Tabs (pulpit / wizyty / profil) |
+| M2 | Logowanie | Tabs (pulpit / wizyty / dokumentacja / profil / ustawienia) |
 | M3 | Pulpit | Compliance ćwiczeń, oznaczenie wykonania |
 | M4 | Wizyty | Nadchodzące + archiwum |
 | M5 | Szczegóły wizyty | Stack `visit/[id]` |
 | M6 | Profil terapeuty | Stack `therapist/[id]` ze zdjęciem (jeśli ustawione) |
-| M7 | Profil | Dokumenty, powiadomienia, zgody, upload własnego avatara |
-| M8 | Offline / błąd API | Banner offline + czytelny `NetworkError` / ErrorBanner, bez crasha i bez wylogowania |
+| M7 | Dokumentacja | Lista kliniczna (kierowanie / wyroby / recepta / odmowa / PDF) po wystawieniu przez terapeutę |
+| M8 | Profil | Dane kontaktowe, avatar |
+| M9 | Offline / błąd API | Banner offline + czytelny `NetworkError` / ErrorBanner, bez crasha i bez wylogowania |
 
 ## Cross-cutting
 

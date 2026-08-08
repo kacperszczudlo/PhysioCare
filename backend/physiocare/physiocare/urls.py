@@ -8,6 +8,7 @@ from exercises.urls import me_urlpatterns as exercises_me_urls
 from notifications.urls import me_urlpatterns as notifications_me_urls
 from patients.urls import me_urlpatterns as patients_me_urls
 from scheduling.urls import me_urlpatterns as scheduling_me_urls
+from treatment.urls import me_urlpatterns as treatment_me_urls
 
 me_urlpatterns = (
     patients_me_urls
@@ -15,6 +16,7 @@ me_urlpatterns = (
     + exercises_me_urls
     + documents_me_urls
     + notifications_me_urls
+    + treatment_me_urls
 )
 
 urlpatterns = [
