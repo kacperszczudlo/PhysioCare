@@ -31,7 +31,7 @@ export function AppLayout() {
             className="app-shell__mark"
             src="/brand/sygnet.png"
             alt=""
-            width={36}
+            width={48}
             height={48}
           />
           <div>

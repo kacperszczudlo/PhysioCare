@@ -170,5 +170,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     marginTop: space.base,
+    textDecorationLine: 'underline',
   },
 })

@@ -4,7 +4,7 @@ import { DAY_END_HOUR, DAY_START_HOUR, SNAP_MINUTES } from '@/lib/scheduleTime'
 
 import './TimeCarousel.css'
 
-const ITEM_HEIGHT = 40
+const ITEM_HEIGHT = 44
 const SETTLE_MS = 140
 
 interface TimeCarouselProps {

@@ -55,18 +55,36 @@
 }
 
 .ui-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 0;
   background: transparent;
   font-size: 1.5rem;
   line-height: 1;
   color: var(--color-muted);
   cursor: pointer;
-  padding: var(--space-1);
+  width: var(--control-size);
+  height: var(--control-size);
+  min-width: var(--control-size);
+  min-height: var(--control-size);
+  padding: 0;
+  margin: calc(var(--space-1) * -1) calc(var(--space-1) * -1) 0 0;
+  border-radius: var(--radius-sm);
   flex-shrink: 0;
+  transition:
+    color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
 }
 
 .ui-modal__close:hover {
   color: var(--color-ink);
+  background: var(--color-surface);
+}
+
+.ui-modal__close:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .ui-modal__body {
@@ -87,7 +105,7 @@
   border-radius: var(--radius-md);
   background: var(--color-bg);
   padding: var(--space-3);
-  min-height: 2.75rem;
+  min-height: var(--control-size);
 }
 
 .ui-modal__textarea {

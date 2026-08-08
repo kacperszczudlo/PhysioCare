@@ -15,7 +15,7 @@ import {
   formatCountryOption,
   getCountryByCode,
 } from '@/lib/countries'
-import { colors, radius, space, typography } from '@/theme/tokens'
+import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
 interface PhoneFieldProps {
   label?: string
@@ -104,7 +104,13 @@ export function PhoneField({
         <View style={styles.modal}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Wybierz kraj</Text>
-            <Pressable onPress={() => setPickerOpen(false)} hitSlop={8}>
+            <Pressable
+              onPress={() => setPickerOpen(false)}
+              hitSlop={8}
+              style={styles.modalCloseBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Zamknij"
+            >
               <Text style={styles.modalClose}>Zamknij</Text>
             </Pressable>
           </View>
@@ -155,7 +161,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   countryBtn: {
-    minHeight: 44,
+    minHeight: controlSize,
     borderWidth: 1.5,
     borderColor: colors.borderStrong,
     borderRadius: radius.md,
@@ -172,10 +178,10 @@ const styles = StyleSheet.create({
   },
   chevron: {
     color: colors.muted,
-    fontSize: 10,
+    fontSize: typography.xs,
   },
   numberRow: {
-    minHeight: 44,
+    minHeight: controlSize,
     borderWidth: 1.5,
     borderColor: colors.borderStrong,
     borderRadius: radius.md,
@@ -227,15 +233,23 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.ink,
   },
+  modalCloseBtn: {
+    minHeight: controlSize,
+    minWidth: controlSize,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: space.sm,
+  },
   modalClose: {
     color: colors.primary,
     fontWeight: '600',
     fontSize: typography.base,
+    textDecorationLine: 'underline',
   },
   search: {
     marginHorizontal: space.xl,
     marginBottom: space.md,
-    minHeight: 44,
+    minHeight: controlSize,
     borderWidth: 1.5,
     borderColor: colors.borderStrong,
     borderRadius: radius.md,
@@ -247,7 +261,9 @@ const styles = StyleSheet.create({
   option: {
     paddingHorizontal: space.xl,
     paddingVertical: space.md,
+    minHeight: controlSize,
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: space.md,
     borderBottomWidth: StyleSheet.hairlineWidth,

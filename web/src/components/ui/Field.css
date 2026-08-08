@@ -17,7 +17,7 @@
 
 .ui-field__input {
   width: 100%;
-  min-height: 2.75rem;
+  min-height: var(--control-size);
   padding: 0 var(--space-3);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
@@ -26,7 +26,7 @@
 }
 
 .ui-field__control--reveal .ui-field__input {
-  padding-right: 2.75rem;
+  padding-right: var(--control-size);
 }
 
 .ui-field__input::placeholder {
@@ -48,12 +48,14 @@
 .ui-field__reveal {
   position: absolute;
   top: 50%;
-  right: 0.35rem;
+  right: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: var(--control-size);
+  height: var(--control-size);
+  min-width: var(--control-size);
+  min-height: var(--control-size);
   padding: 0;
   border: none;
   border-radius: var(--radius-sm);

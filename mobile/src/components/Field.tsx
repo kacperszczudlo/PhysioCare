@@ -9,7 +9,7 @@ import {
   type TextInputProps,
 } from 'react-native'
 
-import { colors, radius, space, typography } from '@/theme/tokens'
+import { colors, controlSize, iconSize, radius, space, typography } from '@/theme/tokens'
 
 interface FieldProps extends TextInputProps {
   label: string
@@ -58,7 +58,7 @@ export function Field({
           >
             <Ionicons
               name={revealed ? 'eye-off-outline' : 'eye-outline'}
-              size={22}
+              size={iconSize.lg}
               color={colors.muted}
             />
           </Pressable>
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   input: {
-    minHeight: 48,
+    minHeight: controlSize,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: radius.md,
@@ -100,17 +100,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   inputWithReveal: {
-    paddingRight: 48,
+    paddingRight: controlSize,
   },
   inputError: {
     borderColor: colors.danger,
   },
   reveal: {
     position: 'absolute',
-    right: 4,
+    right: 0,
     top: 0,
     bottom: 0,
-    width: 44,
+    width: controlSize,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.sm,

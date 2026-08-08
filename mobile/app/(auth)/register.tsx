@@ -368,12 +368,13 @@ const styles = StyleSheet.create({
   form: { gap: space.base },
   error: { color: colors.danger, fontSize: typography.sm },
   legalHint: { fontSize: typography.sm, color: colors.muted, lineHeight: 20 },
-  inlineLink: { color: colors.primary, fontWeight: '600' },
+  inlineLink: { color: colors.primary, fontWeight: '600', textDecorationLine: 'underline' },
   link: {
     color: colors.primary,
     fontWeight: '600',
     textAlign: 'center',
     marginTop: space.base,
+    textDecorationLine: 'underline',
   },
   consentRow: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start' },
   checkbox: {

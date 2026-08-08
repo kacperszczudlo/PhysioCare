@@ -7,7 +7,7 @@
 
   --color-ink: oklch(0.22 0.02 113);
   --color-muted: oklch(0.48 0.018 113);
-  --color-faint: oklch(0.62 0.014 113);
+  --color-faint: oklch(0.52 0.016 113);
 
   --color-primary: oklch(0.42 0.11 113);
   --color-primary-hover: oklch(0.36 0.1 113);
@@ -68,8 +68,15 @@
   --z-tooltip: 600;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --duration-fast: 150ms;
   --duration-normal: 220ms;
+  --duration-medium: 300ms;
+  --duration-large: 400ms;
+
+  --control-size: 2.75rem;
+  --control-size-lg: 3rem;
 
   --focus-ring: 0 0 0 3px oklch(0.42 0.11 113 / 0.35);
 }

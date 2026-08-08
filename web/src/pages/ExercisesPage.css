@@ -47,7 +47,7 @@
 }
 
 .exercises-media__btn {
-  min-height: 2.35rem;
+  min-height: var(--control-size);
   padding: 0 var(--space-3);
   border: none;
   border-radius: calc(var(--radius-md) - 0.1rem);

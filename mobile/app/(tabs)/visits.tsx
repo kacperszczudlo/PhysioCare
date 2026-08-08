@@ -9,7 +9,7 @@ import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { formatDateTime, formatTimeRange, visitStatusLabel } from '@/lib/format'
-import { colors, radius, space, typography } from '@/theme/tokens'
+import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
 type TabKey = 'upcoming' | 'past'
 
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   },
   segment: {
     flex: 1,
-    minHeight: 40,
+    minHeight: controlSize,
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',

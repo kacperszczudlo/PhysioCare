@@ -30,12 +30,15 @@
 }
 
 .day-carousel__chip {
-  flex: 0 0 3.75rem;
+  flex: 0 0 auto;
+  min-width: var(--control-size-lg);
+  min-height: var(--control-size-lg);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.1rem;
-  padding: var(--space-2) var(--space-1);
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   background: var(--color-bg);

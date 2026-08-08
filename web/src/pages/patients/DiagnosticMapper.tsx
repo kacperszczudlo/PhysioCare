@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Body, type BodyPartData, type BodyPartSlug } from 'simple-body-highlighter-react'
 
 import { treatmentApi } from '@/api/treatment'
@@ -41,6 +41,7 @@ export function DiagnosticMapper({ episodeId }: DiagnosticMapperProps) {
   const [kindFilter, setKindFilter] = useState<StructureKind | 'ALL'>('ALL')
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const modelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -102,6 +103,33 @@ export function DiagnosticMapper({ episodeId }: DiagnosticMapperProps) {
 
     return Array.from(bySlug.entries()).map(([slug, color]) => ({ slug, color }))
   }, [sideEntries, selectedRegion, vas])
+
+  useEffect(() => {
+    const root = modelRef.current
+    if (!root) return
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return
+      const target = event.target
+      if (!(target instanceof SVGPathElement)) return
+      event.preventDefault()
+      target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      const paths = root.querySelectorAll('path')
+      paths.forEach((path) => {
+        path.setAttribute('tabindex', '0')
+        path.setAttribute('role', 'button')
+      })
+    })
+
+    root.addEventListener('keydown', onKeyDown)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      root.removeEventListener('keydown', onKeyDown)
+    }
+  }, [side, highlightData, loading])
 
   function selectRegion(regionId: string) {
     setSelectedRegion(regionId)
@@ -242,7 +270,11 @@ export function DiagnosticMapper({ episodeId }: DiagnosticMapperProps) {
 
       <div className="diag-map__layout">
         <div className="diag-map__canvas-wrap">
-          <div className="diag-map__model" aria-label={side === 'FRONT' ? 'Sylwetka - przód' : 'Sylwetka - tył'}>
+          <div
+            ref={modelRef}
+            className="diag-map__model"
+            aria-label={side === 'FRONT' ? 'Sylwetka - przód' : 'Sylwetka - tył'}
+          >
             <Body
               data={highlightData}
               onClick={onMuscleClick}

@@ -408,7 +408,7 @@ img.dash-visit__avatar {
 .dash-empty-action {
   display: inline-flex;
   align-items: center;
-  min-height: 2.25rem;
+  min-height: var(--control-size);
   padding: 0 var(--space-4);
   border: 0;
   border-radius: var(--radius-md);

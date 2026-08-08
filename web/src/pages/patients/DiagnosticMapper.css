@@ -39,13 +39,19 @@
 .diag-map__tab {
   border: 0;
   background: transparent;
-  min-height: 2rem;
+  min-height: var(--control-size);
+  min-width: var(--control-size);
   padding: 0 var(--space-3);
   border-radius: var(--radius-sm);
   font-weight: 600;
   font-size: var(--text-sm);
   color: var(--color-muted);
   cursor: pointer;
+}
+
+.diag-map__tab:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .diag-map__tab--active {
@@ -88,20 +94,21 @@
 .diag-map__model path {
   cursor: pointer;
   outline: none;
-  stroke: none;
-  transition: fill var(--duration-fast) var(--ease-out);
+  stroke: transparent;
+  stroke-width: 3px;
+  paint-order: stroke fill;
+  transition:
+    fill var(--duration-fast) var(--ease-out),
+    stroke var(--duration-fast) var(--ease-out);
 }
 
 .diag-map__model path:hover {
   filter: brightness(0.92);
 }
 
-.diag-map__model path:focus,
-.diag-map__model path:focus-visible,
-.diag-map__model path:active {
-  outline: none;
-  stroke: none;
-  box-shadow: none;
+.diag-map__model path:focus-visible {
+  stroke: var(--color-primary);
+  filter: brightness(0.94);
 }
 
 .diag-map__panel {
@@ -168,9 +175,15 @@
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   font-weight: 600;
-  min-height: 1.75rem;
-  padding: 0 var(--space-2);
+  min-height: var(--control-size);
+  min-width: var(--control-size);
+  padding: 0 var(--space-3);
   cursor: pointer;
+}
+
+.diag-map__kind:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .diag-map__kind--active {
@@ -205,6 +218,7 @@
   align-items: center;
   gap: var(--space-2);
   font-size: var(--text-sm);
+  min-height: var(--control-size);
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -235,11 +249,18 @@
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
-  padding: 0;
+  min-height: var(--control-size);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
 }
 
 .diag-map__clear:hover {
   color: var(--color-ink);
+}
+
+.diag-map__clear:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .diag-map__badges {
@@ -257,12 +278,18 @@
   gap: var(--space-2);
   border: 0;
   border-radius: var(--radius-md);
+  min-height: var(--control-size);
   padding: var(--space-2) var(--space-3);
   color: var(--color-on-primary);
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
   text-align: left;
+}
+
+.diag-map__badge:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .diag-map__badge-text {

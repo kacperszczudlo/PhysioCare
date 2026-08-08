@@ -17,7 +17,7 @@ import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { downloadAuthenticatedMediaToCache } from '@/lib/authMedia'
 import { formatDate } from '@/lib/format'
-import { colors, radius, space, typography } from '@/theme/tokens'
+import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
 type FilterKey = 'all' | ClinicalDocumentKind
 
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     paddingVertical: space.sm,
     borderRadius: radius.md,
     backgroundColor: colors.surfaceMuted,
-    minHeight: 44,
+    minHeight: controlSize,
     justifyContent: 'center',
   },
   segmentOn: {
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: space.base,
     paddingVertical: space.sm,
-    minHeight: 44,
+    minHeight: controlSize,
     justifyContent: 'center',
   },
   pdfBtnLabel: {

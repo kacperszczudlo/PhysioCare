@@ -10,7 +10,7 @@ import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { BrandMark } from '@/components/BrandMark'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
 import { formatDateTime, formatTimeRange } from '@/lib/format'
-import { colors, radius, space, typography } from '@/theme/tokens'
+import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
 export default function DashboardScreen() {
   const { user } = useAuth()
@@ -155,7 +155,6 @@ export default function DashboardScreen() {
                 accessibilityRole="checkbox"
                 accessibilityLabel={`Oznacz ${item.exercise_title} jako wykonane`}
                 accessibilityState={{ checked: item.completed_today, busy: busyId === item.id }}
-                hitSlop={10}
               >
                 {item.completed_today ? <Text style={styles.checkMark}>✓</Text> : null}
               </Pressable>
@@ -233,13 +232,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
   },
   tagText: {
-    fontSize: 11,
-    fontWeight: '650',
+    fontSize: typography.xs,
+    fontWeight: '600',
     color: colors.primary,
   },
   tagMore: {
-    fontSize: 11,
-    fontWeight: '650',
+    fontSize: typography.xs,
+    fontWeight: '600',
     color: colors.muted,
     alignSelf: 'center',
   },
@@ -258,16 +257,15 @@ const styles = StyleSheet.create({
   exerciseDone: { backgroundColor: colors.successSubtle, borderColor: colors.success },
   exerciseBody: { flex: 1, gap: 4 },
   check: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: controlSize,
+    height: controlSize,
+    borderRadius: radius.md,
     borderWidth: 1.5,
     borderColor: colors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 2,
   },
   checkOn: { backgroundColor: colors.success, borderColor: colors.success },
-  checkMark: { color: colors.onPrimary, fontWeight: '700' },
+  checkMark: { color: colors.onPrimary, fontWeight: '700', fontSize: typography.lg },
   strike: { textDecorationLine: 'line-through', color: colors.muted },
 })

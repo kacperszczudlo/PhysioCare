@@ -10,7 +10,7 @@ import { Button } from '@/components/Button'
 import { ExerciseVideoPlayer } from '@/components/ExerciseVideoPlayer'
 import { SectionCard } from '@/components/ScreenHeader'
 import { downloadAuthenticatedMediaToCache, useAuthenticatedMediaSource } from '@/lib/authMedia'
-import { colors, radius, space, typography } from '@/theme/tokens'
+import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
 function tagStyleForKind(kind: CategoryKind) {
   switch (kind) {
@@ -149,7 +149,6 @@ export default function ExerciseDetailScreen() {
                   accessibilityRole="checkbox"
                   accessibilityLabel="Oznacz jako wykonane"
                   accessibilityState={{ checked: item.completed_today, busy }}
-                  hitSlop={8}
                 >
                   {item.completed_today ? <Text style={styles.checkMark}>✓</Text> : null}
                 </Pressable>
@@ -287,15 +286,15 @@ const styles = StyleSheet.create({
   },
   mediaError: { color: colors.danger, fontSize: typography.sm },
   check: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: controlSize,
+    height: controlSize,
+    borderRadius: radius.md,
     borderWidth: 1.5,
     borderColor: colors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkOn: { backgroundColor: colors.success, borderColor: colors.success },
-  checkMark: { color: colors.onPrimary, fontWeight: '700', fontSize: 18 },
+  checkMark: { color: colors.onPrimary, fontWeight: '700', fontSize: typography.lg },
   period: { fontSize: typography.sm, color: colors.faint, marginTop: space.sm },
 })

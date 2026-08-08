@@ -36,9 +36,12 @@
 
 .auth-form__check input {
   margin-top: 0.2rem;
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
   accent-color: var(--color-primary);
+  flex-shrink: 0;
 }
 
 .auth-form__password {
