@@ -82,6 +82,16 @@ export function hourMarks(day: Date): Date[] {
   return marks
 }
 
+/** Minute offsets from day start for each snap slot (inclusive of day end). */
+export function slotOffsets(day: Date, step = SNAP_MINUTES): number[] {
+  const { minutes } = dayBounds(day)
+  const offsets: number[] = []
+  for (let m = 0; m <= minutes; m += step) {
+    offsets.push(m)
+  }
+  return offsets
+}
+
 export function toIsoLocal(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   const offsetMin = -date.getTimezoneOffset()

@@ -20,6 +20,7 @@ import {
   formatTime,
   hourMarks,
   minutesFromDayStart,
+  slotOffsets,
   snapMinutes,
   toIsoLocal,
 } from '@/lib/scheduleTime'
@@ -45,6 +46,16 @@ interface DragState {
   currentMinutes: number
 }
 
+function lineKind(minutes: number): 'hour' | 'half' | 'quarter' {
+  if (minutes % 60 === 0) {
+    return 'hour'
+  }
+  if (minutes % 30 === 0) {
+    return 'half'
+  }
+  return 'quarter'
+}
+
 export function DayCalendar({
   day,
   visits,
@@ -61,8 +72,10 @@ export function DayCalendar({
   const dragRef = useRef<DragState | null>(null)
   const [drag, setDrag] = useState<DragState | null>(null)
   const [savingId, setSavingId] = useState<string | null>(null)
+  const [hoverMinutes, setHoverMinutes] = useState<number | null>(null)
   const { minutes: dayMinutes } = dayBounds(day)
   const gridHeight = dayMinutes * PX_PER_MINUTE
+  const gridSlots = slotOffsets(day).slice(0, -1)
 
   visitsRef.current = visits
   dragRef.current = drag
@@ -129,12 +142,26 @@ export function DayCalendar({
     }
   }, [drag, day, dayMinutes, onVisitsChange, onError])
 
+  function minutesFromClientY(clientY: number): number {
+    const grid = gridRef.current
+    if (!grid) {
+      return 0
+    }
+    const rect = grid.getBoundingClientRect()
+    return clamp(
+      snapMinutes((clientY - rect.top) / PX_PER_MINUTE),
+      0,
+      dayMinutes - SNAP_MINUTES,
+    )
+  }
+
   function beginDrag(visit: Visit, event: ReactPointerEvent<HTMLElement>) {
     if (visit.status === 'CANCELLED' || savingId) {
       return
     }
     event.preventDefault()
     event.stopPropagation()
+    setHoverMinutes(null)
 
     const grid = gridRef.current
     if (!grid) {
@@ -157,6 +184,23 @@ export function DayCalendar({
     })
   }
 
+  function handleGridPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+    if (drag || savingId) {
+      setHoverMinutes(null)
+      return
+    }
+    const target = event.target as HTMLElement
+    if (!target.closest('.day-cal__lane') || target.closest('.day-cal__event')) {
+      setHoverMinutes(null)
+      return
+    }
+    setHoverMinutes(minutesFromClientY(event.clientY))
+  }
+
+  function handleGridPointerLeave() {
+    setHoverMinutes(null)
+  }
+
   function handleGridClick(event: MouseEvent<HTMLDivElement>) {
     if (drag || savingId) {
       return
@@ -165,20 +209,12 @@ export function DayCalendar({
     if (!target.closest('.day-cal__lane') || target.closest('.day-cal__event')) {
       return
     }
-    const grid = gridRef.current
-    if (!grid) {
-      return
-    }
-    const rect = grid.getBoundingClientRect()
-    const minutes = clamp(
-      snapMinutes((event.clientY - rect.top) / PX_PER_MINUTE),
-      0,
-      dayMinutes - SNAP_MINUTES,
-    )
-    onSlotClick(minutes)
+    onSlotClick(minutesFromClientY(event.clientY))
   }
 
   const visibleVisits = visits.filter((visit) => visit.status !== 'CANCELLED')
+  const hoverLabel =
+    hoverMinutes !== null ? formatTime(dateFromDayMinutes(day, hoverMinutes)) : null
 
   return (
     <div className="day-cal" style={{ ['--day-cal-height' as string]: `${gridHeight}px` }}>
@@ -191,25 +227,47 @@ export function DayCalendar({
             </div>
           )
         })}
+        {hoverMinutes !== null && hoverLabel ? (
+          <div
+            className="day-cal__hover-time"
+            style={{ top: hoverMinutes * PX_PER_MINUTE + (SNAP_MINUTES * PX_PER_MINUTE) / 2 }}
+          >
+            {hoverLabel}
+          </div>
+        ) : null}
       </div>
 
       <div
         ref={gridRef}
         className="day-cal__track"
         role="grid"
-        aria-label={`Harmonogram ${DAY_START_HOUR}:00-${DAY_END_HOUR}:00`}
+        aria-label={`Harmonogram ${DAY_START_HOUR}:00-${DAY_END_HOUR}:00, sloty co ${SNAP_MINUTES} min`}
         onClick={handleGridClick}
+        onPointerMove={handleGridPointerMove}
+        onPointerLeave={handleGridPointerLeave}
       >
         <div className="day-cal__lane">
-          {hourMarks(day)
-            .slice(0, -1)
-            .map((mark) => (
+          {gridSlots.map((minutes) => {
+            const kind = lineKind(minutes)
+            return (
               <div
-                key={mark.toISOString()}
-                className="day-cal__line"
-                style={{ top: minutesFromDayStart(mark, day) * PX_PER_MINUTE }}
+                key={minutes}
+                className={`day-cal__line day-cal__line--${kind}`}
+                style={{ top: minutes * PX_PER_MINUTE }}
               />
-            ))}
+            )
+          })}
+
+          {hoverMinutes !== null && !drag ? (
+            <div
+              className="day-cal__slot-preview"
+              style={{
+                top: hoverMinutes * PX_PER_MINUTE,
+                height: SNAP_MINUTES * PX_PER_MINUTE,
+              }}
+              aria-hidden="true"
+            />
+          ) : null}
 
           {visibleVisits.map((visit) => {
             const start = new Date(visit.start_at)
