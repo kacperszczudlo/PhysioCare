@@ -49,6 +49,12 @@ function RootNavigator() {
             name="therapist/[id]"
             options={{ headerShown: true, title: 'Twój terapeuta', presentation: 'card' }}
           />
+          <Stack.Screen name="legal/privacy" options={{ headerShown: true, title: 'Prywatność' }} />
+          <Stack.Screen name="legal/cookies" options={{ headerShown: true, title: 'Cookies' }} />
+          <Stack.Screen
+            name="legal/account-deletion"
+            options={{ headerShown: true, title: 'Usuwanie konta' }}
+          />
         </Stack>
       </View>
     </View>

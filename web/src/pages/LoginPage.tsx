@@ -74,6 +74,8 @@ export function LoginPage() {
         <Link to="/register">Załóż konto (PWZFz)</Link>
         <span aria-hidden="true">·</span>
         <Link to="/password-reset">Nie pamiętam hasła</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/privacy">Prywatność</Link>
       </p>
     </div>
   )

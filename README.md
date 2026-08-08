@@ -43,6 +43,8 @@ PhysioCare/
 | [docs/architecture.md](docs/architecture.md) | Architektura systemu |
 | [docs/use-cases.md](docs/use-cases.md) | Przypadki użycia |
 | [docs/api.md](docs/api.md) | Kontrakt REST API |
+| [docs/legal/polityka-prywatnosci.md](docs/legal/polityka-prywatnosci.md) | Polityka prywatności (RODO / PKE) |
+| [docs/legal/polityka-cookies.md](docs/legal/polityka-cookies.md) | Polityka cookies i technologie w urządzeniu |
 | [docs/monitoring.md](docs/monitoring.md) | Logi strukturalne, latency, request id |
 | [docs/e2e-checklist.md](docs/e2e-checklist.md) | Checklist ścieżek krytycznych |
 | [docs/deployment.md](docs/deployment.md) | Wdrożenie demo (Railway / VPS / EAS) |

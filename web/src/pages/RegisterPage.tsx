@@ -300,6 +300,12 @@ export function RegisterPage() {
           <span>Oświadczam, że posiadam ważne prawo wykonywania zawodu (PWZFz).</span>
         </label>
 
+        <p className="auth-form__legal">
+          Rejestrując konto, akceptujesz przetwarzanie danych zgodnie z{' '}
+          <Link to="/privacy">Polityką prywatności</Link> oraz{' '}
+          <Link to="/cookies">Polityką cookies</Link>.
+        </p>
+
         {error ? (
           <p className="auth-form__error" role="alert">
             {error}
@@ -313,6 +319,8 @@ export function RegisterPage() {
 
       <p className="auth-form__footer">
         Masz już konto? <Link to="/login">Zaloguj się</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/privacy">Prywatność</Link>
       </p>
     </div>
   )

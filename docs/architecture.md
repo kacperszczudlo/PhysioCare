@@ -77,6 +77,7 @@ Termin w harmonogramie terapeuty. Statusy: `SCHEDULED`, `COMPLETED`, `CANCELLED`
 
 - **Wymagane** (regulamin, dane medyczne): data zawarcia, brak cofnięcia bez usunięcia konta.
 - **Opcjonalne** (marketing, badania): przełączane w profilu.
+- **Dokumenty prawne:** [Polityka prywatności](legal/polityka-prywatnosci.md), [Polityka cookies](legal/polityka-cookies.md); w UI: web `/privacy`, `/cookies`, `/account-deletion`; mobile `/legal/*`.
 
 ## Przepływy krytyczne
 

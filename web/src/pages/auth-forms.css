@@ -72,6 +72,18 @@
   width: 100%;
 }
 
+.auth-form__legal {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.auth-form__legal a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
 .auth-form__footer {
   display: flex;
   flex-wrap: wrap;

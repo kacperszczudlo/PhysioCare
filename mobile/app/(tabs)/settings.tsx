@@ -1,4 +1,4 @@
-import { useFocusEffect } from 'expo-router'
+import { Link, useFocusEffect } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { RefreshControl, StyleSheet, Switch, Text, View } from 'react-native'
 
@@ -256,6 +256,15 @@ export default function SettingsScreen() {
           variant="danger"
           onPress={() => void requestDeletion()}
         />
+        <Link href="/legal/privacy" style={styles.legalLink}>
+          Polityka prywatności
+        </Link>
+        <Link href="/legal/cookies" style={styles.legalLink}>
+          Polityka cookies
+        </Link>
+        <Link href="/legal/account-deletion" style={styles.legalLink}>
+          Usuwanie konta (instrukcja)
+        </Link>
         {feedback?.kind === 'privacy' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
 
@@ -306,4 +315,5 @@ const styles = StyleSheet.create({
   },
   switchLabel: { flex: 1, color: colors.ink, fontSize: typography.base },
   locked: { color: colors.faint, fontSize: typography.xs, fontWeight: '700' },
+  legalLink: { color: colors.primary, fontWeight: '600', fontSize: typography.sm },
 })

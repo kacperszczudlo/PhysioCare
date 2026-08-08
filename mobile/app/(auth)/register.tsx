@@ -298,6 +298,16 @@ export default function RegisterScreen() {
           checked={medical}
           onToggle={() => setMedical((v) => !v)}
         />
+        <Text style={styles.legalHint}>
+          Szczegóły przetwarzania danych:{' '}
+          <Link href="/legal/privacy" style={styles.inlineLink}>
+            Polityka prywatności
+          </Link>
+          {' · '}
+          <Link href="/legal/cookies" style={styles.inlineLink}>
+            Cookies
+          </Link>
+        </Text>
 
         {error ? (
           <Text style={styles.error} accessibilityRole="alert">
@@ -357,6 +367,8 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: typography.sm, color: colors.muted, marginBottom: space.sm },
   form: { gap: space.base },
   error: { color: colors.danger, fontSize: typography.sm },
+  legalHint: { fontSize: typography.sm, color: colors.muted, lineHeight: 20 },
+  inlineLink: { color: colors.primary, fontWeight: '600' },
   link: {
     color: colors.primary,
     fontWeight: '600',
