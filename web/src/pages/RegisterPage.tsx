@@ -6,6 +6,8 @@ import { useAuth } from '@/auth/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { PasswordRequirements } from '@/components/ui/PasswordRequirements'
+import { PhoneField } from '@/components/ui/PhoneField'
+import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
 import { getEmailError } from '@/lib/emailPolicy'
 import { getFirstNameError, getLastNameError } from '@/lib/fieldPolicy'
 import {
@@ -14,6 +16,7 @@ import {
   PASSWORD_MESSAGES,
   passwordsMatch,
 } from '@/lib/passwordPolicy'
+import { formatPhoneForApi, getPhoneError } from '@/lib/phonePolicy'
 import { getPwzfError, normalizePwzf } from '@/lib/pwzfPolicy'
 import './auth-forms.css'
 
@@ -24,6 +27,8 @@ export function RegisterPage() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
+  const [phoneNational, setPhoneNational] = useState('')
   const [pwzf, setPwzf] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -33,6 +38,7 @@ export function RegisterPage() {
     firstName?: string
     lastName?: string
     email?: string
+    phone?: string
     pwzf?: string
     password?: string
     confirmPassword?: string
@@ -54,6 +60,7 @@ export function RegisterPage() {
       firstName?: string
       lastName?: string
       email?: string
+      phone?: string
       pwzf?: string
       password?: string
       confirmPassword?: string
@@ -69,6 +76,10 @@ export function RegisterPage() {
     const emailError = getEmailError(email)
     if (emailError) {
       nextFieldErrors.email = emailError
+    }
+    const phoneError = getPhoneError(phoneNational, countryCode)
+    if (phoneError) {
+      nextFieldErrors.phone = phoneError
     }
     const pwzfError = getPwzfError(pwzf)
     if (pwzfError) {
@@ -92,6 +103,7 @@ export function RegisterPage() {
       nextFieldErrors.firstName ||
       nextFieldErrors.lastName ||
       nextFieldErrors.email ||
+      nextFieldErrors.phone ||
       nextFieldErrors.pwzf ||
       nextFieldErrors.password ||
       nextFieldErrors.confirmPassword
@@ -110,18 +122,21 @@ export function RegisterPage() {
         last_name: lastName.trim(),
         pwzf_number: normalizePwzf(pwzf),
         pwzf_declaration: true,
+        phone: formatPhoneForApi(phoneNational, countryCode) || undefined,
       })
       navigate('/', { replace: true })
     } catch (err) {
       const apiFirstNameError = getFieldError(err, 'first_name')
       const apiLastNameError = getFieldError(err, 'last_name')
       const apiEmailError = getFieldError(err, 'email')
+      const apiPhoneError = getFieldError(err, 'phone')
       const apiPwzfError = getFieldError(err, 'pwzf_number')
       const apiPasswordError = getFieldError(err, 'password')
       if (
         apiFirstNameError ||
         apiLastNameError ||
         apiEmailError ||
+        apiPhoneError ||
         apiPwzfError ||
         apiPasswordError
       ) {
@@ -129,6 +144,7 @@ export function RegisterPage() {
           firstName: apiFirstNameError ?? undefined,
           lastName: apiLastNameError ?? undefined,
           email: apiEmailError ?? undefined,
+          phone: apiPhoneError ?? undefined,
           pwzf: apiPwzfError ?? undefined,
           password: apiPasswordError ?? undefined,
         })
@@ -199,6 +215,24 @@ export function RegisterPage() {
             }
           }}
           error={fieldErrors.email}
+        />
+        <PhoneField
+          countryCode={countryCode}
+          nationalNumber={phoneNational}
+          onCountryChange={(code) => {
+            setCountryCode(code)
+            if (fieldErrors.phone) {
+              setFieldErrors((prev) => ({ ...prev, phone: undefined }))
+            }
+          }}
+          onNationalNumberChange={(value) => {
+            setPhoneNational(value)
+            if (fieldErrors.phone) {
+              setFieldErrors((prev) => ({ ...prev, phone: undefined }))
+            }
+          }}
+          error={fieldErrors.phone}
+          hint="Opcjonalnie. Wybierz kraj, żeby ustawić prefix numeru."
         />
         <Field
           label="Numer PWZFz"

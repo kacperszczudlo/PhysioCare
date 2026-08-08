@@ -8,6 +8,8 @@ import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { PasswordRequirements } from '@/components/ui/PasswordRequirements'
+import { PhoneField } from '@/components/ui/PhoneField'
+import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
 import {
   getAddressError,
   getBioError,
@@ -20,7 +22,7 @@ import {
   PASSWORD_MESSAGES,
   passwordsMatch,
 } from '@/lib/passwordPolicy'
-import { formatPhoneForApi, getPhoneError } from '@/lib/phonePolicy'
+import { formatPhoneForApi, getPhoneError, parseStoredPhone } from '@/lib/phonePolicy'
 import './ProfilePage.css'
 
 const QUALIFICATION_OPTIONS: { value: QualificationLevel; label: string }[] = [
@@ -35,7 +37,8 @@ export function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const [phone, setPhone] = useState('')
+  const [phoneCountryCode, setPhoneCountryCode] = useState(DEFAULT_COUNTRY_CODE)
+  const [phoneNational, setPhoneNational] = useState('')
   const [locationAddress, setLocationAddress] = useState('')
   const [bio, setBio] = useState('')
   const [courses, setCourses] = useState<string[]>([])
@@ -82,7 +85,9 @@ export function ProfilePage() {
           return
         }
         setProfile(data)
-        setPhone(data.phone ?? '')
+        const parsedPhone = parseStoredPhone(data.phone)
+        setPhoneCountryCode(parsedPhone.countryCode)
+        setPhoneNational(parsedPhone.nationalNumber)
         setLocationAddress(data.location_address ?? '')
         setBio(data.bio ?? '')
         setCourses(Array.isArray(data.courses) ? data.courses : [])
@@ -149,7 +154,7 @@ export function ProfilePage() {
     setError(null)
 
     const nextErrors = {
-      phone: getPhoneError(phone) ?? undefined,
+      phone: getPhoneError(phoneNational, phoneCountryCode) ?? undefined,
       locationAddress: getAddressError(locationAddress) ?? undefined,
       bio: getBioError(bio) ?? undefined,
     }
@@ -162,7 +167,7 @@ export function ProfilePage() {
     setProfileBusy(true)
     try {
       const updated = await therapistApi.updateProfile({
-        phone: formatPhoneForApi(phone),
+        phone: formatPhoneForApi(phoneNational, phoneCountryCode),
         location_address: locationAddress.trim(),
         bio: bio.trim(),
         courses,
@@ -170,7 +175,9 @@ export function ProfilePage() {
         experience_years: experienceYears,
       })
       setProfile(updated)
-      setPhone(updated.phone ?? '')
+      const parsedPhone = parseStoredPhone(updated.phone)
+      setPhoneCountryCode(parsedPhone.countryCode)
+      setPhoneNational(parsedPhone.nationalNumber)
       setQualificationLevel(updated.qualification_level ?? 'MAGISTER')
       setExperienceYears(updated.experience_years ?? 0)
       setProfileMessage('Dane profilu zostały zapisane.')
@@ -351,21 +358,23 @@ export function ProfilePage() {
             </div>
           </div>
 
-          <Field
-            label="Telefon"
-            name="phone"
-            type="tel"
-            inputMode="tel"
-            value={phone}
-            onChange={(e) => {
-              setPhone(e.target.value)
+          <PhoneField
+            countryCode={phoneCountryCode}
+            nationalNumber={phoneNational}
+            onCountryChange={(code) => {
+              setPhoneCountryCode(code)
+              if (fieldErrors.phone) {
+                setFieldErrors((prev) => ({ ...prev, phone: undefined }))
+              }
+            }}
+            onNationalNumberChange={(value) => {
+              setPhoneNational(value)
               if (fieldErrors.phone) {
                 setFieldErrors((prev) => ({ ...prev, phone: undefined }))
               }
             }}
             error={fieldErrors.phone}
-            hint="Polski numer: 9 cyfr, opcjonalnie z +48"
-            placeholder="np. 512 345 678"
+            hint="Wybierz kraj, żeby ustawić prefix numeru."
           />
           <Field
             label="Adres / lokalizacja gabinetu"

@@ -18,6 +18,7 @@ export interface TherapistRegisterPayload {
   last_name: string
   pwzf_number: string
   pwzf_declaration: boolean
+  phone?: string
 }
 
 export interface PasswordResetConfirmPayload {

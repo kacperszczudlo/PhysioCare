@@ -18,11 +18,13 @@ import { EmptyState, ErrorBanner, LoadingBlock, SuccessBanner } from '@/componen
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
+import { PhoneField } from '@/components/PhoneField'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
+import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
 import { formatDate } from '@/lib/format'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
 import { getPeselError } from '@/lib/peselPolicy'
-import { formatPhoneForApi, getPhoneError } from '@/lib/phonePolicy'
+import { formatPhoneForApi, getPhoneError, parseStoredPhone } from '@/lib/phonePolicy'
 import { colors, space, typography } from '@/theme/tokens'
 
 type FeedbackKind = 'avatar' | 'profile'
@@ -32,7 +34,8 @@ export default function ProfileScreen() {
 
   const [profile, setProfile] = useState<PatientProfile | null>(null)
   const [docs, setDocs] = useState<MedicalDocument[]>([])
-  const [phone, setPhone] = useState('')
+  const [phoneCountryCode, setPhoneCountryCode] = useState(DEFAULT_COUNTRY_CODE)
+  const [phoneNational, setPhoneNational] = useState('')
   const [pesel, setPesel] = useState('')
   const [fieldErrors, setFieldErrors] = useState<{ phone?: string; pesel?: string }>({})
   const [loading, setLoading] = useState(true)
@@ -60,7 +63,9 @@ export default function ProfileScreen() {
     try {
       const [p, d] = await Promise.all([patientApi.getProfile(), patientApi.getDocuments()])
       setProfile(p)
-      setPhone(p.phone ?? '')
+      const parsedPhone = parseStoredPhone(p.phone)
+      setPhoneCountryCode(parsedPhone.countryCode)
+      setPhoneNational(parsedPhone.nationalNumber)
       setPesel(p.pesel ?? '')
       setDocs(d)
     } catch (err) {
@@ -83,7 +88,7 @@ export default function ProfileScreen() {
     setError(null)
     setFeedback(null)
 
-    const phoneError = getPhoneError(phone)
+    const phoneError = getPhoneError(phoneNational, phoneCountryCode)
     const peselError = getPeselError(pesel)
     if (phoneError || peselError) {
       setFieldErrors({
@@ -97,11 +102,13 @@ export default function ProfileScreen() {
     setFieldErrors({})
     try {
       const updated = await patientApi.updateProfile({
-        phone: formatPhoneForApi(phone),
+        phone: formatPhoneForApi(phoneNational, phoneCountryCode),
         pesel: pesel.trim() || null,
       })
       setProfile(updated)
-      setPhone(updated.phone ?? '')
+      const parsedPhone = parseStoredPhone(updated.phone)
+      setPhoneCountryCode(parsedPhone.countryCode)
+      setPhoneNational(parsedPhone.nationalNumber)
       setPesel(updated.pesel ?? '')
       showSuccess('profile', 'Dane profilu zostały zapisane.')
     } catch (err) {
@@ -214,18 +221,23 @@ export default function ProfileScreen() {
       <SectionCard>
         <Text style={styles.sectionTitle}>Dane kontaktowe</Text>
         <Text style={styles.muted}>{profile?.email}</Text>
-        <Field
-          label="Telefon"
-          value={phone}
-          onChangeText={(value) => {
-            setPhone(value)
+        <PhoneField
+          countryCode={phoneCountryCode}
+          nationalNumber={phoneNational}
+          onCountryChange={(code) => {
+            setPhoneCountryCode(code)
             if (fieldErrors.phone) {
               setFieldErrors((prev) => ({ ...prev, phone: undefined }))
             }
           }}
-          keyboardType="phone-pad"
+          onNationalNumberChange={(value) => {
+            setPhoneNational(value)
+            if (fieldErrors.phone) {
+              setFieldErrors((prev) => ({ ...prev, phone: undefined }))
+            }
+          }}
           error={fieldErrors.phone}
-          hint="9 cyfr, opcjonalnie z +48"
+          hint="Wybierz kraj, żeby ustawić prefix numeru."
         />
         <Field
           label="PESEL"

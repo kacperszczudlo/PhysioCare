@@ -21,6 +21,7 @@ from core.field_policies import (
     normalize_and_validate_first_name,
     normalize_and_validate_last_name,
 )
+from core.phone_policy import PHONE_FIELD_ERRORS, normalize_and_validate_phone
 from patients.models import PatientProfile
 from privacy.models import Consent, ConsentType
 from therapists.models import TherapistProfile
@@ -105,12 +106,19 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         error_messages=_THERAPIST_ID_FIELD_ERRORS,
     )
     consents = serializers.DictField(child=serializers.BooleanField(), write_only=True)
+    phone = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=20,
+        write_only=True,
+        error_messages=PHONE_FIELD_ERRORS,
+    )
 
     class Meta:
         model = User
         fields = (
             'id', 'email', 'password', 'first_name', 'last_name',
-            'therapist_id', 'consents',
+            'therapist_id', 'consents', 'phone',
         )
         read_only_fields = ('id',)
         extra_kwargs = {
@@ -161,6 +169,12 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Nie znaleziono wskazanego terapeuty.')
         return value
 
+    def validate_phone(self, value):
+        try:
+            return normalize_and_validate_phone(value, allow_blank=True)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
     @transaction.atomic
     def create(self, validated_data):
         first_name = validated_data.pop('first_name')
@@ -168,6 +182,7 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         therapist_id = validated_data.pop('therapist_id')
         consents_data = validated_data.pop('consents')
         password = validated_data.pop('password')
+        phone = validated_data.pop('phone', '')
 
         user = User.objects.create_user(
             email=validated_data['email'],
@@ -180,6 +195,7 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         PatientProfile.objects.create(
             user=user,
             therapist_id=therapist_id,
+            phone=phone,
         )
 
         Consent.objects.create(
@@ -218,12 +234,19 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
         error_messages=_PWZF_FIELD_ERRORS,
     )
     pwzf_declaration = serializers.BooleanField(write_only=True)
+    phone = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=20,
+        write_only=True,
+        error_messages=PHONE_FIELD_ERRORS,
+    )
 
     class Meta:
         model = User
         fields = (
             'id', 'email', 'password', 'first_name', 'last_name',
-            'pwzf_number', 'pwzf_declaration',
+            'pwzf_number', 'pwzf_declaration', 'phone',
         )
         read_only_fields = ('id',)
         extra_kwargs = {
@@ -274,6 +297,12 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(PWZF_TAKEN_MESSAGE)
         return normalized
 
+    def validate_phone(self, value):
+        try:
+            return normalize_and_validate_phone(value, allow_blank=True)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
     @transaction.atomic
     def create(self, validated_data):
         first_name = validated_data.pop('first_name')
@@ -281,6 +310,7 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
         pwzf_number = validated_data.pop('pwzf_number')
         validated_data.pop('pwzf_declaration')
         password = validated_data.pop('password')
+        phone = validated_data.pop('phone', '')
 
         user = User.objects.create_user(
             email=validated_data['email'],
@@ -293,6 +323,7 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
         TherapistProfile.objects.create(
             user=user,
             pwzf_number=pwzf_number,
+            phone=phone,
         )
 
         return user

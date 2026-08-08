@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  max-width: 24rem;
+  max-width: 28rem;
 }
 
 .auth-form__header h1 {

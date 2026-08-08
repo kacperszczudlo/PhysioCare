@@ -8,6 +8,8 @@ import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { PasswordRequirements } from '@/components/PasswordRequirements'
+import { PhoneField } from '@/components/PhoneField'
+import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
 import { getEmailError } from '@/lib/emailPolicy'
 import { getFirstNameError, getLastNameError } from '@/lib/fieldPolicy'
 import {
@@ -16,6 +18,7 @@ import {
   PASSWORD_MESSAGES,
   passwordsMatch,
 } from '@/lib/passwordPolicy'
+import { formatPhoneForApi, getPhoneError } from '@/lib/phonePolicy'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
 export default function RegisterScreen() {
@@ -25,6 +28,8 @@ export default function RegisterScreen() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
+  const [phoneNational, setPhoneNational] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [therapistId, setTherapistId] = useState('')
@@ -35,6 +40,7 @@ export default function RegisterScreen() {
     firstName?: string
     lastName?: string
     email?: string
+    phone?: string
     password?: string
     confirmPassword?: string
     therapistId?: string
@@ -73,6 +79,7 @@ export default function RegisterScreen() {
       firstName?: string
       lastName?: string
       email?: string
+      phone?: string
       password?: string
       confirmPassword?: string
       therapistId?: string
@@ -88,6 +95,10 @@ export default function RegisterScreen() {
     const emailError = getEmailError(email)
     if (emailError) {
       nextFieldErrors.email = emailError
+    }
+    const phoneError = getPhoneError(phoneNational, countryCode)
+    if (phoneError) {
+      nextFieldErrors.phone = phoneError
     }
     const passwordError = getPasswordError(password, passwordHints)
     if (passwordError) {
@@ -110,6 +121,7 @@ export default function RegisterScreen() {
       nextFieldErrors.firstName ||
       nextFieldErrors.lastName ||
       nextFieldErrors.email ||
+      nextFieldErrors.phone ||
       nextFieldErrors.password ||
       nextFieldErrors.confirmPassword ||
       nextFieldErrors.therapistId
@@ -127,6 +139,7 @@ export default function RegisterScreen() {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         therapist_id: therapistId.trim(),
+        phone: formatPhoneForApi(phoneNational, countryCode) || undefined,
         consents: { terms, medical_data: medical },
       })
       router.replace('/(tabs)')
@@ -134,12 +147,14 @@ export default function RegisterScreen() {
       const apiFirstNameError = getFieldError(err, 'first_name')
       const apiLastNameError = getFieldError(err, 'last_name')
       const apiEmailError = getFieldError(err, 'email')
+      const apiPhoneError = getFieldError(err, 'phone')
       const apiPasswordError = getFieldError(err, 'password')
       const apiTherapistError = getFieldError(err, 'therapist_id')
       if (
         apiFirstNameError ||
         apiLastNameError ||
         apiEmailError ||
+        apiPhoneError ||
         apiPasswordError ||
         apiTherapistError
       ) {
@@ -147,6 +162,7 @@ export default function RegisterScreen() {
           firstName: apiFirstNameError ?? undefined,
           lastName: apiLastNameError ?? undefined,
           email: apiEmailError ?? undefined,
+          phone: apiPhoneError ?? undefined,
           password: apiPasswordError ?? undefined,
           therapistId: apiTherapistError ?? undefined,
         })
@@ -207,6 +223,24 @@ export default function RegisterScreen() {
           keyboardType="email-address"
           autoComplete="email"
           error={fieldErrors.email}
+        />
+        <PhoneField
+          countryCode={countryCode}
+          nationalNumber={phoneNational}
+          onCountryChange={(code) => {
+            setCountryCode(code)
+            if (fieldErrors.phone) {
+              setFieldErrors((prev) => ({ ...prev, phone: undefined }))
+            }
+          }}
+          onNationalNumberChange={(value) => {
+            setPhoneNational(value)
+            if (fieldErrors.phone) {
+              setFieldErrors((prev) => ({ ...prev, phone: undefined }))
+            }
+          }}
+          error={fieldErrors.phone}
+          hint="Opcjonalnie. Wybierz kraj, żeby ustawić prefix numeru."
         />
         <Field
           label="Hasło"

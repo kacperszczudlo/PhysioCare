@@ -47,6 +47,11 @@ def test_phone_normalizes_polish_formats():
     assert normalize_and_validate_phone('0512345678') == '+48512345678'
 
 
+def test_phone_normalizes_international():
+    assert normalize_and_validate_phone('+49 151 23456789') == '+4915123456789'
+    assert normalize_and_validate_phone('+1 202 555 0123') == '+12025550123'
+
+
 def test_phone_rejects_invalid():
     with pytest.raises(ValidationError) as exc:
         normalize_and_validate_phone('12345')
