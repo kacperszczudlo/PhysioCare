@@ -32,6 +32,27 @@ export interface Paginated<T> {
   results: T[]
 }
 
+export type QualificationLevel = 'TECHNIK' | 'LICENCJAT' | 'MAGISTER' | 'FIZJO_SPEC'
+
+export interface CompetenceCapability {
+  code: string
+  allowed: boolean
+  label: string
+  detail: string
+}
+
+export interface CompetenceSnapshot {
+  qualification_level: QualificationLevel
+  qualification_label: string
+  experience_years: number
+  is_magister_or_above: boolean
+  is_fizjo_spec: boolean
+  can_plan_therapy: boolean
+  can_supervise: boolean
+  device_groups: string[]
+  capabilities: CompetenceCapability[]
+}
+
 export interface TherapistProfile {
   id: string
   email: string
@@ -43,7 +64,93 @@ export interface TherapistProfile {
   bio: string | null
   courses: string[]
   avatar_url: string | null
+  qualification_level: QualificationLevel
+  experience_years: number
+  competences?: CompetenceSnapshot
   created_at: string
+}
+
+export type RecommendationType =
+  | 'SPECIALIST_CONSULTATION'
+  | 'IMAGING_MRI'
+  | 'IMAGING_CT'
+  | 'IMAGING_RTG'
+  | 'IMAGING_USG'
+  | 'OTHER'
+
+export type FundingHint = 'NFZ_VIA_DOCTOR' | 'PRIVATE' | 'NOT_APPLICABLE'
+
+export type DeviceOrderStatus = 'DRAFT' | 'ISSUED' | 'CANCELLED'
+
+export type BodySide = 'LEFT' | 'RIGHT' | 'BOTH' | 'NA'
+
+export interface DiagnosticRecommendation {
+  id: string
+  episode: string
+  therapist: string
+  recommendation_type: RecommendationType
+  target_specialty: string
+  body_area: string
+  justification: string
+  red_flags_noted: boolean
+  funding_hint: FundingHint
+  created_at: string
+}
+
+export interface MedicalDeviceOrder {
+  id: string
+  episode: string
+  patient: string
+  therapist: string
+  device_code: string
+  device_group: string
+  device_name: string
+  side: BodySide
+  quantity: number
+  icd10_code: string
+  status: DeviceOrderStatus
+  notes: string
+  created_at: string
+}
+
+export interface PhysicianOrderRefusal {
+  id: string
+  episode: string
+  therapist: string
+  physician_order_description: string
+  refusal_reason: string
+  physician_notified: boolean
+  created_at: string
+}
+
+export interface ReceptaNaRuchReferral {
+  id: string
+  patient: string
+  therapist: string
+  episode: string | null
+  readiness_confirmed: boolean
+  activity_notes: string
+  status: DeviceOrderStatus
+  created_at: string
+}
+
+export interface MedicalDeviceCatalogItem {
+  code: string
+  group: string
+  name: string
+  min_qualification: QualificationLevel
+  usage_hint: string
+  allowed_for_therapist: boolean
+}
+
+export interface MedicalDeviceCatalog {
+  groups: {
+    magister_groups: string[]
+    fizjo_spec_extra_groups: string[]
+  }
+  items: MedicalDeviceCatalogItem[]
+  competences: CompetenceSnapshot
+  disclaimer: string
 }
 
 export interface DashboardStats {
@@ -134,6 +241,7 @@ export interface TreatmentEpisode {
   id: string
   patient: string
   icd10_code: string
+  functional_diagnosis: string
   status: EpisodeStatus
   summary_note: string
   started_at: string

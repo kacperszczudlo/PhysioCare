@@ -1,5 +1,11 @@
 import { api } from './client'
-import type { DashboardStats, TherapistProfile, User } from './types'
+import type {
+  CompetenceSnapshot,
+  DashboardStats,
+  QualificationLevel,
+  TherapistProfile,
+  User,
+} from './types'
 
 interface AuthResponse {
   user: User
@@ -61,6 +67,8 @@ export interface TherapistProfileUpdatePayload {
   location_address?: string
   bio?: string
   courses?: string[]
+  qualification_level?: QualificationLevel
+  experience_years?: number
 }
 
 export const therapistApi = {
@@ -70,6 +78,10 @@ export const therapistApi = {
 
   updateProfile(payload: TherapistProfileUpdatePayload) {
     return api.patch<TherapistProfile>('/therapist/profile/', payload)
+  },
+
+  getCompetences() {
+    return api.get<CompetenceSnapshot>('/therapist/competences/')
   },
 
   uploadAvatar(file: File) {

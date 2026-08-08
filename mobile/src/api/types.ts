@@ -146,6 +146,25 @@ export interface MedicalDocument {
   created_at: string
 }
 
+export interface CompetenceCapability {
+  code: string
+  allowed: boolean
+  label: string
+  detail: string
+}
+
+export interface CompetenceSnapshot {
+  qualification_level: string
+  qualification_label: string
+  experience_years: number
+  is_magister_or_above: boolean
+  is_fizjo_spec: boolean
+  can_plan_therapy: boolean
+  can_supervise: boolean
+  device_groups: string[]
+  capabilities: CompetenceCapability[]
+}
+
 export interface TherapistPublic {
   id: string
   first_name: string
@@ -155,6 +174,10 @@ export interface TherapistPublic {
   avatar_url: string
   phone: string
   location_address: string
+  qualification_level?: string
+  qualification_label?: string
+  experience_years?: number
+  competences?: CompetenceSnapshot
 }
 
 export interface NotificationPreference {

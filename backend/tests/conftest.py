@@ -7,7 +7,13 @@ from exercises.models import Exercise, ExerciseAssignment, ExerciseCompletion
 from patients.models import PatientProfile
 from scheduling.models import TherapyType, Visit
 from therapists.models import TherapistProfile
-from treatment.models import TreatmentEpisode
+from treatment.models import (
+    DiagnosticRecommendation,
+    MedicalDeviceOrder,
+    PhysicianOrderRefusal,
+    ReceptaNaRuchReferral,
+    TreatmentEpisode,
+)
 
 User = get_user_model()
 
@@ -29,6 +35,18 @@ def cleanup_test_data(db):
         patient__user__email__endswith='@physiocare.test',
     ).delete()
     Exercise.objects.filter(therapist__user__email__endswith='@physiocare.test').delete()
+    MedicalDeviceOrder.objects.filter(
+        patient__user__email__endswith='@physiocare.test',
+    ).delete()
+    DiagnosticRecommendation.objects.filter(
+        episode__patient__user__email__endswith='@physiocare.test',
+    ).delete()
+    PhysicianOrderRefusal.objects.filter(
+        episode__patient__user__email__endswith='@physiocare.test',
+    ).delete()
+    ReceptaNaRuchReferral.objects.filter(
+        patient__user__email__endswith='@physiocare.test',
+    ).delete()
     TreatmentEpisode.objects.filter(
         patient__user__email__endswith='@physiocare.test',
     ).delete()

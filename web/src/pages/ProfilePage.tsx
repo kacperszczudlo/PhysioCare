@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'r
 
 import { authApi, therapistApi } from '@/api/auth'
 import { getErrorMessage, getFieldError } from '@/api/client'
-import type { TherapistProfile } from '@/api/types'
+import type { QualificationLevel, TherapistProfile } from '@/api/types'
 import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
@@ -23,6 +23,13 @@ import {
 import { formatPhoneForApi, getPhoneError } from '@/lib/phonePolicy'
 import './ProfilePage.css'
 
+const QUALIFICATION_OPTIONS: { value: QualificationLevel; label: string }[] = [
+  { value: 'TECHNIK', label: 'Technik fizjoterapii' },
+  { value: 'LICENCJAT', label: 'Licencjat fizjoterapii' },
+  { value: 'MAGISTER', label: 'Magister fizjoterapii' },
+  { value: 'FIZJO_SPEC', label: 'Specjalista w dziedzinie fizjoterapii (FIZJO SPEC)' },
+]
+
 export function ProfilePage() {
   const [profile, setProfile] = useState<TherapistProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -33,6 +40,8 @@ export function ProfilePage() {
   const [bio, setBio] = useState('')
   const [courses, setCourses] = useState<string[]>([])
   const [newCourse, setNewCourse] = useState('')
+  const [qualificationLevel, setQualificationLevel] = useState<QualificationLevel>('MAGISTER')
+  const [experienceYears, setExperienceYears] = useState(0)
   const [profileBusy, setProfileBusy] = useState(false)
   const [profileMessage, setProfileMessage] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<{
@@ -77,6 +86,8 @@ export function ProfilePage() {
         setLocationAddress(data.location_address ?? '')
         setBio(data.bio ?? '')
         setCourses(Array.isArray(data.courses) ? data.courses : [])
+        setQualificationLevel(data.qualification_level ?? 'MAGISTER')
+        setExperienceYears(data.experience_years ?? 0)
       } catch (err) {
         if (!cancelled) {
           setProfile(null)
@@ -155,9 +166,13 @@ export function ProfilePage() {
         location_address: locationAddress.trim(),
         bio: bio.trim(),
         courses,
+        qualification_level: qualificationLevel,
+        experience_years: experienceYears,
       })
       setProfile(updated)
       setPhone(updated.phone ?? '')
+      setQualificationLevel(updated.qualification_level ?? 'MAGISTER')
+      setExperienceYears(updated.experience_years ?? 0)
       setProfileMessage('Dane profilu zostały zapisane.')
     } catch (err) {
       const apiPhone = getFieldError(err, 'phone')
@@ -366,6 +381,115 @@ export function ProfilePage() {
             placeholder="np. ul. Kwiatowa 12, 00-001 Warszawa"
             hint="Widoczny dla pacjentów przy wizycie - kliknięcie otwiera mapę."
           />
+
+          <label className="ui-field">
+            <span className="ui-field__label">Kwalifikacja zawodowa</span>
+            <select
+              className="profile-select"
+              value={qualificationLevel}
+              onChange={(e) => setQualificationLevel(e.target.value as QualificationLevel)}
+            >
+              {QUALIFICATION_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <span className="ui-field__hint">
+              Determinuje prawo do diagnozy funkcjonalnej i ordynacji wyrobów (magister / FIZJO SPEC).
+            </span>
+          </label>
+
+          <Field
+            label="Staż w zawodzie (lata)"
+            name="experience_years"
+            type="number"
+            min={0}
+            max={60}
+            value={String(experienceYears)}
+            onChange={(e) => setExperienceYears(Number(e.target.value) || 0)}
+            hint="≥3 lata: samodzielne planowanie zabiegów (NFZ); ≥5 lat: nadzór."
+          />
+
+          {profile.competences ? (
+            <div className="profile-competences" aria-label="Macierz kompetencji">
+              <div className="profile-competences__head">
+                <h3>Twoje uprawnienia</h3>
+                <p className="profile-muted">
+                  {profile.competences.qualification_label}
+                  {' · '}
+                  staż {profile.competences.experience_years}{' '}
+                  {profile.competences.experience_years === 1 ? 'rok' : 'lat'}
+                </p>
+              </div>
+
+              <div className="profile-competences__summary" role="list">
+                <span
+                  className={
+                    profile.competences.can_plan_therapy
+                      ? 'profile-competences__chip profile-competences__chip--ok'
+                      : 'profile-competences__chip'
+                  }
+                  role="listitem"
+                >
+                  Planowanie terapii
+                </span>
+                <span
+                  className={
+                    profile.competences.can_supervise
+                      ? 'profile-competences__chip profile-competences__chip--ok'
+                      : 'profile-competences__chip'
+                  }
+                  role="listitem"
+                >
+                  Nadzór
+                </span>
+                <span
+                  className={
+                    profile.competences.is_fizjo_spec
+                      ? 'profile-competences__chip profile-competences__chip--ok'
+                      : 'profile-competences__chip'
+                  }
+                  role="listitem"
+                >
+                  FIZJO SPEC
+                </span>
+                {profile.competences.device_groups.length > 0 ? (
+                  <span className="profile-competences__chip profile-competences__chip--ok" role="listitem">
+                    Wyroby: {profile.competences.device_groups.join(', ')}
+                  </span>
+                ) : (
+                  <span className="profile-competences__chip" role="listitem">
+                    Brak ordynacji wyrobów
+                  </span>
+                )}
+              </div>
+
+              <div className="profile-competences__columns">
+                <section className="profile-competences__group" aria-labelledby="comp-allowed">
+                  <h4 id="comp-allowed">
+                    Uprawnienia
+                    <span className="profile-competences__count">
+                      {profile.competences.capabilities.filter((c) => c.allowed).length}
+                    </span>
+                  </h4>
+                  <ul className="profile-competences__list">
+                    {profile.competences.capabilities
+                      .filter((cap) => cap.allowed)
+                      .map((cap) => (
+                        <li key={cap.code} className="profile-competences__item">
+                          <details>
+                            <summary>{cap.label}</summary>
+                            <p>{cap.detail}</p>
+                          </details>
+                        </li>
+                      ))}
+                  </ul>
+                </section>
+              </div>
+            </div>
+          ) : null}
+
           <label className="ui-field">
             <span className="ui-field__label">Biogram</span>
             <textarea

@@ -11,6 +11,7 @@ import { Field } from '@/components/ui/Field'
 import { EPISODE_STATUS_LABELS } from '@/lib/bodyMap'
 import { FIELD_MESSAGES, getIcd10Error } from '@/lib/fieldPolicy'
 import { DiagnosticMapper } from '@/pages/patients/DiagnosticMapper'
+import { ClinicalActionsPanel } from '@/pages/patients/ClinicalActionsPanel'
 import { PatientAssignments } from '@/pages/patients/PatientAssignments'
 import './PatientDetailPage.css'
 
@@ -33,6 +34,7 @@ export function PatientDetailPage() {
   const [busy, setBusy] = useState(false)
 
   const [icd10, setIcd10] = useState('')
+  const [functionalDiagnosis, setFunctionalDiagnosis] = useState('')
   const [summary, setSummary] = useState('')
   const [status, setStatus] = useState<EpisodeStatus>('IN_PROGRESS')
   const [noteContent, setNoteContent] = useState('')
@@ -76,12 +78,14 @@ export function PatientDetailPage() {
   useEffect(() => {
     if (!selected) {
       setIcd10('')
+      setFunctionalDiagnosis('')
       setSummary('')
       setStatus('IN_PROGRESS')
       setNotes([])
       return
     }
     setIcd10(selected.icd10_code ?? '')
+    setFunctionalDiagnosis(selected.functional_diagnosis ?? '')
     setSummary(selected.summary_note ?? '')
     setStatus(selected.status)
 
@@ -152,6 +156,7 @@ export function PatientDetailPage() {
     try {
       const updated = await treatmentApi.updateEpisode(selected.id, {
         icd10_code: icd10.trim().toUpperCase(),
+        functional_diagnosis: functionalDiagnosis.trim(),
         summary_note: summary.trim(),
         status,
         ended_at:
@@ -301,7 +306,7 @@ export function PatientDetailPage() {
                 <h2>Dokumentacja epizodu</h2>
                 <div className="patient-episode-form__row">
                   <Field
-                    label="ICD-10"
+                    label="ICD-10 (z dokumentacji / roboczy)"
                     name="icd10"
                     value={icd10}
                     onChange={(e) => {
@@ -311,7 +316,7 @@ export function PatientDetailPage() {
                       }
                     }}
                     error={icd10Error ?? undefined}
-                    hint="Opcjonalnie - format litery + 2 cyfry, np. M54.5"
+                    hint="Kod z skierowania/dokumentacji lekarskiej — nie zastępuje diagnozy nozologicznej lekarza"
                   />
                   <label className="ui-field">
                     <span className="ui-field__label">Status</span>
@@ -329,6 +334,16 @@ export function PatientDetailPage() {
                   </label>
                 </div>
                 <label className="ui-field">
+                  <span className="ui-field__label">Diagnoza funkcjonalna</span>
+                  <textarea
+                    className="patient-textarea"
+                    value={functionalDiagnosis}
+                    onChange={(e) => setFunctionalDiagnosis(e.target.value)}
+                    rows={3}
+                    placeholder="Deficyty ruchowe, biomechanika, zakresy, siła, stabilność…"
+                  />
+                </label>
+                <label className="ui-field">
                   <span className="ui-field__label">Notatka zbiorcza</span>
                   <textarea
                     className="patient-textarea"
@@ -343,6 +358,12 @@ export function PatientDetailPage() {
               </form>
 
               <DiagnosticMapper episodeId={selected.id} />
+
+              <ClinicalActionsPanel
+                patientId={patient.id}
+                episodeId={selected.id}
+                onEpisodePossiblyUpdated={() => void loadPatient()}
+              />
 
               <section className="patient-notes" aria-label="Notatki z wizyt">
                 <h2>Notatki z wizyt</h2>

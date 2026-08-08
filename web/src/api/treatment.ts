@@ -1,11 +1,19 @@
 import { api } from './client'
 import type {
   BodyAreaPain,
+  BodySide,
   BodyViewSide,
+  DiagnosticRecommendation,
   EpisodeStatus,
+  FundingHint,
+  MedicalDeviceCatalog,
+  MedicalDeviceOrder,
   Paginated,
   PatientDetail,
   PatientSummary,
+  PhysicianOrderRefusal,
+  ReceptaNaRuchReferral,
+  RecommendationType,
   TreatmentEpisode,
   VisitNote,
 } from './types'
@@ -32,7 +40,12 @@ export const treatmentApi = {
 
   createEpisode(
     patientId: string,
-    payload: { icd10_code?: string; summary_note?: string; status?: EpisodeStatus },
+    payload: {
+      icd10_code?: string
+      functional_diagnosis?: string
+      summary_note?: string
+      status?: EpisodeStatus
+    },
   ) {
     return api.post<TreatmentEpisode>(`/patients/${patientId}/episodes/`, payload)
   },
@@ -41,6 +54,7 @@ export const treatmentApi = {
     episodeId: string,
     payload: Partial<{
       icd10_code: string
+      functional_diagnosis: string
       status: EpisodeStatus
       summary_note: string
       ended_at: string | null
@@ -93,5 +107,79 @@ export const treatmentApi = {
       content,
       visit: visit ?? null,
     })
+  },
+
+  listDiagnosticRecommendations(episodeId: string) {
+    return listResults<DiagnosticRecommendation>(
+      `/episodes/${episodeId}/diagnostic-recommendations/`,
+    )
+  },
+
+  createDiagnosticRecommendation(
+    episodeId: string,
+    payload: {
+      recommendation_type: RecommendationType
+      target_specialty?: string
+      body_area?: string
+      justification: string
+      red_flags_noted?: boolean
+      funding_hint?: FundingHint
+    },
+  ) {
+    return api.post<DiagnosticRecommendation>(
+      `/episodes/${episodeId}/diagnostic-recommendations/`,
+      payload,
+    )
+  },
+
+  listDeviceOrders(episodeId: string) {
+    return listResults<MedicalDeviceOrder>(`/episodes/${episodeId}/device-orders/`)
+  },
+
+  createDeviceOrder(
+    episodeId: string,
+    payload: {
+      device_code: string
+      side?: BodySide
+      quantity?: number
+      icd10_code: string
+      notes?: string
+    },
+  ) {
+    return api.post<MedicalDeviceOrder>(`/episodes/${episodeId}/device-orders/`, payload)
+  },
+
+  listOrderRefusals(episodeId: string) {
+    return listResults<PhysicianOrderRefusal>(`/episodes/${episodeId}/order-refusals/`)
+  },
+
+  createOrderRefusal(
+    episodeId: string,
+    payload: {
+      physician_order_description: string
+      refusal_reason: string
+      physician_notified?: boolean
+    },
+  ) {
+    return api.post<PhysicianOrderRefusal>(`/episodes/${episodeId}/order-refusals/`, payload)
+  },
+
+  listReceptaNaRuch(patientId: string) {
+    return listResults<ReceptaNaRuchReferral>(`/patients/${patientId}/recepta-na-ruch/`)
+  },
+
+  createReceptaNaRuch(
+    patientId: string,
+    payload: {
+      readiness_confirmed: boolean
+      activity_notes?: string
+      episode?: string | null
+    },
+  ) {
+    return api.post<ReceptaNaRuchReferral>(`/patients/${patientId}/recepta-na-ruch/`, payload)
+  },
+
+  getMedicalDeviceCatalog() {
+    return api.get<MedicalDeviceCatalog>('/medical-devices/catalog/')
   },
 }

@@ -36,6 +36,14 @@ class TherapistProfileView(generics.RetrieveUpdateAPIView):
         return Response(TherapistProfileSerializer(instance).data)
 
 
+class TherapistCompetencesView(APIView):
+    permission_classes = [IsAuthenticated, IsTherapist]
+
+    def get(self, request):
+        therapist = request.user.therapist_profile
+        return Response(therapist.competence_snapshot().to_dict())
+
+
 
 class TherapistDashboardStatsView(APIView):
     permission_classes = [IsAuthenticated, IsTherapist]

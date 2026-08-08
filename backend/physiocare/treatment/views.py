@@ -1,19 +1,44 @@
 from rest_framework import generics, status
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from core.mixins import TherapistPatientQuerysetMixin
 from core.permissions import IsEpisodeParticipant, IsTherapist
 from patients.models import PatientProfile
+from therapists.medical_devices import catalog_as_list, groups_summary
 
-from .models import BodyAreaPain, TreatmentEpisode, VisitNote
+from .models import (
+    BodyAreaPain,
+    DiagnosticRecommendation,
+    EpisodeStatus,
+    MedicalDeviceOrder,
+    PhysicianOrderRefusal,
+    ReceptaNaRuchReferral,
+    TreatmentEpisode,
+    VisitNote,
+)
 from .serializers import (
     BodyAreaPainSerializer,
+    DiagnosticRecommendationSerializer,
+    MedicalDeviceOrderSerializer,
+    PhysicianOrderRefusalSerializer,
+    ReceptaNaRuchReferralSerializer,
     TreatmentEpisodeCreateSerializer,
     TreatmentEpisodeSerializer,
     VisitNoteSerializer,
 )
+
+
+def _get_owned_episode(request, episode_id) -> TreatmentEpisode:
+    episode = TreatmentEpisode.objects.select_related('patient').filter(
+        pk=episode_id,
+        patient__therapist=request.user.therapist_profile,
+    ).first()
+    if episode is None:
+        raise NotFound()
+    return episode
 
 
 class PatientEpisodeListCreateView(TherapistPatientQuerysetMixin, generics.ListCreateAPIView):
@@ -63,12 +88,7 @@ class EpisodeBodyPainListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsTherapist]
 
     def get_episode(self):
-        episode = TreatmentEpisode.objects.select_related('patient').get(
-            pk=self.kwargs['episode_id'],
-        )
-        if episode.patient.therapist_id != self.request.user.therapist_profile.id:
-            raise NotFound()
-        return episode
+        return _get_owned_episode(self.request, self.kwargs['episode_id'])
 
     def get_queryset(self):
         return BodyAreaPain.objects.filter(episode=self.get_episode())
@@ -94,13 +114,7 @@ class EpisodeNoteListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsTherapist]
 
     def get_episode(self):
-        episode = TreatmentEpisode.objects.select_related('patient').filter(
-            pk=self.kwargs['episode_id'],
-            patient__therapist=self.request.user.therapist_profile,
-        ).first()
-        if episode is None:
-            raise NotFound()
-        return episode
+        return _get_owned_episode(self.request, self.kwargs['episode_id'])
 
     def get_queryset(self):
         return VisitNote.objects.filter(episode=self.get_episode()).order_by('-created_at')
@@ -113,3 +127,109 @@ class EpisodeNoteListCreateView(generics.ListCreateAPIView):
         context['episode'] = self.get_episode()
         return context
 
+
+class EpisodeDiagnosticRecommendationListCreateView(generics.ListCreateAPIView):
+    serializer_class = DiagnosticRecommendationSerializer
+    permission_classes = [IsAuthenticated, IsTherapist]
+
+    def get_episode(self):
+        return _get_owned_episode(self.request, self.kwargs['episode_id'])
+
+    def get_queryset(self):
+        return DiagnosticRecommendation.objects.filter(
+            episode=self.get_episode(),
+        ).select_related('therapist')
+
+    def perform_create(self, serializer):
+        episode = self.get_episode()
+        recommendation = serializer.save(
+            episode=episode,
+            therapist=self.request.user.therapist_profile,
+        )
+        if recommendation.red_flags_noted and episode.status == EpisodeStatus.IN_PROGRESS:
+            episode.status = EpisodeStatus.REFERRED
+            episode.save(update_fields=['status'])
+
+
+class EpisodeDeviceOrderListCreateView(generics.ListCreateAPIView):
+    serializer_class = MedicalDeviceOrderSerializer
+    permission_classes = [IsAuthenticated, IsTherapist]
+
+    def get_episode(self):
+        return _get_owned_episode(self.request, self.kwargs['episode_id'])
+
+    def get_queryset(self):
+        return MedicalDeviceOrder.objects.filter(
+            episode=self.get_episode(),
+        ).select_related('therapist')
+
+    def perform_create(self, serializer):
+        episode = self.get_episode()
+        serializer.save(
+            episode=episode,
+            patient=episode.patient,
+            therapist=self.request.user.therapist_profile,
+        )
+
+
+class EpisodeOrderRefusalListCreateView(generics.ListCreateAPIView):
+    serializer_class = PhysicianOrderRefusalSerializer
+    permission_classes = [IsAuthenticated, IsTherapist]
+
+    def get_episode(self):
+        return _get_owned_episode(self.request, self.kwargs['episode_id'])
+
+    def get_queryset(self):
+        return PhysicianOrderRefusal.objects.filter(episode=self.get_episode())
+
+    def perform_create(self, serializer):
+        serializer.save(
+            episode=self.get_episode(),
+            therapist=self.request.user.therapist_profile,
+        )
+
+
+class PatientReceptaNaRuchListCreateView(TherapistPatientQuerysetMixin, generics.ListCreateAPIView):
+    serializer_class = ReceptaNaRuchReferralSerializer
+    permission_classes = [IsAuthenticated, IsTherapist]
+
+    def get_patient(self):
+        try:
+            return PatientProfile.objects.get(
+                pk=self.kwargs['patient_id'],
+                therapist=self.get_therapist_profile(),
+            )
+        except PatientProfile.DoesNotExist as exc:
+            raise NotFound() from exc
+
+    def get_queryset(self):
+        return ReceptaNaRuchReferral.objects.filter(
+            patient=self.get_patient(),
+        ).select_related('therapist', 'episode')
+
+    def perform_create(self, serializer):
+        patient = self.get_patient()
+        episode = serializer.validated_data.get('episode')
+        if episode is not None and episode.patient_id != patient.id:
+            raise ValidationError({'episode': 'Epizod nie należy do tego pacjenta.'})
+        serializer.save(
+            patient=patient,
+            therapist=self.request.user.therapist_profile,
+        )
+
+
+class MedicalDeviceCatalogView(APIView):
+    permission_classes = [IsAuthenticated, IsTherapist]
+
+    def get(self, request):
+        therapist = request.user.therapist_profile
+        return Response({
+            'groups': groups_summary(),
+            'items': catalog_as_list(qualification_level=therapist.qualification_level),
+            'competences': therapist.competence_snapshot().to_dict(),
+            'disclaimer': (
+                'PhysioCare modeluje uprawnienia ordynacyjne wyrobów medycznych. '
+                'Nie służy do wystawiania recept na leki ani maści farmaceutyczne. '
+                'Formalne e-ZWM wymaga podpisu i weryfikacji w systemie P1/NFZ.'
+            ),
+        })
