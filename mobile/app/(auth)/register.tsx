@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage, getFieldError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
+import { BrandMark } from '@/components/BrandMark'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
@@ -179,7 +180,7 @@ export default function RegisterScreen() {
 
   return (
     <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.container}>
-      <Text style={styles.brand}>PhysioCare</Text>
+      <BrandMark variant="logo" size="md" style={styles.brand} />
       <Text style={styles.title}>Rejestracja pacjenta</Text>
       <Text style={styles.subtitle}>
         Załóż konto i zaakceptuj wymagane zgody, aby korzystać z zaleceń terapeuty.
@@ -358,10 +359,9 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
   container: { padding: space.xl, gap: space.md, paddingBottom: space['4xl'] },
   brand: {
-    fontSize: typography.xl,
-    fontWeight: '800',
-    color: colors.primary,
     marginTop: space['2xl'],
+    alignSelf: 'center',
+    alignItems: 'center',
   },
   title: { fontSize: typography['2xl'], fontWeight: '700', color: colors.ink },
   subtitle: { fontSize: typography.sm, color: colors.muted, marginBottom: space.sm },

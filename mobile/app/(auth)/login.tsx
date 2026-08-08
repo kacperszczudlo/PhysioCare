@@ -4,6 +4,7 @@ import { StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
+import { BrandMark } from '@/components/BrandMark'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
@@ -32,10 +33,7 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.container}>
-      <View style={styles.brand}>
-        <Text style={styles.brandName}>PhysioCare</Text>
-        <Text style={styles.brandTag}>Twoja terapia w kieszeni</Text>
-      </View>
+      <BrandMark variant="logo" size="lg" style={styles.brand} />
 
       <Text style={styles.title}>Logowanie</Text>
       <Text style={styles.subtitle}>Wejdź do konta pacjenta.</Text>
@@ -86,14 +84,7 @@ const styles = StyleSheet.create({
     paddingBottom: space['4xl'],
     gap: space.base,
   },
-  brand: { gap: space.xs, marginBottom: space.base },
-  brandName: {
-    fontSize: typography['3xl'],
-    fontWeight: '800',
-    color: colors.primary,
-    letterSpacing: -0.5,
-  },
-  brandTag: { fontSize: typography.base, color: colors.muted },
+  brand: { marginBottom: space.base, alignSelf: 'center', alignItems: 'center' },
   title: { fontSize: typography['2xl'], fontWeight: '700', color: colors.ink },
   subtitle: { fontSize: typography.sm, color: colors.muted, marginBottom: space.sm },
   form: { gap: space.base },

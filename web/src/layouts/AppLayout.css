@@ -21,10 +21,9 @@
 
 .app-shell__mark {
   width: 2.25rem;
-  height: 2.25rem;
-  border-radius: var(--radius-md);
-  background: linear-gradient(145deg, oklch(0.55 0.12 113), var(--color-primary));
-  box-shadow: var(--shadow-sm);
+  height: auto;
+  flex-shrink: 0;
+  object-fit: contain;
 }
 
 .app-shell__product {

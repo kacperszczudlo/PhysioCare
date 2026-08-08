@@ -23,19 +23,14 @@
 .legal-layout__brand {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-3);
-  color: var(--color-ink);
   text-decoration: none;
-  font-size: var(--text-lg);
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  width: fit-content;
 }
 
-.legal-layout__mark {
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(145deg, oklch(0.55 0.12 113), var(--color-primary));
+.legal-layout__logo {
+  display: block;
+  width: min(10rem, 42vw);
+  height: auto;
 }
 
 .legal-layout__nav {

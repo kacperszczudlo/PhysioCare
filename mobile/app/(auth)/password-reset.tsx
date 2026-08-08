@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native'
 import { getErrorMessage, getFieldError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
 import { ErrorBanner, SuccessBanner } from '@/components/AsyncState'
+import { BrandMark } from '@/components/BrandMark'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
@@ -88,6 +89,7 @@ export default function PasswordResetScreen() {
 
   return (
     <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.container}>
+      <BrandMark variant="logo" size="sm" style={styles.brand} />
       <Text style={styles.title}>Reset hasła</Text>
       <Text style={styles.subtitle}>
         {step === 'request'
@@ -159,6 +161,7 @@ const styles = StyleSheet.create({
     paddingBottom: space['4xl'],
     gap: space.md,
   },
+  brand: { marginBottom: space.sm, alignSelf: 'center', alignItems: 'center' },
   title: { fontSize: typography['2xl'], fontWeight: '700', color: colors.ink },
   subtitle: { fontSize: typography.sm, color: colors.muted, marginBottom: space.sm },
   form: { gap: space.base },

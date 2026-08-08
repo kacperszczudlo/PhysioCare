@@ -7,6 +7,7 @@ import { patientApi } from '@/api/patient'
 import type { TodayExercise, Visit } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { BrandMark } from '@/components/BrandMark'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
 import { formatDateTime, formatTimeRange } from '@/lib/format'
 import { colors, radius, space, typography } from '@/theme/tokens'
@@ -90,6 +91,7 @@ export default function DashboardScreen() {
         />
       }
     >
+      <BrandMark variant="sygnet" size="sm" style={styles.brand} />
       <ScreenHeader
         title={`Cześć, ${user?.first_name ?? 'Pacjencie'}`}
         subtitle="Najbliższa wizyta i zalecenia na dziś."
@@ -194,6 +196,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
   content: { padding: space.lg, paddingBottom: space['4xl'], gap: space.md },
+  brand: { marginBottom: space.xs },
   sectionLabel: {
     marginTop: space.md,
     fontSize: typography.sm,

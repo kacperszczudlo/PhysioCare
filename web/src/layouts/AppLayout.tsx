@@ -19,7 +19,13 @@ export function AppLayout() {
     <div className="app-shell">
       <aside className="app-shell__sidebar" aria-label="Nawigacja główna">
         <div className="app-shell__brand">
-          <span className="app-shell__mark" aria-hidden="true" />
+          <img
+            className="app-shell__mark"
+            src="/brand/sygnet.png"
+            alt=""
+            width={36}
+            height={48}
+          />
           <div>
             <p className="app-shell__product">PhysioCare</p>
             <p className="app-shell__product-sub">Panel terapeuty</p>
