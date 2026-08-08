@@ -17,6 +17,7 @@ import { PrivacyPolicyPage } from '@/pages/PrivacyPolicyPage'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { SchedulePage } from '@/pages/SchedulePage'
+import { SettingsPage } from '@/pages/SettingsPage'
 
 export default function App() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
               <Route path="/patients/:patientId" element={<PatientDetailPage />} />
               <Route path="/exercises" element={<ExercisesPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>
 

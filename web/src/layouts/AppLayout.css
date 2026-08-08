@@ -146,23 +146,6 @@
   line-height: 1.25;
 }
 
-.app-shell__logout {
-  align-self: start;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  margin-left: calc(2.5rem + var(--space-3));
-  color: var(--color-muted);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
-}
-
-.app-shell__logout:hover {
-  color: var(--color-ink);
-}
-
 .app-shell__main {
   padding: var(--space-8) var(--space-10);
   min-width: 0;

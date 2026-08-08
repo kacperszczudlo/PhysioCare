@@ -10,6 +10,7 @@ const NAV: ReadonlyArray<{ to: string; label: string; end?: boolean }> = [
   { to: '/patients', label: 'Pacjenci' },
   { to: '/exercises', label: 'Ćwiczenia' },
   { to: '/profile', label: 'Profil' },
+  { to: '/settings', label: 'Ustawienia' },
 ]
 
 function initials(first?: string, last?: string): string {
@@ -18,7 +19,7 @@ function initials(first?: string, last?: string): string {
 }
 
 export function AppLayout() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const displayName =
     [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || 'Fizjoterapeuta'
   const avatarSrc = resolveMediaUrl(user?.avatar_url)
@@ -69,9 +70,6 @@ export function AppLayout() {
               <span className="app-shell__role">Fizjoterapeuta</span>
             </span>
           </NavLink>
-          <button type="button" className="app-shell__logout" onClick={() => void logout()}>
-            Wyloguj
-          </button>
         </div>
       </aside>
 

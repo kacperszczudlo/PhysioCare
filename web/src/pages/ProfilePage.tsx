@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 
-import { authApi, therapistApi } from '@/api/auth'
+import { therapistApi } from '@/api/auth'
 import { getErrorMessage, getFieldError } from '@/api/client'
 import type { QualificationLevel, TherapistProfile } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
@@ -8,7 +8,6 @@ import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncStat
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
-import { PasswordRequirements } from '@/components/ui/PasswordRequirements'
 import { PhoneField } from '@/components/ui/PhoneField'
 import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
 import {
@@ -17,12 +16,6 @@ import {
   getCourseError,
 } from '@/lib/fieldPolicy'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
-import {
-  getPasswordError,
-  getPasswordRequirements,
-  PASSWORD_MESSAGES,
-  passwordsMatch,
-} from '@/lib/passwordPolicy'
 import { formatPhoneForApi, getPhoneError, parseStoredPhone } from '@/lib/phonePolicy'
 import './ProfilePage.css'
 
@@ -62,18 +55,9 @@ export function ProfilePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [passwordBusy, setPasswordBusy] = useState(false)
-  const [passwordError, setPasswordError] = useState<string | null>(null)
-  const [passwordMessage, setPasswordMessage] = useState<string | null>(null)
-  const [passwordTouched, setPasswordTouched] = useState(false)
   const [copyMessage, setCopyMessage] = useState<string | null>(null)
   const [copyError, setCopyError] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
-
-  const passwordRequirements = getPasswordRequirements(newPassword)
 
   useEffect(() => {
     let cancelled = false
@@ -240,40 +224,6 @@ export function ProfilePage() {
     }
   }
 
-  async function onChangePassword(event: FormEvent) {
-    event.preventDefault()
-    setPasswordError(null)
-    setPasswordMessage(null)
-
-    if (!currentPassword.trim()) {
-      setPasswordError('Podaj obecne hasło.')
-      return
-    }
-    const newPasswordError = getPasswordError(newPassword)
-    if (newPasswordError) {
-      setPasswordError(newPasswordError)
-      return
-    }
-    if (!passwordsMatch(newPassword, confirmPassword)) {
-      setPasswordError(PASSWORD_MESSAGES.mismatch)
-      return
-    }
-
-    setPasswordBusy(true)
-    try {
-      const { detail } = await authApi.changePassword(currentPassword, newPassword)
-      setPasswordMessage(detail)
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
-      setPasswordTouched(false)
-    } catch (err) {
-      setPasswordError(getErrorMessage(err, 'Nie udało się zmienić hasła.'))
-    } finally {
-      setPasswordBusy(false)
-    }
-  }
-
   if (loading) {
     return (
       <section>
@@ -295,145 +245,246 @@ export function ProfilePage() {
 
   const avatarSrc = previewUrl ?? resolveMediaUrl(profile.avatar_url)
   const initials = `${profile.first_name?.[0] ?? ''}${profile.last_name?.[0] ?? ''}`.toUpperCase()
+  const allowedCapabilities = profile.competences?.capabilities.filter((c) => c.allowed) ?? []
 
   return (
     <section className="profile-page">
       <PageHeader
-        title={`${profile.first_name} ${profile.last_name}`}
-        description={`PWZFz ${profile.pwzf_number} · ${profile.email}`}
+        title="Profil"
+        description={`${profile.first_name} ${profile.last_name} · PWZFz ${profile.pwzf_number}`}
       />
 
       {error ? <ErrorBanner message={error} /> : null}
 
-      <aside className="profile-invite" aria-labelledby="invite-heading">
-        <div className="profile-invite__copy">
-          <h2 id="invite-heading">Kod dla pacjenta</h2>
-          <p className="profile-muted">
-            Pacjent podaje ten kod przy rejestracji w aplikacji mobilnej. Skopiuj i prześlij
-            go pacjentowi (SMS, e-mail lub wiadomość).
-          </p>
-        </div>
-        <div className="profile-invite__actions">
-          <code className="profile-invite__id" title="ID profilu fizjoterapeuty">
-            {profile.id}
-          </code>
-          <Button type="button" variant="secondary" size="sm" onClick={() => void copyTherapistId()}>
-            Kopiuj kod
-          </Button>
-        </div>
-        {copyError ? <ErrorBanner message={copyError} /> : null}
-        {copyMessage ? <SuccessBanner message={copyMessage} /> : null}
-      </aside>
+      <div className="profile-grid">
+        <form className="profile-main" onSubmit={(e) => void onSaveProfile(e)}>
+          <section className="profile-card" aria-labelledby="profile-identity-heading">
+            <header className="profile-card__head">
+              <h2 id="profile-identity-heading">Tożsamość</h2>
+              <p className="profile-muted">Zdjęcie i dane widoczne dla pacjentów w aplikacji.</p>
+            </header>
 
-      <div className="profile-layout">
-        <form className="profile-panel" onSubmit={(e) => void onSaveProfile(e)}>
-          <h2>Dane gabinetowe</h2>
-
-          <div className="profile-avatar">
-            <div className="profile-avatar__preview" aria-hidden={!avatarSrc}>
-              {avatarSrc ? (
-                <img src={avatarSrc} alt="" className="profile-avatar__img" />
-              ) : (
-                <span className="profile-avatar__initials">{initials || '?'}</span>
-              )}
+            <div className="profile-avatar">
+              <div className="profile-avatar__preview" aria-hidden={!avatarSrc}>
+                {avatarSrc ? (
+                  <img src={avatarSrc} alt="" className="profile-avatar__img" />
+                ) : (
+                  <span className="profile-avatar__initials">{initials || '?'}</span>
+                )}
+              </div>
+              <div className="profile-avatar__meta">
+                <p className="profile-avatar__label">Zdjęcie profilowe</p>
+                <p className="profile-muted">JPEG, PNG lub WebP · max 5 MB</p>
+                <p className="profile-avatar__email">{profile.email}</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="profile-avatar__input"
+                  onChange={(e) => void onAvatarSelected(e)}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  loading={avatarBusy}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Wybierz zdjęcie
+                </Button>
+                {avatarError ? <ErrorBanner message={avatarError} /> : null}
+                {avatarMessage ? <SuccessBanner message={avatarMessage} /> : null}
+              </div>
             </div>
-            <div className="profile-avatar__meta">
-              <p className="profile-avatar__label">Zdjęcie profilowe</p>
-              <p className="profile-muted">JPEG, PNG lub WebP · max 5 MB. Widoczne dla pacjentów.</p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="profile-avatar__input"
-                onChange={(e) => void onAvatarSelected(e)}
+
+            <div className="profile-fields">
+              <PhoneField
+                countryCode={phoneCountryCode}
+                nationalNumber={phoneNational}
+                onCountryChange={(code) => {
+                  setPhoneCountryCode(code)
+                  if (fieldErrors.phone) {
+                    setFieldErrors((prev) => ({ ...prev, phone: undefined }))
+                  }
+                }}
+                onNationalNumberChange={(value) => {
+                  setPhoneNational(value)
+                  if (fieldErrors.phone) {
+                    setFieldErrors((prev) => ({ ...prev, phone: undefined }))
+                  }
+                }}
+                error={fieldErrors.phone}
+                hint="Wybierz kraj, żeby ustawić prefix numeru."
               />
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                loading={avatarBusy}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                Wybierz zdjęcie
-              </Button>
-              {avatarError ? <ErrorBanner message={avatarError} /> : null}
-              {avatarMessage ? <SuccessBanner message={avatarMessage} /> : null}
+              <Field
+                label="Adres / lokalizacja gabinetu"
+                name="location_address"
+                value={locationAddress}
+                onChange={(e) => {
+                  setLocationAddress(e.target.value)
+                  if (fieldErrors.locationAddress) {
+                    setFieldErrors((prev) => ({ ...prev, locationAddress: undefined }))
+                  }
+                }}
+                error={fieldErrors.locationAddress}
+                placeholder="np. ul. Kwiatowa 12, 00-001 Warszawa"
+                hint="Widoczny dla pacjentów przy wizycie - kliknięcie otwiera mapę."
+              />
             </div>
+          </section>
+
+          <section className="profile-card" aria-labelledby="profile-qual-heading">
+            <header className="profile-card__head">
+              <h2 id="profile-qual-heading">Kwalifikacje</h2>
+              <p className="profile-muted">
+                Poziom i staż wpływają na uprawnienia w panelu (NFZ / FIZJO SPEC).
+              </p>
+            </header>
+
+            <div className="profile-fields profile-fields--split">
+              <label className="ui-field">
+                <span className="ui-field__label">Kwalifikacja zawodowa</span>
+                <select
+                  className="profile-select"
+                  value={qualificationLevel}
+                  onChange={(e) => setQualificationLevel(e.target.value as QualificationLevel)}
+                >
+                  {QUALIFICATION_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <span className="ui-field__hint">
+                  Determinuje prawo do diagnozy funkcjonalnej i ordynacji wyrobów.
+                </span>
+              </label>
+
+              <Field
+                label="Staż w zawodzie (lata)"
+                name="experience_years"
+                type="number"
+                min={0}
+                max={60}
+                value={String(experienceYears)}
+                onChange={(e) => setExperienceYears(Number(e.target.value) || 0)}
+                hint="≥3 lata: planowanie zabiegów; ≥5 lat: nadzór."
+              />
+            </div>
+          </section>
+
+          <section className="profile-card" aria-labelledby="profile-about-heading">
+            <header className="profile-card__head">
+              <h2 id="profile-about-heading">O mnie</h2>
+              <p className="profile-muted">Biogram i kursy widoczne w profilu pacjenta.</p>
+            </header>
+
+            <div className="profile-fields">
+              <label className="ui-field">
+                <span className="ui-field__label">Biogram</span>
+                <textarea
+                  className={
+                    fieldErrors.bio ? 'profile-textarea profile-textarea--error' : 'profile-textarea'
+                  }
+                  value={bio}
+                  onChange={(e) => {
+                    setBio(e.target.value)
+                    if (fieldErrors.bio) {
+                      setFieldErrors((prev) => ({ ...prev, bio: undefined }))
+                    }
+                  }}
+                  rows={5}
+                  maxLength={2000}
+                  placeholder="Krótki opis doświadczenia i specjalizacji…"
+                  aria-invalid={fieldErrors.bio ? true : undefined}
+                />
+                {fieldErrors.bio ? (
+                  <span className="ui-field__error" role="alert">
+                    {fieldErrors.bio}
+                  </span>
+                ) : null}
+              </label>
+
+              <div className="profile-courses">
+                <h3>Kursy zawodowe</h3>
+                {courses.length === 0 ? (
+                  <p className="profile-muted">Brak kursów - dodaj pierwszy poniżej.</p>
+                ) : (
+                  <ul className="profile-courses__list">
+                    {courses.map((course, index) => (
+                      <li key={`${course}-${index}`} className="profile-courses__item">
+                        <span>{course}</span>
+                        <button
+                          type="button"
+                          className="profile-courses__remove"
+                          onClick={() => removeCourse(index)}
+                          aria-label={`Usuń kurs: ${course}`}
+                        >
+                          Usuń
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="profile-courses__add">
+                  <Field
+                    label="Nowy kurs"
+                    name="new_course"
+                    value={newCourse}
+                    onChange={(e) => {
+                      setNewCourse(e.target.value)
+                      if (fieldErrors.newCourse) {
+                        setFieldErrors((prev) => ({ ...prev, newCourse: undefined }))
+                      }
+                    }}
+                    error={fieldErrors.newCourse}
+                    placeholder="np. Terapia manualna - kurs podstawowy"
+                  />
+                  <Button type="button" variant="secondary" size="sm" onClick={addCourse}>
+                    Dodaj
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div className="profile-actions">
+            <Button type="submit" loading={profileBusy}>
+              Zapisz profil
+            </Button>
+            {profileMessage ? <SuccessBanner message={profileMessage} /> : null}
           </div>
+        </form>
 
-          <PhoneField
-            countryCode={phoneCountryCode}
-            nationalNumber={phoneNational}
-            onCountryChange={(code) => {
-              setPhoneCountryCode(code)
-              if (fieldErrors.phone) {
-                setFieldErrors((prev) => ({ ...prev, phone: undefined }))
-              }
-            }}
-            onNationalNumberChange={(value) => {
-              setPhoneNational(value)
-              if (fieldErrors.phone) {
-                setFieldErrors((prev) => ({ ...prev, phone: undefined }))
-              }
-            }}
-            error={fieldErrors.phone}
-            hint="Wybierz kraj, żeby ustawić prefix numeru."
-          />
-          <Field
-            label="Adres / lokalizacja gabinetu"
-            name="location_address"
-            value={locationAddress}
-            onChange={(e) => {
-              setLocationAddress(e.target.value)
-              if (fieldErrors.locationAddress) {
-                setFieldErrors((prev) => ({ ...prev, locationAddress: undefined }))
-              }
-            }}
-            error={fieldErrors.locationAddress}
-            placeholder="np. ul. Kwiatowa 12, 00-001 Warszawa"
-            hint="Widoczny dla pacjentów przy wizycie - kliknięcie otwiera mapę."
-          />
-
-          <label className="ui-field">
-            <span className="ui-field__label">Kwalifikacja zawodowa</span>
-            <select
-              className="profile-select"
-              value={qualificationLevel}
-              onChange={(e) => setQualificationLevel(e.target.value as QualificationLevel)}
-            >
-              {QUALIFICATION_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <span className="ui-field__hint">
-              Determinuje prawo do diagnozy funkcjonalnej i ordynacji wyrobów (magister / FIZJO SPEC).
-            </span>
-          </label>
-
-          <Field
-            label="Staż w zawodzie (lata)"
-            name="experience_years"
-            type="number"
-            min={0}
-            max={60}
-            value={String(experienceYears)}
-            onChange={(e) => setExperienceYears(Number(e.target.value) || 0)}
-            hint="≥3 lata: samodzielne planowanie zabiegów (NFZ); ≥5 lat: nadzór."
-          />
+        <aside className="profile-aside">
+          <section className="profile-card profile-card--accent" aria-labelledby="invite-heading">
+            <header className="profile-card__head">
+              <h2 id="invite-heading">Kod dla pacjenta</h2>
+              <p className="profile-muted">
+                Pacjent podaje ten kod przy rejestracji w aplikacji mobilnej.
+              </p>
+            </header>
+            <code className="profile-invite__id" title="ID profilu fizjoterapeuty">
+              {profile.id}
+            </code>
+            <Button type="button" variant="secondary" onClick={() => void copyTherapistId()}>
+              Kopiuj kod
+            </Button>
+            {copyError ? <ErrorBanner message={copyError} /> : null}
+            {copyMessage ? <SuccessBanner message={copyMessage} /> : null}
+          </section>
 
           {profile.competences ? (
-            <div className="profile-competences" aria-label="Macierz kompetencji">
-              <div className="profile-competences__head">
-                <h3>Twoje uprawnienia</h3>
+            <section className="profile-card" aria-labelledby="comp-heading">
+              <header className="profile-card__head">
+                <h2 id="comp-heading">Uprawnienia</h2>
                 <p className="profile-muted">
                   {profile.competences.qualification_label}
                   {' · '}
                   staż {profile.competences.experience_years}{' '}
                   {profile.competences.experience_years === 1 ? 'rok' : 'lat'}
                 </p>
-              </div>
+              </header>
 
               <div className="profile-competences__summary" role="list">
                 <span
@@ -467,7 +518,10 @@ export function ProfilePage() {
                   FIZJO SPEC
                 </span>
                 {profile.competences.device_groups.length > 0 ? (
-                  <span className="profile-competences__chip profile-competences__chip--ok" role="listitem">
+                  <span
+                    className="profile-competences__chip profile-competences__chip--ok"
+                    role="listitem"
+                  >
                     Wyroby: {profile.competences.device_groups.join(', ')}
                   </span>
                 ) : (
@@ -477,149 +531,21 @@ export function ProfilePage() {
                 )}
               </div>
 
-              <div className="profile-competences__columns">
-                <section className="profile-competences__group" aria-labelledby="comp-allowed">
-                  <h4 id="comp-allowed">
-                    Uprawnienia
-                    <span className="profile-competences__count">
-                      {profile.competences.capabilities.filter((c) => c.allowed).length}
-                    </span>
-                  </h4>
-                  <ul className="profile-competences__list">
-                    {profile.competences.capabilities
-                      .filter((cap) => cap.allowed)
-                      .map((cap) => (
-                        <li key={cap.code} className="profile-competences__item">
-                          <details>
-                            <summary>{cap.label}</summary>
-                            <p>{cap.detail}</p>
-                          </details>
-                        </li>
-                      ))}
-                  </ul>
-                </section>
-              </div>
-            </div>
+              {allowedCapabilities.length > 0 ? (
+                <ul className="profile-competences__list">
+                  {allowedCapabilities.map((cap) => (
+                    <li key={cap.code} className="profile-competences__item">
+                      <details>
+                        <summary>{cap.label}</summary>
+                        <p>{cap.detail}</p>
+                      </details>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </section>
           ) : null}
-
-          <label className="ui-field">
-            <span className="ui-field__label">Biogram</span>
-            <textarea
-              className={
-                fieldErrors.bio
-                  ? 'profile-textarea profile-textarea--error'
-                  : 'profile-textarea'
-              }
-              value={bio}
-              onChange={(e) => {
-                setBio(e.target.value)
-                if (fieldErrors.bio) {
-                  setFieldErrors((prev) => ({ ...prev, bio: undefined }))
-                }
-              }}
-              rows={5}
-              maxLength={2000}
-              placeholder="Krótki opis doświadczenia i specjalizacji…"
-              aria-invalid={fieldErrors.bio ? true : undefined}
-            />
-            {fieldErrors.bio ? (
-              <span className="ui-field__error" role="alert">
-                {fieldErrors.bio}
-              </span>
-            ) : null}
-          </label>
-
-          <div className="profile-courses">
-            <h3>Kursy zawodowe</h3>
-            {courses.length === 0 ? (
-              <p className="profile-muted">Brak kursów - dodaj pierwszy poniżej.</p>
-            ) : (
-              <ul className="profile-courses__list">
-                {courses.map((course, index) => (
-                  <li key={`${course}-${index}`} className="profile-courses__item">
-                    <span>{course}</span>
-                    <button
-                      type="button"
-                      className="profile-courses__remove"
-                      onClick={() => removeCourse(index)}
-                      aria-label={`Usuń kurs: ${course}`}
-                    >
-                      Usuń
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="profile-courses__add">
-              <Field
-                label="Nowy kurs"
-                name="new_course"
-                value={newCourse}
-                onChange={(e) => {
-                  setNewCourse(e.target.value)
-                  if (fieldErrors.newCourse) {
-                    setFieldErrors((prev) => ({ ...prev, newCourse: undefined }))
-                  }
-                }}
-                error={fieldErrors.newCourse}
-                placeholder="np. Terapia manualna - kurs podstawowy"
-              />
-              <Button type="button" variant="secondary" size="sm" onClick={addCourse}>
-                + Dodaj
-              </Button>
-            </div>
-          </div>
-
-          <Button type="submit" loading={profileBusy}>
-            Zapisz profil
-          </Button>
-          {profileMessage ? <SuccessBanner message={profileMessage} /> : null}
-        </form>
-
-        <form className="profile-panel" onSubmit={(e) => void onChangePassword(e)}>
-          <h2>Zmiana hasła</h2>
-          <Field
-            label="Obecne hasło"
-            name="current_password"
-            type="password"
-            autoComplete="current-password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            required
-          />
-          <Field
-            label="Nowe hasło"
-            name="new_password"
-            type="password"
-            autoComplete="new-password"
-            value={newPassword}
-            onChange={(e) => {
-              setNewPassword(e.target.value)
-              setPasswordTouched(true)
-            }}
-            onBlur={() => setPasswordTouched(true)}
-            required
-          />
-          <PasswordRequirements
-            requirements={passwordRequirements}
-            showErrors={passwordTouched}
-          />
-          <Field
-            label="Powtórz nowe hasło"
-            name="confirm_password"
-            type="password"
-            autoComplete="new-password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-
-          <Button type="submit" loading={passwordBusy}>
-            Zmień hasło
-          </Button>
-          {passwordError ? <ErrorBanner message={passwordError} /> : null}
-          {passwordMessage ? <SuccessBanner message={passwordMessage} /> : null}
-        </form>
+        </aside>
       </div>
     </section>
   )
