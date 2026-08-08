@@ -132,11 +132,24 @@ export function ExercisesPage() {
     }
   }
 
+  const hasActiveFilters = Boolean(
+    query || typeFilter || regionFilter || muscleFilter || injuryFilter || mediaFilter,
+  )
+
+  function clearFilters() {
+    setQuery('')
+    setTypeFilter('')
+    setRegionFilter('')
+    setMuscleFilter('')
+    setInjuryFilter('')
+    setMediaFilter('')
+  }
+
   return (
     <section className="exercises-page">
       <PageHeader
         title="Baza ćwiczeń"
-        description="Katalog wideo i PDF - filtruj po typie, okolicy, mięśniu i kontuzji, potem wysyłaj pacjentom."
+        description="Katalog wideo i PDF — filtruj, potem wysyłaj pacjentom."
         actions={
           <Button type="button" onClick={() => setCreateOpen(true)}>
             + Dodaj ćwiczenie
@@ -144,86 +157,123 @@ export function ExercisesPage() {
         }
       />
 
-      <div className="exercises-filters">
-        <Field
-          label="Szukaj"
-          name="q"
-          value={query}
-          onChange={onFilterChange(setQuery)}
-          placeholder="Tytuł lub fragment instrukcji…"
-        />
-        <label className="ui-field">
-          <span className="ui-field__label">Typ ćwiczenia</span>
-          <select
-            className="exercises-select"
-            value={typeFilter}
-            onChange={onFilterChange(setTypeFilter)}
+      <div className="exercises-toolbar">
+        <div className="exercises-toolbar__primary">
+          <Field
+            className="exercises-toolbar__search"
+            label="Szukaj"
+            name="q"
+            value={query}
+            onChange={onFilterChange(setQuery)}
+            placeholder="Tytuł lub fragment instrukcji…"
+            autoComplete="off"
+          />
+          <div
+            className="exercises-media"
+            role="group"
+            aria-label="Typ pliku"
           >
-            <option value="">Wszystkie</option>
-            {grouped.TYPE.map((category) => (
-              <option key={category.id} value={category.slug}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="ui-field">
-          <span className="ui-field__label">Okolica</span>
-          <select
-            className="exercises-select"
-            value={regionFilter}
-            onChange={onFilterChange(setRegionFilter)}
-          >
-            <option value="">Wszystkie</option>
-            {grouped.REGION.map((category) => (
-              <option key={category.id} value={category.slug}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="ui-field">
-          <span className="ui-field__label">Mięsień</span>
-          <select
-            className="exercises-select"
-            value={muscleFilter}
-            onChange={onFilterChange(setMuscleFilter)}
-          >
-            <option value="">Wszystkie</option>
-            {grouped.MUSCLE.map((category) => (
-              <option key={category.id} value={category.slug}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="ui-field">
-          <span className="ui-field__label">Kontuzja</span>
-          <select
-            className="exercises-select"
-            value={injuryFilter}
-            onChange={onFilterChange(setInjuryFilter)}
-          >
-            <option value="">Wszystkie</option>
-            {grouped.INJURY.map((category) => (
-              <option key={category.id} value={category.slug}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="ui-field">
-          <span className="ui-field__label">Typ pliku</span>
-          <select
-            className="exercises-select"
-            value={mediaFilter}
-            onChange={(e) => setMediaFilter(e.target.value as MediaType | '')}
-          >
-            <option value="">Wszystkie</option>
-            <option value="VIDEO">Wideo</option>
-            <option value="PDF">PDF</option>
-          </select>
-        </label>
+            <span className="exercises-media__label" id="exercises-media-label">
+              Typ pliku
+            </span>
+            <div className="exercises-media__options" aria-labelledby="exercises-media-label">
+              {(
+                [
+                  { value: '', label: 'Wszystkie' },
+                  { value: 'VIDEO', label: 'Wideo' },
+                  { value: 'PDF', label: 'PDF' },
+                ] as const
+              ).map((option) => {
+                const selected = mediaFilter === option.value
+                return (
+                  <button
+                    key={option.label}
+                    type="button"
+                    className={
+                      selected
+                        ? 'exercises-media__btn exercises-media__btn--active'
+                        : 'exercises-media__btn'
+                    }
+                    aria-pressed={selected}
+                    onClick={() => setMediaFilter(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="exercises-toolbar__filters" role="group" aria-label="Filtry kategorii">
+          <label className="ui-field">
+            <span className="ui-field__label">Typ</span>
+            <select
+              className="exercises-select"
+              value={typeFilter}
+              onChange={onFilterChange(setTypeFilter)}
+            >
+              <option value="">Wszystkie</option>
+              {grouped.TYPE.map((category) => (
+                <option key={category.id} value={category.slug}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="ui-field">
+            <span className="ui-field__label">Okolica</span>
+            <select
+              className="exercises-select"
+              value={regionFilter}
+              onChange={onFilterChange(setRegionFilter)}
+            >
+              <option value="">Wszystkie</option>
+              {grouped.REGION.map((category) => (
+                <option key={category.id} value={category.slug}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="ui-field">
+            <span className="ui-field__label">Mięsień</span>
+            <select
+              className="exercises-select"
+              value={muscleFilter}
+              onChange={onFilterChange(setMuscleFilter)}
+            >
+              <option value="">Wszystkie</option>
+              {grouped.MUSCLE.map((category) => (
+                <option key={category.id} value={category.slug}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="ui-field">
+            <span className="ui-field__label">Kontuzja</span>
+            <select
+              className="exercises-select"
+              value={injuryFilter}
+              onChange={onFilterChange(setInjuryFilter)}
+            >
+              <option value="">Wszystkie</option>
+              {grouped.INJURY.map((category) => (
+                <option key={category.id} value={category.slug}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          {hasActiveFilters ? (
+            <div className="exercises-toolbar__clear">
+              <Button type="button" size="sm" variant="ghost" onClick={clearFilters}>
+                Wyczyść
+              </Button>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {error ? (
