@@ -5,6 +5,7 @@ import { DAY_END_HOUR, DAY_START_HOUR, SNAP_MINUTES } from '@/lib/scheduleTime'
 import './TimeCarousel.css'
 
 const ITEM_HEIGHT = 40
+const SETTLE_MS = 140
 
 interface TimeCarouselProps {
   value: string
@@ -50,16 +51,17 @@ interface WheelProps {
 function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [activeIndex, setActiveIndex] = useState(selectedIndex)
-  const userScrolling = useRef(false)
+  const dragging = useRef(false)
+  const moved = useRef(false)
+  const ignoreScroll = useRef(false)
   const settleTimer = useRef<number | null>(null)
+  const selectedIndexRef = useRef(selectedIndex)
+  const onChangeIndexRef = useRef(onChangeIndex)
+  const itemsLengthRef = useRef(items.length)
 
-  useEffect(() => {
-    setActiveIndex(selectedIndex)
-    if (userScrolling.current || !ref.current) {
-      return
-    }
-    ref.current.scrollTop = selectedIndex * ITEM_HEIGHT
-  }, [selectedIndex, items.length])
+  selectedIndexRef.current = selectedIndex
+  onChangeIndexRef.current = onChangeIndex
+  itemsLengthRef.current = items.length
 
   function clearSettle() {
     if (settleTimer.current != null) {
@@ -68,24 +70,71 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
     }
   }
 
+  function withIgnoredScroll(action: () => void) {
+    ignoreScroll.current = true
+    action()
+    window.requestAnimationFrame(() => {
+      ignoreScroll.current = false
+    })
+  }
+
+  function scrollToIndex(index: number) {
+    const node = ref.current
+    if (!node) {
+      return
+    }
+    withIgnoredScroll(() => {
+      node.scrollTop = index * ITEM_HEIGHT
+    })
+  }
+
+  function emitIndex(index: number) {
+    setActiveIndex(index)
+    scrollToIndex(index)
+    if (index !== selectedIndexRef.current) {
+      onChangeIndexRef.current(index)
+    }
+  }
+
   function commit(scrollTop: number) {
-    const next = indexFromScroll(scrollTop, items.length)
-    setActiveIndex(next)
-    if (ref.current) {
-      ref.current.scrollTo({ top: next * ITEM_HEIGHT, behavior: 'smooth' })
-    }
-    if (next !== selectedIndex) {
-      onChangeIndex(next)
-    }
-    userScrolling.current = false
+    clearSettle()
+    dragging.current = false
+    const next = indexFromScroll(scrollTop, itemsLengthRef.current)
+    emitIndex(next)
   }
 
   function scheduleCommit(scrollTop: number) {
     clearSettle()
-    settleTimer.current = window.setTimeout(() => commit(scrollTop), 80)
+    settleTimer.current = window.setTimeout(() => commit(scrollTop), SETTLE_MS)
   }
 
-  useEffect(() => () => clearSettle(), [])
+  useEffect(() => {
+    setActiveIndex(selectedIndex)
+    if (dragging.current) {
+      return
+    }
+    scrollToIndex(selectedIndex)
+  }, [selectedIndex, items.length])
+
+  useEffect(() => {
+    const node = ref.current
+    if (!node) {
+      return
+    }
+
+    function onScrollEnd() {
+      if (ignoreScroll.current || !ref.current) {
+        return
+      }
+      commit(ref.current.scrollTop)
+    }
+
+    node.addEventListener('scrollend', onScrollEnd)
+    return () => {
+      node.removeEventListener('scrollend', onScrollEnd)
+      clearSettle()
+    }
+  }, [])
 
   return (
     <div className="time-carousel__col" aria-label={`${ariaLabel}: ${items[activeIndex] ?? ''}`}>
@@ -97,37 +146,58 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
         aria-label={ariaLabel}
         tabIndex={0}
         onScroll={(event) => {
-          const scrollTop = event.currentTarget.scrollTop
-          if (userScrolling.current) {
-            setActiveIndex(indexFromScroll(scrollTop, items.length))
-            scheduleCommit(scrollTop)
+          if (ignoreScroll.current) {
+            return
           }
+          const scrollTop = event.currentTarget.scrollTop
+          moved.current = true
+          setActiveIndex(indexFromScroll(scrollTop, items.length))
+          scheduleCommit(scrollTop)
         }}
         onPointerDown={() => {
-          userScrolling.current = true
+          dragging.current = true
+          moved.current = false
+        }}
+        onPointerUp={() => {
+          dragging.current = false
+        }}
+        onPointerCancel={() => {
+          dragging.current = false
         }}
         onKeyDown={(event) => {
           if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
             event.preventDefault()
             const delta = event.key === 'ArrowUp' ? -1 : 1
-            const next = Math.max(0, Math.min(items.length - 1, selectedIndex + delta))
-            onChangeIndex(next)
+            const next = Math.max(0, Math.min(items.length - 1, activeIndex + delta))
+            clearSettle()
+            emitIndex(next)
           }
         }}
       >
         {items.map((item, index) => {
           const selected = index === activeIndex
           return (
-            <div
+            <button
               key={`${item}-${index}`}
+              type="button"
               className={
                 selected ? 'time-carousel__item time-carousel__item--on' : 'time-carousel__item'
               }
               role="option"
               aria-selected={selected}
+              tabIndex={-1}
+              onClick={(event) => {
+                if (moved.current) {
+                  event.preventDefault()
+                  return
+                }
+                clearSettle()
+                dragging.current = false
+                emitIndex(index)
+              }}
             >
               {item}
-            </div>
+            </button>
           )
         })}
       </div>
@@ -198,7 +268,7 @@ export function TimeCarousel({
           onChangeIndex={(index) => emit(hour, minutes[index] ?? 0)}
         />
       </div>
-      <span className="time-carousel__hint">{hint ?? 'Przewiń w górę lub w dół'}</span>
+      <span className="time-carousel__hint">{hint ?? 'Przewiń albo kliknij godzinę'}</span>
     </div>
   )
 }

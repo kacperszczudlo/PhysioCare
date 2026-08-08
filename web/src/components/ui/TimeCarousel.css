@@ -76,15 +76,28 @@
 }
 
 .time-carousel__item {
+  box-sizing: border-box;
+  width: 100%;
   height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   scroll-snap-align: center;
+  font: inherit;
   font-size: var(--text-lg);
   font-variant-numeric: tabular-nums;
   color: var(--color-faint);
+  cursor: pointer;
   user-select: none;
+}
+
+.time-carousel__item:focus-visible {
+  outline: none;
+  box-shadow: inset var(--focus-ring);
 }
 
 .time-carousel__item--on {
