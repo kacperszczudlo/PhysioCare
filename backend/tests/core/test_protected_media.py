@@ -139,3 +139,58 @@ def test_document_download_endpoint_still_works(
     url = reverse('document-download', kwargs={'pk': document.id})
     response = api_client.get(url)
     assert response.status_code == status.HTTP_200_OK
+
+
+def _write_avatar(tmp_path, name: str = 'face.png') -> str:
+    avatars_dir = tmp_path / 'avatars'
+    avatars_dir.mkdir(exist_ok=True)
+    (avatars_dir / name).write_bytes(b'fake-png')
+    return f'/media/avatars/{name}'
+
+
+@pytest.mark.django_db
+def test_media_patient_avatar_owner_and_therapist_can_access(
+    api_client, tmp_path, settings, therapist, patient,
+):
+    settings.MEDIA_ROOT = tmp_path
+    patient.avatar_url = _write_avatar(tmp_path, 'patient.png')
+    patient.save(update_fields=['avatar_url'])
+
+    _auth(api_client, patient.user)
+    assert api_client.get(patient.avatar_url).status_code == status.HTTP_200_OK
+
+    _auth(api_client, therapist.user)
+    assert api_client.get(patient.avatar_url).status_code == status.HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_media_patient_avatar_foreign_therapist_gets_404(
+    api_client, tmp_path, settings, therapist_b, patient,
+):
+    settings.MEDIA_ROOT = tmp_path
+    patient.avatar_url = _write_avatar(tmp_path, 'private-patient.png')
+    patient.save(update_fields=['avatar_url'])
+
+    _auth(api_client, therapist_b.user)
+    assert api_client.get(patient.avatar_url).status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_media_therapist_avatar_linked_patient_can_access(
+    api_client, tmp_path, settings, therapist, patient,
+):
+    settings.MEDIA_ROOT = tmp_path
+    therapist.avatar_url = _write_avatar(tmp_path, 'therapist.png')
+    therapist.save(update_fields=['avatar_url'])
+
+    _auth(api_client, patient.user)
+    assert api_client.get(therapist.avatar_url).status_code == status.HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_media_orphan_avatar_denied(api_client, tmp_path, settings, therapist):
+    settings.MEDIA_ROOT = tmp_path
+    orphan_url = _write_avatar(tmp_path, 'orphan.png')
+
+    _auth(api_client, therapist.user)
+    assert api_client.get(orphan_url).status_code == status.HTTP_404_NOT_FOUND

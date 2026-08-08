@@ -35,6 +35,10 @@ DEBUG = env_bool('DJANGO_DEBUG', 'false')
 
 ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
 
+# Django admin: disable on public demo hosts, or restrict by REMOTE_ADDR.
+ADMIN_ENABLED = env_bool('DJANGO_ADMIN_ENABLED', 'true')
+ADMIN_ALLOWED_IPS = env_list('DJANGO_ADMIN_ALLOWED_IPS', '')
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -60,6 +64,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'core.middleware.AdminAccessMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

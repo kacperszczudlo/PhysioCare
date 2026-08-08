@@ -30,6 +30,7 @@ Skopiuj z `.env.example`, w szczególności:
 - `DJANGO_DEBUG=false` (domyślne w kodzie; lokalnie ustaw `true` w `.env`)
 - `DJANGO_ALLOWED_HOSTS` - host publiczny
 - `DJANGO_SECURE_COOKIES=true`, `DJANGO_SECURE_SSL_REDIRECT=true`
+- `DJANGO_ADMIN_ENABLED=false` **lub** `DJANGO_ADMIN_ALLOWED_IPS=<twoje IP>` (bez MFA admin jest ryzykiem)
 - `POSTGRES_*` / `DATABASE_URL`
 - `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS`, `FRONTEND_URL`
 - `LOG_FORMAT=json`
@@ -99,13 +100,15 @@ Tokeny natywne: SecureStore. Kanał Expo web używa `localStorage` — nie trakt
 ## Checklist przed demem
 
 - [ ] HTTPS na API i web
-- [ ] `DJANGO_DEBUG=false`, `SENTRY_DSN` ustawione
-- [ ] Media tylko przez Django (brak publicznego aliasu nginx)
+- [ ] `DJANGO_DEBUG=false`, `DJANGO_SECURE_COOKIES=true`, `SENTRY_DSN` ustawione
+- [ ] `DJANGO_ADMIN_ENABLED=false` lub `DJANGO_ADMIN_ALLOWED_IPS` z Twoim IP
+- [ ] `REDIS_URL` gdy Gunicorn ma >1 worker
+- [ ] Media tylko przez Django (brak publicznego aliasu nginx) — ownership także dla `/media/avatars/`
 - [ ] Migracje na czystej bazie staging
 - [ ] Konta demo: 1 terapeuta + 1 pacjent z danymi przykładowymi
 - [ ] Logi JSON widoczne w panelu hostingu ([monitoring](monitoring.md))
 - [ ] Procedura rollback przetestowana raz na staging
-- [ ] Build mobile zainstalowany lub Expo Go + update channel
+- [ ] Build mobile **native** (EAS / Expo Go na telefonie) — **nie** Expo web jako produkcja (localStorage)
 
 ## Alternatywa „tylko laptop”
 

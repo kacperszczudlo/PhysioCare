@@ -1,4 +1,4 @@
-"""HTTP request logging and response-time metrics."""
+"""HTTP request logging, admin hardening, and response-time metrics."""
 
 from __future__ import annotations
 
@@ -6,9 +6,33 @@ import logging
 import time
 import uuid
 
+from django.conf import settings
+from django.http import HttpResponseNotFound
+
 logger = logging.getLogger('physiocare.api')
 
 _SKIP_PREFIXES = ('/static/', '/media/', '/favicon.ico')
+
+
+class AdminAccessMiddleware:
+    """Restrict Django admin by enable flag and optional IP allowlist."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        path = request.path
+        if path == '/admin' or path.startswith('/admin/'):
+            if not getattr(settings, 'ADMIN_ENABLED', True):
+                return HttpResponseNotFound()
+
+            allowed_ips = getattr(settings, 'ADMIN_ALLOWED_IPS', None) or []
+            if allowed_ips:
+                client_ip = request.META.get('REMOTE_ADDR', '')
+                if client_ip not in allowed_ips:
+                    return HttpResponseNotFound()
+
+        return self.get_response(request)
 
 
 class RequestTimingMiddleware:

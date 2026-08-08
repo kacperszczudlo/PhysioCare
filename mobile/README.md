@@ -1,6 +1,9 @@
 # PhysioCare Mobile - aplikacja pacjenta
 
-Expo SDK **54** (React Native) + TypeScript. Komunikacja z backendem przez REST (`/api/v1`) i JWT Bearer (SecureStore / localStorage na web).
+Expo SDK **54** (React Native) + TypeScript. Komunikacja z backendem przez REST (`/api/v1`) i JWT Bearer (**SecureStore** na native).
+
+> **Produkcja = native build (EAS / Expo Go na urządzeniu).**  
+> `npm run web` / Expo web trzyma tokeny w `localStorage` — wyłącznie do lokalnego UI, nie jako klient produkcyjny.
 
 > SDK 54 - zgodne ze sklepowym **Expo Go**.  
 > „Aktualne” Expo Go ze sklepu **nie** obsługuje SDK 56/57 (nie są jeszcze w Play/App Store).

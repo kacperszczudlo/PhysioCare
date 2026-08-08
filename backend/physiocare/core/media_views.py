@@ -37,6 +37,39 @@ def user_can_access_exercise_file(user, exercise) -> bool:
     return bool(user.is_staff)
 
 
+def user_can_access_avatar(user, media_url: str) -> bool:
+    """Avatar only for owner, linked therapist↔patient, or staff."""
+    if user.is_staff:
+        return True
+
+    from patients.models import PatientProfile
+    from therapists.models import TherapistProfile
+
+    patient = (
+        PatientProfile.objects.select_related('therapist')
+        .filter(avatar_url=media_url)
+        .first()
+    )
+    if patient is not None:
+        return user_can_access_patient(user, patient)
+
+    therapist = TherapistProfile.objects.filter(avatar_url=media_url).first()
+    if therapist is None:
+        return False
+
+    if user.role == 'THERAPIST':
+        return (
+            hasattr(user, 'therapist_profile')
+            and user.therapist_profile.id == therapist.id
+        )
+    if user.role == 'PATIENT':
+        return (
+            hasattr(user, 'patient_profile')
+            and user.patient_profile.therapist_id == therapist.id
+        )
+    return False
+
+
 def user_may_access_media_path(user, relative: str) -> bool:
     """Authorize by media subfolder and owning record."""
     normalized = relative.replace('\\', '/').lstrip('/')
@@ -47,7 +80,7 @@ def user_may_access_media_path(user, relative: str) -> bool:
     media_url = _media_url_from_relative(normalized)
 
     if subdir == 'avatars':
-        return True
+        return user_can_access_avatar(user, media_url)
 
     if subdir == 'documents':
         from documents.models import MedicalDocument
