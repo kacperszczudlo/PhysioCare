@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
 
 import { useAuth } from '@/auth/AuthContext'
+import { resolveMediaUrl } from '@/lib/mediaUrl'
 import './AppLayout.css'
 
 const NAV: ReadonlyArray<{ to: string; label: string; end?: boolean }> = [
@@ -11,9 +12,16 @@ const NAV: ReadonlyArray<{ to: string; label: string; end?: boolean }> = [
   { to: '/profile', label: 'Profil' },
 ]
 
+function initials(first?: string, last?: string): string {
+  const value = `${first?.charAt(0) ?? ''}${last?.charAt(0) ?? ''}`.toUpperCase()
+  return value || '?'
+}
+
 export function AppLayout() {
   const { user, logout } = useAuth()
-  const displayName = [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email
+  const displayName =
+    [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || 'Fizjoterapeuta'
+  const avatarSrc = resolveMediaUrl(user?.avatar_url)
 
   return (
     <div className="app-shell">
@@ -28,7 +36,7 @@ export function AppLayout() {
           />
           <div>
             <p className="app-shell__product">PhysioCare</p>
-            <p className="app-shell__product-sub">Panel terapeuty</p>
+            <p className="app-shell__product-sub">Panel fizjoterapeuty</p>
           </div>
         </div>
 
@@ -48,7 +56,19 @@ export function AppLayout() {
         </nav>
 
         <div className="app-shell__footer">
-          <p className="app-shell__user">{displayName}</p>
+          <NavLink to="/profile" className="app-shell__identity" aria-label={`Profil: ${displayName}`}>
+            {avatarSrc ? (
+              <img className="app-shell__avatar" src={avatarSrc} alt="" width={40} height={40} />
+            ) : (
+              <span className="app-shell__avatar app-shell__avatar--fallback" aria-hidden="true">
+                {initials(user?.first_name, user?.last_name)}
+              </span>
+            )}
+            <span className="app-shell__identity-text">
+              <span className="app-shell__user">{displayName}</span>
+              <span className="app-shell__role">Fizjoterapeuta</span>
+            </span>
+          </NavLink>
           <button type="button" className="app-shell__logout" onClick={() => void logout()}>
             Wyloguj
           </button>

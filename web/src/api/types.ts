@@ -13,6 +13,8 @@ export interface User {
   role: UserRole
   first_name: string
   last_name: string
+  /** Present after session restore / profile refresh; login payload may omit it. */
+  avatar_url?: string | null
 }
 
 export interface ApiErrorBody {

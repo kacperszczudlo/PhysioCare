@@ -15,7 +15,7 @@ import {
   type TherapistRegisterPayload,
 } from '@/api/auth'
 import { ApiError } from '@/api/client'
-import type { User } from '@/api/types'
+import type { TherapistProfile, User } from '@/api/types'
 
 interface AuthContextValue {
   user: User | null
@@ -24,20 +24,27 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>
   register: (payload: TherapistRegisterPayload) => Promise<void>
   logout: () => Promise<void>
+  refreshSession: () => Promise<void>
   requestPasswordReset: (email: string) => Promise<string>
   confirmPasswordReset: (payload: PasswordResetConfirmPayload) => Promise<string>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function profileToUser(profile: Awaited<ReturnType<typeof therapistApi.getProfile>>): User {
+function profileToUser(profile: TherapistProfile): User {
   return {
     id: profile.id,
     email: profile.email,
     role: 'THERAPIST',
     first_name: profile.first_name,
     last_name: profile.last_name,
+    avatar_url: profile.avatar_url,
   }
+}
+
+async function loadTherapistSession(): Promise<User> {
+  const profile = await therapistApi.getProfile()
+  return profileToUser(profile)
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -49,9 +56,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function restoreSession() {
       try {
-        const profile = await therapistApi.getProfile()
+        const nextUser = await loadTherapistSession()
         if (!cancelled) {
-          setUser(profileToUser(profile))
+          setUser(nextUser)
         }
       } catch (error) {
         if (!cancelled) {
@@ -79,12 +86,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authApi.logout().catch(() => undefined)
       throw new ApiError(403, 'Panel webowy jest dostępny tylko dla fizjoterapeutów.')
     }
-    setUser(nextUser)
+    try {
+      setUser(await loadTherapistSession())
+    } catch {
+      setUser({ ...nextUser, avatar_url: nextUser.avatar_url ?? null })
+    }
   }, [])
 
   const register = useCallback(async (payload: TherapistRegisterPayload) => {
     const { user: nextUser } = await authApi.registerTherapist(payload)
-    setUser(nextUser)
+    try {
+      setUser(await loadTherapistSession())
+    } catch {
+      setUser({ ...nextUser, avatar_url: nextUser.avatar_url ?? null })
+    }
   }, [])
 
   const logout = useCallback(async () => {
@@ -93,6 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setUser(null)
     }
+  }, [])
+
+  const refreshSession = useCallback(async () => {
+    const nextUser = await loadTherapistSession()
+    setUser(nextUser)
   }, [])
 
   const requestPasswordReset = useCallback(async (email: string) => {
@@ -113,10 +133,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
+      refreshSession,
       requestPasswordReset,
       confirmPasswordReset,
     }),
-    [user, isLoading, login, register, logout, requestPasswordReset, confirmPasswordReset],
+    [
+      user,
+      isLoading,
+      login,
+      register,
+      logout,
+      refreshSession,
+      requestPasswordReset,
+      confirmPasswordReset,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

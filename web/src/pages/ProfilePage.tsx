@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'r
 import { authApi, therapistApi } from '@/api/auth'
 import { getErrorMessage, getFieldError } from '@/api/client'
 import type { QualificationLevel, TherapistProfile } from '@/api/types'
+import { useAuth } from '@/auth/AuthContext'
 import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
@@ -33,6 +34,7 @@ const QUALIFICATION_OPTIONS: { value: QualificationLevel; label: string }[] = [
 ]
 
 export function ProfilePage() {
+  const { refreshSession } = useAuth()
   const [profile, setProfile] = useState<TherapistProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -227,6 +229,7 @@ export function ProfilePage() {
     try {
       const updated = await therapistApi.uploadAvatar(file)
       setProfile(updated)
+      await refreshSession().catch(() => undefined)
       setAvatarMessage('Zdjęcie profilowe zostało zapisane - widoczne w aplikacji pacjenta.')
       URL.revokeObjectURL(localPreview)
       setPreviewUrl(null)
@@ -311,7 +314,7 @@ export function ProfilePage() {
           </p>
         </div>
         <div className="profile-invite__actions">
-          <code className="profile-invite__id" title="ID profilu terapeuty">
+          <code className="profile-invite__id" title="ID profilu fizjoterapeuty">
             {profile.id}
           </code>
           <Button type="button" variant="secondary" size="sm" onClick={() => void copyTherapistId()}>

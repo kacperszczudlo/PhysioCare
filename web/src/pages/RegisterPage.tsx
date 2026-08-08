@@ -166,7 +166,7 @@ export function RegisterPage() {
   return (
     <div className="auth-form">
       <header className="auth-form__header">
-        <h1>Rejestracja terapeuty</h1>
+        <h1>Rejestracja fizjoterapeuty</h1>
         <p>Konto z numerem PWZFz - dostęp do panelu gabinetu.</p>
       </header>
 

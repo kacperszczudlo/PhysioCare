@@ -320,7 +320,7 @@ export function VisitFormModal({
       {!loadingMeta && !isEdit && patients.length === 0 ? (
         <p className="schedule-empty" role="status">
           Brak pacjentów w gabinecie. Pacjent musi najpierw zarejestrować się w aplikacji mobilnej z
-          Twoim profilem terapeuty.
+          Twoim profilem fizjoterapeuty.
         </p>
       ) : null}
 

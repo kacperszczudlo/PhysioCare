@@ -46,5 +46,5 @@ src/
 - **4.3** Harmonogram dzienny + drag & drop
 - **4.4** Karta pacjenta + Diagnostic Mapper
 - **4.5** Baza ćwiczeń + przypisywanie
-- **4.6** Profil terapeuty
+- **4.6** Profil fizjoterapeuty
 - **4.7** Loading / error / empty + retry we wszystkich modułach

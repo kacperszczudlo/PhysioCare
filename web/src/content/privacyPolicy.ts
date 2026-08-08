@@ -70,7 +70,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     id: 'data',
     title: '3. Kategorie przetwarzanych danych',
     paragraphs: [
-      'Dane konta: e-mail, imię, nazwisko, hasło (wyłącznie skrót), rola, opcjonalny telefon; u terapeuty także PWZFz, biogram, adres gabinetu i pokrewne pola profilu; u pacjenta opcjonalnie PESEL i powiązanie z terapeutą.',
+      'Dane konta: e-mail, imię, nazwisko, hasło (wyłącznie skrót), rola, opcjonalny telefon; u fizjoterapeuty także PWZFz, biogram, adres gabinetu i pokrewne pola profilu; u pacjenta opcjonalnie PESEL i powiązanie z fizjoterapeutą.',
       'Dane zdrowotne (art. 9 RODO): epizody leczenia, mapa bólu (VAS), notatki, dokumenty, ćwiczenia i compliance, dane wizyt.',
       'Dane techniczne: tokeny JWT (cookies web lub SecureStore na mobile), ograniczone logi aplikacyjne (bez haseł), preferencje powiadomień.',
       'Stan na datę Polityki: nie używamy SDK reklamowych, analityki behawioralnej, śledzenia IDFA, GPS w tle ani dostępu do kontaktów/mikrofonu.',
