@@ -12,7 +12,7 @@ export const NAME_MESSAGES = {
 } as const
 
 const NAME_PATTERN =
-  /^[A-Za-zÀ-ÖØ-öø-ÿĄąĆćĘęŁłŃńÓóŚśŹźŻż]+(?:[ '\-][A-Za-zÀ-ÖØ-öø-ÿĄąĆćĘęŁłŃńÓóŚśŹźŻż]+)*$/
+  /^[A-Za-zÀ-ÖØ-öø-ÿĄąĆćĘęŁłŃńÓóŚśŹźŻż]+(?:[ '-][A-Za-zÀ-ÖØ-öø-ÿĄąĆćĘęŁłŃńÓóŚśŹźŻż]+)*$/
 
 function normalizeName(value: string): string {
   return value.trim().replace(/\s+/g, ' ')
