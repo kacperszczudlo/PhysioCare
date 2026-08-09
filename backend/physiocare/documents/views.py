@@ -1,12 +1,18 @@
 import os
 
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import FileResponse, Http404
 from rest_framework import generics, parsers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.field_policies import (
+    DOCUMENT_TITLE_REQUIRED,
+    DOCUMENT_TITLE_TOO_LONG,
+    normalize_optional_text,
+)
 from core.mixins import PatientSelfMixin, user_can_access_patient
 from core.permissions import IsPatient, IsTherapist
 from core.storage import save_upload
@@ -44,40 +50,61 @@ class TherapistDocumentUploadView(generics.CreateAPIView):
         if patient is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        raw_title = request.data.get('title', uploaded.name)
+        try:
+            title = normalize_optional_text(
+                raw_title,
+                max_length=200,
+                too_long_message=DOCUMENT_TITLE_TOO_LONG,
+                allow_blank=False,
+                required_message=DOCUMENT_TITLE_REQUIRED,
+            )
+        except DjangoValidationError as exc:
+            return Response(
+                {
+                    'error': {
+                        'code': 'VALIDATION',
+                        'message': exc.messages[0],
+                        'details': {'title': list(exc.messages)},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         file_url = save_upload(uploaded, subdir='documents')
         visit_id = request.data.get('visit_id') or None
         episode_id = request.data.get('episode_id') or None
 
-        if visit_id:
-            if not Visit.objects.filter(pk=visit_id, patient=patient).exists():
-                return Response(
-                    {
-                        'error': {
-                            'code': 'VALIDATION',
-                            'message': 'Wizyta nie należy do wskazanego pacjenta.',
-                            'details': {'visit_id': visit_id},
-                        }
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        if visit_id and not Visit.objects.filter(pk=visit_id, patient=patient).exists():
+            return Response(
+                {
+                    'error': {
+                        'code': 'VALIDATION',
+                        'message': 'Wizyta nie należy do wskazanego pacjenta.',
+                        'details': {'visit_id': visit_id},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-        if episode_id:
-            if not TreatmentEpisode.objects.filter(pk=episode_id, patient=patient).exists():
-                return Response(
-                    {
-                        'error': {
-                            'code': 'VALIDATION',
-                            'message': 'Epizod nie należy do wskazanego pacjenta.',
-                            'details': {'episode_id': episode_id},
-                        }
-                    },
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        if episode_id and not TreatmentEpisode.objects.filter(
+            pk=episode_id, patient=patient
+        ).exists():
+            return Response(
+                {
+                    'error': {
+                        'code': 'VALIDATION',
+                        'message': 'Epizod nie należy do wskazanego pacjenta.',
+                        'details': {'episode_id': episode_id},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         document = MedicalDocument.objects.create(
             patient=patient,
             uploaded_by=request.user,
-            title=request.data.get('title', uploaded.name),
+            title=title,
             file_url=file_url,
             mime_type=getattr(uploaded, 'content_type', 'application/pdf'),
             visit_id=visit_id,
@@ -100,4 +127,11 @@ class DocumentDownloadView(APIView):
         path = os.path.join(str(settings.MEDIA_ROOT), relative)
         if not os.path.isfile(path):
             raise Http404
-        return FileResponse(open(path, 'rb'), content_type=document.mime_type, as_attachment=True)
+        response = FileResponse(
+            open(path, 'rb'),
+            content_type=document.mime_type,
+            as_attachment=True,
+        )
+        response['X-Content-Type-Options'] = 'nosniff'
+        response['Cache-Control'] = 'private, no-store'
+        return response

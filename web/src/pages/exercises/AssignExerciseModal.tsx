@@ -4,9 +4,12 @@ import { exercisesApi } from '@/api/exercises'
 import { patientsApi, treatmentApi } from '@/api/treatment'
 import { ApiError } from '@/api/client'
 import type { Exercise, PatientSummary, TreatmentEpisode } from '@/api/types'
+import { SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/ui/Button'
+import { DateCarousel } from '@/components/ui/DateCarousel'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
+import { getDosageError } from '@/lib/fieldPolicy'
 import { toDateInputValue } from '@/lib/scheduleTime'
 
 interface AssignExerciseModalProps {
@@ -110,6 +113,11 @@ export function AssignExerciseModal({
     if (!exercise || !patientId) {
       return
     }
+    const dosageError = getDosageError(dosage)
+    if (dosageError) {
+      setError(dosageError)
+      return
+    }
     setBusy(true)
     setError(null)
     setSuccess(null)
@@ -141,7 +149,7 @@ export function AssignExerciseModal({
 
       {!loadingMeta && patients.length === 0 ? (
         <p className="exercises-empty" role="status">
-          Brak pacjentów — nie ma komu przypisać ćwiczenia.
+          Brak pacjentów - nie ma komu przypisać ćwiczenia.
         </p>
       ) : null}
 
@@ -187,20 +195,20 @@ export function AssignExerciseModal({
             required
           />
           <div className="exercises-date-row">
-            <Field
+            <DateCarousel
               label="Od"
-              name="start_date"
-              type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={setStartDate}
+              minimumDate={toDateInputValue(new Date())}
+              dayCount={90}
               required
             />
-            <Field
+            <DateCarousel
               label="Do"
-              name="end_date"
-              type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={setEndDate}
+              minimumDate={startDate}
+              dayCount={120}
               required
             />
           </div>
@@ -210,11 +218,7 @@ export function AssignExerciseModal({
               {error}
             </p>
           ) : null}
-          {success ? (
-            <p className="exercises-success" role="status">
-              {success}
-            </p>
-          ) : null}
+          {success ? <SuccessBanner message={success} /> : null}
 
           <div className="ui-modal__actions">
             <Button type="button" variant="secondary" onClick={onClose} disabled={busy}>

@@ -1,22 +1,16 @@
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useState } from 'react'
-import {
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { TodayExercise, Visit } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { BrandMark } from '@/components/BrandMark'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
-import { formatDateTime, formatTimeRange, todayISODate } from '@/lib/format'
-import { colors, radius, space, typography } from '@/theme/tokens'
+import { formatDateTime, formatTimeRange } from '@/lib/format'
+import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
 export default function DashboardScreen() {
   const { user } = useAuth()
@@ -53,17 +47,23 @@ export default function DashboardScreen() {
   )
 
   async function onToggleExercise(item: TodayExercise) {
-    if (item.completed_today || busyId) {
+    if (busyId) {
       return
     }
+    const nextDone = !item.completed_today
     setBusyId(item.id)
+    setExercises((prev) =>
+      prev.map((ex) => (ex.id === item.id ? { ...ex, completed_today: nextDone } : ex)),
+    )
     try {
-      await patientApi.completeExercise(item.id, todayISODate())
-      setExercises((prev) =>
-        prev.map((ex) => (ex.id === item.id ? { ...ex, completed_today: true } : ex)),
-      )
+      await patientApi.completeExercise(item.id, undefined, nextDone)
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się oznaczyć ćwiczenia.'))
+      setExercises((prev) =>
+        prev.map((ex) =>
+          ex.id === item.id ? { ...ex, completed_today: item.completed_today } : ex,
+        ),
+      )
+      setError(getErrorMessage(err, 'Nie udało się zaktualizować zalecenia.'))
     } finally {
       setBusyId(null)
     }
@@ -91,6 +91,7 @@ export default function DashboardScreen() {
         />
       }
     >
+      <BrandMark variant="sygnet" size="sm" style={styles.brand} />
       <ScreenHeader
         title={`Cześć, ${user?.first_name ?? 'Pacjencie'}`}
         subtitle="Najbliższa wizyta i zalecenia na dziś."
@@ -143,31 +144,47 @@ export default function DashboardScreen() {
       ) : (
         <View style={styles.list}>
           {exercises.map((item) => (
-            <Pressable
+            <View
               key={item.id}
-              onPress={() => void onToggleExercise(item)}
-              disabled={item.completed_today || busyId === item.id}
               style={[styles.exercise, item.completed_today ? styles.exerciseDone : null]}
-              accessibilityRole="button"
-              accessibilityState={{ checked: item.completed_today }}
             >
-              <View
+              <Pressable
+                onPress={() => void onToggleExercise(item)}
+                disabled={busyId === item.id}
                 style={[styles.check, item.completed_today ? styles.checkOn : null]}
+                accessibilityRole="checkbox"
+                accessibilityLabel={`Oznacz ${item.exercise_title} jako wykonane`}
+                accessibilityState={{ checked: item.completed_today, busy: busyId === item.id }}
               >
                 {item.completed_today ? <Text style={styles.checkMark}>✓</Text> : null}
-              </View>
-              <View style={styles.exerciseBody}>
-                <Text
-                  style={[
-                    styles.cardTitle,
-                    item.completed_today ? styles.strike : null,
-                  ]}
-                >
+              </Pressable>
+              <Pressable
+                style={styles.exerciseBody}
+                onPress={() =>
+                  router.push({ pathname: '/exercise/[id]', params: { id: item.id } })
+                }
+                accessibilityRole="button"
+                accessibilityLabel={`Szczegóły: ${item.exercise_title}`}
+              >
+                <Text style={[styles.cardTitle, item.completed_today ? styles.strike : null]}>
                   {item.exercise_title}
                 </Text>
                 <Text style={styles.muted}>{item.dosage}</Text>
-              </View>
-            </Pressable>
+                {item.categories?.length ? (
+                  <View style={styles.tags}>
+                    {item.categories.slice(0, 3).map((category) => (
+                      <View key={category.id} style={styles.tag}>
+                        <Text style={styles.tagText}>{category.name}</Text>
+                      </View>
+                    ))}
+                    {item.categories.length > 3 ? (
+                      <Text style={styles.tagMore}>+{item.categories.length - 3}</Text>
+                    ) : null}
+                  </View>
+                ) : null}
+                <Text style={styles.openHint}>Instrukcja i materiał</Text>
+              </Pressable>
+            </View>
           ))}
         </View>
       )}
@@ -178,6 +195,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
   content: { padding: space.lg, paddingBottom: space['4xl'], gap: space.md },
+  brand: { marginBottom: space.xs },
   sectionLabel: {
     marginTop: space.md,
     fontSize: typography.sm,
@@ -195,6 +213,35 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: typography.lg, fontWeight: '700', color: colors.ink },
   meta: { fontSize: typography.sm, color: colors.ink },
   muted: { fontSize: typography.sm, color: colors.muted },
+  openHint: {
+    marginTop: 4,
+    fontSize: typography.xs,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  tags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 4,
+  },
+  tag: {
+    backgroundColor: colors.primarySubtle,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+  },
+  tagText: {
+    fontSize: typography.xs,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  tagMore: {
+    fontSize: typography.xs,
+    fontWeight: '600',
+    color: colors.muted,
+    alignSelf: 'center',
+  },
   dot: { width: 12, height: 12, borderRadius: 6 },
   list: { gap: space.md },
   exercise: {
@@ -210,15 +257,15 @@ const styles = StyleSheet.create({
   exerciseDone: { backgroundColor: colors.successSubtle, borderColor: colors.success },
   exerciseBody: { flex: 1, gap: 4 },
   check: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: controlSize,
+    height: controlSize,
+    borderRadius: radius.md,
     borderWidth: 1.5,
     borderColor: colors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkOn: { backgroundColor: colors.success, borderColor: colors.success },
-  checkMark: { color: colors.onPrimary, fontWeight: '700' },
+  checkMark: { color: colors.onPrimary, fontWeight: '700', fontSize: typography.lg },
   strike: { textDecorationLine: 'line-through', color: colors.muted },
 })

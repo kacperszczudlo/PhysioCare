@@ -1,4 +1,4 @@
-# Przypadki użycia — PhysioCare
+# Przypadki użycia - PhysioCare
 
 Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
@@ -12,7 +12,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-01 — Logowanie użytkownika
+## UC-01 - Logowanie użytkownika
 
 | Pole | Wartość |
 |------|---------|
@@ -21,11 +21,11 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Warunki wstępne | Konto istnieje w systemie |
 | Przebieg | 1. Użytkownik podaje e-mail i hasło. 2. System weryfikuje dane. 3. Zwraca JWT. |
 | Warunki końcowe | Sesja aktywna, przekierowanie do pulpitu |
-| Wyjątki | E1: Błędne dane → 401. E2: Konto nieaktywne → 403. |
+| Wyjątki | E1: Błędne dane -> 401. E2: Konto nieaktywne -> 403. |
 
 ---
 
-## UC-02 — Rejestracja pacjenta
+## UC-02 - Rejestracja pacjenta
 
 | Pole | Wartość |
 |------|---------|
@@ -34,22 +34,22 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Warunki wstępne | Brak konta o danym e-mailu |
 | Przebieg | 1. Pacjent wypełnia formularz. 2. Zaznacza zgody wymagane (regulamin, dane medyczne). 3. Przycisk aktywny dopiero po zgodach. 4. System tworzy User + PatientProfile. |
 | Warunki końcowe | Konto utworzone, zgody zapisane z datą |
-| Wyjątki | E1: E-mail zajęty → 409. E2: Brak zgód → 400. |
+| Wyjątki | E1: E-mail zajęty -> 409. E2: Brak zgód -> 400. |
 
 ---
 
-## UC-03 — Rejestracja fizjoterapeuty
+## UC-03 - Rejestracja fizjoterapeuty
 
 | Pole | Wartość |
 |------|---------|
 | Aktor | Fizjoterapeuta |
 | Cel | Założenie konta gabinetu z weryfikacją PWZFz |
 | Przebieg | 1. Formularz z numerem PWZFz i oświadczeniem. 2. System tworzy User (THERAPIST) + TherapistProfile. |
-| Wyjątki | E1: PWZFz już zarejestrowany → 409. |
+| Wyjątki | E1: PWZFz już zarejestrowany -> 409. |
 
 ---
 
-## UC-04 — Reset hasła
+## UC-04 - Reset hasła
 
 | Pole | Wartość |
 |------|---------|
@@ -58,7 +58,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-05 — Przegląd pulpitu pacjenta
+## UC-05 - Przegląd pulpitu pacjenta
 
 | Pole | Wartość |
 |------|---------|
@@ -68,7 +68,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-06 — Oznaczenie wykonania ćwiczenia (compliance)
+## UC-06 - Oznaczenie wykonania ćwiczenia (compliance)
 
 | Pole | Wartość |
 |------|---------|
@@ -79,55 +79,56 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-07 — Przegląd i zarządzanie wizytami (pacjent)
+## UC-07 - Przegląd i zarządzanie wizytami (pacjent)
 
 | Pole | Wartość |
 |------|---------|
 | Aktor | Pacjent |
 | Przebieg | 1. Zakładka nadchodzące / zakończone. 2. Szczegóły wizyty (adres, przygotowanie). 3. Opcjonalnie: zmiana terminu (modal), odwołanie z potwierdzeniem. |
-| Wyjątki | E1: Termin niedostępny → 409. |
+| Wyjątki | E1: Termin niedostępny -> 409. |
 
 ---
 
-## UC-08 — Pobranie dokumentacji medycznej
+## UC-08 - Pobranie dokumentacji medycznej
 
 | Pole | Wartość |
 |------|---------|
 | Aktor | Pacjent |
-| Przebieg | 1. Profil → dokumentacja lub archiwum wizyt. 2. Pobranie PDF udostępnionego przez terapeutę. |
+| Przebieg | 1. Zakładka **Dokumentacja**. 2. Lista dokumentów klinicznych (kierowanie, wyroby, Recepta na Ruch, odmowy) oraz PDF-ów — widocznych automatycznie po wystawieniu przez terapeutę. 3. Szczegóły wpisu / otwarcie PDF. |
 | Bezpieczeństwo | Tylko dokumenty przypisane do zalogowanego pacjenta. |
+| Uwagi | Fizjoterapeuta nie wykonuje osobnego kroku „wyślij”; wystawienie w karcie pacjenta = publikacja dla pacjenta. Szkice (`DRAFT`) wyrobów / Recepty na Ruch nie są widoczne. |
 
 ---
 
-## UC-09 — Zarządzanie zgodami i danymi osobowymi
+## UC-09 - Zarządzanie zgodami i danymi osobowymi
 
 | Pole | Wartość |
 |------|---------|
 | Aktor | Pacjent |
-| Przebieg | 1. Zgody wymagane — tylko podgląd daty. 2. Zgody opcjonalne — przełączniki. 3. Eksport danych / wniosek o usunięcie konta. |
+| Przebieg | 1. Zgody wymagane - tylko podgląd daty. 2. Zgody opcjonalne - przełączniki. 3. Eksport danych / wniosek o usunięcie konta. |
 
 ---
 
-## UC-10 — Przegląd pulpitu terapeuty
+## UC-10 - Przegląd pulpitu terapeuty
 
 | Pole | Wartość |
 |------|---------|
 | Aktor | Fizjoterapeuta |
-| Przebieg | Widgety: liczba wizyt, nowi pacjenci, przypisane ćwiczenia. Lista najbliższych wizyt → przejście do karty pacjenta. |
+| Przebieg | Widgety: liczba wizyt, nowi pacjenci, przypisane ćwiczenia. Lista najbliższych wizyt -> przejście do karty pacjenta. |
 
 ---
 
-## UC-11 — Zarządzanie harmonogramem
+## UC-11 - Zarządzanie harmonogramem
 
 | Pole | Wartość |
 |------|---------|
 | Aktor | Fizjoterapeuta |
 | Przebieg | 1. Widok dzienny z nawigacją dat. 2. Dodanie wizyty (+ lub klik slotu). 3. Drag & drop zmiany godziny. 4. Automatyczny kolor wg typu terapii. |
-| Wyjątki | E1: Kolizja terminów → 409. |
+| Wyjątki | E1: Kolizja terminów -> 409. |
 
 ---
 
-## UC-12 — Karta pacjenta i epizody leczenia
+## UC-12 - Karta pacjenta i epizody leczenia
 
 | Pole | Wartość |
 |------|---------|
@@ -137,16 +138,16 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-13 — Mapa ciała (Diagnostic Mapper)
+## UC-13 - Mapa ciała (Diagnostic Mapper)
 
 | Pole | Wartość |
 |------|---------|
 | Aktor | Fizjoterapeuta |
-| Przebieg | 1. Przełącznik przód/tył. 2. Klik regionu → panel VAS (0–10) i charakter bólu. 3. Zapis → plakietka pod diagnozą + kolor na modelu. 4. Ponowny klik → edycja (Zaktualizuj). |
+| Przebieg | 1. Przełącznik przód/tył. 2. Zapisane regiony widać na sylwetce (kolor = VAS). 3. Klik regionu -> panel VAS, charakter bólu i cele leczenia. 4. Zapisz / Zaktualizuj / Usuń. |
 
 ---
 
-## UC-14 — Zarządzanie wizytą z karty pacjenta
+## UC-14 - Zarządzanie wizytą z karty pacjenta
 
 | Pole | Wartość |
 |------|---------|
@@ -155,16 +156,16 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-15 — Baza ćwiczeń i przypisanie
+## UC-15 - Baza ćwiczeń i przypisanie
 
 | Pole | Wartość |
 |------|---------|
 | Aktor | Fizjoterapeuta |
-| Przebieg | 1. Filtrowanie kategorii. 2. Dodanie ćwiczenia (mp4/PDF). 3. Przypisanie: pacjent, dawkowanie, okres → „Wyślij do aplikacji”. |
+| Przebieg | 1. Filtrowanie kategorii. 2. Dodanie ćwiczenia (mp4/PDF). 3. Przypisanie: pacjent, dawkowanie, okres -> „Wyślij do aplikacji”. |
 
 ---
 
-## UC-16 — Profil fizjoterapeuty
+## UC-16 - Profil fizjoterapeuty
 
 | Pole | Wartość |
 |------|---------|
@@ -173,7 +174,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-17 — Podgląd profilu terapeuty (pacjent)
+## UC-17 - Podgląd profilu terapeuty (pacjent)
 
 | Pole | Wartość |
 |------|---------|
@@ -182,7 +183,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-18 — Preferencje powiadomień
+## UC-18 - Preferencje powiadomień
 
 | Pole | Wartość |
 |------|---------|
@@ -195,7 +196,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 | UC | Mobile | Web | API | BD |
 |----|--------|-----|-----|-----|
-| UC-01–04 | ✓ | ✓ | accounts | users |
-| UC-05–09 | ✓ | — | patients, privacy | profiles, consents |
-| UC-10–16 | — | ✓ | treatment, scheduling, exercises | episodes, visits |
-| UC-17–18 | ✓ | — | therapists, notifications | profiles, prefs |
+| UC-01-04 | ✓ | ✓ | accounts | users |
+| UC-05-09 | ✓ | - | patients, privacy | profiles, consents |
+| UC-10-16 | - | ✓ | treatment, scheduling, exercises | episodes, visits |
+| UC-17-18 | ✓ | - | therapists, notifications | profiles, prefs |

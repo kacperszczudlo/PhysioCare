@@ -1,15 +1,15 @@
--- PhysioCare — auto-generated from Django migrations
--- Generated: 2026-07-14T20:10:51Z
--- Do not edit manually. Run: ./scripts/sync-schema-sql.sh
+-- PhysioCare - auto-generated from Django migrations
+-- Generated: 2026-08-07T21:23:26Z
+-- Do not edit manually. Run: python scripts/sync_schema_sql.py
 
 --
 -- PostgreSQL database dump
 --
 
-\restrict eimNenK9Bk3L81tg4XIEKwTmgwLegiD9ef3jPNh5l9sZZUa3zi3cNgShV8WV5Kh
+\restrict DiDK0XE4xUxdElef6vfAgy9DnbXrEut6hYsf1AwXagLlxrJ6ZXpr9ICrnGORb5r
 
--- Dumped from database version 18.3
--- Dumped by pg_dump version 18.3
+-- Dumped from database version 18.4
+-- Dumped by pg_dump version 18.4
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -128,6 +128,7 @@ CREATE TABLE public.body_area_pain (
     pain_character jsonb NOT NULL,
     recorded_at timestamp with time zone NOT NULL,
     episode_id uuid NOT NULL,
+    treatment_targets jsonb NOT NULL,
     CONSTRAINT body_area_pain_vas_score_check CHECK ((vas_score >= 0)),
     CONSTRAINT chk_body_pain_vas_score CHECK (((vas_score >= 0) AND (vas_score <= 10)))
 );
@@ -262,7 +263,9 @@ CREATE TABLE public.exercise_assignments (
 
 CREATE TABLE public.exercise_categories (
     id uuid NOT NULL,
-    name character varying(80) NOT NULL
+    name character varying(80) NOT NULL,
+    kind character varying(10) NOT NULL,
+    slug character varying(60) NOT NULL
 );
 
 
@@ -389,7 +392,8 @@ CREATE TABLE public.therapist_profiles (
     bio text NOT NULL,
     courses jsonb NOT NULL,
     avatar_url character varying(500) NOT NULL,
-    user_id uuid NOT NULL
+    user_id uuid NOT NULL,
+    location_address character varying(300) NOT NULL
 );
 
 
@@ -633,6 +637,14 @@ ALTER TABLE ONLY public.django_session
 
 
 --
+-- Name: exercise_assignments exclude_overlapping_exercise_assignments; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.exercise_assignments
+    ADD CONSTRAINT exclude_overlapping_exercise_assignments EXCLUDE USING gist (patient_id WITH =, exercise_id WITH =, daterange(start_date, end_date, '[]'::text) WITH &&);
+
+
+--
 -- Name: visits exclude_overlapping_visits; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -662,6 +674,14 @@ ALTER TABLE ONLY public.exercise_categories
 
 ALTER TABLE ONLY public.exercise_categories
     ADD CONSTRAINT exercise_categories_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: exercise_categories exercise_categories_slug_92a32b02_uniq; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.exercise_categories
+    ADD CONSTRAINT exercise_categories_slug_92a32b02_uniq UNIQUE (slug);
 
 
 --
@@ -980,10 +1000,31 @@ CREATE INDEX exercise_assignments_patient_id_d652c92a ON public.exercise_assignm
 
 
 --
+-- Name: exercise_categories_kind_05da1ff1; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX exercise_categories_kind_05da1ff1 ON public.exercise_categories USING btree (kind);
+
+
+--
+-- Name: exercise_categories_kind_05da1ff1_like; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX exercise_categories_kind_05da1ff1_like ON public.exercise_categories USING btree (kind varchar_pattern_ops);
+
+
+--
 -- Name: exercise_categories_name_0b4bbec4_like; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX exercise_categories_name_0b4bbec4_like ON public.exercise_categories USING btree (name varchar_pattern_ops);
+
+
+--
+-- Name: exercise_categories_slug_92a32b02_like; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX exercise_categories_slug_92a32b02_like ON public.exercise_categories USING btree (slug varchar_pattern_ops);
 
 
 --
@@ -1026,6 +1067,13 @@ CREATE INDEX idx_episodes_patient_status ON public.treatment_episodes USING btre
 --
 
 CREATE INDEX idx_ex_assign_patient_dates ON public.exercise_assignments USING btree (patient_id, start_date, end_date);
+
+
+--
+-- Name: idx_ex_cat_kind_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_ex_cat_kind_name ON public.exercise_categories USING btree (kind, name);
 
 
 --
@@ -1501,5 +1549,5 @@ ALTER TABLE ONLY public.visits
 -- PostgreSQL database dump complete
 --
 
-\unrestrict eimNenK9Bk3L81tg4XIEKwTmgwLegiD9ef3jPNh5l9sZZUa3zi3cNgShV8WV5Kh
+\unrestrict DiDK0XE4xUxdElef6vfAgy9DnbXrEut6hYsf1AwXagLlxrJ6ZXpr9ICrnGORb5r
 

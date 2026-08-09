@@ -1,6 +1,6 @@
-# REST API — PhysioCare (szkic kontraktu)
+# REST API - PhysioCare (szkic kontraktu)
 
-> Wersja dokumentu: **0.3 (Faza 2 — implementacja)**.  
+> Wersja dokumentu: **0.3 (Faza 2 - implementacja)**.  
 > Kolekcja Postman: [`postman/PhysioCare.json`](postman/PhysioCare.json) · przewodnik testów: [`postman-testing.md`](postman-testing.md).
 
 **Base URL:** `http://localhost:8000/api/v1`  
@@ -15,8 +15,8 @@ Login / rejestracja / refresh zwracają też `access` + `refresh` w JSON (dla mo
 | Identyfikatory | UUID v4 |
 | Daty | ISO 8601 (`2026-06-09T14:30:00+02:00`) |
 | Błędy | `{ "error": { "code": "...", "message": "...", "details": {} } }` |
-| Paginacja | `?page=1&page_size=20` → `{ "count", "next", "previous", "results" }` |
-| Role | `PATIENT` \| `THERAPIST` — egzekwowane per endpoint |
+| Paginacja | `?page=1&page_size=20` -> `{ "count", "next", "previous", "results" }` |
+| Role | `PATIENT` \| `THERAPIST` - egzekwowane per endpoint |
 
 ## Kody HTTP (wybrane)
 
@@ -52,7 +52,7 @@ Login / rejestracja / refresh zwracają też `access` + `refresh` w JSON (dla mo
 }
 ```
 
-**201** — `{ "user": { "id", "email", "role", "first_name", "last_name" } }` + cookies JWT.  
+**201** - `{ "user": { "id", "email", "role", "first_name", "last_name" } }` + cookies JWT.  
 `therapist_id` = UUID `TherapistProfile` (nie User).
 
 ### POST `/auth/register/therapist`
@@ -74,12 +74,12 @@ Login / rejestracja / refresh zwracają też `access` + `refresh` w JSON (dla mo
 { "email": "...", "password": "..." }
 ```
 
-**200** — `{ "user": {...}, "access": "<jwt>", "refresh": "<jwt>" }` + cookies JWT.  
+**200** - `{ "user": {...}, "access": "<jwt>", "refresh": "<jwt>" }` + cookies JWT.  
 Mobile zapisuje `access`/`refresh` (np. SecureStore) i wysyła `Authorization: Bearer`.
 
 ### POST `/auth/logout`
 
-Czyści cookies `access_token` / `refresh_token`. **200** — `{ "detail": "Wylogowano." }`.
+Czyści cookies `access_token` / `refresh_token`. **200** - `{ "detail": "Wylogowano." }`.
 
 ### POST `/auth/refresh`
 
@@ -88,7 +88,7 @@ Czyści cookies `access_token` / `refresh_token`. **200** — `{ "detail": "Wylo
 ```
 
 Cookie `refresh_token` też jest akceptowane (body opcjonalne).  
-**200** — `{ "detail", "access", "refresh" }` + odświeżone cookies.
+**200** - `{ "detail", "access", "refresh" }` + odświeżone cookies.
 ### POST `/auth/password-reset/request`
 
 ```json
@@ -103,16 +103,17 @@ Cookie `refresh_token` też jest akceptowane (body opcjonalne).
 
 ### POST `/auth/password-change`
 
-Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło zmienione.
+Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** - hasło zmienione.
 
 ---
 
-## Pacjent — profil (`/me/`)
+## Pacjent - profil (`/me/`)
 
 | Metoda | Endpoint | Opis |
 |--------|----------|------|
 | GET | `/me/profile` | Dane pacjenta |
-| PATCH | `/me/profile` | Edycja PESEL, telefon, avatar |
+| PATCH | `/me/profile` | Edycja PESEL, telefon |
+| POST | `/me/profile/avatar` | Upload avatara (`multipart`, pole `file`: JPEG/PNG/WebP) |
 | GET | `/me/consents` | Lista zgód |
 | PATCH | `/me/consents/optional` | Marketing, badania |
 | POST | `/me/data-export` | Eksport RODO |
@@ -130,6 +131,7 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 | PATCH | `/visits/{id}/reschedule` | PATIENT | Zmiana terminu |
 | POST | `/visits/{id}/cancel` | obie | Odwołanie + powód |
 | GET | `/therapist/visits?date=2026-06-09` | THERAPIST | Harmonogram dnia |
+| GET | `/therapist/visits?upcoming=1` | THERAPIST | Najbliższe zaplanowane (od teraz) |
 | POST | `/therapist/visits` | THERAPIST | Nowa wizyta |
 | PATCH | `/therapist/visits/{id}` | THERAPIST | Edycja / drag slot |
 
@@ -158,20 +160,45 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 | PATCH | `/episodes/{id}` | THERAPIST | Status, ICD-10 |
 | GET | `/episodes/{id}/body-pain` | THERAPIST | Wpisy mapy ciała |
 | POST | `/episodes/{id}/body-pain` | THERAPIST | Nowy wpis VAS |
-| PUT | `/episodes/{id}/body-pain/{entry_id}` | THERAPIST | Aktualizacja |
+| PUT/PATCH | `/episodes/{id}/body-pain/{entry_id}` | THERAPIST | Aktualizacja |
+| DELETE | `/episodes/{id}/body-pain/{entry_id}` | THERAPIST | Usunięcie wpisu |
 | POST | `/episodes/{id}/notes` | THERAPIST | Notatka z wizyty |
 | GET | `/episodes/{id}/notes` | THERAPIST | Lista notatek epizodu |
+| GET/POST | `/episodes/{id}/diagnostic-recommendations` | THERAPIST | Kierowanie pośrednie (opinia) |
+| PATCH/DELETE | `/episodes/{id}/diagnostic-recommendations/{item_id}` | THERAPIST | Edycja / usunięcie kierowania |
+| GET/POST | `/episodes/{id}/device-orders` | THERAPIST | Zlecenia wyrobów (e-ZWM model) |
+| PATCH/DELETE | `/episodes/{id}/device-orders/{item_id}` | THERAPIST | Edycja / usunięcie zlecenia |
+| GET/POST | `/episodes/{id}/order-refusals` | THERAPIST | Odmowa zlecenia lekarskiego |
+| PATCH/DELETE | `/episodes/{id}/order-refusals/{item_id}` | THERAPIST | Edycja / usunięcie odmowy |
+| GET/POST | `/patients/{id}/recepta-na-ruch` | THERAPIST | Skierowanie Recepta na Ruch |
+| PATCH/DELETE | `/patients/{id}/recepta-na-ruch/{item_id}` | THERAPIST | Edycja / usunięcie skierowania |
+| GET | `/medical-devices/catalog` | THERAPIST | Katalog wyrobów + kompetencje |
+| GET | `/me/clinical-documents` | PATIENT | Skrzynka dokumentacji pacjenta |
+
+**Dokumentacja pacjenta** (`GET /me/clinical-documents`):
+
+Wystawienie przez terapeutę udostępnia wpis pacjentowi automatycznie (bez osobnego uploadu).
+
+| Param | Znaczenie |
+|-------|-----------|
+| `kind` | Opcjonalnie: `recommendation` \| `device_order` \| `refusal` \| `recepta_na_ruch` \| `pdf` |
+
+Odpowiedź: `{ count, results[] }` gdzie każdy element ma `id`, `kind`, `kind_label`, `title`, `summary`, `created_at`, `therapist_name`, `episode_id`, `status`, `file_url` (PDF), `details`. Wyroby i Recepta na Ruch tylko ze statusem `ISSUED`.
 
 **Body pain:**
 
 ```json
 {
-  "body_region": "THIGH_RIGHT",
+  "body_region": "right-quadriceps",
   "view_side": "FRONT",
   "vas_score": 7,
-  "pain_character": ["SHARP", "RADIATING"]
+  "pain_character": ["SHARP", "RADIATING"],
+  "treatment_targets": ["QUAD_R", "HIP_JT_R"]
 }
 ```
+
+`body_region` - slug mięśnia/regionu z modelu anatomicznego (np. `left-lower-back`, `right-quadriceps`).  
+`treatment_targets` - opcjonalne cele leczenia (staw / mięsień / kość / tkanka) dla wybranego regionu.
 
 ---
 
@@ -179,12 +206,34 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 
 | Metoda | Endpoint | Rola | Opis |
 |--------|----------|------|------|
-| GET | `/therapist/exercises` | THERAPIST | Katalog (`?category=`, `?media_type=`, `?q=`) |
-| GET | `/therapist/exercise-categories` | THERAPIST | Lista kategorii |
+| GET | `/therapist/exercises` | THERAPIST | Katalog - filtry poniżej; paginacja `?page=` (domyślnie 20) |
+| GET | `/therapist/exercises/{id}` | THERAPIST | Szczegóły ćwiczenia |
+| GET | `/therapist/exercise-categories` | THERAPIST | Lista kategorii (`?kind=TYPE\|REGION\|MUSCLE\|INJURY`) |
 | POST | `/therapist/exercises` | THERAPIST | Upload metadanych + plik |
+| PATCH | `/therapist/exercises/{id}` | THERAPIST | Edycja (plik opcjonalny) |
+| DELETE | `/therapist/exercises/{id}` | THERAPIST | Usunięcie (kaskada: przypisania) |
+| GET | `/therapist/exercise-assignments` | THERAPIST | Lista (`?patient=`, `?active=1`) |
 | POST | `/therapist/exercise-assignments` | THERAPIST | Przypisanie |
+| PATCH | `/therapist/exercise-assignments/{id}` | THERAPIST | Okres / dawkowanie |
+| DELETE | `/therapist/exercise-assignments/{id}` | THERAPIST | Usunięcie zalecenia |
 | GET | `/me/exercises/today` | PATIENT | Zalecenia na dziś |
-| POST | `/me/exercise-completions` | PATIENT | Oznacz wykonanie |
+| POST | `/me/exercise-completions` | PATIENT | Oznacz / odznacz wykonanie (`done: true\|false`) |
+
+**Filtry katalogu** (`GET /therapist/exercises`):
+
+| Param | Znaczenie |
+|-------|-----------|
+| `type` | Typ ćwiczenia - slug lub UUID (`strengthening`, `stretching`, `mobilization`, `education`…) |
+| `region` | Okolica ciała (`knee`, `lumbar`, `shoulder`…) |
+| `muscle` | Mięsień / grupa (`quadriceps`, `gluteals`…) |
+| `injury` | Kontuzja / wskazanie (`acl_rehab`, `lbp`…) |
+| `category` | Dowolna kategoria (slug lub UUID); OR przy wielu wartościach |
+| `media_type` | `VIDEO` / `PDF` |
+| `q` | Szukaj w tytule i instrukcji |
+
+Wymiary `type` / `region` / `muscle` / `injury` łączone są **AND** (ćwiczenie musi mieć tag z każdego wybranego wymiaru). W ramach jednego parametru wiele wartości (powtórzony query lub CSV) to **OR**.
+
+**Kategoria w odpowiedzi:** `{ id, name, kind, slug }` gdzie `kind` ∈ `TYPE` | `REGION` | `MUSCLE` | `INJURY`.
 
 **Przypisanie:**
 
@@ -205,18 +254,21 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 
 | Metoda | Endpoint | Opis |
 |--------|----------|------|
-| GET | `/me/documents` | Lista PDF pacjenta |
-| GET | `/{id}/download` | Pobranie (auth) — ścieżka faktyczna w URLconf |
-| POST | `/therapist/documents` | Upload przez terapeutę (`multipart`) |
+| GET | `/me/documents` | Lista samych PDF pacjenta (legacy / wąski widok) |
+| GET | `/me/clinical-documents` | Pełna skrzynka: kierowanie, wyroby, odmowy, Recepta na Ruch + PDF (`file_url` dla PDF = `/api/v1/{id}/download/`) |
+| GET | `/{id}/download` | Pobranie (auth + ownership) |
+| GET | `/media/<path>` | Serwowanie plików (JWT + ownership; dokumenty/ćwiczenia/avatary) |
+| POST | `/therapist/documents` | Upload PDF przez terapeutę (`multipart`) |
 
 ---
 
-## Terapeuta — profil i statystyki
+## Terapeuta - profil i statystyki
 
 | Metoda | Endpoint | Opis |
 |--------|----------|------|
-| GET | `/therapist/profile` | Biogram, kursy, PWZFz |
-| PATCH | `/therapist/profile` | Edycja |
+| GET | `/therapist/profile` | Biogram, kursy, PWZFz, avatar |
+| PATCH | `/therapist/profile` | Edycja (telefon, bio, kursy) |
+| POST | `/therapist/profile/avatar` | Upload avatara (`multipart`, pole `file`: JPEG/PNG/WebP) |
 | GET | `/therapist/dashboard/stats` | Widgety pulpitu |
 | GET | `/therapists/{id}/public` | Wizytówka dla pacjenta |
 
@@ -242,6 +294,6 @@ Dozwolone MIME: `application/pdf`, `video/mp4`.
 ## Kolejne kroki
 
 1. ~~Implementacja serializers + permissions w DRF~~ (Faza 2)
-2. ~~Eksport kolekcji Postman~~ → [`postman/PhysioCare.json`](postman/PhysioCare.json), przewodnik [`postman-testing.md`](postman-testing.md)
+2. ~~Eksport kolekcji Postman~~ -> [`postman/PhysioCare.json`](postman/PhysioCare.json), przewodnik [`postman-testing.md`](postman-testing.md)
 3. Przejście checklisty Postman (wszystkie UC + wyjątki)
 4. Walidacja kontraktu testami integracyjnymi (Faza 3)

@@ -1,4 +1,4 @@
-from rest_framework import permissions
+"""Therapist/patient queryset helpers and ownership checks."""
 
 
 class TherapistPatientQuerysetMixin:

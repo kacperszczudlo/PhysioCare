@@ -38,6 +38,9 @@ def test_patient_completes_assigned_exercise(api_client, patient, assignment):
     assert today_response.status_code == status.HTTP_200_OK
     assert today_response.data['count'] == 1
     assert today_response.data['results'][0]['id'] == str(assignment.id)
+    assert today_response.data['results'][0]['completed_today'] is False
+    assert 'categories' in today_response.data['results'][0]
+    assert today_response.data['results'][0]['categories'] == []
 
     complete_response = api_client.post(
         '/api/v1/me/exercise-completions/',
@@ -49,9 +52,61 @@ def test_patient_completes_assigned_exercise(api_client, patient, assignment):
     assert complete_response.data['done'] is True
     assert ExerciseCompletion.objects.filter(assignment=assignment, done=True).count() == 1
 
+    today_after = api_client.get('/api/v1/me/exercises/today/')
+    assert today_after.data['results'][0]['completed_today'] is True
+
 
 @pytest.mark.django_db
-def test_duplicate_exercise_completion_rejected(api_client, patient, assignment):
+def test_patient_can_uncheck_exercise_completion(api_client, patient, assignment):
+    api_client.force_authenticate(user=patient.user)
+
+    first = api_client.post(
+        '/api/v1/me/exercise-completions/',
+        {'assignment_id': str(assignment.id), 'done': True},
+        format='json',
+    )
+    assert first.status_code == status.HTTP_201_CREATED
+
+    uncheck = api_client.post(
+        '/api/v1/me/exercise-completions/',
+        {'assignment_id': str(assignment.id), 'done': False},
+        format='json',
+    )
+    assert uncheck.status_code == status.HTTP_200_OK
+    assert uncheck.data['done'] is False
+    assert ExerciseCompletion.objects.filter(assignment=assignment).count() == 1
+    assert ExerciseCompletion.objects.get(assignment=assignment).done is False
+
+    today_response = api_client.get('/api/v1/me/exercises/today/')
+    assert today_response.data['results'][0]['completed_today'] is False
+
+
+@pytest.mark.django_db
+def test_completion_uses_server_local_date_not_client_clock(api_client, patient, assignment):
+    """Client completed_on must not desync from MeExercisesToday (clinic TZ)."""
+    api_client.force_authenticate(user=patient.user)
+    today = timezone.localdate()
+    client_skewed = (today - timedelta(days=1)).isoformat()
+
+    response = api_client.post(
+        '/api/v1/me/exercise-completions/',
+        {'assignment_id': str(assignment.id), 'completed_on': client_skewed, 'done': True},
+        format='json',
+    )
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response.data['completed_on'] == today.isoformat()
+    assert ExerciseCompletion.objects.filter(
+        assignment=assignment,
+        completed_on=today,
+        done=True,
+    ).exists()
+
+    today_after = api_client.get('/api/v1/me/exercises/today/')
+    assert today_after.data['results'][0]['completed_today'] is True
+
+
+@pytest.mark.django_db
+def test_duplicate_exercise_completion_updates_existing(api_client, patient, assignment):
     api_client.force_authenticate(user=patient.user)
 
     first = api_client.post(
@@ -66,5 +121,6 @@ def test_duplicate_exercise_completion_rejected(api_client, patient, assignment)
         {'assignment_id': str(assignment.id), 'done': True},
         format='json',
     )
-    assert second.status_code == status.HTTP_400_BAD_REQUEST
+    assert second.status_code == status.HTTP_200_OK
+    assert second.data['done'] is True
     assert ExerciseCompletion.objects.filter(assignment=assignment).count() == 1

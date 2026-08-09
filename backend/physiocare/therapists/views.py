@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.permissions import IsTherapist
+from exercises.models import ExerciseAssignment
 from scheduling.models import Visit, VisitStatus
 
 from .models import TherapistProfile
@@ -35,6 +36,14 @@ class TherapistProfileView(generics.RetrieveUpdateAPIView):
         return Response(TherapistProfileSerializer(instance).data)
 
 
+class TherapistCompetencesView(APIView):
+    permission_classes = [IsAuthenticated, IsTherapist]
+
+    def get(self, request):
+        therapist = request.user.therapist_profile
+        return Response(therapist.competence_snapshot().to_dict())
+
+
 
 class TherapistDashboardStatsView(APIView):
     permission_classes = [IsAuthenticated, IsTherapist]
@@ -48,9 +57,15 @@ class TherapistDashboardStatsView(APIView):
             status=VisitStatus.SCHEDULED,
         ).count()
         patients_count = therapist.patients.count()
+        assignments_active = ExerciseAssignment.objects.filter(
+            patient__therapist=therapist,
+            start_date__lte=today,
+            end_date__gte=today,
+        ).count()
         return Response({
             'visits_today': upcoming,
             'patients_total': patients_count,
+            'assignments_active': assignments_active,
         })
 
 

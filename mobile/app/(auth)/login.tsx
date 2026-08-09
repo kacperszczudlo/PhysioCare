@@ -1,18 +1,13 @@
 import { Link, useRouter } from 'expo-router'
 import { useState } from 'react'
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 
-import { ApiError } from '@/api/client'
+import { getErrorMessage } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
+import { BrandMark } from '@/components/BrandMark'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
+import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { colors, space, typography } from '@/theme/tokens'
 
 export default function LoginScreen() {
@@ -30,61 +25,53 @@ export default function LoginScreen() {
       await login(email.trim(), password)
       router.replace('/(tabs)')
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się zalogować.')
+      setError(getErrorMessage(err, 'Nie udało się zalogować.'))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <View style={styles.brand}>
-          <Text style={styles.brandName}>PhysioCare</Text>
-          <Text style={styles.brandTag}>Twoja terapia w kieszeni</Text>
-        </View>
+    <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.container}>
+      <BrandMark variant="logo" size="lg" style={styles.brand} />
 
-        <Text style={styles.title}>Logowanie</Text>
-        <Text style={styles.subtitle}>Wejdź do konta pacjenta.</Text>
+      <Text style={styles.title}>Logowanie</Text>
+      <Text style={styles.subtitle}>Wejdź do konta pacjenta.</Text>
 
-        <View style={styles.form}>
-          <Field
-            label="E-mail"
-            autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <Field
-            label="Hasło"
-            secureTextEntry
-            autoComplete="password"
-            value={password}
-            onChangeText={setPassword}
-          />
-          {error ? (
-            <Text style={styles.error} accessibilityRole="alert">
-              {error}
-            </Text>
-          ) : null}
-          <Button title="Zaloguj się" loading={loading} onPress={onSubmit} />
-        </View>
+      <View style={styles.form}>
+        <Field
+          label="E-mail"
+          autoCapitalize="none"
+          autoComplete="email"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <Field
+          label="Hasło"
+          secureTextEntry
+          autoComplete="password"
+          value={password}
+          onChangeText={setPassword}
+        />
+        {error ? (
+          <Text style={styles.error} accessibilityRole="alert">
+            {error}
+          </Text>
+        ) : null}
+        <Button title="Zaloguj się" loading={loading} onPress={onSubmit} />
+      </View>
 
-        <View style={styles.footer}>
-          <Link href="/(auth)/register" style={styles.link}>
-            Załóż konto
-          </Link>
-          <Text style={styles.dot}>·</Text>
-          <Link href="/(auth)/password-reset" style={styles.link}>
-            Nie pamiętam hasła
-          </Link>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <View style={styles.footer}>
+        <Link href="/(auth)/register" style={styles.link}>
+          Załóż konto
+        </Link>
+        <Text style={styles.dot}>·</Text>
+        <Link href="/(auth)/password-reset" style={styles.link}>
+          Nie pamiętam hasła
+        </Link>
+      </View>
+    </KeyboardAwareForm>
   )
 }
 
@@ -93,17 +80,11 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: space.xl,
-    justifyContent: 'center',
+    paddingTop: space['4xl'],
+    paddingBottom: space['4xl'],
     gap: space.base,
   },
-  brand: { gap: space.xs, marginBottom: space.base },
-  brandName: {
-    fontSize: typography['3xl'],
-    fontWeight: '800',
-    color: colors.primary,
-    letterSpacing: -0.5,
-  },
-  brandTag: { fontSize: typography.base, color: colors.muted },
+  brand: { marginBottom: space.base, alignSelf: 'center', alignItems: 'center' },
   title: { fontSize: typography['2xl'], fontWeight: '700', color: colors.ink },
   subtitle: { fontSize: typography.sm, color: colors.muted, marginBottom: space.sm },
   form: { gap: space.base },
@@ -115,6 +96,6 @@ const styles = StyleSheet.create({
     gap: space.sm,
     marginTop: space.base,
   },
-  link: { color: colors.primary, fontWeight: '600', fontSize: typography.sm },
+  link: { color: colors.primary, fontWeight: '600', fontSize: typography.sm, textDecorationLine: 'underline' },
   dot: { color: colors.faint },
 })

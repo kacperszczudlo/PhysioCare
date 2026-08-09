@@ -11,13 +11,20 @@
 .diag-map__header {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-3);
 }
 
 .diag-map__header h3 {
   font-size: var(--text-lg);
+  margin: 0;
+}
+
+.diag-map__subtitle {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
 }
 
 .diag-map__tabs {
@@ -32,13 +39,19 @@
 .diag-map__tab {
   border: 0;
   background: transparent;
-  min-height: 2rem;
+  min-height: var(--control-size);
+  min-width: var(--control-size);
   padding: 0 var(--space-3);
   border-radius: var(--radius-sm);
   font-weight: 600;
   font-size: var(--text-sm);
   color: var(--color-muted);
   cursor: pointer;
+}
+
+.diag-map__tab:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .diag-map__tab--active {
@@ -49,52 +62,53 @@
 
 .diag-map__layout {
   display: grid;
-  grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr);
+  grid-template-columns: 380px minmax(0, 1fr);
   gap: var(--space-6);
   align-items: start;
 }
 
 .diag-map__canvas-wrap {
-  display: flex;
-  justify-content: center;
+  width: 380px;
+  flex-shrink: 0;
 }
 
-.diag-map__svg {
-  width: 100%;
-  max-width: 14rem;
+.diag-map__model {
+  width: 370px;
+  height: 740px;
+  margin: 0 auto;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: oklch(0.96 0.008 220);
+  border: 1px solid var(--color-border);
+}
+
+.diag-map__model svg {
+  display: block;
+  max-width: none;
   height: auto;
 }
 
-.diag-map__silhouette {
-  fill: oklch(0.94 0.015 113);
-  stroke: var(--color-border-strong);
-  stroke-width: 1.5;
-}
-
-.diag-map__region {
-  fill: oklch(0.88 0.03 113 / 0.55);
-  stroke: oklch(0.55 0.06 113 / 0.45);
-  stroke-width: 1;
+.diag-map__model path {
   cursor: pointer;
-  transition: filter var(--duration-fast) var(--ease-out);
-}
-
-.diag-map__region:hover,
-.diag-map__region:focus-visible {
-  filter: brightness(0.95);
   outline: none;
+  stroke: transparent;
+  stroke-width: 3px;
+  paint-order: stroke fill;
+  transition:
+    fill var(--duration-fast) var(--ease-out),
+    stroke var(--duration-fast) var(--ease-out);
 }
 
-.diag-map__region--selected {
-  stroke: var(--color-ink);
-  stroke-width: 2;
+.diag-map__model path:hover {
+  filter: brightness(0.92);
 }
 
-.diag-map__vas-label {
-  fill: var(--color-on-primary);
-  font-size: 11px;
-  font-weight: 700;
-  pointer-events: none;
+.diag-map__model path:focus-visible {
+  stroke: var(--color-primary);
+  filter: brightness(0.94);
 }
 
 .diag-map__panel {
@@ -112,6 +126,13 @@
 
 .diag-map__form h4 {
   font-size: var(--text-base);
+  margin: 0;
+}
+
+.diag-map__hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
 }
 
 .diag-map__vas {
@@ -126,16 +147,64 @@
   accent-color: var(--color-primary);
 }
 
-.diag-map__chars {
+.diag-map__chars,
+.diag-map__targets {
   border: 0;
   margin: 0;
   padding: 0;
 }
 
-.diag-map__chars legend {
+.diag-map__chars legend,
+.diag-map__targets legend {
   font-size: var(--text-sm);
   font-weight: 600;
   margin-bottom: var(--space-2);
+}
+
+.diag-map__kind-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.diag-map__kind {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-muted);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  min-height: var(--control-size);
+  min-width: var(--control-size);
+  padding: 0 var(--space-3);
+  cursor: pointer;
+}
+
+.diag-map__kind:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.diag-map__kind--active {
+  color: var(--color-primary);
+  border-color: color-mix(in oklch, var(--color-primary) 45%, var(--color-border));
+  background: color-mix(in oklch, var(--color-primary) 10%, var(--color-bg));
+}
+
+.diag-map__target-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.diag-map__target-kind {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-muted);
 }
 
 .diag-map__char-list {
@@ -149,6 +218,7 @@
   align-items: center;
   gap: var(--space-2);
   font-size: var(--text-sm);
+  min-height: var(--control-size);
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -156,8 +226,41 @@
   cursor: pointer;
 }
 
+.diag-map__char--target {
+  max-width: 100%;
+}
+
 .diag-map__char input {
   accent-color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.diag-map__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.diag-map__clear {
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  min-height: var(--control-size);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.diag-map__clear:hover {
+  color: var(--color-ink);
+}
+
+.diag-map__clear:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 .diag-map__badges {
@@ -175,11 +278,31 @@
   gap: var(--space-2);
   border: 0;
   border-radius: var(--radius-md);
+  min-height: var(--control-size);
   padding: var(--space-2) var(--space-3);
   color: var(--color-on-primary);
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
+  text-align: left;
+}
+
+.diag-map__badge:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.diag-map__badge-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.diag-map__badge-sub {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  opacity: 0.9;
 }
 
 .diag-map__muted {
@@ -195,8 +318,33 @@
   font-size: var(--text-sm);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .diag-map__model path {
+    transition: none;
+  }
+}
+
 @media (max-width: 800px) {
   .diag-map__layout {
     grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .diag-map__canvas-wrap {
+    width: min(100%, 320px);
+  }
+
+  .diag-map__model {
+    width: min(100%, 300px);
+    height: 600px;
+  }
+
+  .diag-map__model svg {
+    width: 300px !important;
+    height: 600px !important;
+  }
+
+  .diag-map__panel {
+    width: 100%;
   }
 }

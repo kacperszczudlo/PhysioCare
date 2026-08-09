@@ -17,11 +17,7 @@ export function ScreenHeader({ title, subtitle, style, ...rest }: ScreenHeaderPr
   )
 }
 
-export function SectionCard({
-  children,
-  style,
-  ...rest
-}: ViewProps & { children: ReactNode }) {
+export function SectionCard({ children, style, ...rest }: ViewProps & { children: ReactNode }) {
   return (
     <View style={[styles.card, style]} {...rest}>
       {children}

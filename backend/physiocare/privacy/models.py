@@ -31,4 +31,4 @@ class Consent(UUIDModel):
         ]
 
     def __str__(self):
-        return f'{self.user.email} — {self.consent_type}'
+        return f'{self.user.email} - {self.consent_type}'

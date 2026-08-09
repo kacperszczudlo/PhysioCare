@@ -1,8 +1,4 @@
-import logging
-
 from rest_framework import permissions
-
-logger = logging.getLogger('physiocare.auth')
 
 
 class IsPatient(permissions.BasePermission):

@@ -9,7 +9,10 @@ import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { EPISODE_STATUS_LABELS } from '@/lib/bodyMap'
+import { FIELD_MESSAGES, getIcd10Error } from '@/lib/fieldPolicy'
 import { DiagnosticMapper } from '@/pages/patients/DiagnosticMapper'
+import { ClinicalActionsPanel } from '@/pages/patients/ClinicalActionsPanel'
+import { PatientAssignments } from '@/pages/patients/PatientAssignments'
 import './PatientDetailPage.css'
 
 const STATUS_OPTIONS: EpisodeStatus[] = [
@@ -31,11 +34,15 @@ export function PatientDetailPage() {
   const [busy, setBusy] = useState(false)
 
   const [icd10, setIcd10] = useState('')
+  const [functionalDiagnosis, setFunctionalDiagnosis] = useState('')
   const [summary, setSummary] = useState('')
   const [status, setStatus] = useState<EpisodeStatus>('IN_PROGRESS')
   const [noteContent, setNoteContent] = useState('')
   const [newIcd10, setNewIcd10] = useState('')
   const [newSummary, setNewSummary] = useState('')
+  const [icd10Error, setIcd10Error] = useState<string | null>(null)
+  const [newIcd10Error, setNewIcd10Error] = useState<string | null>(null)
+  const [noteError, setNoteError] = useState<string | null>(null)
 
   const selected = episodes.find((episode) => episode.id === selectedId) ?? null
 
@@ -71,12 +78,14 @@ export function PatientDetailPage() {
   useEffect(() => {
     if (!selected) {
       setIcd10('')
+      setFunctionalDiagnosis('')
       setSummary('')
       setStatus('IN_PROGRESS')
       setNotes([])
       return
     }
     setIcd10(selected.icd10_code ?? '')
+    setFunctionalDiagnosis(selected.functional_diagnosis ?? '')
     setSummary(selected.summary_note ?? '')
     setStatus(selected.status)
 
@@ -106,11 +115,17 @@ export function PatientDetailPage() {
 
   async function createEpisode(event: FormEvent) {
     event.preventDefault()
+    const icdError = getIcd10Error(newIcd10)
+    if (icdError) {
+      setNewIcd10Error(icdError)
+      return
+    }
+    setNewIcd10Error(null)
     setBusy(true)
     setError(null)
     try {
       const created = await treatmentApi.createEpisode(patientId, {
-        icd10_code: newIcd10.trim(),
+        icd10_code: newIcd10.trim().toUpperCase(),
         summary_note: newSummary.trim(),
         status: 'IN_PROGRESS',
       })
@@ -130,17 +145,24 @@ export function PatientDetailPage() {
     if (!selected) {
       return
     }
+    const icdError = getIcd10Error(icd10)
+    if (icdError) {
+      setIcd10Error(icdError)
+      return
+    }
+    setIcd10Error(null)
     setBusy(true)
     setError(null)
     try {
       const updated = await treatmentApi.updateEpisode(selected.id, {
-        icd10_code: icd10.trim(),
+        icd10_code: icd10.trim().toUpperCase(),
+        functional_diagnosis: functionalDiagnosis.trim(),
         summary_note: summary.trim(),
         status,
         ended_at:
           status === 'IN_PROGRESS'
             ? null
-            : selected.ended_at ?? new Date().toISOString().slice(0, 10),
+            : (selected.ended_at ?? new Date().toISOString().slice(0, 10)),
       })
       setEpisodes((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
     } catch (err) {
@@ -152,9 +174,14 @@ export function PatientDetailPage() {
 
   async function addNote(event: FormEvent) {
     event.preventDefault()
-    if (!selected || !noteContent.trim()) {
+    if (!selected) {
       return
     }
+    if (!noteContent.trim()) {
+      setNoteError(FIELD_MESSAGES.noteRequired)
+      return
+    }
+    setNoteError(null)
     setBusy(true)
     setError(null)
     try {
@@ -204,61 +231,141 @@ export function PatientDetailPage() {
 
       {error ? <ErrorBanner message={error} /> : null}
 
+      <PatientAssignments patientId={patient.id} />
+
       <div className="patient-layout">
-        <aside className="patient-episodes" aria-label="Epizody leczenia">
-          <h2>Epizody</h2>
-          <ul className="patient-episodes__list">
-            {episodes.map((episode) => (
-              <li key={episode.id}>
-                <button
-                  type="button"
-                  className={
-                    episode.id === selectedId
-                      ? 'patient-episodes__item patient-episodes__item--active'
-                      : 'patient-episodes__item'
-                  }
-                  onClick={() => setSelectedId(episode.id)}
-                >
-                  <span className="patient-episodes__code">
-                    {episode.icd10_code || 'Bez ICD-10'}
-                  </span>
-                  <span className="patient-episodes__status">
-                    {EPISODE_STATUS_LABELS[episode.status] ?? episode.status}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
+        <aside className="patient-rail" aria-label="Epizody i notatki">
+          <section className="patient-episodes">
+            <h2>Epizody</h2>
+            <ul className="patient-episodes__list">
+              {episodes.map((episode) => (
+                <li key={episode.id}>
+                  <button
+                    type="button"
+                    className={
+                      episode.id === selectedId
+                        ? 'patient-episodes__item patient-episodes__item--active'
+                        : 'patient-episodes__item'
+                    }
+                    onClick={() => setSelectedId(episode.id)}
+                  >
+                    <span className="patient-episodes__code">
+                      {episode.icd10_code || 'Bez ICD-10'}
+                    </span>
+                    <span className="patient-episodes__status">
+                      {EPISODE_STATUS_LABELS[episode.status] ?? episode.status}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
 
-          {episodes.length === 0 ? (
-            <EmptyState
-              title="Brak epizodów"
-              description="Utwórz pierwszy epizod leczenia, aby prowadzić dokumentację i mapę ciała."
-            />
-          ) : null}
-
-          <form className="patient-episodes__create" onSubmit={(e) => void createEpisode(e)}>
-            <h3>Nowy epizod</h3>
-            <Field
-              label="ICD-10"
-              name="new_icd10"
-              value={newIcd10}
-              onChange={(e) => setNewIcd10(e.target.value)}
-              placeholder="np. M54.5"
-            />
-            <label className="ui-field">
-              <span className="ui-field__label">Opis wstępny</span>
-              <textarea
-                className="patient-textarea"
-                value={newSummary}
-                onChange={(e) => setNewSummary(e.target.value)}
-                rows={3}
+            {episodes.length === 0 ? (
+              <EmptyState
+                title="Brak epizodów"
+                description="Utwórz pierwszy epizod leczenia, aby prowadzić dokumentację i mapę ciała."
               />
-            </label>
-            <Button type="submit" size="sm" loading={busy}>
-              + Nowy epizod
-            </Button>
-          </form>
+            ) : null}
+
+            <form className="patient-episodes__create" onSubmit={(e) => void createEpisode(e)}>
+              <h3>Nowy epizod</h3>
+              <Field
+                label="ICD-10"
+                name="new_icd10"
+                value={newIcd10}
+                onChange={(e) => {
+                  setNewIcd10(e.target.value)
+                  if (newIcd10Error) {
+                    setNewIcd10Error(null)
+                  }
+                }}
+                error={newIcd10Error ?? undefined}
+                placeholder="np. M54.5"
+                hint="Opcjonalnie - format litery + 2 cyfry, np. M54.5"
+              />
+              <label className="ui-field">
+                <span className="ui-field__label">Opis wstępny</span>
+                <textarea
+                  className="patient-textarea"
+                  value={newSummary}
+                  onChange={(e) => setNewSummary(e.target.value)}
+                  rows={2}
+                />
+              </label>
+              <Button type="submit" size="sm" loading={busy}>
+                + Nowy epizod
+              </Button>
+            </form>
+          </section>
+
+          {selected ? (
+            <section className="patient-notes" aria-label="Notatki z wizyt">
+              <header className="patient-notes__header">
+                <div>
+                  <h2>Notatki z wizyt</h2>
+                  <p className="patient-notes__lead">Zapis z wizyty w tym epizodzie.</p>
+                </div>
+                {!notesLoading && notes.length > 0 ? (
+                  <span className="patient-notes__count" aria-label={`${notes.length} notatek`}>
+                    {notes.length}
+                  </span>
+                ) : null}
+              </header>
+
+              <form className="patient-notes__compose" onSubmit={(e) => void addNote(e)}>
+                <label className="ui-field">
+                  <span className="ui-field__label">Nowa notatka</span>
+                  <textarea
+                    className="patient-textarea"
+                    value={noteContent}
+                    onChange={(e) => {
+                      setNoteContent(e.target.value)
+                      if (noteError) {
+                        setNoteError(null)
+                      }
+                    }}
+                    rows={3}
+                    required
+                    placeholder="Obserwacje, reakcja na terapię…"
+                    aria-invalid={noteError ? true : undefined}
+                  />
+                  {noteError ? (
+                    <span className="ui-field__error" role="alert">
+                      {noteError}
+                    </span>
+                  ) : null}
+                </label>
+                <Button type="submit" size="sm" loading={busy}>
+                  Dodaj notatkę
+                </Button>
+              </form>
+
+              <div className="patient-notes__timeline">
+                {notesLoading ? <p className="patient-muted">Ładowanie notatek…</p> : null}
+                {!notesLoading && notes.length === 0 ? (
+                  <EmptyState
+                    title="Brak notatek"
+                    description="Dodaj pierwszą notatkę z wizyty."
+                  />
+                ) : null}
+                {!notesLoading && notes.length > 0 ? (
+                  <ol className="patient-notes__list">
+                    {notes.map((note) => (
+                      <li key={note.id} className="patient-notes__item">
+                        <time dateTime={note.created_at}>
+                          {new Intl.DateTimeFormat('pl-PL', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          }).format(new Date(note.created_at))}
+                        </time>
+                        <p>{note.content}</p>
+                      </li>
+                    ))}
+                  </ol>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
         </aside>
 
         <div className="patient-main">
@@ -270,10 +377,17 @@ export function PatientDetailPage() {
                 <h2>Dokumentacja epizodu</h2>
                 <div className="patient-episode-form__row">
                   <Field
-                    label="ICD-10"
+                    label="ICD-10 (z dokumentacji / roboczy)"
                     name="icd10"
                     value={icd10}
-                    onChange={(e) => setIcd10(e.target.value)}
+                    onChange={(e) => {
+                      setIcd10(e.target.value)
+                      if (icd10Error) {
+                        setIcd10Error(null)
+                      }
+                    }}
+                    error={icd10Error ?? undefined}
+                    hint="Kod z skierowania/dokumentacji lekarskiej — nie zastępuje diagnozy nozologicznej lekarza"
                   />
                   <label className="ui-field">
                     <span className="ui-field__label">Status</span>
@@ -291,6 +405,16 @@ export function PatientDetailPage() {
                   </label>
                 </div>
                 <label className="ui-field">
+                  <span className="ui-field__label">Diagnoza funkcjonalna</span>
+                  <textarea
+                    className="patient-textarea"
+                    value={functionalDiagnosis}
+                    onChange={(e) => setFunctionalDiagnosis(e.target.value)}
+                    rows={3}
+                    placeholder="Deficyty ruchowe, biomechanika, zakresy, siła, stabilność…"
+                  />
+                </label>
+                <label className="ui-field">
                   <span className="ui-field__label">Notatka zbiorcza</span>
                   <textarea
                     className="patient-textarea"
@@ -306,44 +430,11 @@ export function PatientDetailPage() {
 
               <DiagnosticMapper episodeId={selected.id} />
 
-              <section className="patient-notes" aria-label="Notatki z wizyt">
-                <h2>Notatki z wizyt</h2>
-                <form className="patient-notes__form" onSubmit={(e) => void addNote(e)}>
-                  <label className="ui-field">
-                    <span className="ui-field__label">Nowa notatka</span>
-                    <textarea
-                      className="patient-textarea"
-                      value={noteContent}
-                      onChange={(e) => setNoteContent(e.target.value)}
-                      rows={3}
-                      required
-                    />
-                  </label>
-                  <Button type="submit" size="sm" loading={busy}>
-                    Dodaj notatkę
-                  </Button>
-                </form>
-
-                {notesLoading ? <p className="patient-muted">Ładowanie notatek…</p> : null}
-
-                {!notesLoading && notes.length === 0 ? (
-                  <p className="patient-muted">Brak notatek w tym epizodzie.</p>
-                ) : null}
-
-                <ul className="patient-notes__list">
-                  {notes.map((note) => (
-                    <li key={note.id} className="patient-notes__item">
-                      <time dateTime={note.created_at}>
-                        {new Intl.DateTimeFormat('pl-PL', {
-                          dateStyle: 'medium',
-                          timeStyle: 'short',
-                        }).format(new Date(note.created_at))}
-                      </time>
-                      <p>{note.content}</p>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              <ClinicalActionsPanel
+                patientId={patient.id}
+                episodeId={selected.id}
+                onEpisodePossiblyUpdated={() => void loadPatient()}
+              />
             </>
           )}
         </div>

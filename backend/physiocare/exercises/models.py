@@ -1,6 +1,14 @@
+from django.contrib.postgres.constraints import ExclusionConstraint
+from django.contrib.postgres.fields import DateRangeField, RangeBoundary, RangeOperators
 from django.db import models
+from django.db.models import Func
 
 from core.models import TimestampedModel, UUIDModel
+
+
+class DateRange(Func):
+    function = 'DATERANGE'
+    output_field = DateRangeField()
 
 
 class MediaType(models.TextChoices):
@@ -8,14 +16,32 @@ class MediaType(models.TextChoices):
     PDF = 'PDF', 'PDF'
 
 
+class CategoryKind(models.TextChoices):
+    TYPE = 'TYPE', 'Typ ćwiczenia'
+    REGION = 'REGION', 'Okolica ciała'
+    MUSCLE = 'MUSCLE', 'Mięsień / grupa'
+    INJURY = 'INJURY', 'Kontuzja / wskazanie'
+
+
 class ExerciseCategory(UUIDModel):
     name = models.CharField(max_length=80, unique=True)
+    kind = models.CharField(
+        max_length=10,
+        choices=CategoryKind.choices,
+        default=CategoryKind.TYPE,
+        db_index=True,
+    )
+    slug = models.SlugField(max_length=60, unique=True)
 
     class Meta:
         db_table = 'exercise_categories'
+        ordering = ['kind', 'name']
+        indexes = [
+            models.Index(fields=['kind', 'name'], name='idx_ex_cat_kind_name'),
+        ]
 
     def __str__(self):
-        return self.name
+        return f'{self.name} ({self.kind})'
 
 
 class Exercise(TimestampedModel):
@@ -99,10 +125,25 @@ class ExerciseAssignment(UUIDModel):
                 condition=models.Q(end_date__gte=models.F('start_date')),
                 name='chk_exercise_assignment_dates',
             ),
+            ExclusionConstraint(
+                name='exclude_overlapping_exercise_assignments',
+                expressions=[
+                    ('patient', RangeOperators.EQUAL),
+                    ('exercise', RangeOperators.EQUAL),
+                    (
+                        DateRange(
+                            'start_date',
+                            'end_date',
+                            RangeBoundary(inclusive_lower=True, inclusive_upper=True),
+                        ),
+                        RangeOperators.OVERLAPS,
+                    ),
+                ],
+            ),
         ]
 
     def __str__(self):
-        return f'{self.exercise.title} → {self.patient}'
+        return f'{self.exercise.title} - {self.patient}'
 
 
 class ExerciseCompletion(UUIDModel):
@@ -111,7 +152,7 @@ class ExerciseCompletion(UUIDModel):
         on_delete=models.CASCADE,
         related_name='completions',
     )
-    completed_on = models.DateField(auto_now_add=True)
+    completed_on = models.DateField()
     done = models.BooleanField(default=True)
     completed_at = models.DateTimeField(auto_now_add=True)
 

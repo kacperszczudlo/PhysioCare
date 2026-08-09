@@ -1,5 +1,5 @@
-from datetime import timedelta
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
@@ -30,9 +30,14 @@ def env_list(name: str, default: str = '') -> list[str]:
 
 SECRET_KEY = require_env('DJANGO_SECRET_KEY')
 
-DEBUG = env_bool('DJANGO_DEBUG', 'true')
+# Secure default: production-safe. Local .env.example sets DJANGO_DEBUG=true.
+DEBUG = env_bool('DJANGO_DEBUG', 'false')
 
 ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
+
+# Django admin: disable on public demo hosts, or restrict by REMOTE_ADDR.
+ADMIN_ENABLED = env_bool('DJANGO_ADMIN_ENABLED', 'true')
+ADMIN_ALLOWED_IPS = env_list('DJANGO_ADMIN_ALLOWED_IPS', '')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -59,6 +64,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'core.middleware.AdminAccessMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -66,6 +72,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.RequestTimingMiddleware',
 ]
 
 ROOT_URLCONF = 'physiocare.urls'
@@ -112,13 +119,17 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 8},
+    },
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {'NAME': 'accounts.password_policy.SpecialCharacterValidator'},
 ]
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'pl'
+TIME_ZONE = 'Europe/Warsaw'
 USE_I18N = True
 USE_TZ = True
 
@@ -129,6 +140,7 @@ MEDIA_ROOT = ROOT_DIR / _media_path if not os.path.isabs(_media_path) else Path(
 MEDIA_URL = '/media/'
 
 MAX_UPLOAD_MB = int(os.environ.get('MAX_UPLOAD_MB', '50'))
+MAX_AVATAR_MB = int(os.environ.get('MAX_AVATAR_MB', '5'))
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_MB * 1024 * 1024
 
 CORS_ALLOWED_ORIGINS = env_list(
@@ -187,6 +199,8 @@ if DEBUG:
         'rest_framework.renderers.BrowsableAPIRenderer'
     )
 
+_LOG_FORMAT = os.environ.get('LOG_FORMAT', 'json' if not DEBUG else 'text').lower()
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -194,11 +208,14 @@ LOGGING = {
         'standard': {
             'format': '%(asctime)s %(levelname)s [%(name)s] %(message)s',
         },
+        'json': {
+            '()': 'core.logging_formatters.StructuredJsonFormatter',
+        },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'standard',
+            'formatter': 'json' if _LOG_FORMAT == 'json' else 'standard',
         },
     },
     'loggers': {
@@ -227,12 +244,22 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'physiocare-default',
+_REDIS_URL = os.environ.get('REDIS_URL', '').strip()
+if _REDIS_URL:
+    # Shared cache across Gunicorn workers — required for correct rate limits in multi-process.
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': _REDIS_URL,
+        }
     }
-}
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'physiocare-default',
+        }
+    }
 
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_FROM', 'noreply@example.com')
 
@@ -248,3 +275,21 @@ EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', 'true')
 
 PASSWORD_RESET_TIMEOUT = int(os.environ.get('PASSWORD_RESET_TIMEOUT', '1800'))
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173').rstrip('/')
+
+# Optional error alerting (production). Without DSN, errors stay in structured logs only.
+_SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()
+if _SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.logging import LoggingIntegration
+
+    sentry_sdk.init(
+        dsn=_SENTRY_DSN,
+        integrations=[
+            DjangoIntegration(),
+            LoggingIntegration(level=None, event_level=None),
+        ],
+        environment=os.environ.get('SENTRY_ENVIRONMENT', 'production' if not DEBUG else 'development'),
+        traces_sample_rate=float(os.environ.get('SENTRY_TRACES_SAMPLE_RATE', '0.1')),
+        send_default_pii=False,
+    )

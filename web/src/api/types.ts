@@ -1,6 +1,11 @@
 export type UserRole = 'PATIENT' | 'THERAPIST'
 
-export type VisitStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
+export type VisitStatus =
+  | 'PENDING_APPROVAL'
+  | 'SCHEDULED'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'NO_SHOW'
 
 export interface User {
   id: string
@@ -8,6 +13,8 @@ export interface User {
   role: UserRole
   first_name: string
   last_name: string
+  /** Present after session restore / profile refresh; login payload may omit it. */
+  avatar_url?: string | null
 }
 
 export interface ApiErrorBody {
@@ -27,6 +34,27 @@ export interface Paginated<T> {
   results: T[]
 }
 
+export type QualificationLevel = 'TECHNIK' | 'LICENCJAT' | 'MAGISTER' | 'FIZJO_SPEC'
+
+export interface CompetenceCapability {
+  code: string
+  allowed: boolean
+  label: string
+  detail: string
+}
+
+export interface CompetenceSnapshot {
+  qualification_level: QualificationLevel
+  qualification_label: string
+  experience_years: number
+  is_magister_or_above: boolean
+  is_fizjo_spec: boolean
+  can_plan_therapy: boolean
+  can_supervise: boolean
+  device_groups: string[]
+  capabilities: CompetenceCapability[]
+}
+
 export interface TherapistProfile {
   id: string
   email: string
@@ -34,15 +62,103 @@ export interface TherapistProfile {
   last_name: string
   pwzf_number: string
   phone: string | null
+  location_address: string | null
   bio: string | null
   courses: string[]
   avatar_url: string | null
+  qualification_level: QualificationLevel
+  experience_years: number
+  competences?: CompetenceSnapshot
   created_at: string
+}
+
+export type RecommendationType =
+  | 'SPECIALIST_CONSULTATION'
+  | 'IMAGING_MRI'
+  | 'IMAGING_CT'
+  | 'IMAGING_RTG'
+  | 'IMAGING_USG'
+  | 'OTHER'
+
+export type FundingHint = 'NFZ_VIA_DOCTOR' | 'PRIVATE' | 'NOT_APPLICABLE'
+
+export type DeviceOrderStatus = 'DRAFT' | 'ISSUED' | 'CANCELLED'
+
+export type BodySide = 'LEFT' | 'RIGHT' | 'BOTH' | 'NA'
+
+export interface DiagnosticRecommendation {
+  id: string
+  episode: string
+  therapist: string
+  recommendation_type: RecommendationType
+  target_specialty: string
+  body_area: string
+  justification: string
+  red_flags_noted: boolean
+  funding_hint: FundingHint
+  created_at: string
+}
+
+export interface MedicalDeviceOrder {
+  id: string
+  episode: string
+  patient: string
+  therapist: string
+  device_code: string
+  device_group: string
+  device_name: string
+  side: BodySide
+  quantity: number
+  icd10_code: string
+  status: DeviceOrderStatus
+  notes: string
+  created_at: string
+}
+
+export interface PhysicianOrderRefusal {
+  id: string
+  episode: string
+  therapist: string
+  physician_order_description: string
+  refusal_reason: string
+  physician_notified: boolean
+  created_at: string
+}
+
+export interface ReceptaNaRuchReferral {
+  id: string
+  patient: string
+  therapist: string
+  episode: string | null
+  readiness_confirmed: boolean
+  activity_notes: string
+  status: DeviceOrderStatus
+  created_at: string
+}
+
+export interface MedicalDeviceCatalogItem {
+  code: string
+  group: string
+  name: string
+  min_qualification: QualificationLevel
+  usage_hint: string
+  allowed_for_therapist: boolean
+}
+
+export interface MedicalDeviceCatalog {
+  groups: {
+    magister_groups: string[]
+    fizjo_spec_extra_groups: string[]
+  }
+  items: MedicalDeviceCatalogItem[]
+  competences: CompetenceSnapshot
+  disclaimer: string
 }
 
 export interface DashboardStats {
   visits_today: number
   patients_total: number
+  assignments_active?: number
 }
 
 export interface PatientSummary {
@@ -62,6 +178,17 @@ export interface TherapyType {
   created_at: string
 }
 
+export type TherapyTypePresetGroup = 'kind' | 'profile'
+
+export interface TherapyTypePreset {
+  group: TherapyTypePresetGroup
+  name: string
+  color_hex: string
+  duration_min: number
+  description: string
+  already_added: boolean
+}
+
 export interface Visit {
   id: string
   patient: string
@@ -70,6 +197,7 @@ export interface Visit {
   therapy_type: string
   patient_first_name: string
   patient_last_name: string
+  patient_avatar_url: string | null
   therapy_type_name: string
   therapy_type_color: string
   therapy_type_duration_min: number
@@ -78,6 +206,7 @@ export interface Visit {
   status: VisitStatus
   location_address: string
   prep_instructions: string
+  patient_note: string
   cancel_reason: string
   created_at: string
 }
@@ -88,15 +217,19 @@ export interface VisitCreatePayload {
   episode_id?: string | null
   start_at: string
   end_at: string
-  location_address?: string
   prep_instructions?: string
 }
 
-export type EpisodeStatus =
-  | 'IN_PROGRESS'
-  | 'COMPLETED_SUCCESS'
-  | 'REFERRED'
-  | 'INTERRUPTED'
+export interface VisitUpdatePayload {
+  therapy_type_id?: string
+  start_at?: string
+  end_at?: string
+  prep_instructions?: string
+  location_address?: string
+  status?: VisitStatus
+}
+
+export type EpisodeStatus = 'IN_PROGRESS' | 'COMPLETED_SUCCESS' | 'REFERRED' | 'INTERRUPTED'
 
 export type BodyViewSide = 'FRONT' | 'BACK'
 
@@ -110,6 +243,7 @@ export interface TreatmentEpisode {
   id: string
   patient: string
   icd10_code: string
+  functional_diagnosis: string
   status: EpisodeStatus
   summary_note: string
   started_at: string
@@ -124,6 +258,7 @@ export interface BodyAreaPain {
   view_side: BodyViewSide
   vas_score: number
   pain_character: string[]
+  treatment_targets: string[]
   recorded_at: string
 }
 
@@ -137,9 +272,13 @@ export interface VisitNote {
 
 export type MediaType = 'VIDEO' | 'PDF'
 
+export type CategoryKind = 'TYPE' | 'REGION' | 'MUSCLE' | 'INJURY'
+
 export interface ExerciseCategory {
   id: string
   name: string
+  kind: CategoryKind
+  slug: string
 }
 
 export interface Exercise {
@@ -156,6 +295,9 @@ export interface ExerciseAssignment {
   id: string
   exercise: string
   exercise_title: string
+  exercise_instruction?: string
+  exercise_file_url?: string
+  exercise_media_type?: MediaType
   patient: string
   episode: string | null
   dosage: string
@@ -171,4 +313,11 @@ export interface ExerciseAssignmentPayload {
   dosage: string
   start_date: string
   end_date: string
+}
+
+export interface ExerciseAssignmentUpdatePayload {
+  dosage?: string
+  start_date?: string
+  end_date?: string
+  episode_id?: string | null
 }

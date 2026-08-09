@@ -4,15 +4,17 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
 
 import { authApi, type PasswordResetConfirmPayload, type PatientRegisterPayload } from '@/api/auth'
-import { ApiError } from '@/api/client'
+import { ApiError, isNetworkFailure } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import { tokenStorage } from '@/api/tokenStorage'
 import type { User } from '@/api/types'
+import { useNetworkOptional } from '@/network/NetworkContext'
 
 interface AuthContextValue {
   user: User | null
@@ -40,30 +42,51 @@ function profileToUser(profile: Awaited<ReturnType<typeof patientApi.getProfile>
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const network = useNetworkOptional()
+  const wasOffline = useRef(false)
+  const userRef = useRef<User | null>(null)
+  userRef.current = user
+
+  const hydrateFromProfile = useCallback(async (): Promise<void> => {
+    const access = await tokenStorage.getAccess()
+    if (!access) {
+      setUser(null)
+      return
+    }
+
+    try {
+      const profile = await patientApi.getProfile()
+      const next = profileToUser(profile)
+      setUser(next)
+      await tokenStorage.setCachedUser(next)
+    } catch (error) {
+      if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+        setUser(null)
+        await tokenStorage.clear()
+        return
+      }
+
+      if (!isNetworkFailure(error)) {
+        console.error('Session restore failed', error)
+      }
+
+      if (!userRef.current) {
+        const cached = await tokenStorage.getCachedUser()
+        setUser(cached)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
 
     async function restoreSession() {
       try {
-        const access = await tokenStorage.getAccess()
-        if (!access) {
-          if (!cancelled) {
-            setUser(null)
-          }
-          return
-        }
-        const profile = await patientApi.getProfile()
-        if (!cancelled) {
-          setUser(profileToUser(profile))
-        }
+        await hydrateFromProfile()
       } catch (error) {
         if (!cancelled) {
+          console.error('Session restore failed', error)
           setUser(null)
-          await tokenStorage.clear()
-          if (!(error instanceof ApiError && (error.status === 401 || error.status === 403))) {
-            console.error('Session restore failed', error)
-          }
         }
       } finally {
         if (!cancelled) {
@@ -76,7 +99,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [hydrateFromProfile])
+
+  useEffect(() => {
+    if (!network?.isResolved) {
+      return
+    }
+
+    if (network.isOffline) {
+      wasOffline.current = true
+      return
+    }
+
+    if (!wasOffline.current) {
+      return
+    }
+    wasOffline.current = false
+
+    void (async () => {
+      const access = await tokenStorage.getAccess()
+      if (!access) {
+        return
+      }
+      try {
+        const profile = await patientApi.getProfile()
+        const next = profileToUser(profile)
+        setUser(next)
+        await tokenStorage.setCachedUser(next)
+      } catch (error) {
+        if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+          setUser(null)
+          await tokenStorage.clear()
+        }
+      }
+    })()
+  }, [network?.isOffline, network?.isResolved])
 
   const login = useCallback(async (email: string, password: string) => {
     const nextUser = await authApi.login(email, password)
@@ -85,11 +142,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new ApiError(403, 'Aplikacja mobilna jest dostępna tylko dla pacjentów.')
     }
     setUser(nextUser)
+    await tokenStorage.setCachedUser(nextUser)
   }, [])
 
   const register = useCallback(async (payload: PatientRegisterPayload) => {
     const nextUser = await authApi.registerPatient(payload)
     setUser(nextUser)
+    await tokenStorage.setCachedUser(nextUser)
   }, [])
 
   const logout = useCallback(async () => {
@@ -121,15 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       requestPasswordReset,
       confirmPasswordReset,
     }),
-    [
-      user,
-      isLoading,
-      login,
-      register,
-      logout,
-      requestPasswordReset,
-      confirmPasswordReset,
-    ],
+    [user, isLoading, login, register, logout, requestPasswordReset, confirmPasswordReset],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

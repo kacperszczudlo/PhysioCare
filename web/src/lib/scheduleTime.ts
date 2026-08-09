@@ -42,7 +42,15 @@ export function formatTime(date: Date): string {
 }
 
 export function dayBounds(date: Date): { start: Date; end: Date; minutes: number } {
-  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate(), DAY_START_HOUR, 0, 0, 0)
+  const start = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    DAY_START_HOUR,
+    0,
+    0,
+    0,
+  )
   const end = new Date(date.getFullYear(), date.getMonth(), date.getDate(), DAY_END_HOUR, 0, 0, 0)
   const minutes = (end.getTime() - start.getTime()) / 60_000
   return { start, end, minutes }
@@ -72,6 +80,16 @@ export function hourMarks(day: Date): Date[] {
     marks.push(new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour, 0, 0, 0))
   }
   return marks
+}
+
+/** Minute offsets from day start for each snap slot (inclusive of day end). */
+export function slotOffsets(day: Date, step = SNAP_MINUTES): number[] {
+  const { minutes } = dayBounds(day)
+  const offsets: number[] = []
+  for (let m = 0; m <= minutes; m += step) {
+    offsets.push(m)
+  }
+  return offsets
 }
 
 export function toIsoLocal(date: Date): string {

@@ -1,3 +1,1 @@
-from django.shortcuts import render
-
-# Create your views here.
+"""App-level HTTP views live in domain packages (accounts, scheduling, …)."""

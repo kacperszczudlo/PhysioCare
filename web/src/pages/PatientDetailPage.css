@@ -12,30 +12,57 @@
 
 .patient-layout {
   display: grid;
-  grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
-  gap: var(--space-6);
+  grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+  gap: var(--space-5);
   align-items: start;
 }
 
-.patient-episodes {
+.patient-rail {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  padding: var(--space-5);
+  position: sticky;
+  top: var(--space-4);
+  max-height: calc(100dvh - var(--space-8));
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.patient-episodes,
+.patient-notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.patient-notes {
+  background: var(--color-surface-raised);
 }
 
 .patient-episodes h2,
 .patient-episode-form h2,
-.patient-notes h2 {
+.patient-notes h2,
+.patient-notes h3 {
+  font-size: var(--text-base);
+  margin: 0;
+  text-wrap: balance;
+}
+
+.patient-episode-form h2 {
   font-size: var(--text-lg);
 }
 
 .patient-episodes h3 {
   font-size: var(--text-sm);
   font-weight: 700;
+  margin: 0;
 }
 
 .patient-episodes__list {
@@ -45,6 +72,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  max-height: 12rem;
+  overflow: auto;
 }
 
 .patient-episodes__item {
@@ -79,19 +108,18 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  padding-top: var(--space-4);
+  padding-top: var(--space-3);
   border-top: 1px solid var(--color-border);
 }
 
 .patient-main {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-5);
   min-width: 0;
 }
 
-.patient-episode-form,
-.patient-notes {
+.patient-episode-form {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -103,7 +131,7 @@
 
 .patient-episode-form__row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr minmax(10rem, 14rem);
   gap: var(--space-4);
 }
 
@@ -122,10 +150,55 @@
   min-height: 2.75rem;
 }
 
-.patient-notes__form {
+.patient-notes__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.patient-notes__lead {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.patient-notes__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 0.45rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-subtle);
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.patient-notes__compose {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+}
+
+.patient-notes__compose .patient-textarea {
+  max-height: 8rem;
+}
+
+.patient-notes__header,
+.patient-notes__compose {
+  flex-shrink: 0;
+}
+
+.patient-notes__timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 0;
 }
 
 .patient-notes__list {
@@ -134,21 +207,43 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: 0;
+  max-height: min(22rem, 40vh);
+  overflow: auto;
+  border-top: 1px solid var(--color-border);
 }
 
 .patient-notes__item {
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  position: relative;
+  padding: var(--space-3) 0 var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.patient-notes__item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1.15rem;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--color-primary);
 }
 
 .patient-notes__item time {
   display: block;
   font-size: var(--text-xs);
+  font-weight: 600;
   color: var(--color-muted);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.patient-notes__item p {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  text-wrap: pretty;
 }
 
 .patient-banner {
@@ -167,9 +262,29 @@
   font-size: var(--text-sm);
 }
 
+@media (max-width: 1100px) {
+  .patient-layout {
+    grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 900px) {
   .patient-layout {
     grid-template-columns: 1fr;
+  }
+
+  .patient-rail {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .patient-episodes__list {
+    max-height: none;
+  }
+
+  .patient-notes__list {
+    max-height: none;
   }
 
   .patient-episode-form__row {

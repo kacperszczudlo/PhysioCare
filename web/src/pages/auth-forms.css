@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  max-width: 24rem;
+  max-width: 28rem;
 }
 
 .auth-form__header h1 {
@@ -36,9 +36,23 @@
 
 .auth-form__check input {
   margin-top: 0.2rem;
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
   accent-color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.auth-form__password {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.auth-form__password-reqs {
+  margin-top: calc(var(--space-1) * -1);
+  padding-left: var(--space-1);
 }
 
 .auth-form__error {
@@ -59,6 +73,18 @@
 
 .auth-form__submit {
   width: 100%;
+}
+
+.auth-form__legal {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.auth-form__legal a {
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
 .auth-form__footer {

@@ -21,14 +21,14 @@
 }
 
 .ui-btn--md {
-  min-height: 2.75rem;
+  min-height: var(--control-size);
   padding: 0 var(--space-5);
   font-size: var(--text-base);
 }
 
 .ui-btn--sm {
-  min-height: 2.25rem;
-  padding: 0 var(--space-3);
+  min-height: var(--control-size);
+  padding: 0 var(--space-4);
   font-size: var(--text-sm);
 }
 

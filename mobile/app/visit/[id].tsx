@@ -1,23 +1,32 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
-import { useCallback, useEffect, useState } from 'react'
-import {
-  Alert,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { Visit } from '@/api/types'
 import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
+import { DateTimePickerField } from '@/components/DateTimePickerField'
 import { Field } from '@/components/Field'
+import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { SectionCard } from '@/components/ScreenHeader'
 import { addMinutesISO, formatDateTime, formatTimeRange, visitStatusLabel } from '@/lib/format'
+import { openAddressInMaps } from '@/lib/maps'
 import { colors, space, typography } from '@/theme/tokens'
+
+function defaultRescheduleStart(from?: string): Date {
+  if (from) {
+    const parsed = new Date(from)
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed
+    }
+  }
+  const date = new Date()
+  date.setDate(date.getDate() + 1)
+  date.setHours(10, 0, 0, 0)
+  return date
+}
 
 export default function VisitDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -27,8 +36,13 @@ export default function VisitDetailScreen() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [rescheduleOpen, setRescheduleOpen] = useState(false)
-  const [newStart, setNewStart] = useState('')
+  const [newStart, setNewStart] = useState(() => defaultRescheduleStart())
   const [cancelReason, setCancelReason] = useState('')
+
+  const minimumDate = useMemo(() => {
+    const now = new Date()
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  }, [])
 
   const load = useCallback(async () => {
     if (!id) {
@@ -39,7 +53,7 @@ export default function VisitDetailScreen() {
     try {
       const data = await patientApi.getVisit(id)
       setVisit(data)
-      setNewStart(data.start_at.slice(0, 16))
+      setNewStart(defaultRescheduleStart(data.start_at))
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się pobrać wizyty.'))
     } finally {
@@ -52,13 +66,17 @@ export default function VisitDetailScreen() {
   }, [load])
 
   async function onReschedule() {
-    if (!visit || !newStart) {
+    if (!visit) {
+      return
+    }
+    if (newStart.getTime() <= Date.now()) {
+      setError('Termin musi być w przyszłości.')
       return
     }
     setBusy(true)
     setError(null)
     try {
-      const startIso = new Date(newStart).toISOString()
+      const startIso = newStart.toISOString()
       const endIso = addMinutesISO(startIso, visit.therapy_type_duration_min || 45)
       const updated = await patientApi.rescheduleVisit(visit.id, {
         start_at: startIso,
@@ -74,30 +92,42 @@ export default function VisitDetailScreen() {
   }
 
   function confirmCancel() {
-    Alert.alert('Odwołać wizytę?', 'Tej operacji nie można cofnąć z poziomu aplikacji.', [
-      { text: 'Anuluj', style: 'cancel' },
-      {
-        text: 'Odwołaj',
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            if (!visit) {
-              return
-            }
-            setBusy(true)
-            setError(null)
-            try {
-              const updated = await patientApi.cancelVisit(visit.id, cancelReason.trim())
-              setVisit(updated)
-            } catch (err) {
-              setError(getErrorMessage(err, 'Nie udało się odwołać wizyty.'))
-            } finally {
-              setBusy(false)
-            }
-          })()
+    const pending = visit?.status === 'PENDING_APPROVAL'
+    Alert.alert(
+      pending ? 'Wycofać zgłoszenie?' : 'Odwołać wizytę?',
+      'Tej operacji nie można cofnąć z poziomu aplikacji.',
+      [
+        { text: 'Anuluj', style: 'cancel' },
+        {
+          text: pending ? 'Wycofaj' : 'Odwołaj',
+          style: 'destructive',
+          onPress: () => {
+            void (async () => {
+              if (!visit) {
+                return
+              }
+              setBusy(true)
+              setError(null)
+              try {
+                const updated = await patientApi.cancelVisit(visit.id, cancelReason.trim())
+                setVisit(updated)
+              } catch (err) {
+                setError(
+                  getErrorMessage(
+                    err,
+                    pending
+                      ? 'Nie udało się wycofać zgłoszenia.'
+                      : 'Nie udało się odwołać wizyty.',
+                  ),
+                )
+              } finally {
+                setBusy(false)
+              }
+            })()
+          },
         },
-      },
-    ])
+      ],
+    )
   }
 
   if (loading) {
@@ -112,17 +142,24 @@ export default function VisitDetailScreen() {
     )
   }
 
-  const canManage = visit.status === 'SCHEDULED'
+  const isPending = visit.status === 'PENDING_APPROVAL'
+  const canManage = visit.status === 'SCHEDULED' || isPending
 
   return (
     <>
       <Stack.Screen options={{ title: visit.therapy_type_name }} />
-      <ScrollView style={styles.flex} contentContainerStyle={styles.content}>
+      <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.content}>
         {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
 
         <SectionCard>
           <Text style={styles.title}>{visit.therapy_type_name}</Text>
           <Text style={styles.meta}>{visitStatusLabel(visit.status)}</Text>
+          {isPending ? (
+            <Text style={styles.muted}>
+              Zgłoszenie czeka na zatwierdzenie przez terapeutę. Możesz zmienić termin albo je
+              wycofać.
+            </Text>
+          ) : null}
           <Text style={styles.body}>{formatDateTime(visit.start_at)}</Text>
           <Text style={styles.muted}>{formatTimeRange(visit.start_at, visit.end_at)}</Text>
         </SectionCard>
@@ -141,7 +178,24 @@ export default function VisitDetailScreen() {
 
         <SectionCard>
           <Text style={styles.section}>Lokalizacja</Text>
-          <Text style={styles.body}>{visit.location_address || '—'}</Text>
+          {visit.location_address ? (
+            <Pressable
+              onPress={() => openAddressInMaps(visit.location_address)}
+              accessibilityRole="link"
+              accessibilityHint="Otwiera adres w Google Maps"
+            >
+              <Text style={styles.link}>{visit.location_address}</Text>
+              <Text style={styles.muted}>Otwórz w Google Maps</Text>
+            </Pressable>
+          ) : (
+            <Text style={styles.body}>-</Text>
+          )}
+          {visit.patient_note ? (
+            <>
+              <Text style={styles.section}>Twoja notatka</Text>
+              <Text style={styles.body}>{visit.patient_note}</Text>
+            </>
+          ) : null}
           <Text style={styles.section}>Przygotowanie</Text>
           <Text style={styles.body}>{visit.prep_instructions || 'Brak instrukcji.'}</Text>
           {visit.cancel_reason ? (
@@ -154,39 +208,42 @@ export default function VisitDetailScreen() {
 
         {canManage ? (
           <SectionCard>
-            <Button title="Zmień termin" onPress={() => setRescheduleOpen(true)} />
+            <Button
+              title={isPending ? 'Zmień proponowany termin' : 'Zmień termin'}
+              onPress={() => setRescheduleOpen(true)}
+            />
             <Field
-              label="Powód odwołania (opcjonalnie)"
+              label={isPending ? 'Powód wycofania (opcjonalnie)' : 'Powód odwołania (opcjonalnie)'}
               value={cancelReason}
               onChangeText={setCancelReason}
             />
             <Button
-              title="Odwołaj wizytę"
+              title={isPending ? 'Wycofaj zgłoszenie' : 'Odwołaj wizytę'}
               variant="danger"
               loading={busy}
               onPress={confirmCancel}
             />
           </SectionCard>
         ) : null}
-      </ScrollView>
+      </KeyboardAwareForm>
 
       <Modal visible={rescheduleOpen} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
+          <KeyboardAwareForm style={styles.modalScroll} contentContainerStyle={styles.modalCard}>
             <Text style={styles.title}>Nowy termin</Text>
             <Text style={styles.muted}>
-              Podaj datę i godzinę (lokalna). Koniec wyliczymy z czasu zabiegu.
+              Wybierz dzień i godzinę. Koniec wyliczymy z czasu zabiegu (
+              {visit.therapy_type_duration_min || 45} min).
             </Text>
-            <Field
-              label="Start (YYYY-MM-DDTHH:mm)"
+            <DateTimePickerField
+              label="Termin wizyty"
               value={newStart}
-              onChangeText={setNewStart}
-              autoCapitalize="none"
-              hint="Np. 2026-06-12T11:00"
+              onChange={setNewStart}
+              minimumDate={minimumDate}
             />
             <Button title="Zapisz termin" loading={busy} onPress={() => void onReschedule()} />
             <Button title="Anuluj" variant="ghost" onPress={() => setRescheduleOpen(false)} />
-          </View>
+          </KeyboardAwareForm>
         </View>
       </Modal>
     </>
@@ -205,6 +262,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   body: { fontSize: typography.base, color: colors.ink },
+  link: {
+    fontSize: typography.base,
+    color: colors.primary,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
   meta: { fontSize: typography.sm, color: colors.primary, fontWeight: '700' },
   muted: { fontSize: typography.sm, color: colors.muted },
   modalBackdrop: {
@@ -212,11 +275,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.35)',
     justifyContent: 'flex-end',
   },
+  modalScroll: {
+    maxHeight: '92%',
+  },
   modalCard: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     padding: space.lg,
     gap: space.md,
+    paddingBottom: space['3xl'],
   },
 })

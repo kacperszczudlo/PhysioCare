@@ -3,8 +3,10 @@ from django.urls import path
 from .views import (
     MeExerciseCompletionCreateView,
     MeExercisesTodayView,
-    TherapistExerciseAssignmentCreateView,
+    TherapistExerciseAssignmentDetailView,
+    TherapistExerciseAssignmentListCreateView,
     TherapistExerciseCategoryListView,
+    TherapistExerciseDetailView,
     TherapistExerciseListCreateView,
 )
 
@@ -15,14 +17,24 @@ urlpatterns = [
         name='therapist-exercises',
     ),
     path(
+        'therapist/exercises/<uuid:pk>/',
+        TherapistExerciseDetailView.as_view(),
+        name='therapist-exercise-detail',
+    ),
+    path(
         'therapist/exercise-categories/',
         TherapistExerciseCategoryListView.as_view(),
         name='therapist-exercise-categories',
     ),
     path(
         'therapist/exercise-assignments/',
-        TherapistExerciseAssignmentCreateView.as_view(),
+        TherapistExerciseAssignmentListCreateView.as_view(),
         name='therapist-exercise-assignments',
+    ),
+    path(
+        'therapist/exercise-assignments/<uuid:pk>/',
+        TherapistExerciseAssignmentDetailView.as_view(),
+        name='therapist-exercise-assignment-detail',
     ),
 ]
 

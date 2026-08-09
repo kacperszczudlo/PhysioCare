@@ -17,6 +17,7 @@ def main() -> None:
     pg = postgres_env()
     dropdb = find_postgres_bin("dropdb")
     createdb = find_postgres_bin("createdb")
+    psql = find_postgres_bin("psql")
     python = backend_python()
     env = {"PGPASSWORD": pg.password}
 
@@ -38,6 +39,26 @@ def main() -> None:
             "Nie udalo sie utworzyc bazy. Najpierw: "
             "python scripts/setup_postgres_auth.py"
         ) from exc
+
+    print("Ensuring btree_gist extension...")
+    run(
+        [
+            psql,
+            "-h",
+            pg.host,
+            "-p",
+            pg.port,
+            "-U",
+            pg.user,
+            "-d",
+            pg.db,
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE EXTENSION IF NOT EXISTS btree_gist;",
+        ],
+        env=env,
+    )
 
     print("Running migrations...")
     run(

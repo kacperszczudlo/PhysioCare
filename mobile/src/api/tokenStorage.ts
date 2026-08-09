@@ -1,18 +1,24 @@
 import * as SecureStore from 'expo-secure-store'
 import { Platform } from 'react-native'
 
+import type { User } from './types'
+
 const ACCESS_KEY = 'physiocare_access'
 const REFRESH_KEY = 'physiocare_refresh'
+const USER_KEY = 'physiocare_cached_user'
 
 const memory = new Map<string, string>()
 
+/**
+ * Native: SecureStore (Keychain / Keystore).
+ * Expo web: localStorage — tylko do dev; produkcyjny klient to native build.
+ */
 async function setItem(key: string, value: string): Promise<void> {
   if (Platform.OS === 'web') {
     memory.set(key, value)
     try {
       localStorage.setItem(key, value)
     } catch {
-      // ignore quota / private mode
     }
     return
   }
@@ -39,7 +45,6 @@ async function deleteItem(key: string): Promise<void> {
     try {
       localStorage.removeItem(key)
     } catch {
-      // ignore
     }
     return
   }
@@ -60,8 +65,25 @@ export const tokenStorage = {
     await setItem(REFRESH_KEY, refresh)
   },
 
+  async getCachedUser(): Promise<User | null> {
+    const raw = await getItem(USER_KEY)
+    if (!raw) {
+      return null
+    }
+    try {
+      return JSON.parse(raw) as User
+    } catch {
+      return null
+    }
+  },
+
+  async setCachedUser(user: User): Promise<void> {
+    await setItem(USER_KEY, JSON.stringify(user))
+  },
+
   async clear(): Promise<void> {
     await deleteItem(ACCESS_KEY)
     await deleteItem(REFRESH_KEY)
+    await deleteItem(USER_KEY)
   },
 }

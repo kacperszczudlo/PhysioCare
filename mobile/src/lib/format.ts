@@ -34,7 +34,7 @@ export function formatTimeRange(startIso: string, endIso: string): string {
     hour: '2-digit',
     minute: '2-digit',
   })
-  return `${fmt.format(start)}–${fmt.format(end)}`
+  return `${fmt.format(start)}-${fmt.format(end)}`
 }
 
 export function todayISODate(): string {
@@ -53,6 +53,8 @@ export function addMinutesISO(iso: string, minutes: number): string {
 
 export function visitStatusLabel(status: string): string {
   switch (status) {
+    case 'PENDING_APPROVAL':
+      return 'Oczekuje na zatwierdzenie'
     case 'SCHEDULED':
       return 'Zaplanowana'
     case 'COMPLETED':

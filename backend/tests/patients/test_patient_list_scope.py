@@ -1,7 +1,7 @@
 import pytest
 from django.contrib.auth import get_user_model
-from django.test.utils import CaptureQueriesContext
 from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from rest_framework.test import APIClient
 
 from patients.models import PatientProfile

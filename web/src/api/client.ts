@@ -1,14 +1,8 @@
 import type { ApiErrorBody } from './types'
 
-const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(
-  /\/$/,
-  '',
-)
+const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
 
-/** Dev: proxy Vite (`/api` → backend). Prod: ustaw `VITE_API_BASE_URL`. */
-export const API_BASE_URL = configuredBase && configuredBase.length > 0
-  ? configuredBase
-  : '/api/v1'
+export const API_BASE_URL = configuredBase && configuredBase.length > 0 ? configuredBase : '/api/v1'
 
 export class ApiError extends Error {
   readonly status: number
@@ -36,7 +30,6 @@ export class ApiError extends Error {
 
 type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: unknown
-  /** Skip one automatic refresh+retry on 401. */
   skipAuthRefresh?: boolean
 }
 
@@ -66,14 +59,53 @@ async function tryRefreshSession(): Promise<boolean> {
   return refreshPromise
 }
 
+const GENERIC_API_MESSAGES = new Set([
+  'Walidacja nie powiodła się.',
+  'Wystąpił błąd.',
+  'Wystąpił nieoczekiwany błąd.',
+  'Wystąpił nieoczekiwany błąd serwera.',
+  'Wystąpił nieoczekiwany błąd serwera. Szczegóły są w logach backendu.',
+])
+
+function firstFieldMessage(details: unknown): string | null {
+  if (!details || typeof details !== 'object') {
+    return null
+  }
+  if (Array.isArray(details)) {
+    return typeof details[0] === 'string' ? details[0] : null
+  }
+
+  for (const value of Object.values(details as Record<string, unknown>)) {
+    if (typeof value === 'string' && value.trim()) {
+      return value
+    }
+    if (Array.isArray(value) && typeof value[0] === 'string' && value[0].trim()) {
+      return value[0]
+    }
+    if (value && typeof value === 'object') {
+      const nested = firstFieldMessage(value)
+      if (nested) {
+        return nested
+      }
+    }
+  }
+  return null
+}
+
 function firstValidationMessage(body: ApiErrorBody | null): string | null {
   if (!body) {
     return null
   }
-  if (body.error?.message) {
+
+  const fromDetails = firstFieldMessage(body.error?.details)
+  if (fromDetails) {
+    return fromDetails
+  }
+
+  if (body.error?.message && !GENERIC_API_MESSAGES.has(body.error.message)) {
     return body.error.message
   }
-  if (typeof body.detail === 'string') {
+  if (typeof body.detail === 'string' && body.detail.trim()) {
     return body.detail
   }
 
@@ -81,18 +113,14 @@ function firstValidationMessage(body: ApiErrorBody | null): string | null {
     if (key === 'error' || key === 'detail') {
       continue
     }
-    if (typeof value === 'string') {
-      return value
+    const nested = firstFieldMessage(value)
+    if (nested) {
+      return nested
     }
-    if (Array.isArray(value) && typeof value[0] === 'string') {
-      return value[0]
-    }
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      const nested = firstValidationMessage(value as ApiErrorBody)
-      if (nested) {
-        return nested
-      }
-    }
+  }
+
+  if (body.error?.message) {
+    return body.error.message
   }
   return null
 }
@@ -132,10 +160,7 @@ async function parseJson(response: Response): Promise<ApiErrorBody | null> {
   }
 }
 
-export async function apiRequest<T>(
-  path: string,
-  options: RequestOptions = {},
-): Promise<T> {
+export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, skipAuthRefresh, headers: customHeaders, ...rest } = options
   const headers = new Headers(customHeaders)
   headers.set('Accept', 'application/json')
@@ -187,6 +212,20 @@ export async function apiRequest<T>(
 
 export function getErrorMessage(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback
+}
+
+export function getFieldError(err: unknown, field: string): string | null {
+  if (!(err instanceof ApiError)) {
+    return null
+  }
+  const value = err.details?.[field]
+  if (typeof value === 'string' && value.trim()) {
+    return value
+  }
+  if (Array.isArray(value) && typeof value[0] === 'string' && value[0].trim()) {
+    return value[0]
+  }
+  return null
 }
 
 export const api = {

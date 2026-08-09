@@ -1,21 +1,15 @@
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useState } from 'react'
-import {
-  Pressable,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { Visit } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { Button } from '@/components/Button'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { formatDateTime, formatTimeRange, visitStatusLabel } from '@/lib/format'
-import { colors, radius, space, typography } from '@/theme/tokens'
+import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
 type TabKey = 'upcoming' | 'past'
 
@@ -58,18 +52,15 @@ export default function VisitsScreen() {
   return (
     <View style={styles.flex}>
       <View style={styles.pad}>
-        <ScreenHeader title="Wizyty" subtitle="Nadchodzące i archiwum." />
+        <ScreenHeader title="Wizyty" subtitle="Nadchodzące, zgłoszenia i archiwum." />
+        <Button title="Umów wizytę" onPress={() => router.push('/visit/request')} />
         <View style={styles.tabs}>
           <Segment
             label="Nadchodzące"
             active={tab === 'upcoming'}
             onPress={() => switchTab('upcoming')}
           />
-          <Segment
-            label="Archiwum"
-            active={tab === 'past'}
-            onPress={() => switchTab('past')}
-          />
+          <Segment label="Archiwum" active={tab === 'past'} onPress={() => switchTab('past')} />
         </View>
       </View>
 
@@ -94,22 +85,37 @@ export default function VisitsScreen() {
           {visits.length === 0 ? (
             <EmptyState
               title={tab === 'upcoming' ? 'Brak nadchodzących wizyt' : 'Brak historii wizyt'}
+              description={
+                tab === 'upcoming'
+                  ? 'Wyślij zgłoszenie przyciskiem powyżej - fizjoterapeuta zatwierdzi termin.'
+                  : undefined
+              }
             />
           ) : (
             visits.map((visit) => (
               <Pressable
                 key={visit.id}
                 onPress={() => router.push(`/visit/${visit.id}`)}
-                style={styles.card}
+                style={[
+                  styles.card,
+                  visit.status === 'PENDING_APPROVAL' ? styles.cardPending : null,
+                ]}
               >
                 <View style={styles.rowBetween}>
                   <Text style={styles.title}>{visit.therapy_type_name}</Text>
-                  <Text style={styles.status}>{visitStatusLabel(visit.status)}</Text>
+                  <Text
+                    style={[
+                      styles.status,
+                      visit.status === 'PENDING_APPROVAL' ? styles.statusPending : null,
+                    ]}
+                  >
+                    {visitStatusLabel(visit.status)}
+                  </Text>
                 </View>
                 <Text style={styles.meta}>{formatDateTime(visit.start_at)}</Text>
                 <Text style={styles.muted}>
-                  {formatTimeRange(visit.start_at, visit.end_at)} ·{' '}
-                  {visit.therapist_first_name} {visit.therapist_last_name}
+                  {formatTimeRange(visit.start_at, visit.end_at)} · {visit.therapist_first_name}{' '}
+                  {visit.therapist_last_name}
                 </Text>
               </Pressable>
             ))
@@ -143,7 +149,7 @@ function Segment({
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
-  pad: { paddingHorizontal: space.lg, paddingTop: space.sm },
+  pad: { paddingHorizontal: space.lg, paddingTop: space.sm, gap: space.md },
   tabs: {
     flexDirection: 'row',
     backgroundColor: colors.surfaceMuted,
@@ -154,7 +160,7 @@ const styles = StyleSheet.create({
   },
   segment: {
     flex: 1,
-    minHeight: 40,
+    minHeight: controlSize,
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -171,6 +177,10 @@ const styles = StyleSheet.create({
     padding: space.base,
     gap: space.xs,
   },
+  cardPending: {
+    borderStyle: 'dashed',
+    borderColor: colors.primary,
+  },
   rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -178,7 +188,8 @@ const styles = StyleSheet.create({
     gap: space.sm,
   },
   title: { flex: 1, fontSize: typography.lg, fontWeight: '700', color: colors.ink },
-  status: { fontSize: typography.xs, color: colors.primary, fontWeight: '700' },
+  status: { fontSize: typography.xs, color: colors.primary, fontWeight: '700', maxWidth: '46%' },
+  statusPending: { color: colors.warning },
   meta: { fontSize: typography.sm, color: colors.ink },
   muted: { fontSize: typography.sm, color: colors.muted },
 })

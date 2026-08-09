@@ -1,10 +1,4 @@
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { colors, radius, space, typography } from '@/theme/tokens'
 import { Button } from './Button'
@@ -18,13 +12,7 @@ export function LoadingBlock({ label = 'Ładowanie…' }: { label?: string }) {
   )
 }
 
-export function ErrorBanner({
-  message,
-  onRetry,
-}: {
-  message: string
-  onRetry?: () => void
-}) {
+export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <View style={styles.errorBox} accessibilityRole="alert">
       <Text style={styles.errorText}>{message}</Text>
@@ -33,6 +21,14 @@ export function ErrorBanner({
           <Text style={styles.retry}>Spróbuj ponownie</Text>
         </Pressable>
       ) : null}
+    </View>
+  )
+}
+
+export function SuccessBanner({ message }: { message: string }) {
+  return (
+    <View style={styles.successBox} accessibilityRole="text" accessibilityLiveRegion="polite">
+      <Text style={styles.successText}>{message}</Text>
     </View>
   )
 }
@@ -82,11 +78,24 @@ const styles = StyleSheet.create({
   errorText: {
     color: colors.danger,
     fontSize: typography.sm,
+    fontWeight: '600',
   },
   retry: {
     color: colors.danger,
     fontWeight: '700',
     fontSize: typography.sm,
+  },
+  successBox: {
+    backgroundColor: colors.successSubtle,
+    borderRadius: radius.md,
+    padding: space.base,
+    borderWidth: 1,
+    borderColor: colors.success,
+  },
+  successText: {
+    color: colors.success,
+    fontSize: typography.sm,
+    fontWeight: '700',
   },
   empty: {
     alignItems: 'center',

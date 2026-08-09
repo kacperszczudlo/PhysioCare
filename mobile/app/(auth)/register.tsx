@@ -1,19 +1,25 @@
 import { Link, useRouter } from 'expo-router'
 import { useMemo, useState } from 'react'
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 
-import { ApiError, getErrorMessage } from '@/api/client'
+import { getErrorMessage, getFieldError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
+import { BrandMark } from '@/components/BrandMark'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
+import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
+import { PasswordRequirements } from '@/components/PasswordRequirements'
+import { PhoneField } from '@/components/PhoneField'
+import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
+import { getEmailError } from '@/lib/emailPolicy'
+import { getFirstNameError, getLastNameError } from '@/lib/fieldPolicy'
+import {
+  getPasswordError,
+  getPasswordRequirements,
+  PASSWORD_MESSAGES,
+  passwordsMatch,
+} from '@/lib/passwordPolicy'
+import { formatPhoneForApi, getPhoneError } from '@/lib/phonePolicy'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
 export default function RegisterScreen() {
@@ -23,12 +29,30 @@ export default function RegisterScreen() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
+  const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
+  const [phoneNational, setPhoneNational] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [therapistId, setTherapistId] = useState('')
   const [terms, setTerms] = useState(false)
   const [medical, setMedical] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<{
+    firstName?: string
+    lastName?: string
+    email?: string
+    phone?: string
+    password?: string
+    confirmPassword?: string
+    therapistId?: string
+  }>({})
+  const [passwordTouched, setPasswordTouched] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  const passwordHints = { email, firstName, lastName }
+  const passwordRequirements = getPasswordRequirements(password, passwordHints)
+  const showRequirementErrors = submitted || passwordTouched
 
   const canSubmit = useMemo(
     () =>
@@ -37,17 +61,77 @@ export default function RegisterScreen() {
       firstName.trim() &&
       lastName.trim() &&
       email.trim() &&
-      password.length >= 8 &&
+      password.length > 0 &&
+      confirmPassword.length > 0 &&
       therapistId.trim(),
-    [terms, medical, firstName, lastName, email, password, therapistId],
+    [terms, medical, firstName, lastName, email, password, confirmPassword, therapistId],
   )
 
   async function onSubmit() {
-    if (!canSubmit) {
+    setSubmitted(true)
+    setError(null)
+
+    if (!terms || !medical) {
       setError('Uzupełnij formularz i zaznacz wymagane zgody RODO.')
       return
     }
-    setError(null)
+
+    const nextFieldErrors: {
+      firstName?: string
+      lastName?: string
+      email?: string
+      phone?: string
+      password?: string
+      confirmPassword?: string
+      therapistId?: string
+    } = {}
+    const firstNameError = getFirstNameError(firstName)
+    if (firstNameError) {
+      nextFieldErrors.firstName = firstNameError
+    }
+    const lastNameError = getLastNameError(lastName)
+    if (lastNameError) {
+      nextFieldErrors.lastName = lastNameError
+    }
+    const emailError = getEmailError(email)
+    if (emailError) {
+      nextFieldErrors.email = emailError
+    }
+    const phoneError = getPhoneError(phoneNational, countryCode)
+    if (phoneError) {
+      nextFieldErrors.phone = phoneError
+    }
+    const passwordError = getPasswordError(password, passwordHints)
+    if (passwordError) {
+      nextFieldErrors.password = passwordError
+    }
+    if (!passwordsMatch(password, confirmPassword)) {
+      nextFieldErrors.confirmPassword = PASSWORD_MESSAGES.mismatch
+    }
+    if (!therapistId.trim()) {
+      nextFieldErrors.therapistId = 'Podaj kod terapeuty.'
+    } else if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        therapistId.trim(),
+      )
+    ) {
+      nextFieldErrors.therapistId = 'Podaj prawidłowy kod terapeuty (UUID z panelu terapeuty).'
+    }
+
+    if (
+      nextFieldErrors.firstName ||
+      nextFieldErrors.lastName ||
+      nextFieldErrors.email ||
+      nextFieldErrors.phone ||
+      nextFieldErrors.password ||
+      nextFieldErrors.confirmPassword ||
+      nextFieldErrors.therapistId
+    ) {
+      setFieldErrors(nextFieldErrors)
+      return
+    }
+
+    setFieldErrors({})
     setLoading(true)
     try {
       await register({
@@ -56,85 +140,194 @@ export default function RegisterScreen() {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         therapist_id: therapistId.trim(),
+        phone: formatPhoneForApi(phoneNational, countryCode) || undefined,
         consents: { terms, medical_data: medical },
       })
       router.replace('/(tabs)')
     } catch (err) {
-      setError(getErrorMessage(err, 'Rejestracja nie powiodła się.'))
+      const apiFirstNameError = getFieldError(err, 'first_name')
+      const apiLastNameError = getFieldError(err, 'last_name')
+      const apiEmailError = getFieldError(err, 'email')
+      const apiPhoneError = getFieldError(err, 'phone')
+      const apiPasswordError = getFieldError(err, 'password')
+      const apiTherapistError = getFieldError(err, 'therapist_id')
+      if (
+        apiFirstNameError ||
+        apiLastNameError ||
+        apiEmailError ||
+        apiPhoneError ||
+        apiPasswordError ||
+        apiTherapistError
+      ) {
+        setFieldErrors({
+          firstName: apiFirstNameError ?? undefined,
+          lastName: apiLastNameError ?? undefined,
+          email: apiEmailError ?? undefined,
+          phone: apiPhoneError ?? undefined,
+          password: apiPasswordError ?? undefined,
+          therapistId: apiTherapistError ?? undefined,
+        })
+      }
+      const message = getErrorMessage(err, 'Rejestracja nie powiodła się.')
+      const duplicate =
+        (apiEmailError && message === apiEmailError) ||
+        (apiPasswordError && message === apiPasswordError)
+      setError(duplicate ? null : message)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.brand}>PhysioCare</Text>
-        <Text style={styles.title}>Rejestracja pacjenta</Text>
-        <Text style={styles.subtitle}>
-          Załóż konto i zaakceptuj wymagane zgody, aby korzystać z zaleceń terapeuty.
+    <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.container}>
+      <BrandMark variant="logo" size="md" style={styles.brand} />
+      <Text style={styles.title}>Rejestracja pacjenta</Text>
+      <Text style={styles.subtitle}>
+        Załóż konto i zaakceptuj wymagane zgody, aby korzystać z zaleceń terapeuty.
+      </Text>
+
+      <View style={styles.form}>
+        <Field
+          label="Imię"
+          value={firstName}
+          onChangeText={(value) => {
+            setFirstName(value)
+            if (fieldErrors.firstName) {
+              setFieldErrors((prev) => ({ ...prev, firstName: undefined }))
+            }
+          }}
+          autoComplete="given-name"
+          error={fieldErrors.firstName}
+        />
+        <Field
+          label="Nazwisko"
+          value={lastName}
+          onChangeText={(value) => {
+            setLastName(value)
+            if (fieldErrors.lastName) {
+              setFieldErrors((prev) => ({ ...prev, lastName: undefined }))
+            }
+          }}
+          autoComplete="family-name"
+          error={fieldErrors.lastName}
+        />
+        <Field
+          label="E-mail"
+          value={email}
+          onChangeText={(value) => {
+            setEmail(value)
+            if (fieldErrors.email) {
+              setFieldErrors((prev) => ({ ...prev, email: undefined }))
+            }
+          }}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          autoComplete="email"
+          error={fieldErrors.email}
+        />
+        <PhoneField
+          countryCode={countryCode}
+          nationalNumber={phoneNational}
+          onCountryChange={(code) => {
+            setCountryCode(code)
+            if (fieldErrors.phone) {
+              setFieldErrors((prev) => ({ ...prev, phone: undefined }))
+            }
+          }}
+          onNationalNumberChange={(value) => {
+            setPhoneNational(value)
+            if (fieldErrors.phone) {
+              setFieldErrors((prev) => ({ ...prev, phone: undefined }))
+            }
+          }}
+          error={fieldErrors.phone}
+          hint="Opcjonalnie. Wybierz kraj, żeby ustawić prefix numeru."
+        />
+        <Field
+          label="Hasło"
+          value={password}
+          onChangeText={(value) => {
+            setPassword(value)
+            if (fieldErrors.password) {
+              setFieldErrors((prev) => ({ ...prev, password: undefined }))
+            }
+          }}
+          onBlur={() => setPasswordTouched(true)}
+          secureTextEntry
+          autoComplete="new-password"
+          error={fieldErrors.password}
+        />
+        <PasswordRequirements
+          requirements={passwordRequirements}
+          showErrors={showRequirementErrors}
+        />
+        <Field
+          label="Powtórz hasło"
+          value={confirmPassword}
+          onChangeText={(value) => {
+            setConfirmPassword(value)
+            if (fieldErrors.confirmPassword) {
+              setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }))
+            }
+          }}
+          secureTextEntry
+          autoComplete="new-password"
+          error={fieldErrors.confirmPassword}
+        />
+        <Field
+          label="Kod terapeuty"
+          value={therapistId}
+          onChangeText={(value) => {
+            setTherapistId(value)
+            if (fieldErrors.therapistId) {
+              setFieldErrors((prev) => ({ ...prev, therapistId: undefined }))
+            }
+          }}
+          autoCapitalize="none"
+          autoCorrect={false}
+          error={fieldErrors.therapistId}
+          hint="Kod z panelu webowego terapeuty: Profil / „Kod dla pacjenta” (Kopiuj kod)."
+        />
+
+        <ConsentToggle
+          label="Akceptuję regulamin serwisu (wymagane)"
+          checked={terms}
+          onToggle={() => setTerms((v) => !v)}
+        />
+        <ConsentToggle
+          label="Wyrażam zgodę na przetwarzanie danych medycznych (wymagane)"
+          checked={medical}
+          onToggle={() => setMedical((v) => !v)}
+        />
+        <Text style={styles.legalHint}>
+          Szczegóły przetwarzania danych:{' '}
+          <Link href="/legal/privacy" style={styles.inlineLink}>
+            Polityka prywatności
+          </Link>
+          {' · '}
+          <Link href="/legal/cookies" style={styles.inlineLink}>
+            Cookies
+          </Link>
         </Text>
 
-        <View style={styles.form}>
-          <Field label="Imię" value={firstName} onChangeText={setFirstName} autoComplete="given-name" />
-          <Field label="Nazwisko" value={lastName} onChangeText={setLastName} autoComplete="family-name" />
-          <Field
-            label="E-mail"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            autoComplete="email"
-          />
-          <Field
-            label="Hasło"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoComplete="new-password"
-            hint="Minimum 8 znaków"
-          />
-          <Field
-            label="ID terapeuty (UUID)"
-            value={therapistId}
-            onChangeText={setTherapistId}
-            autoCapitalize="none"
-            hint="Otrzymasz od fizjoterapeuty po założeniu konta w panelu webowym."
-          />
+        {error ? (
+          <Text style={styles.error} accessibilityRole="alert">
+            {error}
+          </Text>
+        ) : null}
 
-          <ConsentToggle
-            label="Akceptuję regulamin serwisu (wymagane)"
-            checked={terms}
-            onToggle={() => setTerms((v) => !v)}
-          />
-          <ConsentToggle
-            label="Wyrażam zgodę na przetwarzanie danych medycznych (wymagane)"
-            checked={medical}
-            onToggle={() => setMedical((v) => !v)}
-          />
+        <Button
+          title="Utwórz konto"
+          loading={loading}
+          disabled={!canSubmit}
+          onPress={() => void onSubmit()}
+        />
+      </View>
 
-          {error ? (
-            <Text style={styles.error} accessibilityRole="alert">
-              {error}
-            </Text>
-          ) : null}
-
-          <Button
-            title="Utwórz konto"
-            loading={loading}
-            disabled={!canSubmit}
-            onPress={onSubmit}
-          />
-        </View>
-
-        <Link href="/(auth)/login" style={styles.link}>
-          Mam już konto — zaloguj się
-        </Link>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <Link href="/(auth)/login" style={styles.link}>
+        Mam już konto - zaloguj się
+      </Link>
+    </KeyboardAwareForm>
   )
 }
 
@@ -166,20 +359,22 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
   container: { padding: space.xl, gap: space.md, paddingBottom: space['4xl'] },
   brand: {
-    fontSize: typography.xl,
-    fontWeight: '800',
-    color: colors.primary,
     marginTop: space['2xl'],
+    alignSelf: 'center',
+    alignItems: 'center',
   },
   title: { fontSize: typography['2xl'], fontWeight: '700', color: colors.ink },
   subtitle: { fontSize: typography.sm, color: colors.muted, marginBottom: space.sm },
   form: { gap: space.base },
   error: { color: colors.danger, fontSize: typography.sm },
+  legalHint: { fontSize: typography.sm, color: colors.muted, lineHeight: 20 },
+  inlineLink: { color: colors.primary, fontWeight: '600', textDecorationLine: 'underline' },
   link: {
     color: colors.primary,
     fontWeight: '600',
     textAlign: 'center',
     marginTop: space.base,
+    textDecorationLine: 'underline',
   },
   consentRow: { flexDirection: 'row', gap: space.md, alignItems: 'flex-start' },
   checkbox: {

@@ -25,7 +25,9 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.physiocare.patient"
+      "package": "com.physiocare.patient",
+      "usesCleartextTraffic": true,
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -34,7 +36,14 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "PhysioCare potrzebuje dostępu do zdjęć, aby ustawić avatar profilu."
+        }
+      ],
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true

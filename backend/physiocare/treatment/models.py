@@ -15,13 +15,44 @@ class BodyViewSide(models.TextChoices):
     BACK = 'BACK', 'Tył'
 
 
+class RecommendationType(models.TextChoices):
+    SPECIALIST_CONSULTATION = 'SPECIALIST_CONSULTATION', 'Konsultacja lekarza specjalisty'
+    IMAGING_MRI = 'IMAGING_MRI', 'Sugestia MRI'
+    IMAGING_CT = 'IMAGING_CT', 'Sugestia TK'
+    IMAGING_RTG = 'IMAGING_RTG', 'Sugestia RTG (wymaga lekarza)'
+    IMAGING_USG = 'IMAGING_USG', 'Sugestia USG'
+    OTHER = 'OTHER', 'Inne'
+
+
+class FundingHint(models.TextChoices):
+    NFZ_VIA_DOCTOR = 'NFZ_VIA_DOCTOR', 'NFZ — formalne skierowanie wystawia lekarz'
+    PRIVATE = 'PRIVATE', 'Ścieżka prywatna'
+    NOT_APPLICABLE = 'NOT_APPLICABLE', 'Nie dotyczy'
+
+
+class DeviceOrderStatus(models.TextChoices):
+    DRAFT = 'DRAFT', 'Szkic'
+    ISSUED = 'ISSUED', 'Wystawione'
+    CANCELLED = 'CANCELLED', 'Anulowane'
+
+
+class BodySide(models.TextChoices):
+    LEFT = 'LEFT', 'Lewa'
+    RIGHT = 'RIGHT', 'Prawa'
+    BOTH = 'BOTH', 'Obustronnie'
+    NA = 'NA', 'Nie dotyczy'
+
+
 class TreatmentEpisode(TimestampedModel):
     patient = models.ForeignKey(
         'patients.PatientProfile',
         on_delete=models.CASCADE,
         related_name='episodes',
     )
+    # Kod roboczy / z dokumentacji lekarskiej — nie jest samodzielną diagnozą nozologiczną.
     icd10_code = models.CharField(max_length=10, blank=True, default='')
+    # Diagnoza funkcjonalna — domena fizjoterapeuty (art. 4 u.o.z.f.).
+    functional_diagnosis = models.TextField(blank=True, default='')
     status = models.CharField(
         max_length=30,
         choices=EpisodeStatus.choices,
@@ -41,7 +72,7 @@ class TreatmentEpisode(TimestampedModel):
         ]
 
     def __str__(self):
-        return f'Epizod {self.id} — {self.patient}'
+        return f'Epizod {self.id} - {self.patient}'
 
 
 class BodyAreaPain(UUIDModel):
@@ -54,6 +85,7 @@ class BodyAreaPain(UUIDModel):
     view_side = models.CharField(max_length=10, choices=BodyViewSide.choices)
     vas_score = models.PositiveSmallIntegerField()
     pain_character = models.JSONField(default=list)
+    treatment_targets = models.JSONField(default=list, blank=True)
     recorded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -93,3 +125,145 @@ class VisitNote(TimestampedModel):
 
     def __str__(self):
         return f'Notatka epizodu {self.episode_id}'
+
+
+class DiagnosticRecommendation(TimestampedModel):
+    """
+    Kierowanie pośrednie: opinia fizjoterapeuty ułatwiająca diagnostykę lekarską.
+    Nie jest formalnym e-skierowaniem NFZ na badania obrazowe.
+    """
+
+    episode = models.ForeignKey(
+        TreatmentEpisode,
+        on_delete=models.CASCADE,
+        related_name='diagnostic_recommendations',
+    )
+    therapist = models.ForeignKey(
+        'therapists.TherapistProfile',
+        on_delete=models.PROTECT,
+        related_name='diagnostic_recommendations',
+    )
+    recommendation_type = models.CharField(
+        max_length=40,
+        choices=RecommendationType.choices,
+    )
+    target_specialty = models.CharField(max_length=120, blank=True, default='')
+    body_area = models.CharField(max_length=120, blank=True, default='')
+    justification = models.TextField()
+    red_flags_noted = models.BooleanField(default=False)
+    funding_hint = models.CharField(
+        max_length=30,
+        choices=FundingHint.choices,
+        default=FundingHint.NFZ_VIA_DOCTOR,
+    )
+
+    class Meta:
+        db_table = 'diagnostic_recommendations'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.recommendation_type} @ {self.episode_id}'
+
+
+class MedicalDeviceOrder(TimestampedModel):
+    """Zlecenie na wyrób medyczny (model e-ZWM w aplikacji — bez integracji P1)."""
+
+    episode = models.ForeignKey(
+        TreatmentEpisode,
+        on_delete=models.CASCADE,
+        related_name='device_orders',
+    )
+    patient = models.ForeignKey(
+        'patients.PatientProfile',
+        on_delete=models.CASCADE,
+        related_name='device_orders',
+    )
+    therapist = models.ForeignKey(
+        'therapists.TherapistProfile',
+        on_delete=models.PROTECT,
+        related_name='device_orders',
+    )
+    device_code = models.CharField(max_length=40)
+    device_group = models.CharField(max_length=5)
+    device_name = models.CharField(max_length=255)
+    side = models.CharField(
+        max_length=10,
+        choices=BodySide.choices,
+        default=BodySide.NA,
+    )
+    quantity = models.PositiveSmallIntegerField(default=1)
+    icd10_code = models.CharField(max_length=10)
+    status = models.CharField(
+        max_length=20,
+        choices=DeviceOrderStatus.choices,
+        default=DeviceOrderStatus.ISSUED,
+    )
+    notes = models.TextField(blank=True, default='')
+
+    class Meta:
+        db_table = 'medical_device_orders'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.device_code} → {self.patient_id}'
+
+
+class PhysicianOrderRefusal(TimestampedModel):
+    """Odmowa wykonania zlecenia lekarskiego — art. 6 ust. 2 u.o.z.f."""
+
+    episode = models.ForeignKey(
+        TreatmentEpisode,
+        on_delete=models.CASCADE,
+        related_name='order_refusals',
+    )
+    therapist = models.ForeignKey(
+        'therapists.TherapistProfile',
+        on_delete=models.PROTECT,
+        related_name='order_refusals',
+    )
+    physician_order_description = models.TextField()
+    refusal_reason = models.TextField()
+    physician_notified = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'physician_order_refusals'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Odmowa @ {self.episode_id}'
+
+
+class ReceptaNaRuchReferral(TimestampedModel):
+    """Skierowanie do programu Recepta na Ruch (mojeIKP) — model dokumentacyjny."""
+
+    patient = models.ForeignKey(
+        'patients.PatientProfile',
+        on_delete=models.CASCADE,
+        related_name='recepta_na_ruch_referrals',
+    )
+    therapist = models.ForeignKey(
+        'therapists.TherapistProfile',
+        on_delete=models.PROTECT,
+        related_name='recepta_na_ruch_referrals',
+    )
+    episode = models.ForeignKey(
+        TreatmentEpisode,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='recepta_na_ruch_referrals',
+    )
+    readiness_confirmed = models.BooleanField(default=False)
+    activity_notes = models.TextField(blank=True, default='')
+    status = models.CharField(
+        max_length=20,
+        choices=DeviceOrderStatus.choices,
+        default=DeviceOrderStatus.ISSUED,
+    )
+
+    class Meta:
+        db_table = 'recepta_na_ruch_referrals'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'Recepta na Ruch → {self.patient_id}'

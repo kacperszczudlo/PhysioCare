@@ -55,16 +55,19 @@ def _set_auth_cookies(response, *, access_token: str, refresh_token: str):
 
 def _clear_auth_cookies(response):
     secure = settings.SECURE_COOKIES
-    response.delete_cookie(
-        key=settings.SIMPLE_JWT.get('AUTH_COOKIE_ACCESS', 'access_token'),
-        samesite='Lax',
-        secure=secure,
-    )
-    response.delete_cookie(
-        key=settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token'),
-        samesite='Lax',
-        secure=secure,
-    )
+    for key in (
+        settings.SIMPLE_JWT.get('AUTH_COOKIE_ACCESS', 'access_token'),
+        settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token'),
+    ):
+        response.set_cookie(
+            key=key,
+            value='',
+            max_age=0,
+            expires='Thu, 01 Jan 1970 00:00:00 GMT',
+            secure=secure,
+            httponly=True,
+            samesite='Lax',
+        )
     return response
 
 
@@ -113,8 +116,16 @@ class LoginView(APIView):
             return _auth_response(user, refresh)
 
         logger.info('Failed login attempt for email=%s', email)
+
+        # Same message for unknown email and wrong password (no account enumeration).
         return Response(
-            {'error': {'code': 'AUTH_001', 'message': 'Błędny e-mail lub hasło.', 'details': {}}},
+            {
+                'error': {
+                    'code': 'AUTH_001',
+                    'message': 'Nieprawidłowy e-mail lub hasło.',
+                    'details': {},
+                }
+            },
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
@@ -170,9 +181,22 @@ class CookieTokenRefreshView(TokenRefreshView):
             )
 
         serializer = self.get_serializer(data={'refresh': refresh_value})
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except User.DoesNotExist:
+            response = Response(
+                {
+                    'error': {
+                        'code': 'AUTH_003',
+                        'message': 'Token odświeżania jest nieprawidłowy lub wygasł.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+            return _clear_auth_cookies(response)
+
         access = serializer.validated_data['access']
-        # ROTATE_REFRESH_TOKENS may issue a new refresh; otherwise reuse the presented one.
         new_refresh = serializer.validated_data.get('refresh', refresh_value)
         response = Response(
             {
@@ -209,7 +233,7 @@ class PasswordResetRequestView(APIView):
             reset_url = f'{settings.FRONTEND_URL}/reset?token={raw_token}'
             from django.core.mail import send_mail
             send_mail(
-                subject='PhysioCare — reset hasła',
+                subject='PhysioCare - reset hasła',
                 message=f'Użyj linku w ciągu 30 minut: {reset_url}',
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[email],
@@ -227,15 +251,20 @@ class PasswordResetConfirmView(APIView):
     throttle_classes = [PasswordResetRateThrottle]
 
     def post(self, request, *args, **kwargs):
-        serializer = PasswordResetConfirmSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        token_hash = _hash_token(serializer.validated_data['token'])
+        raw_token = request.data.get('token')
+        reset_token = None
+        if isinstance(raw_token, str) and raw_token.strip():
+            reset_token = PasswordResetToken.objects.filter(
+                token_hash=_hash_token(raw_token.strip()),
+                used_at__isnull=True,
+                expires_at__gt=timezone.now(),
+            ).select_related('user').first()
 
-        reset_token = PasswordResetToken.objects.filter(
-            token_hash=token_hash,
-            used_at__isnull=True,
-            expires_at__gt=timezone.now(),
-        ).select_related('user').first()
+        serializer = PasswordResetConfirmSerializer(
+            data=request.data,
+            context={'user': reset_token.user if reset_token is not None else None},
+        )
+        serializer.is_valid(raise_exception=True)
 
         if reset_token is None:
             return Response(
@@ -276,7 +305,10 @@ class ChangePasswordView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        serializer = ChangePasswordSerializer(data=request.data)
+        serializer = ChangePasswordSerializer(
+            data=request.data,
+            context={'request': request},
+        )
         serializer.is_valid(raise_exception=True)
 
         user = request.user

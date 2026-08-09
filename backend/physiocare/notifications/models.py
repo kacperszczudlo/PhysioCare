@@ -23,4 +23,4 @@ class NotificationPreference(UUIDModel):
         ]
 
     def __str__(self):
-        return f'{self.user.email} — {self.pref_key}'
+        return f'{self.user.email} - {self.pref_key}'

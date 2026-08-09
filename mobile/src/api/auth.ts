@@ -8,6 +8,7 @@ export interface PatientRegisterPayload {
   first_name: string
   last_name: string
   therapist_id: string
+  phone?: string
   consents: {
     terms: boolean
     medical_data: boolean

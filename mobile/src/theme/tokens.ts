@@ -1,4 +1,3 @@
-/** Clinic olive palette — aligned with web panel tokens. */
 export const colors = {
   bg: '#F4F7F2',
   surface: '#FFFFFF',
@@ -7,7 +6,7 @@ export const colors = {
   borderStrong: '#A8B8A0',
   ink: '#1F2A1C',
   muted: '#5C6B56',
-  faint: '#8A9784',
+  faint: '#6F7D69',
   primary: '#3D5C32',
   primaryHover: '#314D28',
   primarySubtle: '#E4EFE0',
@@ -47,4 +46,21 @@ export const typography = {
   xl: 20,
   '2xl': 24,
   '3xl': 30,
+} as const
+
+/** Hit target floor — M3 / Web recommended (meets iOS 44). */
+export const controlSize = 48
+
+export const iconSize = {
+  sm: 16,
+  md: 20,
+  lg: 24,
+  xl: 32,
+  '2xl': 48,
+} as const
+
+export const motion = {
+  fast: 150,
+  medium: 300,
+  large: 400,
 } as const

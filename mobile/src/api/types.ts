@@ -1,8 +1,22 @@
 export type UserRole = 'PATIENT' | 'THERAPIST'
 
-export type VisitStatus = 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
+export type VisitStatus =
+  | 'PENDING_APPROVAL'
+  | 'SCHEDULED'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'NO_SHOW'
 
 export type MediaType = 'VIDEO' | 'PDF'
+
+export type CategoryKind = 'TYPE' | 'REGION' | 'MUSCLE' | 'INJURY'
+
+export interface ExerciseCategory {
+  id: string
+  name: string
+  kind: CategoryKind
+  slug: string
+}
 
 export interface User {
   id: string
@@ -65,6 +79,7 @@ export interface Visit {
   therapy_type: string
   patient_first_name: string
   patient_last_name: string
+  patient_avatar_url: string
   therapist_first_name: string
   therapist_last_name: string
   therapy_type_name: string
@@ -75,8 +90,24 @@ export interface Visit {
   status: VisitStatus
   location_address: string
   prep_instructions: string
+  patient_note: string
   cancel_reason: string
   created_at: string
+}
+
+export interface TherapyType {
+  id: string
+  name: string
+  color_hex: string
+  duration_min: number
+  created_at: string
+}
+
+export interface VisitRequestPayload {
+  therapy_type_id: string
+  start_at: string
+  end_at: string
+  patient_note?: string
 }
 
 export interface TodayExercise {
@@ -86,6 +117,7 @@ export interface TodayExercise {
   exercise_instruction: string
   exercise_file_url: string
   exercise_media_type: MediaType
+  categories?: ExerciseCategory[]
   patient: string
   episode: string | null
   dosage: string
@@ -114,6 +146,46 @@ export interface MedicalDocument {
   created_at: string
 }
 
+export type ClinicalDocumentKind =
+  | 'recommendation'
+  | 'device_order'
+  | 'refusal'
+  | 'recepta_na_ruch'
+  | 'pdf'
+
+export interface ClinicalDocumentItem {
+  id: string
+  kind: ClinicalDocumentKind
+  kind_label: string
+  title: string
+  summary: string
+  created_at: string
+  therapist_name: string
+  episode_id: string | null
+  status: string | null
+  file_url: string | null
+  details: Record<string, unknown>
+}
+
+export interface CompetenceCapability {
+  code: string
+  allowed: boolean
+  label: string
+  detail: string
+}
+
+export interface CompetenceSnapshot {
+  qualification_level: string
+  qualification_label: string
+  experience_years: number
+  is_magister_or_above: boolean
+  is_fizjo_spec: boolean
+  can_plan_therapy: boolean
+  can_supervise: boolean
+  device_groups: string[]
+  capabilities: CompetenceCapability[]
+}
+
 export interface TherapistPublic {
   id: string
   first_name: string
@@ -122,6 +194,11 @@ export interface TherapistPublic {
   courses: string[]
   avatar_url: string
   phone: string
+  location_address: string
+  qualification_level?: string
+  qualification_label?: string
+  experience_years?: number
+  competences?: CompetenceSnapshot
 }
 
 export interface NotificationPreference {

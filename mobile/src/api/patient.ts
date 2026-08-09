@@ -1,5 +1,7 @@
 import { api } from './client'
 import type {
+  ClinicalDocumentItem,
+  ClinicalDocumentKind,
   Consent,
   ExerciseCompletion,
   MedicalDocument,
@@ -7,8 +9,10 @@ import type {
   Paginated,
   PatientProfile,
   TherapistPublic,
+  TherapyType,
   TodayExercise,
   Visit,
+  VisitRequestPayload,
 } from './types'
 
 function unwrapList<T>(data: T[] | Paginated<T>): T[] {
@@ -20,8 +24,18 @@ export const patientApi = {
     return api.get<PatientProfile>('/me/profile/')
   },
 
-  updateProfile(payload: Partial<Pick<PatientProfile, 'pesel' | 'phone' | 'avatar_url'>>) {
+  updateProfile(payload: Partial<Pick<PatientProfile, 'pesel' | 'phone'>>) {
     return api.patch<PatientProfile>('/me/profile/', payload)
+  },
+
+  uploadAvatar(uri: string, mimeType = 'image/jpeg', fileName = 'avatar.jpg') {
+    const body = new FormData()
+    body.append('file', {
+      uri,
+      type: mimeType,
+      name: fileName,
+    } as unknown as Blob)
+    return api.post<PatientProfile>('/me/profile/avatar/', body)
   },
 
   async getConsents() {
@@ -50,6 +64,15 @@ export const patientApi = {
     return api.get<Visit>(`/visits/${id}/`)
   },
 
+  requestVisit(payload: VisitRequestPayload) {
+    return api.post<Visit>('/me/visits/', payload)
+  },
+
+  async getTherapyTypes() {
+    const data = await api.get<TherapyType[] | Paginated<TherapyType>>('/me/therapy-types/')
+    return unwrapList(data)
+  },
+
   rescheduleVisit(id: string, payload: { start_at: string; end_at: string }) {
     return api.patch<Visit>(`/visits/${id}/reschedule/`, payload)
   },
@@ -59,25 +82,29 @@ export const patientApi = {
   },
 
   async getExercisesToday() {
-    const data = await api.get<TodayExercise[] | Paginated<TodayExercise>>(
-      '/me/exercises/today/',
-    )
+    const data = await api.get<TodayExercise[] | Paginated<TodayExercise>>('/me/exercises/today/')
     return unwrapList(data)
   },
 
-  completeExercise(assignment_id: string, completed_on?: string) {
+  completeExercise(assignment_id: string, completed_on?: string, done = true) {
     return api.post<ExerciseCompletion>('/me/exercise-completions/', {
       assignment_id,
-      completed_on,
-      done: true,
+      done,
+      ...(completed_on ? { completed_on } : {}),
     })
   },
 
   async getDocuments() {
-    const data = await api.get<MedicalDocument[] | Paginated<MedicalDocument>>(
-      '/me/documents/',
-    )
+    const data = await api.get<MedicalDocument[] | Paginated<MedicalDocument>>('/me/documents/')
     return unwrapList(data)
+  },
+
+  async getClinicalDocuments(kind?: ClinicalDocumentKind) {
+    const query = kind ? `?kind=${kind}` : ''
+    const data = await api.get<{ count: number; results: ClinicalDocumentItem[] }>(
+      `/me/clinical-documents/${query}`,
+    )
+    return data.results
   },
 
   getTherapistPublic(id: string) {
@@ -85,9 +112,9 @@ export const patientApi = {
   },
 
   async getNotificationPreferences() {
-    const data = await api.get<
-      NotificationPreference[] | Paginated<NotificationPreference>
-    >('/me/notification-preferences/')
+    const data = await api.get<NotificationPreference[] | Paginated<NotificationPreference>>(
+      '/me/notification-preferences/',
+    )
     return unwrapList(data)
   },
 

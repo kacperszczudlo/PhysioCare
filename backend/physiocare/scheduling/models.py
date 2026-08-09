@@ -1,7 +1,7 @@
+from django.contrib.postgres.constraints import ExclusionConstraint
+from django.contrib.postgres.fields import DateTimeRangeField, RangeBoundary, RangeOperators
 from django.db import models
 from django.db.models import Func, Q
-from django.contrib.postgres.constraints import ExclusionConstraint
-from django.contrib.postgres.fields import RangeOperators, RangeBoundary, DateTimeRangeField
 
 from core.models import TimestampedModel
 
@@ -12,6 +12,7 @@ class TsTzRange(Func):
 
 
 class VisitStatus(models.TextChoices):
+    PENDING_APPROVAL = 'PENDING_APPROVAL', 'Oczekuje na zatwierdzenie'
     SCHEDULED = 'SCHEDULED', 'Zaplanowana'
     COMPLETED = 'COMPLETED', 'Zakończona'
     CANCELLED = 'CANCELLED', 'Anulowana'
@@ -73,6 +74,7 @@ class Visit(TimestampedModel):
     )
     location_address = models.CharField(max_length=300, blank=True, default='')
     prep_instructions = models.TextField(blank=True, default='')
+    patient_note = models.TextField(blank=True, default='')
     cancel_reason = models.TextField(blank=True, default='')
 
     class Meta:
@@ -107,4 +109,4 @@ class Visit(TimestampedModel):
         ]
 
     def __str__(self):
-        return f'Wizyta {self.start_at} — {self.patient}'
+        return f'Wizyta {self.start_at} - {self.patient}'

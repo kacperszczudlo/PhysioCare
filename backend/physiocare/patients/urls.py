@@ -1,5 +1,7 @@
 from django.urls import path
 
+from core.avatar_views import MeAvatarUploadView
+
 from .views import (
     MeAccountDeletionRequestView,
     MeConsentsView,
@@ -17,6 +19,7 @@ urlpatterns = [
 
 me_urlpatterns = [
     path('profile/', MeProfileView.as_view(), name='me-profile'),
+    path('profile/avatar/', MeAvatarUploadView.as_view(), name='me-profile-avatar'),
     path('consents/', MeConsentsView.as_view(), name='me-consents'),
     path('consents/optional/', MeOptionalConsentsView.as_view(), name='me-consents-optional'),
     path('data-export/', MeDataExportView.as_view(), name='me-data-export'),

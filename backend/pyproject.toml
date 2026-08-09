@@ -1,0 +1,44 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["physiocare", "tests"]
+extend-exclude = [
+  "**/migrations/**",
+  "venv",
+  ".venv",
+  "reports",
+]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "I",   # isort
+  "UP",  # pyupgrade
+  "B",   # bugbear
+  "SIM", # simplify
+]
+ignore = [
+  "E501", # line length handled by formatter awareness; keep pragmatic for Django
+]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+  "accounts",
+  "core",
+  "documents",
+  "exercises",
+  "notifications",
+  "patients",
+  "physiocare",
+  "privacy",
+  "scheduling",
+  "therapists",
+  "treatment",
+]
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
