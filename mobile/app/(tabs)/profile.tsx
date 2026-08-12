@@ -19,7 +19,7 @@ import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { PhoneField } from '@/components/PhoneField'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
 import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
-import { useAuthenticatedMediaSource } from '@/lib/authMedia'
+import { useAuthenticatedCachedUri } from '@/lib/authMedia'
 import { getPeselError } from '@/lib/peselPolicy'
 import { formatPhoneForApi, getPhoneError, parseStoredPhone } from '@/lib/phonePolicy'
 import { colors, space, typography } from '@/theme/tokens'
@@ -38,9 +38,13 @@ export default function ProfileScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [avatarLoading, setAvatarLoading] = useState(false)
+  const [avatarPreviewUri, setAvatarPreviewUri] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<{ kind: FeedbackKind; message: string } | null>(null)
-  const { source: avatarSource } = useAuthenticatedMediaSource(profile?.avatar_url)
+  const { uri: remoteAvatarUri } = useAuthenticatedCachedUri(
+    avatarPreviewUri ? null : profile?.avatar_url,
+  )
+  const avatarUri = avatarPreviewUri ?? remoteAvatarUri
 
   const showSuccess = useCallback((kind: FeedbackKind, message: string) => {
     setError(null)
@@ -57,6 +61,7 @@ export default function ProfileScreen() {
 
   const load = useCallback(async () => {
     setError(null)
+    setAvatarPreviewUri(null)
     try {
       const p = await patientApi.getProfile()
       setProfile(p)
@@ -145,12 +150,14 @@ export default function ProfileScreen() {
     const mime = asset.mimeType ?? 'image/jpeg'
     const name = asset.fileName ?? `avatar.${mime === 'image/png' ? 'png' : 'jpg'}`
 
+    setAvatarPreviewUri(asset.uri)
     setAvatarLoading(true)
     try {
       const updated = await patientApi.uploadAvatar(asset.uri, mime, name)
       setProfile(updated)
       showSuccess('avatar', 'Zdjęcie profilowe zostało zapisane.')
     } catch (err) {
+      setAvatarPreviewUri(null)
       setError(getErrorMessage(err, 'Nie udało się przesłać avatara.'))
     } finally {
       setAvatarLoading(false)
@@ -187,9 +194,9 @@ export default function ProfileScreen() {
       <SectionCard>
         <Text style={styles.sectionTitle}>Zdjęcie profilowe</Text>
         <View style={styles.avatarRow}>
-          {avatarSource ? (
+          {avatarUri ? (
             <Image
-              source={avatarSource}
+              source={{ uri: avatarUri }}
               style={styles.avatar}
               accessibilityIgnoresInvertColors
             />
