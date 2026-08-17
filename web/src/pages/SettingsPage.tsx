@@ -65,6 +65,7 @@ export function SettingsPage() {
       setNewPassword('')
       setConfirmPassword('')
       setPasswordTouched(false)
+      await logout()
     } catch (err) {
       setPasswordError(getErrorMessage(err, 'Nie udało się zmienić hasła.'))
     } finally {

@@ -2,6 +2,7 @@ import hashlib
 import logging
 import secrets
 from datetime import timedelta
+from smtplib import SMTPException
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
@@ -9,6 +10,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -25,6 +27,11 @@ from .serializers import (
     PasswordResetRequestSerializer,
     PatientRegistrationSerializer,
     TherapistRegistrationSerializer,
+)
+from .token_ops import (
+    blacklist_refresh_value,
+    blacklist_user_refresh_tokens,
+    wants_tokens_in_body,
 )
 
 User = get_user_model()
@@ -88,12 +95,12 @@ def _token_pair(refresh: RefreshToken) -> dict[str, str]:
     }
 
 
-def _auth_response(user, refresh: RefreshToken, *, status_code=status.HTTP_200_OK):
+def _auth_response(request, user, refresh: RefreshToken, *, status_code=status.HTTP_200_OK):
     tokens = _token_pair(refresh)
-    response = Response(
-        {'user': _user_payload(user), **tokens},
-        status=status_code,
-    )
+    payload = {'user': _user_payload(user)}
+    if wants_tokens_in_body(request):
+        payload.update(tokens)
+    response = Response(payload, status=status_code)
     return _set_auth_cookies(
         response,
         access_token=tokens['access'],
@@ -113,7 +120,7 @@ class LoginView(APIView):
 
         if user is not None and user.is_active:
             refresh = RefreshToken.for_user(user)
-            return _auth_response(user, refresh)
+            return _auth_response(request, user, refresh)
 
         logger.info('Failed login attempt for email=%s', email)
 
@@ -134,6 +141,9 @@ class LogoutView(APIView):
     permission_classes = []
 
     def post(self, request, *args, **kwargs):
+        refresh_cookie = settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token')
+        raw_refresh = request.data.get('refresh') or request.COOKIES.get(refresh_cookie)
+        blacklist_refresh_value(raw_refresh)
         response = Response({'detail': 'Wylogowano.'}, status=status.HTTP_200_OK)
         return _clear_auth_cookies(response)
 
@@ -147,7 +157,7 @@ class PatientRegisterView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
-        return _auth_response(user, refresh, status_code=status.HTTP_201_CREATED)
+        return _auth_response(request, user, refresh, status_code=status.HTTP_201_CREATED)
 
 
 class TherapistRegisterView(APIView):
@@ -159,7 +169,7 @@ class TherapistRegisterView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
-        return _auth_response(user, refresh, status_code=status.HTTP_201_CREATED)
+        return _auth_response(request, user, refresh, status_code=status.HTTP_201_CREATED)
 
 
 class CookieTokenRefreshView(TokenRefreshView):
@@ -183,7 +193,7 @@ class CookieTokenRefreshView(TokenRefreshView):
         serializer = self.get_serializer(data={'refresh': refresh_value})
         try:
             serializer.is_valid(raise_exception=True)
-        except User.DoesNotExist:
+        except (User.DoesNotExist, TokenError, InvalidToken):
             response = Response(
                 {
                     'error': {
@@ -198,14 +208,11 @@ class CookieTokenRefreshView(TokenRefreshView):
 
         access = serializer.validated_data['access']
         new_refresh = serializer.validated_data.get('refresh', refresh_value)
-        response = Response(
-            {
-                'detail': 'Token odświeżony.',
-                'access': access,
-                'refresh': new_refresh,
-            },
-            status=status.HTTP_200_OK,
-        )
+        payload = {'detail': 'Token odświeżony.'}
+        if request.data.get('refresh'):
+            payload['access'] = access
+            payload['refresh'] = new_refresh
+        response = Response(payload, status=status.HTTP_200_OK)
         return _set_auth_cookies(response, access_token=access, refresh_token=new_refresh)
 
 
@@ -232,13 +239,17 @@ class PasswordResetRequestView(APIView):
             )
             reset_url = f'{settings.FRONTEND_URL}/reset?token={raw_token}'
             from django.core.mail import send_mail
-            send_mail(
-                subject='PhysioCare - reset hasła',
-                message=f'Użyj linku w ciągu 30 minut: {reset_url}',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-                fail_silently=True,
-            )
+
+            try:
+                send_mail(
+                    subject='PhysioCare - reset hasła',
+                    message=f'Użyj linku w ciągu 30 minut: {reset_url}',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+            except (OSError, SMTPException):
+                logger.exception('Password reset e-mail failed for user_id=%s', user.pk)
 
         return Response(
             {'detail': 'Jeśli konto istnieje, wysłaliśmy instrukcje resetu hasła.'},
@@ -281,6 +292,7 @@ class PasswordResetConfirmView(APIView):
         user = reset_token.user
         user.set_password(serializer.validated_data['new_password'])
         user.save(update_fields=['password'])
+        blacklist_user_refresh_tokens(user)
 
         reset_token.used_at = timezone.now()
         reset_token.save(update_fields=['used_at'])
@@ -326,5 +338,7 @@ class ChangePasswordView(APIView):
 
         user.set_password(serializer.validated_data['new_password'])
         user.save(update_fields=['password'])
-        return Response({'detail': 'Hasło zostało zmienione.'}, status=status.HTTP_200_OK)
+        blacklist_user_refresh_tokens(user)
+        response = Response({'detail': 'Hasło zostało zmienione. Zaloguj się ponownie.'})
+        return _clear_auth_cookies(response)
 

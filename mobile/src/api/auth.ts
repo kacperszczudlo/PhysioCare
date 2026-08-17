@@ -60,7 +60,12 @@ export const authApi = {
 
   async logout() {
     try {
-      await api.post<{ detail: string }>('/auth/logout/', {}, { skipAuthRefresh: true })
+      const refresh = await tokenStorage.getRefresh()
+      await api.post<{ detail: string }>(
+        '/auth/logout/',
+        refresh ? { refresh } : {},
+        { skipAuthRefresh: true },
+      )
     } finally {
       await tokenStorage.clear()
     }

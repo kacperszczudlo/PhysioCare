@@ -1,6 +1,6 @@
-# Wybór tematu - PhysioCare
+# Wybór tematu — PhysioCare
 
-> Dokument zgodny z zatwierdzonym formularzem zgłoszenia tematu pracy dyplomowej (rok akademicki 2026/2027).
+> Treść zgodna z zatwierdzonym formularzem zgłoszenia tematu pracy dyplomowej (rok akademicki 2026/2027).
 
 ## Temat
 
@@ -8,13 +8,13 @@
 
 ## Cel projektu
 
-Implementacja zintegrowanego systemu wspomagającego zarządzanie gabinetem fizjoterapeutycznym, składającego się z:
+Zbudować spięty system obsługi gabinetu fizjoterapeutycznego, w skład którego wchodzą:
 
-- **aplikacji webowej** (panel SaaS dla fizjoterapeutów),
-- **aplikacji mobilnej** (dla pacjentów),
-- **serwera WWW** komunikującego się z relacyjną bazą danych.
+- **aplikacja webowa** (panel SaaS dla fizjoterapeutów),
+- **aplikacja mobilna** (dla pacjentów),
+- **serwer WWW** rozmawiający z relacyjną bazą.
 
-System ma umożliwiać zarządzanie harmonogramem wizyt (z uwzględnieniem czasu trwania zabiegów i dostępności specjalistów) oraz prowadzenie dokumentacji medycznej pacjentów w logicznych **epizodach leczenia**.
+Ma dać się układać grafik wizyt (czas zabiegu i dostępność specjalistów) oraz prowadzić dokumentację w logicznych **epizodach leczenia**.
 
 ## Zakres funkcjonalny
 

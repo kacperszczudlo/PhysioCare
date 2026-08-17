@@ -28,13 +28,21 @@ export interface PasswordResetConfirmPayload {
 
 export const authApi = {
   login(email: string, password: string) {
-    return api.post<AuthResponse>('/auth/login/', { email, password }, { skipAuthRefresh: true })
+    return api.post<AuthResponse>(
+      '/auth/login/',
+      { email, password, token_delivery: 'cookie' },
+      { skipAuthRefresh: true },
+    )
   },
 
   registerTherapist(payload: TherapistRegisterPayload) {
-    return api.post<AuthResponse>('/auth/register/therapist/', payload, {
-      skipAuthRefresh: true,
-    })
+    return api.post<AuthResponse>(
+      '/auth/register/therapist/',
+      { ...payload, token_delivery: 'cookie' },
+      {
+        skipAuthRefresh: true,
+      },
+    )
   },
 
   requestPasswordReset(email: string) {

@@ -6,7 +6,7 @@
 
 ## 1. Cel dokumentu
 
-Niniejsza Polityka wyjaśnia, w jaki sposób PhysioCare przechowuje informacje lub uzyskuje dostęp do informacji w telekomunikacyjnym urządzeniu końcowym użytkownika (przeglądarka / aplikacja mobilna), zgodnie z:
+Niniejsza Polityka opisuje, kiedy PhysioCare zapisuje informacje albo sięga do nich w urządzeniu końcowym (przeglądarka / aplikacja mobilna), zgodnie z:
 
 - art. 399–400 **Prawa komunikacji elektronicznej (PKE)**,
 - wymogami zgody wynikającymi z **RODO** (gdy technologia nie jest niezbędna),
