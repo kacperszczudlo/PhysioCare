@@ -2,7 +2,7 @@
 
 ## Przegląd
 
-PhysioCare to system trójwarstwowy: dwa klienty (web, mobile) komunikują się z jednym backendem REST nad PostgreSQL.
+PhysioCare składa się z trzech części: panelu React, klienta Expo i jednego backendu REST nad PostgreSQL. Oba fronty mówią z API wyłącznie przez HTTPS i JSON.
 
 ```
 +-----------------+     +-----------------+
@@ -25,7 +25,7 @@ PhysioCare to system trójwarstwowy: dwa klienty (web, mobile) komunikują się 
    +-----------+         +-------------+
 ```
 
-Diagram szczegółowy: [diagrams/architecture.drawio](diagrams/architecture.drawio)
+Szczegółowy rysunek kontenerów: [diagrams/architecture.drawio](diagrams/architecture.drawio).
 
 ## Aktorzy i role
 
@@ -34,7 +34,7 @@ Diagram szczegółowy: [diagrams/architecture.drawio](diagrams/architecture.draw
 | Fizjoterapeuta | Web | `THERAPIST` |
 | Pacjent | Mobile | `PATIENT` |
 
-Reguły autoryzacji są egzekwowane **wyłącznie na serwerze**. Klient ukrywa niedostępne UI, ale nie stanowi źródła prawdy.
+Reguły dostępu obowiązują **tylko na serwerze**. Klient może ukryć przyciski, ale nie jest źródłem prawdy.
 
 ## Moduły backendu (Django apps)
 
@@ -57,7 +57,7 @@ Zależności modułów: [diagrams/module-dependencies.drawio](diagrams/module-de
 
 ### Epizod leczenia (Treatment Episode)
 
-Osobna „teczka” problemu medycznego dla pacjenta (np. skręcona kostka 2024 vs. ból kręgosłupa 2026). Zawiera:
+Osobna teczka konkretnego problemu (np. skręcenie kostki w 2024 i ból kręgosłupa w 2026). W środku:
 
 - status (`IN_PROGRESS`, `COMPLETED_SUCCESS`, `REFERRED`, `INTERRUPTED`),
 - kod ICD-10 (opcjonalnie),
@@ -67,11 +67,11 @@ Osobna „teczka” problemu medycznego dla pacjenta (np. skręcona kostka 2024 
 
 ### Wizyta (Visit)
 
-Termin w harmonogramie terapeuty. Statusy: `SCHEDULED`, `COMPLETED`, `CANCELLED`, `NO_SHOW`. Powiązana z epizodem i typem terapii (kolor w kalendarzu).
+Slot w kalendarzu terapeuty. Statusy: `SCHEDULED`, `COMPLETED`, `CANCELLED`, `NO_SHOW`. Wizyta wskazuje epizod i typ terapii (kolor w siatce).
 
 ### Compliance ćwiczeń
 
-`ExerciseAssignment` definiuje dawkowanie i okres. Pacjent oznacza wykonanie dziennie -> `ExerciseCompletion` (unikalność: assignment + data).
+`ExerciseAssignment` ustala dawkę i przedział dat. Pacjent zaznacza wykonanie dnia — `ExerciseCompletion` (unikalność: assignment + data).
 
 ### Zgody RODO
 
@@ -109,16 +109,16 @@ Terapeuta: widok w harmonogramie i karcie pacjenta (ten sam zasób Visit)
 
 ## Bezpieczeństwo (skrót)
 
-- Hasła: bcrypt (Django `AbstractUser` + walidatory)
-- JWT: krótki access, refresh w httpOnly cookie lub secure storage (mobile)
-- CORS: whitelist domen web + Expo dev
-- `express.json` limit -> analog w Django: `DATA_UPLOAD_MAX_MEMORY_SIZE`
-- Pliki medyczne: autoryzacja per pacjent/terapeuta, signed URLs opcjonalnie
-- Rate limiting na `/api/auth/login`
+- Hasła: hashery Django na `AbstractBaseUser` (domyślnie PBKDF2/argon w zależności od wersji; walidatory siły hasła)
+- JWT: krótki access; refresh w httpOnly cookie (web) albo SecureStore (mobile); wylogowanie i zmiana hasła wpisują refresh na czarną listę
+- CORS: lista dozwolonych originów web + Expo
+- Limit ciała żądania: Django `DATA_UPLOAD_MAX_MEMORY_SIZE`
+- Pliki medyczne: JWT + własność rekordu; typ pliku z sygnatury bajtów, nie z nagłówka klienta
+- Throttle na `/api/v1/auth/login/`
 
 ## Stack technologiczny
 
-Zgodnie z tematem zatwierdzonym przez prowadzącego - patrz [topic-selection.md](topic-selection.md).
+Zgodnie z tematem zatwierdzonym przez prowadzącego — [topic-selection.md](topic-selection.md).
 
 ## Powiązane dokumenty
 

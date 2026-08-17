@@ -274,7 +274,7 @@ class VisitDetailView(generics.RetrieveAPIView):
             return Visit.objects.filter(patient=user.patient_profile).select_related(*related)
         if user.role == 'THERAPIST':
             return Visit.objects.filter(therapist=user.therapist_profile).select_related(*related)
-        return Visit.objects.all().select_related(*related)
+        return Visit.objects.none()
 
 
 class VisitRescheduleView(APIView):

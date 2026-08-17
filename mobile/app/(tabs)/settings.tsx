@@ -101,10 +101,10 @@ export default function SettingsScreen() {
 
     setPwdLoading(true)
     try {
-      const { detail } = await authApi.changePassword(currentPassword, newPassword)
-      showSuccess('password', detail || 'Hasło zostało zmienione.')
+      await authApi.changePassword(currentPassword, newPassword)
       setCurrentPassword('')
       setNewPassword('')
+      await logout()
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się zmienić hasła.'))
     } finally {
@@ -139,7 +139,7 @@ export default function SettingsScreen() {
     setFeedback(null)
     try {
       await patientApi.requestDataExport()
-      showSuccess('privacy', 'Wniosek o eksport danych został przyjęty.')
+      showSuccess('privacy', 'Eksport danych został wygenerowany.')
     } catch (err) {
       setError(getErrorMessage(err, 'Eksport nie powiódł się.'))
     }
@@ -149,8 +149,8 @@ export default function SettingsScreen() {
     setError(null)
     setFeedback(null)
     try {
-      const { detail } = await patientApi.requestAccountDeletion()
-      showSuccess('privacy', detail || 'Wniosek o usunięcie konta został zgłoszony.')
+      await patientApi.requestAccountDeletion()
+      await logout()
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się zgłosić wniosku.'))
     }

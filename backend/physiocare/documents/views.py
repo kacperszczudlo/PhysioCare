@@ -3,6 +3,7 @@ import os
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import FileResponse, Http404
+from django.utils._os import safe_join
 from rest_framework import generics, parsers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -71,7 +72,7 @@ class TherapistDocumentUploadView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        file_url = save_upload(uploaded, subdir='documents')
+        file_url, sniffed = save_upload(uploaded, subdir='documents')
         visit_id = request.data.get('visit_id') or None
         episode_id = request.data.get('episode_id') or None
 
@@ -106,7 +107,7 @@ class TherapistDocumentUploadView(generics.CreateAPIView):
             uploaded_by=request.user,
             title=title,
             file_url=file_url,
-            mime_type=getattr(uploaded, 'content_type', 'application/pdf'),
+            mime_type=sniffed,
             visit_id=visit_id,
             episode_id=episode_id,
         )
@@ -123,9 +124,14 @@ class DocumentDownloadView(APIView):
         if not user_can_access_patient(request.user, document.patient):
             raise Http404
 
-        relative = document.file_url.removeprefix('/media/')
-        path = os.path.join(str(settings.MEDIA_ROOT), relative)
-        if not os.path.isfile(path):
+        relative = document.file_url.removeprefix('/media/').lstrip('/')
+        if not relative or '..' in relative.split('/'):
+            raise Http404
+        try:
+            path = safe_join(str(settings.MEDIA_ROOT), relative)
+        except ValueError as exc:
+            raise Http404 from exc
+        if not path or not os.path.isfile(path):
             raise Http404
         response = FileResponse(
             open(path, 'rb'),
