@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'core',
     'accounts',
     'patients',
@@ -165,6 +166,7 @@ SIMPLE_JWT = {
     'AUTH_COOKIE_ACCESS': 'access_token',
     'AUTH_COOKIE_REFRESH': 'refresh_token',
     'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
 }
 
 REST_FRAMEWORK = {

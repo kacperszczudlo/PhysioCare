@@ -79,6 +79,26 @@ def test_avatar_rejects_pdf(therapist, settings, tmp_path):
 
 
 @pytest.mark.django_db
+def test_avatar_rejects_pdf_bytes_labeled_as_png(therapist, settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    client = APIClient()
+    client.force_authenticate(user=therapist.user)
+
+    upload = SimpleUploadedFile(
+        'avatar.png',
+        b'%PDF-1.4 spoofed',
+        content_type='image/png',
+    )
+    response = client.post(
+        '/api/v1/therapist/profile/avatar/',
+        {'file': upload},
+        format='multipart',
+    )
+
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
 def test_avatar_requires_file(therapist):
     client = APIClient()
     client.force_authenticate(user=therapist.user)

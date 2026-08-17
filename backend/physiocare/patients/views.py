@@ -3,9 +3,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.token_ops import blacklist_user_refresh_tokens
 from core.mixins import PatientSelfMixin, TherapistPatientQuerysetMixin
 from core.permissions import IsOwnerPatientProfile, IsPatient, IsTherapist
-from privacy.models import Consent, ConsentType
+from privacy.export import build_patient_export
+from privacy.models import AccountDeletionRequest, Consent, ConsentType
 
 from .serializers import (
     ConsentSerializer,
@@ -91,20 +93,20 @@ class MeDataExportView(PatientSelfMixin, APIView):
 
     def post(self, request, *args, **kwargs):
         profile = self.get_patient_profile()
-        payload = MeProfileSerializer(profile).data
-        consents = ConsentSerializer(
-            Consent.objects.filter(user=request.user), many=True
-        ).data
-        return Response(
-            {'profile': payload, 'consents': consents},
-            status=status.HTTP_200_OK,
-        )
+        payload = build_patient_export(request.user, profile)
+        return Response(payload, status=status.HTTP_200_OK)
 
 
 class MeAccountDeletionRequestView(PatientSelfMixin, APIView):
     permission_classes = [IsAuthenticated, IsPatient]
 
     def post(self, request, *args, **kwargs):
+        AccountDeletionRequest.objects.get_or_create(user=request.user)
+        user = request.user
+        if user.is_active:
+            user.is_active = False
+            user.save(update_fields=['is_active'])
+        blacklist_user_refresh_tokens(user)
         return Response(
             {'detail': 'Wniosek o usunięcie konta został zarejestrowany.'},
             status=status.HTTP_202_ACCEPTED,

@@ -9,8 +9,8 @@ export function AccountDeletionPage() {
         <h1>Usuwanie konta PhysioCare</h1>
         <p className="legal-doc__meta">Wymóg Google Play Data Safety / Apple Account Deletion</p>
         <p className="legal-doc__lede">
-          Możesz usunąć konto pacjenta z poziomu aplikacji mobilnej albo złożyć wniosek bez
-          zainstalowanej aplikacji — tą stroną.
+          Konto pacjenta można zamknąć z aplikacji mobilnej. Jeśli nie masz aplikacji, wniosek
+          składasz przez tę stronę.
         </p>
       </header>
 
@@ -18,9 +18,9 @@ export function AccountDeletionPage() {
         <h2>1. W aplikacji (zalecane)</h2>
         <p>
           Zaloguj się w aplikacji mobilnej PhysioCare → Ustawienia → „Wniosek o usunięcie konta”.
-          System rejestruje wniosek (odpowiedź API 202) i rozpoczyna procedurę usunięcia danych
-          konta oraz powiązanych danych w systemach Administratora, z zastrzeżeniem obowiązków
-          retencyjnych wynikających z prawa.
+          API zapisuje wniosek (odpowiedź 202), wyłącza konto i unieważnia tokeny sesji. Dalsze
+          skasowanie albo anonimizacja danych w systemach Administratora idzie osobną procedurą,
+          z uwzględnieniem retencji wynikającej z prawa.
         </p>
       </section>
 

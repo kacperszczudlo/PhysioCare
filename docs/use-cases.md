@@ -1,6 +1,6 @@
-# Przypadki użycia - PhysioCare
+# Przypadki użycia — PhysioCare
 
-Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
+Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ## Aktorzy
 
@@ -19,7 +19,7 @@ Diagram: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Aktor | Pacjent / Fizjoterapeuta |
 | Cel | Uzyskanie dostępu do własnego konta |
 | Warunki wstępne | Konto istnieje w systemie |
-| Przebieg | 1. Użytkownik podaje e-mail i hasło. 2. System weryfikuje dane. 3. Zwraca JWT. |
+| Przebieg | 1. Użytkownik podaje e-mail i hasło. 2. System sprawdza dane. 3. Wystawia JWT (cookie i/lub body). |
 | Warunki końcowe | Sesja aktywna, przekierowanie do pulpitu |
 | Wyjątki | E1: Błędne dane -> 401. E2: Konto nieaktywne -> 403. |
 

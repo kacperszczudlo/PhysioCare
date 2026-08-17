@@ -60,7 +60,7 @@ class TherapistExerciseListCreateView(generics.ListCreateAPIView):
                 {'error': {'code': 'FILE_REQUIRED', 'message': 'Wymagany plik.', 'details': {}}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        file_url = save_upload(uploaded, subdir='exercises')
+        file_url, _sniffed = save_upload(uploaded, subdir='exercises')
         serializer = ExerciseCreateSerializer(
             data=request.data,
             context={'therapist': request.user.therapist_profile, 'file_url': file_url},
@@ -93,7 +93,7 @@ class TherapistExerciseDetailView(generics.RetrieveUpdateDestroyAPIView):
         previous_url = instance.file_url
         file_url = None
         if uploaded is not None:
-            file_url = save_upload(uploaded, subdir='exercises')
+            file_url, _sniffed = save_upload(uploaded, subdir='exercises')
 
         context = {'therapist': request.user.therapist_profile}
         if file_url:
