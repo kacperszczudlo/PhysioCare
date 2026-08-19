@@ -1,12 +1,12 @@
-# REST API - PhysioCare (szkic kontraktu)
+# REST API — PhysioCare (kontrakt)
 
-> Wersja dokumentu: **0.3 (Faza 2 - implementacja)**.  
-> Kolekcja Postman: [`postman/PhysioCare.json`](postman/PhysioCare.json) · przewodnik testów: [`postman-testing.md`](postman-testing.md).
+> Wersja dokumentu: **0.4**.  
+> Kolekcja Postman: [`postman/PhysioCare.json`](postman/PhysioCare.json) · przewodnik: [`postman-testing.md`](postman-testing.md).
 
 **Base URL:** `http://localhost:8000/api/v1`  
 **Format:** JSON (`Content-Type: application/json`)  
-**Auth:** cookies `access_token` / `refresh_token` (httpOnly) **lub** `Authorization: Bearer <access_token>`.  
-Login / rejestracja / refresh zwracają też `access` + `refresh` w JSON (dla mobile SecureStore).
+**Auth:** cookies `access_token` / `refresh_token` (httpOnly) **albo** `Authorization: Bearer <access_token>`.  
+Login, rejestracja i refresh zwracają `access` + `refresh` w JSON, gdy klient nie wyśle `token_delivery: "cookie"` (tak działa mobile / SecureStore). Panel webowy prosi o dostawę cookie-only, żeby JWT nie lądował w ciele odpowiedzi.
 
 ## Konwencje
 
@@ -79,7 +79,7 @@ Mobile zapisuje `access`/`refresh` (np. SecureStore) i wysyła `Authorization: B
 
 ### POST `/auth/logout`
 
-Czyści cookies `access_token` / `refresh_token`. **200** - `{ "detail": "Wylogowano." }`.
+Czyści cookies `access_token` / `refresh_token` i wpisuje przedstawiony refresh na czarną listę (body `refresh` albo cookie). **200** - `{ "detail": "Wylogowano." }`.
 
 ### POST `/auth/refresh`
 
@@ -88,7 +88,7 @@ Czyści cookies `access_token` / `refresh_token`. **200** - `{ "detail": "Wylogo
 ```
 
 Cookie `refresh_token` też jest akceptowane (body opcjonalne).  
-**200** - `{ "detail", "access", "refresh" }` + odświeżone cookies.
+**200** - `{ "detail" }` + odświeżone cookies; gdy refresh przyszedł w JSON, odpowiedź zawiera też nową parę `access` / `refresh`. Stary refresh po rotacji jest na czarnej liście.
 ### POST `/auth/password-reset/request`
 
 ```json
@@ -103,7 +103,7 @@ Cookie `refresh_token` też jest akceptowane (body opcjonalne).
 
 ### POST `/auth/password-change`
 
-Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** - hasło zmienione.
+Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło zmienione, sesje unieważnione; trzeba zalogować się ponownie.
 
 ---
 
@@ -116,8 +116,8 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** - hasło z
 | POST | `/me/profile/avatar` | Upload avatara (`multipart`, pole `file`: JPEG/PNG/WebP) |
 | GET | `/me/consents` | Lista zgód |
 | PATCH | `/me/consents/optional` | Marketing, badania |
-| POST | `/me/data-export` | Eksport RODO |
-| POST | `/me/account-deletion-request` | Wniosek o usunięcie |
+| POST | `/me/data-export` | Eksport RODO (profil, zgody, wizyty, epizody, dokumenty, ćwiczenia) |
+| POST | `/me/account-deletion-request` | Wniosek o usunięcie (zapis + dezaktywacja konta) |
 
 ---
 

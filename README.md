@@ -1,31 +1,31 @@
 # PhysioCare
 
-System wspomagania zarządzania gabinetem fizjoterapeutycznym - aplikacja webowa (fizjoterapeuta), mobilna (pacjent) i wspólny backend REST API.
+Narzędzie do prowadzenia gabinetu fizjoterapeutycznego: panel WWW dla terapeuty, aplikacja mobilna dla pacjenta oraz jedno REST API.
 
 ## Opis
 
-PhysioCare umożliwia:
+PhysioCare obsługuje:
 
-- **Fizjoterapeucie (web):** harmonogram wizyt, karta pacjenta z epizodami leczenia, mapa ciała (VAS), baza ćwiczeń, dokumentacja.
-- **Pacjentowi (mobile):** przegląd wizyt, realizacja ćwiczeń domowych (compliance), dokumentacja kliniczna (kierowanie, wyroby, Recepta na Ruch), zgody RODO.
+- **panel terapeuty (web):** kalendarz wizyt, kartę pacjenta z epizodami, mapę ciała (VAS), katalog ćwiczeń i pliki dokumentacji;
+- **aplikację pacjenta (mobile):** terminy, ćwiczenia domowe (compliance), dokumenty kliniczne (kierowanie, wyroby, Recepta na Ruch) oraz zgody RODO.
 
 ## Stos technologiczny
 
 | Warstwa | Technologia |
 |---------|-------------|
-| Backend | Python 3.12+, Django 5, Django REST Framework |
+| Backend | Python 3.12+, Django 6, Django REST Framework |
 | Baza danych | PostgreSQL 16 |
 | Web | React 19, Vite, TypeScript |
 | Mobile | React Native (Expo), TypeScript |
 | Auth | JWT (access + refresh) |
 
-Zgodnie z zatwierdzonym tematem pracy - szczegóły w [docs/topic-selection.md](docs/topic-selection.md).
+Zgodnie z zatwierdzonym tematem pracy — szczegóły są w [docs/topic-selection.md](docs/topic-selection.md).
 
 ## Struktura repozytorium
 
 ```
 PhysioCare/
-├── backend/          # Django + DRF (do inicjalizacji w Fazie 1)
+├── backend/          # Django + DRF
 ├── web/              # Panel fizjoterapeuty (React)
 ├── mobile/           # Aplikacja pacjenta (Expo)
 ├── database/         # schema.sql - referencja schematu

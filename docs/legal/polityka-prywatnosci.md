@@ -2,9 +2,9 @@
 
 **Wersja:** 1.0  
 **Data wejścia w życie:** 8 sierpnia 2026 r.  
-**Ostatnia aktualizacja:** 8 sierpnia 2026 r.
+**Ostatnia aktualizacja:** 17 sierpnia 2026 r.
 
-Dokument stanowi warstwę pełnej informacji (art. 13 i 14 RODO). Skrócone podsumowanie znajduje się na początku; szczegóły — w kolejnych sekcjach. Polityka dotyczy aplikacji webowej (panel fizjoterapeuty) oraz aplikacji mobilnej (pacjent).
+Dokument stanowi warstwę pełnej informacji (art. 13 i 14 RODO). Na górze jest skrót; szczegóły są w kolejnych rozdziałach. Tekst obejmuje panel WWW fizjoterapeuty i aplikację mobilną pacjenta.
 
 ---
 
@@ -226,11 +226,11 @@ Masz prawo do:
 
 ### 10.1. Realizacja w PhysioCare
 
-- **Eksport danych (pacjent):** `POST /api/v1/me/data-export/` oraz przycisk w ustawieniach aplikacji mobilnej — zwraca profil i status zgód; zakres eksportu może być rozszerzany.
+- **Eksport danych (pacjent):** `POST /api/v1/me/data-export/` oraz przycisk w ustawieniach aplikacji mobilnej — zwraca profil, zgody, wizyty, epizody (w tym mapę bólu), metadane dokumentów, przypisania ćwiczeń, wyroby, skierowania i odmowy. Same pliki PDF/wideo pobiera się osobnymi, autoryzowanymi URL.
 - **Usunięcie konta (pacjent):**
   - **w aplikacji** — „Wniosek o usunięcie konta” w ustawieniach,
   - **poza aplikacją (wymóg sklepów mobilnych)** — strona WWW `/account-deletion`,
-  - wniosek jest rejestrowany; usunięcie obejmuje dane konta i powiązane dane w systemach Administratora, z zastrzeżeniem obowiązków retencyjnych; w razie użycia zewnętrznych procesorów żądanie jest propagowane w zakresie umów (vendor propagation).
+  - wniosek trafia do bazy; konto pacjenta jest dezaktywowane, a tokeny sesji unieważniane. Skasowanie albo anonimizacja danych zdrowotnych następuje w procedurze Administratora, z uwzględnieniem retencji ustawowej; przy procesorach zewnętrznych żądanie idzie dalej w granicach umów powierzenia.
 - **Zgody opcjonalne:** przełączniki w ustawieniach mobilnych.
 - **DSAR:** kontakt e-mail do ADO; nie żądamy danych nadmiarowych wyłącznie w celu identyfikacji, jeśli użytkownik nie był wcześniej identyfikowany w ten sposób (art. 11 RODO).
 

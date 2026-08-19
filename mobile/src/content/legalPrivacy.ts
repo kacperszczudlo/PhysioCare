@@ -20,7 +20,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
       'Przetwarzamy dane konta, opcjonalnie telefon/PESEL oraz dane zdrowotne potrzebne do fizjoterapii.',
       'Zgody wymagane: regulamin + dane medyczne. Opcjonalne (marketing, badania) — osobne przełączniki w Ustawieniach.',
       'Nie używamy SDK reklamowych ani analityki behawioralnej. Sesja: SecureStore / cookies niezbędne (PKE).',
-      'Usunięcie konta: Ustawienia → wniosek, albo strona WWW /account-deletion.',
+      'Usunięcie konta: Ustawienia → wniosek (konto zostaje wyłączone), albo strona WWW /account-deletion.',
     ],
   },
   {

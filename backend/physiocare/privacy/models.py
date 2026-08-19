@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from core.models import UUIDModel
+from core.models import TimestampedModel, UUIDModel
 
 
 class ConsentType(models.TextChoices):
@@ -32,3 +32,19 @@ class Consent(UUIDModel):
 
     def __str__(self):
         return f'{self.user.email} - {self.consent_type}'
+
+
+class AccountDeletionRequest(TimestampedModel):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='account_deletion_request',
+    )
+    processed_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True, default='')
+
+    class Meta:
+        db_table = 'account_deletion_requests'
+
+    def __str__(self):
+        return f'Deletion request {self.user.email}'

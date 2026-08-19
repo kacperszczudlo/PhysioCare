@@ -133,7 +133,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     title: '10. Twoje prawa',
     paragraphs: [
       'Przysługują Ci prawa dostępu, sprostowania, usunięcia, ograniczenia, przenoszenia, sprzeciwu, wycofania zgody oraz skargi do UODO (ul. Stawki 2, 00-193 Warszawa).',
-      'W aplikacji: eksport danych i wniosek o usunięcie konta (pacjent), przełączniki zgód opcjonalnych, strona /account-deletion dla osób bez zainstalowanej aplikacji.',
+          'W aplikacji: eksport (profil, wizyty, epizody, dokumenty, ćwiczenia) i wniosek o usunięcie konta (pacjent — zapis wniosku, dezaktywacja, unieważnienie sesji), przełączniki zgód opcjonalnych, strona /account-deletion gdy nie ma aplikacji.',
       'Nie żądamy nadmiarowych danych tylko po to, by Cię zidentyfikować, jeśli wcześniej nie byliśmy w stanie Cię zidentyfikować (art. 11 RODO).',
     ],
   },
