@@ -3,6 +3,7 @@
 import django.contrib.postgres.constraints
 import django.contrib.postgres.fields.ranges
 import exercises.models
+from django.contrib.postgres.operations import BtreeGistExtension
 from django.db import migrations
 
 
@@ -15,6 +16,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # UUID equality in GiST exclusion constraints needs btree_gist.
+        # Must be local to this migration: it may run before scheduling.0002.
+        BtreeGistExtension(),
         migrations.AddConstraint(
             model_name='exerciseassignment',
             constraint=django.contrib.postgres.constraints.ExclusionConstraint(expressions=[('patient', '='), ('exercise', '='), (exercises.models.DateRange('start_date', 'end_date', django.contrib.postgres.fields.ranges.RangeBoundary(inclusive_lower=True, inclusive_upper=True)), '&&')], name='exclude_overlapping_exercise_assignments'),
