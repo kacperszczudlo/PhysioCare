@@ -38,6 +38,7 @@ function RootNavigator() {
           <Stack.Screen name="index" />
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="password-reset" options={{ headerShown: false }} />
           <Stack.Screen
             name="visit/[id]"
             options={{ headerShown: true, title: 'Szczegóły wizyty', presentation: 'card' }}

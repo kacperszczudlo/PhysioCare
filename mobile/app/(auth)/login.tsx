@@ -67,7 +67,7 @@ export default function LoginScreen() {
           Załóż konto
         </Link>
         <Text style={styles.dot}>·</Text>
-        <Link href="/(auth)/password-reset" style={styles.link}>
+        <Link href="/password-reset" style={styles.link}>
           Nie pamiętam hasła
         </Link>
       </View>

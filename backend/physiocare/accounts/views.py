@@ -2,7 +2,6 @@ import hashlib
 import logging
 import secrets
 from datetime import timedelta
-from smtplib import SMTPException
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
@@ -20,6 +19,7 @@ from core.throttling import (
     RegisterRateThrottle,
 )
 
+from .mail import send_templated_mail
 from .models import PasswordResetToken
 from .serializers import (
     ChangePasswordSerializer,
@@ -220,6 +220,20 @@ def _hash_token(raw_token: str) -> str:
     return hashlib.sha256(raw_token.encode()).hexdigest()
 
 
+def _build_password_reset_url(*, client: str, raw_token: str) -> str:
+    if client == 'mobile':
+        base = settings.MOBILE_RESET_URL_BASE
+        path = 'password-reset'
+        if base.endswith('://') or base.endswith(':/'):
+            return f'{base}{path}?token={raw_token}'
+        return f'{base.rstrip("/")}/{path}?token={raw_token}'
+    return f'{settings.FRONTEND_URL}/reset?token={raw_token}'
+
+
+def _build_web_password_reset_url(raw_token: str) -> str:
+    return f'{settings.FRONTEND_URL}/reset?token={raw_token}'
+
+
 class PasswordResetRequestView(APIView):
     permission_classes = []
     throttle_classes = [PasswordResetRateThrottle]
@@ -228,8 +242,9 @@ class PasswordResetRequestView(APIView):
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
+        client = serializer.validated_data.get('client', 'web')
 
-        user = User.objects.filter(email=email, is_active=True).first()
+        user = User.objects.filter(email__iexact=email, is_active=True).first()
         if user:
             raw_token = secrets.token_urlsafe(32)
             PasswordResetToken.objects.create(
@@ -237,29 +252,31 @@ class PasswordResetRequestView(APIView):
                 token_hash=_hash_token(raw_token),
                 expires_at=timezone.now() + timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT),
             )
-            reset_url = f'{settings.FRONTEND_URL}/reset?token={raw_token}'
-            from django.core.mail import send_mail
+            reset_url = _build_password_reset_url(client=client, raw_token=raw_token)
+            web_reset_url = _build_web_password_reset_url(raw_token)
+            validity_minutes = max(1, settings.PASSWORD_RESET_TIMEOUT // 60)
+            send_templated_mail(
+                subject='PhysioCare - reset hasła',
+                to=[user.email],
+                template_basename='accounts/email/password_reset',
+                context={
+                    'reset_url': reset_url,
+                    'web_reset_url': web_reset_url,
+                    'is_mobile_client': client == 'mobile',
+                    'validity_minutes': validity_minutes,
+                },
+            )
 
-            if settings.DEBUG:
-                logger.info('DEV password-reset token: %s', raw_token)
-
-            try:
-                send_mail(
-                    subject='PhysioCare - reset hasła',
-                    message=(
-                        'Użyj tokenu w ciągu 30 minut (wklej w całości, jeden ciąg):\n'
-                        f'{raw_token}\n\n'
-                        f'Link: {reset_url}\n'
-                    ),
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[email],
-                    fail_silently=False,
-                )
-            except (OSError, SMTPException):
-                logger.exception('Password reset e-mail failed for user_id=%s', user.pk)
+        detail = 'Jeśli konto istnieje, wysłaliśmy instrukcje resetu hasła.'
+        if settings.DEBUG and 'console' in settings.EMAIL_BACKEND.lower():
+            detail = (
+                f'{detail} '
+                '(DEBUG: EMAIL_BACKEND=console - wiadomość jest w logu Django, '
+                'nie na skrzynce. Ustaw SMTP/Mailtrap w .env.)'
+            )
 
         return Response(
-            {'detail': 'Jeśli konto istnieje, wysłaliśmy instrukcje resetu hasła.'},
+            {'detail': detail},
             status=status.HTTP_200_OK,
         )
 

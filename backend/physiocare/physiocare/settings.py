@@ -252,7 +252,7 @@ if not DEBUG:
 
 _REDIS_URL = os.environ.get('REDIS_URL', '').strip()
 if _REDIS_URL:
-    # Shared cache across Gunicorn workers — required for correct rate limits in multi-process.
+    # Shared cache across Gunicorn workers - required for correct rate limits in multi-process.
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.redis.RedisCache',
@@ -281,6 +281,14 @@ EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', 'true')
 
 PASSWORD_RESET_TIMEOUT = int(os.environ.get('PASSWORD_RESET_TIMEOUT', '1800'))
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173').rstrip('/')
+# Deep-link prefix for mobile reset links, e.g. physiocare:// → physiocare://password-reset?token=…
+_mobile_reset_base = os.environ.get('MOBILE_RESET_URL_BASE', 'physiocare://').strip()
+if _mobile_reset_base.endswith(':/') and not _mobile_reset_base.endswith('://'):
+    _mobile_reset_base = f'{_mobile_reset_base}/'
+elif '://' not in _mobile_reset_base:
+    scheme = _mobile_reset_base.rstrip('/')
+    _mobile_reset_base = scheme + '://'
+MOBILE_RESET_URL_BASE = _mobile_reset_base
 EXPO_PUSH_URL = os.environ.get(
     'EXPO_PUSH_URL',
     'https://exp.host/--/api/v2/push/send',

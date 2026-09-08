@@ -1,4 +1,4 @@
-import { Link, useFocusEffect } from 'expo-router'
+import { Link, useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Linking, Platform, RefreshControl, StyleSheet, Switch, Text, View } from 'react-native'
 
@@ -31,7 +31,8 @@ import { colors, space, typography } from '@/theme/tokens'
 type FeedbackKind = 'notifications' | 'consents' | 'privacy' | 'password'
 
 export default function SettingsScreen() {
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
+  const router = useRouter()
 
   const [consents, setConsents] = useState<Consent[]>([])
   const [prefs, setPrefs] = useState<NotificationPreference[]>([])
@@ -224,7 +225,7 @@ export default function SettingsScreen() {
           <Text style={styles.muted}>
             {Platform.OS === 'web'
               ? 'Push działa w aplikacji na telefonie. Tutaj przypomnienia mogą iść na e-mail.'
-              : 'Expo Go od SDK 53 nie obsługuje zdalnego pusha (szczególnie Android). Zgoda systemowa nic tu nie zmienia — przypomnienia idą na e-mail. Żeby dostać push, zbuduj aplikację: npx expo run:android.'}
+              : 'Expo Go od SDK 53 nie obsługuje zdalnego pusha (szczególnie Android). Zgoda systemowa nic tu nie zmienia - przypomnienia idą na e-mail. Żeby dostać push, zbuduj aplikację: npx expo run:android.'}
           </Text>
         ) : (
           <>
@@ -332,6 +333,9 @@ export default function SettingsScreen() {
 
       <SectionCard>
         <Text style={styles.sectionTitle}>Zmiana hasła</Text>
+        <Text style={styles.sectionHint}>
+          Znasz obecne hasło? Zmień je poniżej. Nie pamiętasz - tak jak przy logowaniu, wyślemy link na e-mail.
+        </Text>
         <Field
           label="Obecne hasło"
           value={currentPassword}
@@ -349,6 +353,18 @@ export default function SettingsScreen() {
           showErrors={newPassword.length > 0}
         />
         <Button title="Zmień hasło" loading={pwdLoading} onPress={() => void changePassword()} />
+        <Button
+          title="Nie pamiętam hasła"
+          variant="secondary"
+          onPress={() => {
+            const email = user?.email?.trim()
+            router.push(
+              email
+                ? { pathname: '/password-reset', params: { email } }
+                : '/password-reset',
+            )
+          }}
+        />
         {feedback?.kind === 'password' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
 
@@ -367,6 +383,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
   content: { padding: space.lg, gap: space.base, paddingBottom: space['4xl'] },
   sectionTitle: { fontSize: typography.lg, fontWeight: '700', color: colors.ink },
+  sectionHint: { fontSize: typography.sm, color: colors.muted, marginBottom: space.xs },
   muted: { fontSize: typography.sm, color: colors.muted },
   switchRow: {
     flexDirection: 'row',

@@ -19,7 +19,7 @@ PhysioCare obsługuje:
 | Mobile | React Native (Expo), TypeScript |
 | Auth | JWT (access + refresh) |
 
-Zgodnie z zatwierdzonym tematem pracy — szczegóły są w [docs/topic-selection.md](docs/topic-selection.md).
+Zgodnie z zatwierdzonym tematem pracy - szczegóły są w [docs/topic-selection.md](docs/topic-selection.md).
 
 ## Struktura repozytorium
 
@@ -78,6 +78,7 @@ Otwórz pliki `.drawio` w [diagrams.net](https://app.diagrams.net) lub rozszerze
 ```powershell
 Copy-Item .env.example .env
 # Uzupelnij wartosci w .env (POSTGRES_*, DJANGO_SECRET_KEY)
+# Opcjonalnie EMAIL_* (Mailtrap) - reset hasła przez link; patrz docs/deployment.md
 ```
 
 **Pierwsza konfiguracja PostgreSQL:**
@@ -106,7 +107,7 @@ cd backend\physiocare
 uvicorn physiocare.asgi:application --reload --host 127.0.0.1 --port 8000
 ```
 
-Przypomnienia (wizyta 24h/2h, ćwiczenia na dziś) wymagają **drugiego** procesu — `runserver` / uvicorn ich sam nie odlicza:
+Przypomnienia (wizyta 24h/2h, ćwiczenia na dziś) wymagają **drugiego** procesu - `runserver` / uvicorn ich sam nie odlicza:
 
 ```powershell
 cd backend\physiocare
@@ -208,7 +209,7 @@ Referencja wizualna ekranów: plik `mockup_systemu_fizjoterapii.tsx` (poza repo 
 
 ## Na później (skalowanie)
 
-Model domenowy już łączy wielu terapeutów z wieloma pacjentami (wizyta = para terapeuta–pacjent). Przy większym ruchu i live UI (SSE: harmonogram / wizyty / dokumenty / ćwiczenia) bolą nie relacje N×M, tylko **infrastruktura połączeń**:
+Model domenowy już łączy wielu terapeutów z wieloma pacjentami (wizyta = para terapeuta-pacjent). Przy większym ruchu i live UI (SSE: harmonogram / wizyty / dokumenty / ćwiczenia) bolą nie relacje N×M, tylko **infrastruktura połączeń**:
 
 | Ból | Dlaczego | Kierunek rozwiązania |
 |-----|----------|----------------------|
@@ -216,7 +217,7 @@ Model domenowy już łączy wielu terapeutów z wieloma pacjentami (wizyta = par
 | Kilka workerów / instancji | Event wyemitowany w jednym procesie nie dociera do streamu w innym | **Redis pub/sub** (lub równoważny bus) zamiast kolejki tylko w pamięci procesu |
 | Demo vs produkcja | Mało równoległych sesji = in-memory wystarczy | Na demo: ASGI + 1 instancja; przy wzroście użytkowników: Redis + monitoring liczby streamów |
 
-Kontrakt eventów (sygnał per `user_id` → klient robi refetch REST) zostaje — nie trzeba przebudowywać feature’u pod klinikę z wieloma fizjo i pacjentami, tylko podnieść warstwę realtime.
+Kontrakt eventów (sygnał per `user_id` → klient robi refetch REST) zostaje - nie trzeba przebudowywać feature’u pod klinikę z wieloma fizjo i pacjentami, tylko podnieść warstwę realtime.
 
 ## Licencja
 

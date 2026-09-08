@@ -14,9 +14,9 @@ Przewodnik demo / staging. Lokalny rozwój pozostaje w root `README.md`.
 
 | Komponent | Rekomendacja demo |
 |-----------|-------------------|
-| Backend + API | Railway / Render / VPS — **uvicorn (ASGI)** gdy włączone live UI |
+| Backend + API | Railway / Render / VPS - **uvicorn (ASGI)** gdy włączone live UI |
 | PostgreSQL | Managed Postgres (Railway/Render) lub Docker na VPS |
-| Redis (opcjonalnie) | Managed Redis — throttle przy >1 workerze; **wymagany** pod SSE multi-worker (na później) |
+| Redis (opcjonalnie) | Managed Redis - throttle przy >1 workerze; **wymagany** pod SSE multi-worker (na później) |
 | Web | Railway static / Cloudflare Pages / Nginx na VPS |
 | Mobile | Expo EAS Update + build preview (Android APK) |
 
@@ -33,17 +33,45 @@ Skopiuj z `.env.example`, w szczególności:
 - `DJANGO_ADMIN_ENABLED=false` **lub** `DJANGO_ADMIN_ALLOWED_IPS=<twoje IP>` (bez MFA admin jest ryzykiem)
 - `POSTGRES_*` / `DATABASE_URL`
 - `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS`, `FRONTEND_URL`
+- `EMAIL_*` - produkcyjny SMTP (nie `console`); `EMAIL_FROM`, `PASSWORD_RESET_TIMEOUT`
+- `MOBILE_RESET_URL_BASE` - prefix deep linku resetu (domyślnie `physiocare://`)
 - `LOG_FORMAT=json`
 - `MEDIA_ROOT` - trwały volume (**nie** wystawiaj go publicznie w nginx)
 - `SENTRY_DSN` - alerty 5xx (patrz [monitoring](monitoring.md))
 - `REDIS_URL` - gdy uruchamiasz wiele workerów (throttle; później SSE bus)
 - `SSE_HEARTBEAT_SECONDS` - opcjonalnie (domyślnie 20)
 
+### E-mail (reset hasła)
+
+Lokalnie możesz zostać przy `EMAIL_BACKEND=console` (treść w logu Django) albo użyć **Mailtrap**:
+
+1. Utwórz inbox na [mailtrap.io](https://mailtrap.io).
+2. W `.env`:
+   ```
+   EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+   EMAIL_HOST=sandbox.smtp.mailtrap.io
+   EMAIL_PORT=587
+   EMAIL_HOST_USER=...
+   EMAIL_HOST_PASSWORD=...
+   EMAIL_USE_TLS=true
+   EMAIL_FROM=noreply@physiocare.local
+   FRONTEND_URL=http://localhost:5173
+   MOBILE_RESET_URL_BASE=physiocare://
+   ```
+3. Request resetu z weba (`client=web`) lub appki (`client=mobile`) → otwórz mail w Mailtrap i kliknij link.
+
+Deep link mobile (gdy masz już token z maila / testowy):
+
+```bash
+npx uri-scheme open "physiocare://password-reset?token=TEST_TOKEN" --android
+# lub --ios
+```
+
 ### Media i pliki medyczne
 
 - Endpoint `GET /media/<path>` wymaga JWT (cookie lub Bearer) oraz ownership (dokument / ćwiczenie / avatar).
 - PDF kliniczne w API pacjenta wskazują na `GET /api/v1/{id}/download/` (też z auth).
-- **Nie** mapuj `alias /media/ → volume` w nginx — ominiesz autoryzację. Proxy wyłącznie do aplikacji Django.
+- **Nie** mapuj `alias /media/ → volume` w nginx - ominiesz autoryzację. Proxy wyłącznie do aplikacji Django.
 
 ### Kroki
 
@@ -51,16 +79,16 @@ Skopiuj z `.env.example`, w szczególności:
 2. Migracje: `python manage.py migrate` (cwd: `backend/physiocare`)
 3. Collectstatic (jeśli serwujesz admin/static): `python manage.py collectstatic --noinput`
 4. Uruchom API:
-   - **Z live UI (SSE) — rekomendowane na demo:**
+   - **Z live UI (SSE) - rekomendowane na demo:**
      ```bash
      uvicorn physiocare.asgi:application --host 0.0.0.0 --port $PORT
      ```
-     Jeden proces ASGI na demo. Przy wielu workerach/instancjach in-memory bus SSE nie fan-outuje między procesami — wtedy Redis (patrz [README — skalowanie](../README.md#na-później-skalowanie)).
+     Jeden proces ASGI na demo. Przy wielu workerach/instancjach in-memory bus SSE nie fan-outuje między procesami - wtedy Redis (patrz [README - skalowanie](../README.md#na-później-skalowanie)).
    - **Bez SSE / legacy:** `gunicorn physiocare.wsgi:application --bind 0.0.0.0:$PORT`
 5. Ustaw healthcheck HTTP na `/api/v1/` (lub dedykowany endpoint)
-6. Osobny proces: `python manage.py run_notification_scheduler` (przypomnienia — nie wpinaj w workery API)
+6. Osobny proces: `python manage.py run_notification_scheduler` (przypomnienia - nie wpinaj w workery API)
 
-### Live UI (SSE) — Nginx / proxy
+### Live UI (SSE) - Nginx / proxy
 
 Dla lokalizacji `/api/v1/me/events/`:
 
@@ -104,7 +132,7 @@ Checklist po rollbacku:
 1. `curl -fsS https://<api>/api/v1/` → 200/401 (nie 5xx)
 2. Logowanie terapeuty + pacjenta
 3. `curl -I https://<api>/media/...` bez tokena → 401/403 (nie 200)
-4. Sentry / logi — spadek ERROR
+4. Sentry / logi - spadek ERROR
 
 ## Web (panel terapeuty)
 
@@ -113,7 +141,7 @@ Checklist po rollbacku:
 3. Opublikuj katalog `web/dist` jako static site
 4. Dopisz origin web do `CORS_ALLOWED_ORIGINS` i `CSRF_TRUSTED_ORIGINS`
 
-Cookie JWT wymagają zgodnego HTTPS i poprawnych CORS credentials. Klient pobiera media przez `fetch` + blob (credentials), nie przez gołe `<img src>` na obcy origin bez cookie. Live Harmonogram/Pulpit: SSE po zalogowaniu (`docs/api.md` — Realtime).
+Cookie JWT wymagają zgodnego HTTPS i poprawnych CORS credentials. Klient pobiera media przez `fetch` + blob (credentials), nie przez gołe `<img src>` na obcy origin bez cookie. Live Harmonogram/Pulpit: SSE po zalogowaniu (`docs/api.md` - Realtime).
 
 ## Mobile (Expo EAS)
 
@@ -124,7 +152,7 @@ Cookie JWT wymagają zgodnego HTTPS i poprawnych CORS credentials. Klient pobier
 5. (Opcjonalnie) OTA: `eas update`
 
 Na urządzeniu fizycznym użyj publicznego URL API (nie `localhost`).
-Tokeny natywne: SecureStore. Kanał Expo web używa `localStorage` — nie traktuj go jako produkcyjnego klienta.
+Tokeny natywne: SecureStore. Kanał Expo web używa `localStorage` - nie traktuj go jako produkcyjnego klienta.
 Live wizyty/dokumenty/ćwiczenia: SSE z Bearer (foreground); push Expo zostaje na tło.
 
 ## Checklist przed demem
@@ -135,12 +163,12 @@ Live wizyty/dokumenty/ćwiczenia: SSE z Bearer (foreground); push Expo zostaje n
 - [ ] API na **uvicorn** (SSE) albo świadomie bez live UI
 - [ ] Nginx: `proxy_buffering off` + długi timeout dla `/api/v1/me/events/`
 - [ ] `REDIS_URL` gdy wiele workerów
-- [ ] Media tylko przez Django (brak publicznego aliasu nginx) — ownership także dla `/media/avatars/`
+- [ ] Media tylko przez Django (brak publicznego aliasu nginx) - ownership także dla `/media/avatars/`
 - [ ] Migracje na czystej bazie staging
 - [ ] Konta demo: 1 terapeuta + 1 pacjent z danymi przykładowymi
 - [ ] Logi JSON widoczne w panelu hostingu ([monitoring](monitoring.md))
 - [ ] Procedura rollback przetestowana raz na staging
-- [ ] Build mobile **native** (EAS / Expo Go na telefonie) — **nie** Expo web jako produkcja (localStorage)
+- [ ] Build mobile **native** (EAS / Expo Go na telefonie) - **nie** Expo web jako produkcja (localStorage)
 - [ ] Checklist live SSE z [e2e-checklist.md](e2e-checklist.md#live-ui-sse) zaliczona
 
 ## Alternatywa „tylko laptop”

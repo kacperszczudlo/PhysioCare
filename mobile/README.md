@@ -3,18 +3,18 @@
 Expo SDK **54** (React Native) + TypeScript. Komunikacja z backendem przez REST (`/api/v1`) i JWT Bearer (**SecureStore** na native). Live UI (SSE `GET /api/v1/me/events/`, Bearer/XHR): wizyty (Pulpit + Wizyty), dokumenty (Dokumentacja), ćwiczenia (`exercise.assigned` → Pulpit). Reconnect przy powrocie apki na foreground.
 
 > **Produkcja i push na Androidzie = native build** (`expo run:android` / EAS).  
-> Expo Go na Androidzie (SDK 53+) **nie** dostarcza zdalnego pusha. `npm run web` trzyma tokeny w `localStorage` — wyłącznie do lokalnego UI.
+> Expo Go na Androidzie (SDK 53+) **nie** dostarcza zdalnego pusha. `npm run web` trzyma tokeny w `localStorage` - wyłącznie do lokalnego UI.
 
-> SDK 54 — zgodne ze sklepowym **Expo Go**.  
+> SDK 54 - zgodne ze sklepowym **Expo Go**.  
 > „Aktualne” Expo Go ze sklepu **nie** obsługuje SDK 56/57 (nie są jeszcze w Play/App Store).
 
-Na Windowsie zawsze `npm.cmd` (nie `npm`) — ExecutionPolicy blokuje `npm.ps1`.
+Na Windowsie zawsze `npm.cmd` (nie `npm`) - ExecutionPolicy blokuje `npm.ps1`.
 
 ## Dwa sposoby uruchomienia
 
 | Cel                                       | Jak                           | Push na Androidzie           |
 | ----------------------------------------- | ----------------------------- | ---------------------------- |
-| Szybki UI, logowanie, wizyty, ćwiczenia   | Expo Go + `npm.cmd start`     | Nie — backend pada na e-mail |
+| Szybki UI, logowanie, wizyty, ćwiczenia   | Expo Go + `npm.cmd start`     | Nie - backend pada na e-mail |
 | Test pusha, ikona PhysioCare na telefonie | Native: `npm.cmd run android` | Tak (po zgodzie w OS)        |
 
 Oba wymagają działającego API: `python manage.py runserver` w `backend/physiocare`.
@@ -51,7 +51,7 @@ Powstaje aplikacja `com.physiocare.patient` (PhysioCare), nie Go. Po zalogowaniu
 
 - [Android Studio](https://developer.android.com/studio) (SDK, platform-tools, NDK dociągnie Gradle)
 - Telefon: **USB debugging** + zaufany ten komputer, albo emulator
-- Windows: ninja (CMake 3.22) ucina ścieżki > 260 znaków. **Nie buduj** z `Documents\GitHub\PhysioCare\mobile`. Junction / `subst` nie działają (Gradle i tak bierze długą ścieżkę). Potrzebna **prawdziwa kopia** w `%USERPROFILE%\p`. **Nie** ustawiaj `CMAKE_OBJECT_PATH_MAX=180` — wtedy CMake nie skraca nazw `.o`.
+- Windows: ninja (CMake 3.22) ucina ścieżki > 260 znaków. **Nie buduj** z `Documents\GitHub\PhysioCare\mobile`. Junction / `subst` nie działają (Gradle i tak bierze długą ścieżkę). Potrzebna **prawdziwa kopia** w `%USERPROFILE%\p`. **Nie** ustawiaj `CMAKE_OBJECT_PATH_MAX=180` - wtedy CMake nie skraca nazw `.o`.
 
 ### Zmienne użytkownika Windows (bez admina)
 
@@ -76,7 +76,7 @@ foreach ($p in $add) {
 
 Ścieżka JBR jest z Android Studio. Inny JDK 17/21 też zadziała, byle `JAVA_HOME` wskazywał na katalog z `bin\java.exe`.
 
-Po ustawieniu zmiennych **nie wystarczy nowa karta terminala w Cursorze / VS Code** — IDE trzyma stary `Path` z chwili startu. Zamknij Cursor całkowicie i otwórz ponownie, albo w **zewnętrznym** PowerShellu (Start → Windows PowerShell). Nie używaj `setx` do całego `Path` — obcina go do ~1024 znaków.
+Po ustawieniu zmiennych **nie wystarczy nowa karta terminala w Cursorze / VS Code** - IDE trzyma stary `Path` z chwili startu. Zamknij Cursor całkowicie i otwórz ponownie, albo w **zewnętrznym** PowerShellu (Start → Windows PowerShell). Nie używaj `setx` do całego `Path` - obcina go do ~1024 znaków.
 
 W sesji, która jeszcze nie widzi `java`, można ręcznie wczytać zmienne użytkownika:
 
@@ -97,7 +97,7 @@ echo $env:ANDROID_HOME
 
 ### Build i wgranie na telefon (Windows)
 
-Sprawdzone na tym repo: kopia w `%USERPROFILE%\p` (nie junction), **świeży** `android/` wygenerowany _w tej kopii_, potem `expo run:android`. `LongPathsEnabled` nie wystarcza. Po `robocopy` **usuń** skopiowany `android` — inaczej zostaje `autolinking.json` z GitHuba.
+Sprawdzone na tym repo: kopia w `%USERPROFILE%\p` (nie junction), **świeży** `android/` wygenerowany _w tej kopii_, potem `expo run:android`. `LongPathsEnabled` nie wystarcza. Po `robocopy` **usuń** skopiowany `android` - inaczej zostaje `autolinking.json` z GitHuba.
 
 **Pierwszy raz / od zera:**
 
@@ -111,7 +111,7 @@ Set-Location $dst
 npm.cmd run android
 ```
 
-Kod `robocopy` 0–7 = sukces. Pierwszy Gradle: kilka–kilkanaście minut.
+Kod `robocopy` 0-7 = sukces. Pierwszy Gradle: kilka-kilkanaście minut.
 
 **Kolejne uruchomienie** (kopia i `android/` już są):
 
@@ -133,8 +133,8 @@ Albo edytuj od razu w `C:\Users\kacpe\p` (git i tak commitujesz z repo).
 1. Otwórz **PhysioCare** na telefonie (nie Expo Go).
 2. Zaloguj pacjenta.
 3. Zezwól na powiadomienia.
-4. Z panelu terapeuty utwórz wizytę / dokument / ćwiczenie — na telefonie powinien przyjść **push** (przy `EMAIL_BACKEND=console` e-mail i tak wyleci tylko na konsolę Django).
-5. Przypomnienia 24h/2h i „ćwiczenia na dziś” — drugi terminal: `python manage.py run_notification_scheduler` (cwd `backend/physiocare`).
+4. Z panelu terapeuty utwórz wizytę / dokument / ćwiczenie - na telefonie powinien przyjść **push** (przy `EMAIL_BACKEND=console` e-mail i tak wyleci tylko na konsolę Django).
+5. Przypomnienia 24h/2h i „ćwiczenia na dziś” - drugi terminal: `python manage.py run_notification_scheduler` (cwd `backend/physiocare`).
 
 ---
 
@@ -187,7 +187,19 @@ Android **wymaga FCM** (Expo Go ma to wbudowane, nasz APK nie):
 4. Przebuduj native: z `C:\Users\kacpe\p` → `npm.cmd run android`.
 5. Na [expo.dev](https://expo.dev) w projekcie PhysioCare → Credentials → wgraj FCM V1 (service account), wg [dokumentacji Expo](https://docs.expo.dev/push-notifications/fcm-credentials/).
 
-Bez kroku 4 Metro JS nic nie zmieni — Firebase musi być w binarium.
+Bez kroku 4 Metro JS nic nie zmieni - Firebase musi być w binarium.
+
+## Reset hasła (deep link)
+
+1. W appce: **Nie pamiętam hasła** → podaj e-mail → **Wyślij link** (backend wysyła mail z `physiocare://password-reset?token=…`).
+2. Otwórz mail (Mailtrap / skrzynka) i kliknij link - OS powinien otworzyć PhysioCare na ekranie nowego hasła (hasło + powtórz).
+3. Test bez maila (dev):
+
+```bash
+npx uri-scheme open "physiocare://password-reset?token=TEST_TOKEN" --android
+```
+
+Scheme jest w `app.json` (`physiocare`). Bez kliknięcia w link z maila nie ma jak ustawić hasła w UI.
 
 ## Status (Faza 5)
 

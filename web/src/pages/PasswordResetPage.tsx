@@ -19,10 +19,9 @@ import './auth-forms.css'
 export function PasswordResetPage() {
   const { requestPasswordReset, confirmPasswordReset } = useAuth()
   const [params] = useSearchParams()
-  const tokenFromUrl = params.get('token') ?? ''
+  const tokenFromUrl = (params.get('token') ?? '').trim()
 
   const [email, setEmail] = useState('')
-  const [token, setToken] = useState(tokenFromUrl)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [message, setMessage] = useState<string | null>(null)
@@ -36,7 +35,7 @@ export function PasswordResetPage() {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const isConfirmMode = Boolean(tokenFromUrl || token)
+  const isConfirmMode = Boolean(tokenFromUrl)
   const passwordRequirements = getPasswordRequirements(password)
   const showRequirementErrors = submitted || passwordTouched
 
@@ -52,8 +51,8 @@ export function PasswordResetPage() {
     setFieldErrors({})
     setLoading(true)
     try {
-      const detail = await requestPasswordReset(email.trim())
-      setMessage(detail)
+      await requestPasswordReset(email.trim())
+      setMessage('Wysłaliśmy link resetujący. Sprawdź e-mail i kliknij link w wiadomości.')
     } catch (err) {
       const apiEmailError = getFieldError(err, 'email')
       if (apiEmailError) {
@@ -73,6 +72,11 @@ export function PasswordResetPage() {
     setMessage(null)
     setSubmitted(true)
 
+    if (!tokenFromUrl) {
+      setError('Użyj linku z wiadomości e-mail, aby ustawić nowe hasło.')
+      return
+    }
+
     const nextFieldErrors: { password?: string; confirmPassword?: string } = {}
     const passwordError = getPasswordError(password)
     if (passwordError) {
@@ -90,7 +94,7 @@ export function PasswordResetPage() {
     setLoading(true)
     try {
       const detail = await confirmPasswordReset({
-        token: token.trim(),
+        token: tokenFromUrl,
         new_password: password,
       })
       setMessage(detail)
@@ -112,22 +116,13 @@ export function PasswordResetPage() {
         <h1>{isConfirmMode ? 'Nowe hasło' : 'Reset hasła'}</h1>
         <p>
           {isConfirmMode
-            ? 'Ustaw nowe hasło na podstawie tokenu z e-maila.'
-            : 'Wyślemy link resetujący, jeśli konto istnieje.'}
+            ? 'Ustaw nowe hasło. Link pochodzi z wiadomości e-mail.'
+            : 'Wyślemy link resetujący na Twój e-mail, jeśli konto istnieje.'}
         </p>
       </header>
 
       {isConfirmMode ? (
         <form className="auth-form__body" onSubmit={onConfirm} noValidate>
-          {!tokenFromUrl ? (
-            <Field
-              label="Token"
-              name="token"
-              required
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-            />
-          ) : null}
           <div className="auth-form__password">
             <Field
               label="Nowe hasło"

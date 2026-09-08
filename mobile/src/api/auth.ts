@@ -46,7 +46,7 @@ export const authApi = {
   requestPasswordReset(email: string) {
     return api.post<{ detail: string }>(
       '/auth/password-reset/request/',
-      { email },
+      { email, client: 'mobile' },
       { auth: false, skipAuthRefresh: true },
     )
   },

@@ -1,4 +1,4 @@
-# REST API — PhysioCare (kontrakt)
+# REST API - PhysioCare (kontrakt)
 
 > Wersja dokumentu: **0.5**.  
 > Kolekcja Postman: [`postman/PhysioCare.json`](postman/PhysioCare.json) · przewodnik: [`postman-testing.md`](postman-testing.md).
@@ -92,8 +92,15 @@ Cookie `refresh_token` też jest akceptowane (body opcjonalne).
 ### POST `/auth/password-reset/request`
 
 ```json
-{ "email": "..." }
+{ "email": "...", "client": "web" }
 ```
+
+`client` opcjonalne: `web` (domyślnie) lub `mobile`. Decyduje o linku w e-mailu:
+
+- `web` → `{FRONTEND_URL}/reset?token=…`
+- `mobile` → `{MOBILE_RESET_URL_BASE}password-reset?token=…` (np. `physiocare://password-reset?token=…`)
+
+**200** - zawsze ten sam komunikat (anti-enumeration): jeśli konto istnieje, wysyłamy mail z klikalnym linkiem (bez raw tokena w treści do skopiowania). Hasło można zmienić tylko po otwarciu linku.
 
 ### POST `/auth/password-reset/confirm`
 
@@ -101,9 +108,11 @@ Cookie `refresh_token` też jest akceptowane (body opcjonalne).
 { "token": "...", "new_password": "..." }
 ```
 
+Token pochodzi wyłącznie z query w linku z e-maila (web `/reset?token=` lub deep link mobile).
+
 ### POST `/auth/password-change`
 
-Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło zmienione, sesje unieważnione; trzeba zalogować się ponownie.
+Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** - hasło zmienione, sesje unieważnione; trzeba zalogować się ponownie.
 
 ---
 
@@ -297,15 +306,15 @@ Przypomnienia `visit_reminder` (okna 24h i 2h, ±30 min) oraz `exercise_reminder
 
 `python manage.py run_notification_scheduler`
 
-Domyślnie co 900 s (`NOTIFICATION_SCHEDULER_INTERVAL_SECONDS`). Jedna tura: `--once`. Deduplikacja w bazie — bezpieczne wielokrotne odpalenie. Nie wpinaj schedulera w workery Gunicorn (zdublowałby ticki).
+Domyślnie co 900 s (`NOTIFICATION_SCHEDULER_INTERVAL_SECONDS`). Jedna tura: `--once`. Deduplikacja w bazie - bezpieczne wielokrotne odpalenie. Nie wpinaj schedulera w workery Gunicorn (zdublowałby ticki).
 
 Klucz `waitlist` jest w kontrakcie, ale w domenie nie ma jeszcze listy rezerwowej.
 
 ---
 
-## Realtime — SSE (`/me/events/`)
+## Realtime - SSE (`/me/events/`)
 
-Live odświeżanie UI (bez F5 / bez zmiany zakładki). **Nie zastępuje** push Expo ani e-mail — te kanały zostają na tło / zamkniętą apkę.
+Live odświeżanie UI (bez F5 / bez zmiany zakładki). **Nie zastępuje** push Expo ani e-mail - te kanały zostają na tło / zamkniętą apkę.
 
 ### GET `/me/events/`
 
@@ -329,7 +338,7 @@ data: {"type":"<type>","resource_id":"<uuid|null>","at":"<ISO8601>"}
 
 - `event` i pole `type` w JSON są zawsze takie same.
 - `resource_id`: UUID zasobu domenowego albo `null` (np. `ping`).
-- Brak pełnego stanu kalendarza / list w streamie — tylko sygnał.
+- Brak pełnego stanu kalendarza / list w streamie - tylko sygnał.
 
 #### Typy eventów (v1)
 
@@ -342,7 +351,7 @@ data: {"type":"<type>","resource_id":"<uuid|null>","at":"<ISO8601>"}
 | `visit.rejected` | Odrzucenie pending | j.w. | j.w. |
 | `document.created` | Nowy PDF lub pozycja skrzynki klinicznej (kierowanie, wyrób ISSUED, odmowa, Recepta ISSUED) | Pacjent-właściciel | Mobile: Dokumenty |
 | `exercise.assigned` | Nowe przypisanie ćwiczenia | Pacjent | Mobile: Pulpit („Zalecenia na dziś”) |
-| `ping` | Heartbeat serwera (ok. co 15–30 s) | Abonent streamu | Nic (utrzymanie połączenia) |
+| `ping` | Heartbeat serwera (ok. co 15-30 s) | Abonent streamu | Nic (utrzymanie połączenia) |
 
 Przykład `data` dla wizyty:
 
@@ -366,18 +375,18 @@ Przykład `ping`:
 
 #### Zasady dostarczania
 
-- Publikacja **per `user_id`** (tylko zainteresowani użytkownicy danej wizyty / dokumentu / przypisania) — nie broadcast całej kliniki.
+- Publikacja **per `user_id`** (tylko zainteresowani użytkownicy danej wizyty / dokumentu / przypisania) - nie broadcast całej kliniki.
 - Wizyty: SSE zawsze do **pacjenta i terapeuty** wizyty (`publish_visit_realtime`). Push/e-mail do pacjenta nadal tylko przez `notify_visit_change` (np. prośba pacjenta o termin = SSE bez maila do siebie).
 - Emit przy mutacjach domenowych (create/approve/reject/reschedule/cancel wizyty, upload PDF, przypisanie ćwiczenia).
-- Preferencje powiadomień (`visit_change` itd.) **nie wyciszają** SSE — SSE to synchronizacja otwartego UI, nie kanał marketingowy.
+- Preferencje powiadomień (`visit_change` itd.) **nie wyciszają** SSE - SSE to synchronizacja otwartego UI, nie kanał marketingowy.
 - Błędy auth na starcie streamu: `401` / `403` jak w REST (bez otwarcia streamu).
 
 #### Uwagi wdrożeniowe (kontrakt vs runtime)
 
 - Demo / lokalnie: ASGI (np. uvicorn). Sync Gunicorn + wiele równoległych streamów = słabe dopasowanie.
-- Wiele workerów / instancji: bus między procesami (np. Redis) — szczegóły w [README — Na później (skalowanie)](../README.md#na-później-skalowanie).
+- Wiele workerów / instancji: bus między procesami (np. Redis) - szczegóły w [README - Na później (skalowanie)](../README.md#na-później-skalowanie).
 
-Skalowanie multi-worker: [README — Na później](../README.md#na-później-skalowanie).
+Skalowanie multi-worker: [README - Na później](../README.md#na-później-skalowanie).
 
 ---
 

@@ -334,6 +334,11 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
 
 class PasswordResetRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(error_messages=EMAIL_FIELD_ERRORS)
+    client = serializers.ChoiceField(
+        choices=('web', 'mobile'),
+        required=False,
+        default='web',
+    )
 
     def validate_email(self, value):
         try:

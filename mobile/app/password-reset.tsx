@@ -1,4 +1,4 @@
-import { Link } from 'expo-router'
+import { Link, useLocalSearchParams, useRouter } from 'expo-router'
 import { useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
@@ -11,22 +11,40 @@ import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { PasswordRequirements } from '@/components/PasswordRequirements'
 import { getEmailError } from '@/lib/emailPolicy'
-import { getPasswordError, getPasswordRequirements } from '@/lib/passwordPolicy'
+import {
+  getPasswordError,
+  getPasswordRequirements,
+  PASSWORD_MESSAGES,
+  passwordsMatch,
+} from '@/lib/passwordPolicy'
 import { colors, space, typography } from '@/theme/tokens'
 
+function firstParam(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) {
+    return (value[0] ?? '').trim()
+  }
+  return (value ?? '').trim()
+}
+
 export default function PasswordResetScreen() {
-  const { requestPasswordReset, confirmPasswordReset } = useAuth()
-  const [step, setStep] = useState<'request' | 'confirm'>('request')
-  const [email, setEmail] = useState('')
-  const [token, setToken] = useState('')
+  const { requestPasswordReset, confirmPasswordReset, logout, isAuthenticated } = useAuth()
+  const router = useRouter()
+  const params = useLocalSearchParams<{ token?: string | string[]; email?: string | string[] }>()
+  const tokenFromLink = firstParam(params.token)
+  const emailFromParams = firstParam(params.email)
+
+  const [email, setEmail] = useState(emailFromParams)
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [emailError, setEmailError] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null)
   const [passwordTouched, setPasswordTouched] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  const isConfirmMode = Boolean(tokenFromLink)
   const passwordRequirements = getPasswordRequirements(password)
 
   async function onRequest() {
@@ -40,9 +58,8 @@ export default function PasswordResetScreen() {
     setEmailError(null)
     setLoading(true)
     try {
-      const detail = await requestPasswordReset(email.trim())
-      setMessage(detail)
-      setStep('confirm')
+      await requestPasswordReset(email.trim())
+      setMessage('Wysłaliśmy link resetujący. Sprawdź e-mail i kliknij link w wiadomości.')
     } catch (err) {
       const apiEmailError = getFieldError(err, 'email')
       if (apiEmailError) {
@@ -59,20 +76,36 @@ export default function PasswordResetScreen() {
   async function onConfirm() {
     setError(null)
     setMessage(null)
+    setPasswordTouched(true)
+
+    if (!tokenFromLink) {
+      setError('Użyj linku z wiadomości e-mail, aby ustawić nowe hasło.')
+      return
+    }
+
     const localPasswordError = getPasswordError(password)
     if (localPasswordError) {
       setPasswordError(localPasswordError)
-      setPasswordTouched(true)
+      setConfirmPasswordError(null)
+      return
+    }
+    if (!passwordsMatch(password, confirmPassword)) {
+      setPasswordError(null)
+      setConfirmPasswordError(PASSWORD_MESSAGES.mismatch)
       return
     }
     setPasswordError(null)
+    setConfirmPasswordError(null)
     setLoading(true)
     try {
       const detail = await confirmPasswordReset({
-        token: token.trim(),
+        token: tokenFromLink,
         new_password: password,
       })
-      setMessage(detail)
+      if (isAuthenticated) {
+        await logout()
+      }
+      setMessage(`${detail} Zaloguj się nowym hasłem.`)
     } catch (err) {
       const apiPasswordError = getFieldError(err, 'new_password') ?? getFieldError(err, 'password')
       if (apiPasswordError) {
@@ -89,35 +122,16 @@ export default function PasswordResetScreen() {
   return (
     <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.container}>
       <BrandMark variant="logo" size="sm" style={styles.brand} />
-      <Text style={styles.title}>Reset hasła</Text>
+      <Text style={styles.title}>{isConfirmMode ? 'Nowe hasło' : 'Reset hasła'}</Text>
       <Text style={styles.subtitle}>
-        {step === 'request'
-          ? 'Wyślemy token resetu na e-mail (w trybie deweloperskim: konsola backendu).'
-          : 'Wklej token z wiadomości i ustaw nowe hasło.'}
+        {isConfirmMode
+          ? 'Ustaw nowe hasło. Link pochodzi z wiadomości e-mail.'
+          : 'Wyślemy link resetujący na Twój e-mail, jeśli konto istnieje.'}
       </Text>
 
       <View style={styles.form}>
-        {step === 'request' ? (
+        {isConfirmMode ? (
           <>
-            <Field
-              label="E-mail"
-              value={email}
-              onChangeText={(value) => {
-                setEmail(value)
-                if (emailError) {
-                  setEmailError(null)
-                }
-              }}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              autoComplete="email"
-              error={emailError}
-            />
-            <Button title="Wyślij token" loading={loading} onPress={() => void onRequest()} />
-          </>
-        ) : (
-          <>
-            <Field label="Token" value={token} onChangeText={setToken} autoCapitalize="none" />
             <Field
               label="Nowe hasło"
               value={password}
@@ -135,8 +149,44 @@ export default function PasswordResetScreen() {
               requirements={passwordRequirements}
               showErrors={passwordTouched || Boolean(passwordError)}
             />
+            <Field
+              label="Powtórz hasło"
+              value={confirmPassword}
+              onChangeText={(value) => {
+                setConfirmPassword(value)
+                if (confirmPasswordError) {
+                  setConfirmPasswordError(null)
+                }
+              }}
+              secureTextEntry
+              error={confirmPasswordError}
+            />
             <Button title="Ustaw nowe hasło" loading={loading} onPress={() => void onConfirm()} />
-            <Button title="Wróć do e-maila" variant="ghost" onPress={() => setStep('request')} />
+            {message ? (
+              <Button
+                title="Przejdź do logowania"
+                variant="secondary"
+                onPress={() => router.replace('/(auth)/login')}
+              />
+            ) : null}
+          </>
+        ) : (
+          <>
+            <Field
+              label="E-mail"
+              value={email}
+              onChangeText={(value) => {
+                setEmail(value)
+                if (emailError) {
+                  setEmailError(null)
+                }
+              }}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoComplete="email"
+              error={emailError}
+            />
+            <Button title="Wyślij link" loading={loading} onPress={() => void onRequest()} />
           </>
         )}
 
