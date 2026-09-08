@@ -33,6 +33,9 @@ yarn-error.*
 # local env files
 .env*.local
 
+# Firebase / FCM (Android push)
+google-services.json
+
 # typescript
 *.tsbuildinfo
 

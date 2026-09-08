@@ -49,7 +49,7 @@ Reguły dostępu obowiązują **tylko na serwerze**. Klient może ukryć przycis
 | `exercises` | Exercise, kategorie, przypisania, compliance |
 | `documents` | MedicalDocument, upload/download |
 | `privacy` | Consent, eksport danych, wniosek o usunięcie |
-| `notifications` | NotificationPreference (kanały w MVP: stub) |
+| `notifications` | NotificationPreference, DeviceToken, wysyłka Expo/e-mail |
 
 Zależności modułów: [diagrams/module-dependencies.drawio](diagrams/module-dependencies.drawio)
 

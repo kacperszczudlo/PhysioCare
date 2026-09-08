@@ -116,7 +116,7 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 | POST | `/me/profile/avatar` | Upload avatara (`multipart`, pole `file`: JPEG/PNG/WebP) |
 | GET | `/me/consents` | Lista zgód |
 | PATCH | `/me/consents/optional` | Marketing, badania |
-| POST | `/me/data-export` | Eksport RODO (profil, zgody, wizyty, epizody, dokumenty, ćwiczenia) |
+| POST | `/me/data-export` | Eksport RODO (profil, zgody, wizyty, epizody, dokumenty, ćwiczenia, preferencje i logi powiadomień) |
 | POST | `/me/account-deletion-request` | Wniosek o usunięcie (zapis + dezaktywacja konta) |
 
 ---
@@ -278,8 +278,26 @@ Wymiary `type` / `region` / `muscle` / `injury` łączone są **AND** (ćwiczeni
 
 | Metoda | Endpoint | Opis |
 |--------|----------|------|
-| GET | `/me/notification-preferences` | Preferencje |
+| GET | `/me/notification-preferences` | Preferencje (kanoniczne klucze; brakujące są dosiewane jako włączone) |
 | PATCH | `/me/notification-preferences` | Aktualizacja switchy |
+
+Kanoniczne `pref_key`: `visit_reminder`, `visit_change`, `waitlist`, `exercise_reminder`, `new_document`.
+
+PATCH przyjmuje płaską mapę `{ "visit_reminder": false }` albo `{ "preferences": { ... } }`. Nieznane klucze zwracają `400`.
+
+| Metoda | Endpoint | Opis |
+|--------|----------|------|
+| GET | `/me/device-tokens` | Aktywne tokeny Expo pacjenta |
+| POST | `/me/device-tokens` | Rejestracja / odświeżenie tokenu (`expo_push_token`, opcjonalnie `platform`: `ios` / `android` / `unknown`) |
+| DELETE | `/me/device-tokens` | Dezaktywacja tokenu (body: `expo_push_token`) |
+
+Wysyłka: zdarzenia domenowe (`visit_change`, `new_document`, nowe przypisanie ćwiczeń) idą od razu. Push Expo, gdy jest aktywny token; w przeciwnym razie e-mail. Przypomnienia `visit_reminder` (okna 24h i 2h) oraz poranne `exercise_reminder` — komendy:
+
+`python manage.py notify_upcoming_visits`
+
+`python manage.py notify_today_exercises`
+
+Klucz `waitlist` jest w kontrakcie, ale w domenie nie ma jeszcze listy rezerwowej.
 
 ---
 

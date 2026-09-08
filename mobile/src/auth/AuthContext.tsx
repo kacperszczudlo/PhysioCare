@@ -15,6 +15,7 @@ import { patientApi } from '@/api/patient'
 import { tokenStorage } from '@/api/tokenStorage'
 import type { User } from '@/api/types'
 import { useNetworkOptional } from '@/network/NetworkContext'
+import { unregisterPushToken } from '@/notifications/push'
 
 interface AuthContextValue {
   user: User | null
@@ -167,6 +168,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(async () => {
+    try {
+      await unregisterPushToken()
+    } catch {
+      // Token API is best-effort; always continue with session clear.
+    }
     try {
       await authApi.logout()
     } finally {

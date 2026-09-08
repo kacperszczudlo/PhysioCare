@@ -5,6 +5,9 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from notifications.defaults import ensure_default_preferences
+from notifications.keys import NotificationPreferenceKey
+from notifications.models import DeviceToken, NotificationPreference
 from scheduling.models import Visit, VisitStatus
 
 
@@ -32,3 +35,40 @@ def test_data_export_includes_clinical_collections(
     assert 'documents' in response.data
     assert 'exercise_assignments' in response.data
     assert len(response.data['visits']) == 1
+
+
+@pytest.mark.django_db
+def test_data_export_includes_notification_prefs_and_device_fingerprint(
+    api_client, patient,
+):
+    ensure_default_preferences(patient.user)
+    NotificationPreference.objects.filter(
+        user=patient.user,
+        pref_key=NotificationPreferenceKey.WAITLIST,
+    ).update(enabled=False)
+    DeviceToken.objects.create(
+        user=patient.user,
+        expo_push_token='ExponentPushToken[physiocare-export]',
+        platform='android',
+    )
+    token = str(RefreshToken.for_user(patient.user).access_token)
+    api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+    response = api_client.post('/api/v1/me/data-export/', {}, format='json')
+    assert response.status_code == status.HTTP_200_OK
+    prefs = {item['pref_key']: item['enabled'] for item in response.data['notification_preferences']}
+    assert set(prefs) == {
+        'visit_reminder',
+        'visit_change',
+        'waitlist',
+        'exercise_reminder',
+        'new_document',
+    }
+    assert prefs['waitlist'] is False
+    devices = response.data['device_tokens']
+    assert len(devices) == 1
+    assert devices[0]['platform'] == 'android'
+    assert 'expo_push_token' not in devices[0]
+    assert devices[0]['token_fingerprint'].startswith('…')
+    assert 'notification_deliveries' in response.data
+

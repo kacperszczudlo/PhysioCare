@@ -22,6 +22,7 @@ from core.field_policies import (
     normalize_and_validate_last_name,
 )
 from core.phone_policy import PHONE_FIELD_ERRORS, normalize_and_validate_phone
+from notifications.defaults import ensure_default_preferences
 from patients.models import PatientProfile
 from privacy.models import Consent, ConsentType
 from therapists.models import TherapistProfile
@@ -197,6 +198,8 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
             therapist_id=therapist_id,
             phone=phone,
         )
+
+        ensure_default_preferences(user)
 
         Consent.objects.create(
             user=user,

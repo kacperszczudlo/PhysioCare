@@ -6,6 +6,7 @@ import type { User } from './types'
 const ACCESS_KEY = 'physiocare_access'
 const REFRESH_KEY = 'physiocare_refresh'
 const USER_KEY = 'physiocare_cached_user'
+const PUSH_TOKEN_KEY = 'physiocare_expo_push_token'
 
 const memory = new Map<string, string>()
 
@@ -79,6 +80,18 @@ export const tokenStorage = {
 
   async setCachedUser(user: User): Promise<void> {
     await setItem(USER_KEY, JSON.stringify(user))
+  },
+
+  async getPushToken(): Promise<string | null> {
+    return getItem(PUSH_TOKEN_KEY)
+  },
+
+  async setPushToken(token: string): Promise<void> {
+    await setItem(PUSH_TOKEN_KEY, token)
+  },
+
+  async clearPushToken(): Promise<void> {
+    await deleteItem(PUSH_TOKEN_KEY)
   },
 
   async clear(): Promise<void> {

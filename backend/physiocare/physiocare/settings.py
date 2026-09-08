@@ -280,6 +280,11 @@ EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', 'true')
 
 PASSWORD_RESET_TIMEOUT = int(os.environ.get('PASSWORD_RESET_TIMEOUT', '1800'))
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173').rstrip('/')
+EXPO_PUSH_URL = os.environ.get(
+    'EXPO_PUSH_URL',
+    'https://exp.host/--/api/v2/push/send',
+)
+EXPO_PUSH_TIMEOUT = int(os.environ.get('EXPO_PUSH_TIMEOUT', '10'))
 
 # Optional error alerting (production). Without DSN, errors stay in structured logs only.
 _SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()

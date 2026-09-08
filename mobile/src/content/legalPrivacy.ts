@@ -8,8 +8,8 @@ export type LegalSection = {
 
 export const PRIVACY_META = {
   title: 'Polityka prywatności',
-  version: '1.0',
-  updatedAt: '8 sierpnia 2026 r.',
+  version: '1.1',
+  updatedAt: '8 września 2026 r.',
 }
 
 export const PRIVACY_SECTIONS: LegalSection[] = [
@@ -37,7 +37,8 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     paragraphs: [
       'Konto: e-mail, imię, nazwisko, hasło (skrót), rola, opcjonalny telefon, avatar.',
       'Zdrowie (art. 9 RODO): epizody, mapa bólu, notatki, dokumenty, ćwiczenia, wizyty.',
-      'Techniczne: tokeny JWT w SecureStore, ograniczone logi bez haseł.',
+      'Techniczne: tokeny JWT w SecureStore, ograniczone logi bez haseł, preferencje powiadomień.',
+      'Gdy włączysz powiadomienia systemowe: token Expo na serwerze (do wylogowania). Treść pusha jest ogólna, bez rozpoznania.',
     ],
   },
   {
@@ -59,7 +60,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     id: 'device',
     title: 'Urządzenie (PKE)',
     paragraphs: [
-      'Dostęp do magazynu urządzenia tylko dla niezbędnej sesji. Trackingowe SDK — obecnie brak; w przyszłości dopiero po granularnym opt-in i asynchronicznej inicjalizacji.',
+      'Dostęp do magazynu urządzenia tylko dla niezbędnej sesji. Token powiadomień — dopiero po zgodzie systemu. Trackingowe SDK — obecnie brak.',
     ],
   },
   {
@@ -67,7 +68,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     title: 'Twoje prawa',
     paragraphs: [
       'Dostęp, sprostowanie, usunięcie, ograniczenie, przenoszenie, sprzeciw, skarga do UODO.',
-      'W aplikacji: eksport danych, wniosek o usunięcie, zarządzanie zgodami opcjonalnymi.',
+      'W aplikacji: eksport danych (w tym preferencje powiadomień), wniosek o usunięcie, zarządzanie zgodami opcjonalnymi.',
     ],
   },
   {

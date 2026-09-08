@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 
 from core.mixins import PatientSelfMixin, user_can_access_visit
 from core.permissions import IsPatient, IsTherapist, IsVisitParticipant
+from notifications.events import notify_visit_change
 
 from .models import TherapyType, Visit, VisitStatus
 from .serializers import (
@@ -106,6 +107,7 @@ class TherapistVisitListCreateView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         visit = _save_visit(serializer.save)
         visit = self.get_queryset().get(pk=visit.pk)
+        notify_visit_change(visit, 'scheduled')
         return Response(VisitSerializer(visit).data, status=status.HTTP_201_CREATED)
 
 
@@ -121,10 +123,17 @@ class TherapistVisitDetailView(generics.RetrieveUpdateAPIView):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
+        previous_start = instance.start_at
+        previous_end = instance.end_at
+        previous_status = instance.status
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         _save_visit(lambda: self.perform_update(serializer))
         visit = self.get_queryset().get(pk=instance.pk)
+        if visit.status == VisitStatus.CANCELLED and previous_status != VisitStatus.CANCELLED:
+            notify_visit_change(visit, 'cancelled')
+        elif visit.start_at != previous_start or visit.end_at != previous_end:
+            notify_visit_change(visit, 'rescheduled')
         return Response(VisitSerializer(visit).data)
 
 
@@ -171,6 +180,7 @@ class VisitApproveView(APIView):
         _save_visit(visit.save)
 
         visit = Visit.objects.select_related(*_visit_related()).get(pk=visit.pk)
+        notify_visit_change(visit, 'approved')
         return Response(VisitSerializer(visit).data)
 
 
@@ -200,6 +210,7 @@ class VisitRejectView(APIView):
         visit.status = VisitStatus.CANCELLED
         visit.cancel_reason = serializer.validated_data.get('cancel_reason', '') or 'Odrzucone przez terapeutę'
         visit.save(update_fields=['status', 'cancel_reason'])
+        notify_visit_change(visit, 'rejected')
         return Response(VisitSerializer(visit).data)
 
 
@@ -301,7 +312,7 @@ class VisitCancelView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
-        visit = Visit.objects.select_related('patient', 'therapist').filter(pk=pk).first()
+        visit = Visit.objects.select_related('patient', 'patient__user', 'therapist').filter(pk=pk).first()
         if visit is None or not user_can_access_visit(request.user, visit):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -321,6 +332,8 @@ class VisitCancelView(APIView):
         visit.status = VisitStatus.CANCELLED
         visit.cancel_reason = serializer.validated_data.get('cancel_reason', '')
         visit.save(update_fields=['status', 'cancel_reason'])
+        if request.user.role == 'THERAPIST':
+            notify_visit_change(visit, 'cancelled')
         return Response(VisitSerializer(visit).data)
 
 

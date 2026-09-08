@@ -1,8 +1,8 @@
 # Polityka prywatności PhysioCare
 
-**Wersja:** 1.0  
+**Wersja:** 1.1  
 **Data wejścia w życie:** 8 sierpnia 2026 r.  
-**Ostatnia aktualizacja:** 17 sierpnia 2026 r.
+**Ostatnia aktualizacja:** 8 września 2026 r.
 
 Dokument stanowi warstwę pełnej informacji (art. 13 i 14 RODO). Na górze jest skrót; szczegóły są w kolejnych rozdziałach. Tekst obejmuje panel WWW fizjoterapeuty i aplikację mobilną pacjenta.
 
@@ -14,7 +14,7 @@ Dokument stanowi warstwę pełnej informacji (art. 13 i 14 RODO). Na górze jest
 |-------|-----------|
 | Kto przetwarza dane | Kacper Szczudło (ADO); kontakt: kacper.szczudlo@gmail.com |
 | Po co | Świadczenie usług PhysioCare: konto, wizyty, dokumentacja fizjoterapeutyczna, ćwiczenia. |
-| Jakie dane | Dane konta, kontaktowe, opcjonalnie PESEL; dane zdrowotne w karcie leczenia; dane techniczne sesji. |
+| Jakie dane | Dane konta, kontaktowe, opcjonalnie PESEL; dane zdrowotne w karcie leczenia; dane techniczne sesji; przy włączonym pushu — token urządzenia (Expo). |
 | Zgody | Wymagane: regulamin + dane medyczne. Opcjonalne: marketing, badania — osobne przełączniki, wycofanie w ustawieniach. |
 | Cookies / urządzenie | Tylko technologie niezbędne do logowania i bezpieczeństwa (PKE). Brak SDK reklamowych i analityki behawioralnej. |
 | Usunięcie konta | Wniosek w aplikacji mobilnej (pacjent) oraz strona WWW `/account-deletion`. |
@@ -79,7 +79,9 @@ W zakresie niezbędnym do prowadzenia dokumentacji fizjoterapeutycznej mogą by�
 
 - tokeny sesji JWT (w przeglądarce: pliki cookie `access_token` / `refresh_token`; w aplikacji mobilnej: bezpieczny magazyn urządzenia, np. SecureStore),
 - logi aplikacyjne ograniczone do metody, ścieżki, statusu, czasu trwania, identyfikatora użytkownika i identyfikatora żądania (**bez** zapisu haseł i bez celowego zbierania adresów IP w logach biznesowych),
-- preferencje powiadomień w aplikacji (klucze preferencji, nie treść powiadomień push — o ile kanał push nie został włączony).
+- preferencje powiadomień (klucze typów, stan włączenia),
+- przy włączonym kanale push: token powiadomień Expo powiązany z kontem i platformą urządzenia,
+- logi dostarczenia powiadomień (kanał, status, ogólny tytuł i treść **bez** danych klinicznych).
 
 ### 3.4. Czego nie zbieramy (stan na datę Polityki)
 
@@ -104,6 +106,7 @@ W razie wprowadzenia takich narzędzi Polityka zostanie zaktualizowana, a techno
 | Prowadzenie dokumentacji fizjoterapeutycznej | dane zdrowotne z § 3.2 | art. 9 ust. 2 lit. a RODO (wyraźna zgoda) oraz — w zakresie wymaganym przepisami — art. 9 ust. 2 lit. h RODO |
 | Bezpieczeństwo, zapobieganie nadużyciom, logi | dane techniczne sesji, logi | art. 6 ust. 1 lit. f RODO (prawnie uzasadniony interes: integralność i poufność systemu); interes ten nie obejmuje profilowania marketingowego |
 | Reset hasła / komunikacja serwisowa | e-mail | art. 6 ust. 1 lit. b RODO |
+| Powiadomienia o wizycie, dokumencie i ćwiczeniach (zgodnie z preferencjami) | e-mail i/lub token Expo | art. 6 ust. 1 lit. b RODO; dostęp do powiadomień systemowych — zgoda systemu operacyjnego (PKE) |
 | Marketing (jeśli włączony) | e-mail / telefon wg zakresu zgody | art. 6 ust. 1 lit. a RODO (zgoda opcjonalna) |
 | Badania naukowe / rozwojowe (jeśli włączone) | dane wskazane w zgodzie | art. 6 ust. 1 lit. a oraz — gdy dotyczy zdrowia — art. 9 ust. 2 lit. a RODO |
 | Dochodzenie / obrona roszczeń, obowiązki prawne | dane rozliczeniowe i archiwalne w niezbędnym zakresie | art. 6 ust. 1 lit. c i/lub f RODO |
@@ -159,8 +162,11 @@ Stosujemy wyłącznie technologie **niezbędne** do świadczenia usługi wyraźn
 | Cookie `access_token` | Web | Sesja zalogowanego użytkownika (JWT) | krótkotrwały (ok. 15 min, konfigurowalne) |
 | Cookie `refresh_token` | Web | Odświeżanie sesji | do ok. 7 dni (konfigurowalne), rotacja |
 | SecureStore / magazyn bezpieczny | Mobile | Przechowywanie tokenów JWT | do wylogowania / wygaśnięcia |
+| Token Expo Push | Mobile | Dostarczenie powiadomienia na urządzenie, gdy pacjent włączy kanał | do wylogowania / wyłączenia zgody systemowej |
 
 Szczegóły: [Polityka cookies](./polityka-cookies.md) oraz strona `/cookies` w aplikacji webowej.
+
+Token powiadomień zapisywany jest dopiero po zgodzie systemu operacyjnego (dialog powiadomień). Nie jest to tracking reklamowy.
 
 ### 6.2. Technologie niewymagalne
 
@@ -174,9 +180,10 @@ Dane mogą być powierzane lub udostępniane wyłącznie w niezbędnym zakresie:
 
 - **przypisanemu fizjoterapeucie** — w zakresie karty pacjenta, wizyt, dokumentów i zaleceń (cel leczenia),
 - **dostawcom hostingu / bazy danych / poczty e-mail** — na podstawie umów powierzenia (DPA), gdy środowisko produkcyjne korzysta z zewnętrznej infrastruktury,
+- **usłudze Expo Push** — wyłącznie gdy pacjent włączy powiadomienia systemowe i zarejestruje token; treść komunikatu jest ogólna (bez rozpoznania klinicznego),
 - **organom publicznym** — wyłącznie gdy wymaga tego prawo.
 
-Aktualny model referencyjny projektu: PostgreSQL, lokalne lub kontenerowe przechowywanie plików mediów, opcjonalnie hosting wskazany w dokumentacji wdrożeniowej (np. Railway / VPS / Cloudflare Pages / Expo EAS). Przed produkcją Administrator uzupełni listę konkretnych procesorów.
+Aktualny model referencyjny projektu: PostgreSQL, lokalne lub kontenerowe przechowywanie plików mediów, opcjonalnie hosting wskazany w dokumentacji wdrożeniowej (np. Railway / VPS / Cloudflare Pages / Expo EAS). Usługa Expo może oznaczać transfer poza EOG — wtedy stosuje się § 8. Przed produkcją Administrator uzupełni listę konkretnych procesorów.
 
 **Współadministrowanie:** w razie użycia SDK, które samodzielnie określają cele przetwarzania, stosunek prawny (powierzenie / współadministrowanie / odrębny administrator) zostanie opisany w aktualizacji Polityki oraz w umowach.
 
@@ -203,6 +210,8 @@ Użytkownik zostanie poinformowany o konkretnych transferach w aktualizacji nini
 | Dane konta aktywnego | przez czas korzystania z usługi |
 | Dane zdrowotne / dokumentacja | przez czas trwania relacji terapeutycznej oraz przez okres wynikający z przepisów regulujących dokumentację medyczną / dochodzenie roszczeń (nie dłużej niż potrzeba) |
 | Tokeny sesji | do wygaśnięcia / wylogowania |
+| Tokeny powiadomień Expo | do wylogowania, dezaktywacji tokenu albo usunięcia konta |
+| Logi dostarczenia powiadomień | przez okres niezbędny do diagnostyki i rozliczenia zgód / preferencji (zasada minimalizacji) |
 | Logi techniczne | przez okres niezbędny do bezpieczeństwa i diagnostyki (zasada minimalizacji) |
 | Wnioski o usunięcie konta | do zakończenia procedury usunięcia oraz ewentualnej obrony roszczeń |
 | Zgody | wraz z dowodem udzielenia/wycofania — przez okres niezbędny do wykazania zgodności |
@@ -226,7 +235,7 @@ Masz prawo do:
 
 ### 10.1. Realizacja w PhysioCare
 
-- **Eksport danych (pacjent):** `POST /api/v1/me/data-export/` oraz przycisk w ustawieniach aplikacji mobilnej — zwraca profil, zgody, wizyty, epizody (w tym mapę bólu), metadane dokumentów, przypisania ćwiczeń, wyroby, skierowania i odmowy. Same pliki PDF/wideo pobiera się osobnymi, autoryzowanymi URL.
+- **Eksport danych (pacjent):** `POST /api/v1/me/data-export/` oraz przycisk w ustawieniach aplikacji mobilnej — zwraca profil, zgody, wizyty, epizody (w tym mapę bólu), metadane dokumentów, przypisania ćwiczeń, wyroby, skierowania, odmowy, preferencje powiadomień, odcisk tokenu urządzenia (bez pełnego tokenu Expo) oraz ostatnie logi dostarczenia. Same pliki PDF/wideo pobiera się osobnymi, autoryzowanymi URL.
 - **Usunięcie konta (pacjent):**
   - **w aplikacji** — „Wniosek o usunięcie konta” w ustawieniach,
   - **poza aplikacją (wymóg sklepów mobilnych)** — strona WWW `/account-deletion`,

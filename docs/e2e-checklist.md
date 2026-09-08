@@ -43,6 +43,8 @@ Automatyczne wsparcie: Postman (`docs/postman/`), pytest backend.
 | M7 | Dokumentacja | Lista kliniczna (kierowanie / wyroby / recepta / odmowa / PDF) po wystawieniu przez terapeutę |
 | M8 | Profil | Dane kontaktowe, avatar |
 | M9 | Offline / błąd API | Banner offline + czytelny `NetworkError` / ErrorBanner, bez crasha i bez wylogowania |
+| M10 | Powiadomienia (UC-18) | Zgoda systemowa + token; OFF w ustawieniach → brak pusha/maila; ON → push (telefon) lub e-mail; tap otwiera właściwy ekran |
+| M11 | Eksport danych | JSON zawiera zgody, wizyty, preferencje powiadomień i odcisk tokenu urządzenia (nie pełny token Expo) |
 
 ## Cross-cutting
 
