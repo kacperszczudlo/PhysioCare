@@ -1,6 +1,7 @@
 import pytest
 from django.core.exceptions import ValidationError
 
+from accounts.serializers import TherapistRegistrationSerializer
 from core.field_policies import (
     normalize_and_validate_first_name,
     normalize_and_validate_icd10,
@@ -14,8 +15,6 @@ from patients.pesel_policy import (
 )
 from patients.serializers import MeProfileUpdateSerializer
 from therapists.pwzf_policy import PWZF_INVALID, normalize_and_validate_pwzf
-from accounts.serializers import TherapistRegistrationSerializer
-
 
 VALID_PESEL = '44051401359'
 

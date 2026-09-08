@@ -39,7 +39,7 @@ def test_list_assignments_filtered_by_patient(api_client, therapist, assignment,
     )
 
     assert response.status_code == status.HTTP_200_OK
-    results = response.data['results'] if 'results' in response.data else response.data
+    results = response.data.get('results', response.data)
     assert len(results) == 1
     assert results[0]['id'] == str(assignment.id)
     assert results[0]['exercise_instruction'] == 'Unieś biodra.'

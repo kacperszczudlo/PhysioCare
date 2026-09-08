@@ -127,8 +127,9 @@ class ProtectedMediaServeView(APIView):
             raise Http404
 
         content_type, _encoding = mimetypes.guess_type(absolute)
+        # FileResponse closes the file handle after the response is sent.
         response = FileResponse(
-            open(absolute, 'rb'),
+            open(absolute, 'rb'),  # noqa: SIM115
             content_type=content_type or 'application/octet-stream',
         )
         response['X-Content-Type-Options'] = 'nosniff'

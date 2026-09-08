@@ -9,6 +9,7 @@ from core.permissions import IsPatient
 from notifications.defaults import ensure_default_preferences
 from notifications.keys import CANONICAL_PREF_KEYS
 from notifications.models import DeviceToken, NotificationPreference
+from notifications.renderers import ServerSentEventRenderer
 from notifications.serializers import (
     DeviceTokenDeleteSerializer,
     DeviceTokenSerializer,
@@ -16,7 +17,6 @@ from notifications.serializers import (
     NotificationPreferencePatchSerializer,
     NotificationPreferenceSerializer,
 )
-from notifications.renderers import ServerSentEventRenderer
 from notifications.sse import iter_sse_frames
 
 

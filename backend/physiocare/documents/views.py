@@ -135,8 +135,9 @@ class DocumentDownloadView(APIView):
             raise Http404 from exc
         if not path or not os.path.isfile(path):
             raise Http404
+        # FileResponse closes the file handle after the response is sent.
         response = FileResponse(
-            open(path, 'rb'),
+            open(path, 'rb'),  # noqa: SIM115
             content_type=document.mime_type,
             as_attachment=True,
         )

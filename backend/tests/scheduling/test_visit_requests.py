@@ -134,7 +134,7 @@ def test_upcoming_includes_pending_for_patient(api_client, therapist, patient, t
     api_client.force_authenticate(user=patient.user)
     response = api_client.get('/api/v1/me/visits/?status=upcoming')
     assert response.status_code == status.HTTP_200_OK
-    results = response.data['results'] if 'results' in response.data else response.data
+    results = response.data.get('results', response.data)
     assert len(results) == 1
     assert results[0]['status'] == VisitStatus.PENDING_APPROVAL
 
@@ -144,7 +144,7 @@ def test_patient_can_list_therapist_therapy_types(api_client, patient, therapy_t
     api_client.force_authenticate(user=patient.user)
     response = api_client.get('/api/v1/me/therapy-types/')
     assert response.status_code == status.HTTP_200_OK
-    results = response.data['results'] if 'results' in response.data else response.data
+    results = response.data.get('results', response.data)
     assert any(item['id'] == str(therapy_type.id) for item in results)
 
 

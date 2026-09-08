@@ -5,8 +5,11 @@ Kody / grupy zgodne z rozporządzeniem MZ (interpretacja 2024 z raportu KIF).
 
 from __future__ import annotations
 
-from therapists.competence import FIZJO_SPEC_EXTRA_GROUPS, MAGISTER_DEVICE_GROUPS, QualificationLevel
-
+from therapists.competence import (
+    FIZJO_SPEC_EXTRA_GROUPS,
+    MAGISTER_DEVICE_GROUPS,
+    QualificationLevel,
+)
 
 # min_qualification: MAGISTER | FIZJO_SPEC
 DEVICE_CATALOG: tuple[dict, ...] = (
