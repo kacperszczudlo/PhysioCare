@@ -10,11 +10,7 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { PhoneField } from '@/components/ui/PhoneField'
 import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
-import {
-  getAddressError,
-  getBioError,
-  getCourseError,
-} from '@/lib/fieldPolicy'
+import { getAddressError, getBioError, getCourseError } from '@/lib/fieldPolicy'
 import { useAuthenticatedMediaUrl } from '@/lib/authMedia'
 import { formatPhoneForApi, getPhoneError, parseStoredPhone } from '@/lib/phonePolicy'
 import './ProfilePage.css'
@@ -385,7 +381,9 @@ export function ProfilePage() {
                 <span className="ui-field__label">Biogram</span>
                 <textarea
                   className={
-                    fieldErrors.bio ? 'profile-textarea profile-textarea--error' : 'profile-textarea'
+                    fieldErrors.bio
+                      ? 'profile-textarea profile-textarea--error'
+                      : 'profile-textarea'
                   }
                   value={bio}
                   onChange={(e) => {

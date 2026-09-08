@@ -33,9 +33,7 @@ export function parseStoredPhone(value: string | null | undefined): PhoneParts {
 
   const digits = digitsOnly(raw)
   const country = findCountryByDial(digits) ?? getDefaultCountry()
-  const national = digits.startsWith(country.dial)
-    ? digits.slice(country.dial.length)
-    : digits
+  const national = digits.startsWith(country.dial) ? digits.slice(country.dial.length) : digits
 
   return { countryCode: country.code, nationalNumber: national }
 }

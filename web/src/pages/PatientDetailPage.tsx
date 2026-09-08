@@ -343,10 +343,7 @@ export function PatientDetailPage() {
               <div className="patient-notes__timeline">
                 {notesLoading ? <p className="patient-muted">Ładowanie notatek…</p> : null}
                 {!notesLoading && notes.length === 0 ? (
-                  <EmptyState
-                    title="Brak notatek"
-                    description="Dodaj pierwszą notatkę z wizyty."
-                  />
+                  <EmptyState title="Brak notatek" description="Dodaj pierwszą notatkę z wizyty." />
                 ) : null}
                 {!notesLoading && notes.length > 0 ? (
                   <ol className="patient-notes__list">

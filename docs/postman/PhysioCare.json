@@ -3493,7 +3493,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"visit_reminders\": true,\n  \"visit_changes\": true,\n  \"waitlist\": false,\n  \"exercise_reminders\": true,\n  \"new_documents\": true\n}",
+              "raw": "{\n  \"visit_reminder\": true,\n  \"visit_change\": true,\n  \"waitlist\": false,\n  \"exercise_reminder\": true,\n  \"new_document\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3509,6 +3509,114 @@
                 "exec": [
                   "pm.test('Status 200', function () {",
                   "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST device token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/device-tokens/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "device-tokens"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expo_push_token\": \"ExponentPushToken[demo]\",\n  \"platform\": \"android\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE device token",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/device-tokens/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "device-tokens"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expo_push_token\": \"ExponentPushToken[demo]\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', function () {",
+                  "  pm.response.to.have.status(204);",
                   "});"
                 ]
               }

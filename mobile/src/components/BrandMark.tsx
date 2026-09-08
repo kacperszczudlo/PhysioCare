@@ -1,4 +1,12 @@
-import { Image, StyleSheet, Text, View, type ImageStyle, type StyleProp, type ViewStyle } from 'react-native'
+import {
+  Image,
+  StyleSheet,
+  Text,
+  View,
+  type ImageStyle,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native'
 
 import { colors, space, typography } from '@/theme/tokens'
 
@@ -14,8 +22,16 @@ const LOGO = require('../../assets/brand/logo.png')
 const SYGNET = require('../../assets/brand/sygnet.png')
 
 const SIZES = {
-  logo: { sm: { width: 180, height: 100 }, md: { width: 240, height: 130 }, lg: { width: 300, height: 170 } },
-  sygnet: { sm: { width: 48, height: 48 }, md: { width: 56, height: 56 }, lg: { width: 72, height: 72 } },
+  logo: {
+    sm: { width: 180, height: 100 },
+    md: { width: 240, height: 130 },
+    lg: { width: 300, height: 170 },
+  },
+  sygnet: {
+    sm: { width: 48, height: 48 },
+    md: { width: 56, height: 56 },
+    lg: { width: 72, height: 72 },
+  },
 } as const
 
 export function BrandMark({ variant = 'logo', size = 'md', tagline, style }: BrandMarkProps) {

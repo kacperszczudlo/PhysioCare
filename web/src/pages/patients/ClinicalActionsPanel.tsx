@@ -353,8 +353,9 @@ export function ClinicalActionsPanel({
         <div>
           <h2>Kompetencje kliniczne</h2>
           <p className="clinical-actions__lead">
-            Kierowanie pośrednie, wyroby (e-ZWM), odmowa zlecenia i Recepta na Ruch — bez ordynacji leków.
-            Wystawione wpisy są od razu widoczne pacjentowi w aplikacji (zakładka Dokumentacja).
+            Kierowanie pośrednie, wyroby (e-ZWM), odmowa zlecenia i Recepta na Ruch — bez ordynacji
+            leków. Wystawione wpisy są od razu widoczne pacjentowi w aplikacji (zakładka
+            Dokumentacja).
           </p>
         </div>
       </header>
@@ -375,13 +376,18 @@ export function ClinicalActionsPanel({
               aria-controls={`${baseId}-panel-${item.id}`}
               tabIndex={selected ? 0 : -1}
               className={
-                selected ? 'clinical-actions__tab clinical-actions__tab--active' : 'clinical-actions__tab'
+                selected
+                  ? 'clinical-actions__tab clinical-actions__tab--active'
+                  : 'clinical-actions__tab'
               }
               onClick={() => setTab(item.id)}
             >
               <span>{item.label}</span>
               {item.count > 0 ? (
-                <span className="clinical-actions__tab-count" aria-label={`${item.count} w historii`}>
+                <span
+                  className="clinical-actions__tab-count"
+                  aria-label={`${item.count} w historii`}
+                >
                   {item.count}
                 </span>
               ) : null}
@@ -398,7 +404,10 @@ export function ClinicalActionsPanel({
       >
         {tab === 'recommend' ? (
           <>
-            <form className="clinical-actions__compose" onSubmit={(e) => void submitRecommendation(e)}>
+            <form
+              className="clinical-actions__compose"
+              onSubmit={(e) => void submitRecommendation(e)}
+            >
               <div className="clinical-actions__compose-head">
                 <h3>Nowa rekomendacja</h3>
                 <p className="clinical-actions__hint">
@@ -900,7 +909,8 @@ export function ClinicalActionsPanel({
                       [{item.group}] {item.name}
                     </option>
                   ))}
-                  {!allowedDevices.some((item) => item.code === editDeviceCode) && editDeviceCode ? (
+                  {!allowedDevices.some((item) => item.code === editDeviceCode) &&
+                  editDeviceCode ? (
                     <option value={editDeviceCode}>{editDeviceCode} (obecny)</option>
                   ) : null}
                 </select>

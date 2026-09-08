@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from 'expo-router'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
@@ -10,6 +10,9 @@ import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { BrandMark } from '@/components/BrandMark'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
 import { formatDateTime, formatTimeRange } from '@/lib/format'
+import { isDashboardRealtimeEvent } from '@/realtime/types'
+import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
+import { useSilentPoll } from '@/realtime/useSilentPoll'
 import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
 export default function DashboardScreen() {
@@ -21,9 +24,12 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const softReloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const load = useCallback(async () => {
-    setError(null)
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) {
+      setError(null)
+    }
     try {
       const [upcoming, today] = await Promise.all([
         patientApi.getVisits('upcoming'),
@@ -31,8 +37,13 @@ export default function DashboardScreen() {
       ])
       setVisits(upcoming)
       setExercises(today)
+      if (opts?.silent) {
+        setError(null)
+      }
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się pobrać pulpitu.'))
+      if (!opts?.silent) {
+        setError(getErrorMessage(err, 'Nie udało się pobrać pulpitu.'))
+      }
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -45,6 +56,38 @@ export default function DashboardScreen() {
       void load()
     }, [load]),
   )
+
+  useRealtimeEvents(
+    useCallback(
+      (event) => {
+        if (!isDashboardRealtimeEvent(event)) {
+          return
+        }
+        if (softReloadTimer.current != null) {
+          clearTimeout(softReloadTimer.current)
+        }
+        softReloadTimer.current = setTimeout(() => {
+          softReloadTimer.current = null
+          void load({ silent: true })
+        }, 250)
+      },
+      [load],
+    ),
+  )
+
+  useSilentPoll(
+    useCallback(() => {
+      void load({ silent: true })
+    }, [load]),
+  )
+
+  useEffect(() => {
+    return () => {
+      if (softReloadTimer.current != null) {
+        clearTimeout(softReloadTimer.current)
+      }
+    }
+  }, [])
 
   async function onToggleExercise(item: TodayExercise) {
     if (busyId) {
@@ -160,9 +203,7 @@ export default function DashboardScreen() {
               </Pressable>
               <Pressable
                 style={styles.exerciseBody}
-                onPress={() =>
-                  router.push({ pathname: '/exercise/[id]', params: { id: item.id } })
-                }
+                onPress={() => router.push({ pathname: '/exercise/[id]', params: { id: item.id } })}
                 accessibilityRole="button"
                 accessibilityLabel={`Szczegóły: ${item.exercise_title}`}
               >

@@ -24,6 +24,7 @@ export function ProtectedRoute() {
 
 export function GuestRoute() {
   const { isAuthenticated, isLoading } = useAuth()
+  const location = useLocation()
 
   if (isLoading) {
     return (
@@ -34,7 +35,8 @@ export function GuestRoute() {
     )
   }
 
-  if (isAuthenticated) {
+  const isPasswordReset = location.pathname === '/reset' || location.pathname === '/password-reset'
+  if (isAuthenticated && !isPasswordReset) {
     return <Navigate to="/" replace />
   }
 

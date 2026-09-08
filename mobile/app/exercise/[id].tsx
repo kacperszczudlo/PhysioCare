@@ -156,10 +156,7 @@ export default function ExerciseDetailScreen() {
               {item.categories?.length ? (
                 <View style={styles.tags}>
                   {item.categories.map((category) => (
-                    <View
-                      key={category.id}
-                      style={[styles.tag, tagStyleForKind(category.kind)]}
-                    >
+                    <View key={category.id} style={[styles.tag, tagStyleForKind(category.kind)]}>
                       <Text style={[styles.tagText, tagTextForKind(category.kind)]}>
                         {category.name}
                       </Text>

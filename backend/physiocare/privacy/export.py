@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from documents.models import MedicalDocument
 from exercises.models import ExerciseAssignment
+from notifications.privacy_export import notification_export_payload
 from patients.serializers import ConsentSerializer, MeProfileSerializer
 from privacy.models import Consent
 from scheduling.models import Visit
@@ -27,7 +28,7 @@ def build_patient_export(user, profile) -> dict:
     recommendations = DiagnosticRecommendation.objects.filter(episode__patient=profile)
     refusals = PhysicianOrderRefusal.objects.filter(episode__patient=profile)
 
-    return {
+    payload = {
         'exported_at': timezone.now().isoformat(),
         'profile': MeProfileSerializer(profile).data,
         'consents': ConsentSerializer(consents, many=True).data,
@@ -126,3 +127,5 @@ def build_patient_export(user, profile) -> dict:
             for item in referrals
         ],
     }
+    payload.update(notification_export_payload(user))
+    return payload

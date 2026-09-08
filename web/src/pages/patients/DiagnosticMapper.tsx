@@ -165,9 +165,7 @@ export function DiagnosticMapper({ episodeId }: DiagnosticMapperProps) {
   }
 
   function toggleTarget(id: string) {
-    setTargets((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
-    )
+    setTargets((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]))
   }
 
   async function onSave(event: FormEvent) {
@@ -375,7 +373,10 @@ export function DiagnosticMapper({ episodeId }: DiagnosticMapperProps) {
                           ) : null}
                           <div className="diag-map__char-list">
                             {list.map((item) => (
-                              <label key={item.id} className="diag-map__char diag-map__char--target">
+                              <label
+                                key={item.id}
+                                className="diag-map__char diag-map__char--target"
+                              >
                                 <input
                                   type="checkbox"
                                   checked={targets.includes(item.id)}

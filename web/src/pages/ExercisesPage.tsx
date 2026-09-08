@@ -168,11 +168,7 @@ export function ExercisesPage() {
             placeholder="Tytuł lub fragment instrukcji…"
             autoComplete="off"
           />
-          <div
-            className="exercises-media"
-            role="group"
-            aria-label="Typ pliku"
-          >
+          <div className="exercises-media" role="group" aria-label="Typ pliku">
             <span className="exercises-media__label" id="exercises-media-label">
               Typ pliku
             </span>
@@ -297,10 +293,7 @@ export function ExercisesPage() {
                 <li key={exercise.id} className="exercises-card">
                   <div className="exercises-card__media">
                     {exercise.media_type === 'VIDEO' ? (
-                      <AuthMediaVideo
-                        path={exercise.file_url}
-                        className="exercises-card__player"
-                      />
+                      <AuthMediaVideo path={exercise.file_url} className="exercises-card__player" />
                     ) : null}
                     {exercise.media_type === 'PDF' ? (
                       <AuthMediaPdfLink path={exercise.file_url} className="exercises-card__pdf">

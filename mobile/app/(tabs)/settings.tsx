@@ -1,6 +1,6 @@
 import { Link, useFocusEffect } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { RefreshControl, StyleSheet, Switch, Text, View } from 'react-native'
+import { Linking, Platform, RefreshControl, StyleSheet, Switch, Text, View } from 'react-native'
 
 import { authApi } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
@@ -20,6 +20,12 @@ import {
   isRequiredConsent,
 } from '@/lib/format'
 import { getPasswordError, getPasswordRequirements } from '@/lib/passwordPolicy'
+import {
+  getPushPermissionStatus,
+  isRemotePushSupported,
+  registerAndUploadPushToken,
+  type PushPermissionStatus,
+} from '@/notifications/push'
 import { colors, space, typography } from '@/theme/tokens'
 
 type FeedbackKind = 'notifications' | 'consents' | 'privacy' | 'password'
@@ -34,6 +40,8 @@ export default function SettingsScreen() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [pwdLoading, setPwdLoading] = useState(false)
+  const [pushPermission, setPushPermission] = useState<PushPermissionStatus>('undetermined')
+  const [pushBusy, setPushBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<{ kind: FeedbackKind; message: string } | null>(null)
 
@@ -59,6 +67,7 @@ export default function SettingsScreen() {
       ])
       setConsents(c)
       setPrefs(n)
+      setPushPermission(await getPushPermissionStatus())
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się pobrać ustawień.'))
     } finally {
@@ -77,7 +86,7 @@ export default function SettingsScreen() {
   const prefMap = useMemo(() => {
     const map: Record<string, boolean> = {}
     for (const key of Object.keys(DEFAULT_NOTIFICATION_PREFS)) {
-      map[key] = prefs.find((p) => p.pref_key === key)?.enabled ?? false
+      map[key] = prefs.find((p) => p.pref_key === key)?.enabled ?? true
     }
     for (const p of prefs) {
       map[p.pref_key] = p.enabled
@@ -134,6 +143,33 @@ export default function SettingsScreen() {
     }
   }
 
+  async function enableSystemNotifications() {
+    setError(null)
+    setPushBusy(true)
+    try {
+      if (pushPermission === 'denied') {
+        await Linking.openSettings()
+        return
+      }
+      const token = await registerAndUploadPushToken()
+      const status = await getPushPermissionStatus()
+      setPushPermission(status)
+      if (token) {
+        showSuccess('notifications', 'Powiadomienia systemowe zostały włączone.')
+        return
+      }
+      if (status !== 'granted') {
+        setError('Aby dostawać powiadomienia na telefon, włącz je w ustawieniach systemu.')
+        return
+      }
+      setError('Push działa na fizycznym telefonie w Expo Go lub w buildzie EAS.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nie udało się włączyć powiadomień systemowych.'))
+    } finally {
+      setPushBusy(false)
+    }
+  }
+
   async function exportData() {
     setError(null)
     setFeedback(null)
@@ -182,6 +218,32 @@ export default function SettingsScreen() {
 
       <SectionCard>
         <Text style={styles.sectionTitle}>Powiadomienia</Text>
+        {pushPermission === 'granted' ? (
+          <Text style={styles.muted}>Powiadomienia systemowe są włączone na tym urządzeniu.</Text>
+        ) : !isRemotePushSupported() || pushPermission === 'unsupported' ? (
+          <Text style={styles.muted}>
+            {Platform.OS === 'web'
+              ? 'Push działa w aplikacji na telefonie. Tutaj przypomnienia mogą iść na e-mail.'
+              : 'Expo Go od SDK 53 nie obsługuje zdalnego pusha (szczególnie Android). Zgoda systemowa nic tu nie zmienia — przypomnienia idą na e-mail. Żeby dostać push, zbuduj aplikację: npx expo run:android.'}
+          </Text>
+        ) : (
+          <>
+            <Text style={styles.muted}>
+              Bez zgody systemowej przypomnienia przyjdą na e-mail (o ile dany typ jest włączony
+              poniżej).
+            </Text>
+            <Button
+              title={
+                pushPermission === 'denied'
+                  ? 'Otwórz ustawienia systemu'
+                  : 'Włącz powiadomienia systemowe'
+              }
+              variant="secondary"
+              loading={pushBusy}
+              onPress={() => void enableSystemNotifications()}
+            />
+          </>
+        )}
         {Object.entries(DEFAULT_NOTIFICATION_PREFS).map(([key, label]) => (
           <View key={key} style={styles.switchRow}>
             <Text style={styles.switchLabel}>{label}</Text>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { therapistApi } from '@/api/auth'
@@ -12,14 +12,15 @@ import { CreateExerciseModal } from '@/pages/exercises/CreateExerciseModal'
 import { VisitFormModal } from '@/pages/schedule/VisitFormModal'
 import { AuthMediaImg } from '@/components/AuthMedia'
 import { addDays, formatTime, startOfDay, toDateInputValue } from '@/lib/scheduleTime'
+import { isVisitRealtimeEvent } from '@/realtime/types'
+import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
 import './DashboardPage.css'
 
 const UPCOMING_VISITS_PREVIEW = 5
 
 function greetingForHour(hour: number, firstName?: string): string {
   const name = firstName?.trim()
-  const base =
-    hour < 12 ? 'Dzień dobry' : hour < 18 ? 'Cześć' : 'Dobry wieczór'
+  const base = hour < 12 ? 'Dzień dobry' : hour < 18 ? 'Cześć' : 'Dobry wieczór'
   return name ? `${base}, ${name}` : base
 }
 
@@ -106,16 +107,8 @@ function IconPatients() {
     <svg className="dash-metric__glyph" viewBox="0 0 48 48" aria-hidden="true">
       <circle cx="18" cy="16" r="6" fill="currentColor" opacity="0.18" />
       <circle cx="30" cy="18" r="5" fill="currentColor" opacity="0.12" />
-      <path
-        d="M8 38c1.5-7 6-11 10-11s8.5 4 10 11"
-        fill="currentColor"
-        opacity="0.18"
-      />
-      <path
-        d="M24 38c1-5.5 4.2-8.5 7.5-8.5S38 32 39 38"
-        fill="currentColor"
-        opacity="0.12"
-      />
+      <path d="M8 38c1.5-7 6-11 10-11s8.5 4 10 11" fill="currentColor" opacity="0.18" />
+      <path d="M24 38c1-5.5 4.2-8.5 7.5-8.5S38 32 39 38" fill="currentColor" opacity="0.12" />
       <circle cx="18" cy="16" r="4.5" fill="none" stroke="currentColor" strokeWidth="2" />
       <circle cx="30" cy="18" r="3.5" fill="none" stroke="currentColor" strokeWidth="2" />
     </svg>
@@ -153,7 +146,13 @@ function IconClock() {
   return (
     <svg className="dash-visit__ico" viewBox="0 0 20 20" aria-hidden="true">
       <circle cx="10" cy="10" r="7.25" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M10 6.5V10l2.5 1.8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path
+        d="M10 6.5V10l2.5 1.8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -185,6 +184,8 @@ export function DashboardPage() {
   const [reloadToken, setReloadToken] = useState(0)
   const [createExerciseOpen, setCreateExerciseOpen] = useState(false)
   const [createVisitOpen, setCreateVisitOpen] = useState(false)
+  const showLoadingRef = useRef(true)
+  const softReloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const today = useMemo(() => startOfDay(now), [now])
   const greeting = greetingForHour(now.getHours(), user?.first_name)
@@ -197,14 +198,48 @@ export function DashboardPage() {
   }, [visits])
 
   const reload = useCallback(() => {
+    showLoadingRef.current = true
     setReloadToken((value) => value + 1)
+  }, [])
+
+  const softReload = useCallback(() => {
+    showLoadingRef.current = false
+    setReloadToken((value) => value + 1)
+  }, [])
+
+  useRealtimeEvents(
+    useCallback(
+      (event) => {
+        if (!isVisitRealtimeEvent(event)) {
+          return
+        }
+        if (softReloadTimer.current != null) {
+          clearTimeout(softReloadTimer.current)
+        }
+        softReloadTimer.current = setTimeout(() => {
+          softReloadTimer.current = null
+          softReload()
+        }, 250)
+      },
+      [softReload],
+    ),
+  )
+
+  useEffect(() => {
+    return () => {
+      if (softReloadTimer.current != null) {
+        clearTimeout(softReloadTimer.current)
+      }
+    }
   }, [])
 
   useEffect(() => {
     let cancelled = false
 
     async function load() {
-      setLoading(true)
+      if (showLoadingRef.current) {
+        setLoading(true)
+      }
       setError(null)
       try {
         const [statsData, visitsData] = await Promise.all([
@@ -223,6 +258,7 @@ export function DashboardPage() {
         }
       } finally {
         if (!cancelled) {
+          showLoadingRef.current = true
           setLoading(false)
         }
       }
@@ -298,9 +334,7 @@ export function DashboardPage() {
                 <span className="dash-metric__value">{stats.patients_total}</span>
                 <span className="dash-metric__label">Pacjenci</span>
                 <span className="dash-metric__hint">
-                  {stats.patients_total === 0
-                    ? 'Dodaj pierwszego pacjenta'
-                    : 'W Twojej opiece'}
+                  {stats.patients_total === 0 ? 'Dodaj pierwszego pacjenta' : 'W Twojej opiece'}
                 </span>
               </span>
             </Link>
@@ -328,7 +362,9 @@ export function DashboardPage() {
                   <h2 id="dash-visits-heading" className="dash-panel__title">
                     Najbliższe wizyty
                   </h2>
-                  <p className="dash-panel__desc">Kolejne zaplanowane terminy - dziś, jutro i dalej.</p>
+                  <p className="dash-panel__desc">
+                    Kolejne zaplanowane terminy - dziś, jutro i dalej.
+                  </p>
                 </div>
                 <Link className="dash-panel__link" to="/schedule">
                   Pełny harmonogram
@@ -398,7 +434,10 @@ export function DashboardPage() {
               )}
             </section>
 
-            <section className="dash-panel dash-panel--actions" aria-labelledby="dash-actions-heading">
+            <section
+              className="dash-panel dash-panel--actions"
+              aria-labelledby="dash-actions-heading"
+            >
               <div className="dash-panel__head">
                 <div>
                   <h2 id="dash-actions-heading" className="dash-panel__title">

@@ -71,16 +71,13 @@ export default function TherapistPublicScreen() {
   }
 
   const fullName = `${therapist.first_name} ${therapist.last_name}`
-  const initials = `${therapist.first_name?.[0] ?? ''}${therapist.last_name?.[0] ?? ''}`.toUpperCase()
+  const initials =
+    `${therapist.first_name?.[0] ?? ''}${therapist.last_name?.[0] ?? ''}`.toUpperCase()
   const showAvatar = Boolean(avatarUri) && !avatarFailed && !avatarLoadError
   const qualification =
-    therapist.qualification_label
-    ?? therapist.competences?.qualification_label
-    ?? null
+    therapist.qualification_label ?? therapist.competences?.qualification_label ?? null
   const experienceYears =
-    therapist.experience_years
-    ?? therapist.competences?.experience_years
-    ?? null
+    therapist.experience_years ?? therapist.competences?.experience_years ?? null
 
   return (
     <>
@@ -124,10 +121,10 @@ export default function TherapistPublicScreen() {
               {experienceYears != null ? ` · ${yearsLabel(experienceYears)}` : ''}
             </Text>
 
-            {(therapist.competences.can_plan_therapy
-              || therapist.competences.can_supervise
-              || therapist.competences.is_fizjo_spec
-              || therapist.competences.device_groups.length > 0) ? (
+            {therapist.competences.can_plan_therapy ||
+            therapist.competences.can_supervise ||
+            therapist.competences.is_fizjo_spec ||
+            therapist.competences.device_groups.length > 0 ? (
               <View style={styles.chipRow}>
                 {therapist.competences.can_plan_therapy ? (
                   <Text style={[styles.chip, styles.chipOk]}>Planowanie terapii</Text>

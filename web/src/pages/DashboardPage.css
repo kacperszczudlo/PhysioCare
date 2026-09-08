@@ -100,18 +100,15 @@
 }
 
 .dash-metric--visits {
-  background:
-    linear-gradient(145deg, oklch(0.97 0.03 113), var(--color-surface-raised) 55%);
+  background: linear-gradient(145deg, oklch(0.97 0.03 113), var(--color-surface-raised) 55%);
 }
 
 .dash-metric--patients {
-  background:
-    linear-gradient(145deg, oklch(0.97 0.025 55), var(--color-surface-raised) 55%);
+  background: linear-gradient(145deg, oklch(0.97 0.025 55), var(--color-surface-raised) 55%);
 }
 
 .dash-metric--exercises {
-  background:
-    linear-gradient(145deg, oklch(0.97 0.03 145), var(--color-surface-raised) 55%);
+  background: linear-gradient(145deg, oklch(0.97 0.03 145), var(--color-surface-raised) 55%);
 }
 
 .dash-metric__icon {

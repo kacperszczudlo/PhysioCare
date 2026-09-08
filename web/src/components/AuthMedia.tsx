@@ -26,9 +26,7 @@ export function AuthMediaVideo({ path, className }: AuthMediaVideoProps) {
   if (!url) {
     return null
   }
-  return (
-    <video className={className} src={url} controls preload="metadata" playsInline />
-  )
+  return <video className={className} src={url} controls preload="metadata" playsInline />
 }
 
 type AuthMediaPdfLinkProps = {

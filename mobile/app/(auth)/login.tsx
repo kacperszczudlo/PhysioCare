@@ -96,6 +96,11 @@ const styles = StyleSheet.create({
     gap: space.sm,
     marginTop: space.base,
   },
-  link: { color: colors.primary, fontWeight: '600', fontSize: typography.sm, textDecorationLine: 'underline' },
+  link: {
+    color: colors.primary,
+    fontWeight: '600',
+    fontSize: typography.sm,
+    textDecorationLine: 'underline',
+  },
   dot: { color: colors.faint },
 })

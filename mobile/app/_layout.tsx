@@ -8,7 +8,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider, useAuth } from '@/auth/AuthContext'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { NetworkProvider } from '@/network/NetworkContext'
+import { configureNotificationHandler } from '@/notifications/push'
+import { NotificationObserver } from '@/notifications/NotificationObserver'
+import { RealtimeObserver } from '@/realtime/RealtimeObserver'
 import { colors } from '@/theme/tokens'
+
+configureNotificationHandler()
 
 function RootNavigator() {
   const { isLoading } = useAuth()
@@ -67,6 +72,8 @@ export default function RootLayout() {
       <KeyboardProvider preload={false}>
         <NetworkProvider>
           <AuthProvider>
+            <NotificationObserver />
+            <RealtimeObserver />
             <RootNavigator />
           </AuthProvider>
         </NetworkProvider>

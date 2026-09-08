@@ -288,9 +288,7 @@ export function CreateExerciseModal({
               value={instruction}
               onChange={(e) => setInstruction(e.target.value)}
               rows={5}
-              placeholder={
-                'Krok po kroku: pozycja wyjściowa, ruch, tempo, oddech, na co uważać…'
-              }
+              placeholder={'Krok po kroku: pozycja wyjściowa, ruch, tempo, oddech, na co uważać…'}
             />
             <span className="ui-field__hint">
               Krótko i konkretnie - pacjent czyta to na telefonie przed ćwiczeniem.
@@ -402,7 +400,10 @@ export function CreateExerciseModal({
           <section className="ex-create__section" aria-labelledby="ex-create-cats">
             <div className="ex-create__section-head">
               <h3 id="ex-create-cats">Kategorie</h3>
-              <p>Oznacz typ, okolicę, mięsień i ewentualne wskazanie - ułatwia filtrowanie w katalogu.</p>
+              <p>
+                Oznacz typ, okolicę, mięsień i ewentualne wskazanie - ułatwia filtrowanie w
+                katalogu.
+              </p>
             </div>
             {KIND_ORDER.map((kind) => {
               const list = groupedCategories[kind]
@@ -416,11 +417,7 @@ export function CreateExerciseModal({
                     <h4>{meta.title}</h4>
                     <p>{meta.hint}</p>
                   </div>
-                  <div
-                    className="ex-create__chips"
-                    role="group"
-                    aria-label={meta.title}
-                  >
+                  <div className="ex-create__chips" role="group" aria-label={meta.title}>
                     {list.map((category) => {
                       const selected = selectedCategories.includes(category.id)
                       return (

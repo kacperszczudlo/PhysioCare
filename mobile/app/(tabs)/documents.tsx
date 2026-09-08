@@ -1,5 +1,5 @@
 import { useFocusEffect } from 'expo-router'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Linking,
   Pressable,
@@ -17,6 +17,9 @@ import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { downloadAuthenticatedMediaToCache } from '@/lib/authMedia'
 import { formatDate } from '@/lib/format'
+import { isDocumentRealtimeEvent } from '@/realtime/types'
+import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
+import { useSilentPoll } from '@/realtime/useSilentPoll'
 import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
 type FilterKey = 'all' | ClinicalDocumentKind
@@ -50,14 +53,24 @@ export default function DocumentsScreen() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const filterRef = useRef(filter)
+  filterRef.current = filter
+  const softReloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const load = useCallback(async (next: FilterKey) => {
-    setError(null)
+  const load = useCallback(async (next: FilterKey, opts?: { silent?: boolean }) => {
+    if (!opts?.silent) {
+      setError(null)
+    }
     try {
       const data = await patientApi.getClinicalDocuments(next === 'all' ? undefined : next)
       setItems(data)
+      if (opts?.silent) {
+        setError(null)
+      }
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się pobrać dokumentacji.'))
+      if (!opts?.silent) {
+        setError(getErrorMessage(err, 'Nie udało się pobrać dokumentacji.'))
+      }
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -70,6 +83,38 @@ export default function DocumentsScreen() {
       void load(filter)
     }, [filter, load]),
   )
+
+  useRealtimeEvents(
+    useCallback(
+      (event) => {
+        if (!isDocumentRealtimeEvent(event)) {
+          return
+        }
+        if (softReloadTimer.current != null) {
+          clearTimeout(softReloadTimer.current)
+        }
+        softReloadTimer.current = setTimeout(() => {
+          softReloadTimer.current = null
+          void load(filterRef.current, { silent: true })
+        }, 250)
+      },
+      [load],
+    ),
+  )
+
+  useSilentPoll(
+    useCallback(() => {
+      void load(filterRef.current, { silent: true })
+    }, [load]),
+  )
+
+  useEffect(() => {
+    return () => {
+      if (softReloadTimer.current != null) {
+        clearTimeout(softReloadTimer.current)
+      }
+    }
+  }, [])
 
   function switchFilter(next: FilterKey) {
     if (next === filter) {
@@ -119,9 +164,7 @@ export default function DocumentsScreen() {
             />
           }
         >
-          {error ? (
-            <ErrorBanner message={error} onRetry={() => void load(filter)} />
-          ) : null}
+          {error ? <ErrorBanner message={error} onRetry={() => void load(filter)} /> : null}
 
           {items.length === 0 ? (
             <EmptyState
@@ -136,9 +179,7 @@ export default function DocumentsScreen() {
                   key={`${doc.kind}:${doc.id}`}
                   doc={doc}
                   expanded={open}
-                  onToggle={() =>
-                    setExpandedId(open ? null : `${doc.kind}:${doc.id}`)
-                  }
+                  onToggle={() => setExpandedId(open ? null : `${doc.kind}:${doc.id}`)}
                 />
               )
             })
@@ -249,11 +290,7 @@ function DetailRows({ doc }: { doc: ClinicalDocumentItem }) {
   )
 }
 
-function pushRow(
-  rows: { label: string; value: string }[],
-  label: string,
-  value: unknown,
-) {
+function pushRow(rows: { label: string; value: string }[], label: string, value: unknown) {
   const text = detailText(value).trim()
   if (!text) {
     return

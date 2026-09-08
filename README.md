@@ -99,6 +99,20 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+Live UI (SSE, `GET /api/v1/me/events/`) działa też na `runserver`. Przy wielu równoległych streamach (demo/prod) preferuj ASGI:
+
+```powershell
+cd backend\physiocare
+uvicorn physiocare.asgi:application --reload --host 127.0.0.1 --port 8000
+```
+
+Przypomnienia (wizyta 24h/2h, ćwiczenia na dziś) wymagają **drugiego** procesu — `runserver` / uvicorn ich sam nie odlicza:
+
+```powershell
+cd backend\physiocare
+python manage.py run_notification_scheduler
+```
+
 **Reset bazy dev (po zmianie migracji):**
 
 ```powershell
@@ -189,7 +203,20 @@ Referencja wizualna ekranów: plik `mockup_systemu_fizjoterapii.tsx` (poza repo 
 **Faza 0-3** - dokumentacja, modele, REST API, Postman, testy backendu.  
 **Faza 4 (branch `feat/web`)** - panel webowy terapeuty: auth, pulpit, harmonogram, pacjenci, ćwiczenia, profil (4.1-4.7).  
 **Faza 5 (branch `feat/mobile`)** - aplikacja mobilna pacjenta (Expo): auth RODO, pulpit, wizyty, profil, stack szczegółów (5.1-5.7).  
-**Faza 6 (branch `feat/refactor`)** - Ruff / ESLint / Prettier, monitoring (logi JSON + latency), checklist E2E, przewodnik wdrożenia, konspekt prezentacji.
+**Faza 6 (branch `feat/refactor`)** - Ruff / ESLint / Prettier, monitoring (logi JSON + latency), checklist E2E, przewodnik wdrożenia, konspekt prezentacji.  
+**Live UI (SSE)** - `GET /api/v1/me/events/`: Harmonogram/Pulpit web + Pulpit/Wizyty/Dokumenty/ćwiczenia mobile; demo: uvicorn ASGI (patrz [docs/deployment.md](docs/deployment.md), [docs/e2e-checklist.md](docs/e2e-checklist.md#live-ui-sse)).
+
+## Na później (skalowanie)
+
+Model domenowy już łączy wielu terapeutów z wieloma pacjentami (wizyta = para terapeuta–pacjent). Przy większym ruchu i live UI (SSE: harmonogram / wizyty / dokumenty / ćwiczenia) bolą nie relacje N×M, tylko **infrastruktura połączeń**:
+
+| Ból | Dlaczego | Kierunek rozwiązania |
+|-----|----------|----------------------|
+| Wiele otwartych SSE naraz | Sync Gunicorn trzyma workera na czas streamu → reszta API zwalnia | Uruchamiać API na **ASGI (uvicorn/daphne)**, nie na samym WSGI pod długie streamy |
+| Kilka workerów / instancji | Event wyemitowany w jednym procesie nie dociera do streamu w innym | **Redis pub/sub** (lub równoważny bus) zamiast kolejki tylko w pamięci procesu |
+| Demo vs produkcja | Mało równoległych sesji = in-memory wystarczy | Na demo: ASGI + 1 instancja; przy wzroście użytkowników: Redis + monitoring liczby streamów |
+
+Kontrakt eventów (sygnał per `user_id` → klient robi refetch REST) zostaje — nie trzeba przebudowywać feature’u pod klinikę z wieloma fizjo i pacjentami, tylko podnieść warstwę realtime.
 
 ## Licencja
 

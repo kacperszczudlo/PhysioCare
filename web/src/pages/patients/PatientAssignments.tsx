@@ -190,7 +190,12 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
                     </AuthMediaPdfLink>
                   ) : null}
                   <div className="patient-assignments__actions">
-                    <Button type="button" size="sm" variant="secondary" onClick={() => openEdit(assignment)}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => openEdit(assignment)}
+                    >
                       Okres
                     </Button>
                     <Button
@@ -215,7 +220,9 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
       <Modal
         open={editTarget !== null}
         title="Edytuj zalecenie"
-        description={editTarget ? `„${editTarget.exercise_title}” - dawkowanie i okres.` : undefined}
+        description={
+          editTarget ? `„${editTarget.exercise_title}” - dawkowanie i okres.` : undefined
+        }
         onClose={() => setEditTarget(null)}
       >
         <form className="ui-modal__form" onSubmit={(e) => void onSave(e)}>
@@ -250,7 +257,12 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
             </p>
           ) : null}
           <div className="ui-modal__actions">
-            <Button type="button" variant="secondary" onClick={() => setEditTarget(null)} disabled={busy}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setEditTarget(null)}
+              disabled={busy}
+            >
               Anuluj
             </Button>
             <Button type="submit" loading={busy}>
@@ -277,7 +289,12 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
             </p>
           ) : null}
           <div className="ui-modal__actions">
-            <Button type="button" variant="secondary" onClick={() => setDeleteTarget(null)} disabled={busy}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setDeleteTarget(null)}
+              disabled={busy}
+            >
               Anuluj
             </Button>
             <Button type="button" onClick={() => void onDelete()} loading={busy}>

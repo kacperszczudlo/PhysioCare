@@ -34,6 +34,9 @@ SECRET_KEY = require_env('DJANGO_SECRET_KEY')
 DEBUG = env_bool('DJANGO_DEBUG', 'false')
 
 ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
+if DEBUG and '*' not in ALLOWED_HOSTS:
+    # Telefon w LAN (FunBox / hotspot) woła Django po IP laptopa.
+    ALLOWED_HOSTS = [*ALLOWED_HOSTS, '*']
 
 # Django admin: disable on public demo hosts, or restrict by REMOTE_ADDR.
 ADMIN_ENABLED = env_bool('DJANGO_ADMIN_ENABLED', 'true')
@@ -94,6 +97,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'physiocare.wsgi.application'
+ASGI_APPLICATION = 'physiocare.asgi.application'
 
 
 def postgres_database(*, db_name=None, test_db_name=None):
@@ -277,6 +281,17 @@ EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', 'true')
 
 PASSWORD_RESET_TIMEOUT = int(os.environ.get('PASSWORD_RESET_TIMEOUT', '1800'))
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173').rstrip('/')
+EXPO_PUSH_URL = os.environ.get(
+    'EXPO_PUSH_URL',
+    'https://exp.host/--/api/v2/push/send',
+)
+EXPO_PUSH_TIMEOUT = int(os.environ.get('EXPO_PUSH_TIMEOUT', '10'))
+NOTIFICATION_SCHEDULER_INTERVAL_SECONDS = int(
+    os.environ.get('NOTIFICATION_SCHEDULER_INTERVAL_SECONDS', '900'),
+)
+# SSE (/api/v1/me/events/): heartbeat + optional frame cap (tests). 0 = unlimited.
+SSE_HEARTBEAT_SECONDS = int(os.environ.get('SSE_HEARTBEAT_SECONDS', '20'))
+SSE_MAX_FRAMES = int(os.environ.get('SSE_MAX_FRAMES', '0'))
 
 # Optional error alerting (production). Without DSN, errors stay in structured logs only.
 _SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()

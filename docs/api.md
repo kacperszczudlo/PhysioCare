@@ -1,10 +1,10 @@
 # REST API — PhysioCare (kontrakt)
 
-> Wersja dokumentu: **0.4**.  
+> Wersja dokumentu: **0.5**.  
 > Kolekcja Postman: [`postman/PhysioCare.json`](postman/PhysioCare.json) · przewodnik: [`postman-testing.md`](postman-testing.md).
 
 **Base URL:** `http://localhost:8000/api/v1`  
-**Format:** JSON (`Content-Type: application/json`)  
+**Format:** JSON (`Content-Type: application/json`); wyjątek: stream realtime → `text/event-stream` (SSE), payload eventu nadal JSON.  
 **Auth:** cookies `access_token` / `refresh_token` (httpOnly) **albo** `Authorization: Bearer <access_token>`.  
 Login, rejestracja i refresh zwracają `access` + `refresh` w JSON, gdy klient nie wyśle `token_delivery: "cookie"` (tak działa mobile / SecureStore). Panel webowy prosi o dostawę cookie-only, żeby JWT nie lądował w ciele odpowiedzi.
 
@@ -116,7 +116,7 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 | POST | `/me/profile/avatar` | Upload avatara (`multipart`, pole `file`: JPEG/PNG/WebP) |
 | GET | `/me/consents` | Lista zgód |
 | PATCH | `/me/consents/optional` | Marketing, badania |
-| POST | `/me/data-export` | Eksport RODO (profil, zgody, wizyty, epizody, dokumenty, ćwiczenia) |
+| POST | `/me/data-export` | Eksport RODO (profil, zgody, wizyty, epizody, dokumenty, ćwiczenia, preferencje i logi powiadomień) |
 | POST | `/me/account-deletion-request` | Wniosek o usunięcie (zapis + dezaktywacja konta) |
 
 ---
@@ -278,8 +278,106 @@ Wymiary `type` / `region` / `muscle` / `injury` łączone są **AND** (ćwiczeni
 
 | Metoda | Endpoint | Opis |
 |--------|----------|------|
-| GET | `/me/notification-preferences` | Preferencje |
+| GET | `/me/notification-preferences` | Preferencje (kanoniczne klucze; brakujące są dosiewane jako włączone) |
 | PATCH | `/me/notification-preferences` | Aktualizacja switchy |
+
+Kanoniczne `pref_key`: `visit_reminder`, `visit_change`, `waitlist`, `exercise_reminder`, `new_document`.
+
+PATCH przyjmuje płaską mapę `{ "visit_reminder": false }` albo `{ "preferences": { ... } }`. Nieznane klucze zwracają `400`.
+
+| Metoda | Endpoint | Opis |
+|--------|----------|------|
+| GET | `/me/device-tokens` | Aktywne tokeny Expo pacjenta |
+| POST | `/me/device-tokens` | Rejestracja / odświeżenie tokenu (`expo_push_token`, opcjonalnie `platform`: `ios` / `android` / `unknown`) |
+| DELETE | `/me/device-tokens` | Dezaktywacja tokenu (body: `expo_push_token`) |
+
+Wysyłka: zdarzenia domenowe (`visit_change`, `new_document`, nowe przypisanie ćwiczeń) idą od razu. Push Expo, gdy jest aktywny token; w przeciwnym razie e-mail.
+
+Przypomnienia `visit_reminder` (okna 24h i 2h, ±30 min) oraz `exercise_reminder` (raz dziennie, pierwsza tura po północy) odpala **osobny proces**:
+
+`python manage.py run_notification_scheduler`
+
+Domyślnie co 900 s (`NOTIFICATION_SCHEDULER_INTERVAL_SECONDS`). Jedna tura: `--once`. Deduplikacja w bazie — bezpieczne wielokrotne odpalenie. Nie wpinaj schedulera w workery Gunicorn (zdublowałby ticki).
+
+Klucz `waitlist` jest w kontrakcie, ale w domenie nie ma jeszcze listy rezerwowej.
+
+---
+
+## Realtime — SSE (`/me/events/`)
+
+Live odświeżanie UI (bez F5 / bez zmiany zakładki). **Nie zastępuje** push Expo ani e-mail — te kanały zostają na tło / zamkniętą apkę.
+
+### GET `/me/events/`
+
+| | |
+|--|--|
+| Auth | Wymagany: cookie **lub** `Authorization: Bearer` (jak reszta `/me/`) |
+| Role | `THERAPIST` \| `PATIENT` |
+| Accept | `text/event-stream` (EventSource / klient SSE; inaczej DRF → 406) |
+| Odpowiedź | `200` + `Content-Type: text/event-stream` (długie połączenie) |
+| Cel | Sygnał „zmieniło się X” → klient robi **refetch** istniejącego REST (invalidate + reload) |
+
+Klient utrzymuje jedno połączenie na sesję (po zalogowaniu). Po utracie sieci / wygaśnięciu access: refresh tokenu → ponowne `GET /me/events/`.
+
+#### Format ramki SSE
+
+```
+event: <type>
+data: {"type":"<type>","resource_id":"<uuid|null>","at":"<ISO8601>"}
+
+```
+
+- `event` i pole `type` w JSON są zawsze takie same.
+- `resource_id`: UUID zasobu domenowego albo `null` (np. `ping`).
+- Brak pełnego stanu kalendarza / list w streamie — tylko sygnał.
+
+#### Typy eventów (v1)
+
+| `type` | Kiedy | Odbiorcy | Co refetchuje klient |
+|--------|--------|----------|----------------------|
+| `visit.scheduled` | Utworzenie wizyty / prośba o termin | Terapeuta wizyty + pacjent | Web: Harmonogram, Pulpit · Mobile: Wizyty, Pulpit |
+| `visit.rescheduled` | Zmiana terminu | j.w. | j.w. |
+| `visit.cancelled` | Odwołanie | j.w. | j.w. |
+| `visit.approved` | Zatwierdzenie pending | j.w. | j.w. |
+| `visit.rejected` | Odrzucenie pending | j.w. | j.w. |
+| `document.created` | Nowy PDF lub pozycja skrzynki klinicznej (kierowanie, wyrób ISSUED, odmowa, Recepta ISSUED) | Pacjent-właściciel | Mobile: Dokumenty |
+| `exercise.assigned` | Nowe przypisanie ćwiczenia | Pacjent | Mobile: Pulpit („Zalecenia na dziś”) |
+| `ping` | Heartbeat serwera (ok. co 15–30 s) | Abonent streamu | Nic (utrzymanie połączenia) |
+
+Przykład `data` dla wizyty:
+
+```json
+{
+  "type": "visit.cancelled",
+  "resource_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "at": "2026-09-08T21:15:00+02:00"
+}
+```
+
+Przykład `ping`:
+
+```json
+{
+  "type": "ping",
+  "resource_id": null,
+  "at": "2026-09-08T21:15:30+02:00"
+}
+```
+
+#### Zasady dostarczania
+
+- Publikacja **per `user_id`** (tylko zainteresowani użytkownicy danej wizyty / dokumentu / przypisania) — nie broadcast całej kliniki.
+- Wizyty: SSE zawsze do **pacjenta i terapeuty** wizyty (`publish_visit_realtime`). Push/e-mail do pacjenta nadal tylko przez `notify_visit_change` (np. prośba pacjenta o termin = SSE bez maila do siebie).
+- Emit przy mutacjach domenowych (create/approve/reject/reschedule/cancel wizyty, upload PDF, przypisanie ćwiczenia).
+- Preferencje powiadomień (`visit_change` itd.) **nie wyciszają** SSE — SSE to synchronizacja otwartego UI, nie kanał marketingowy.
+- Błędy auth na starcie streamu: `401` / `403` jak w REST (bez otwarcia streamu).
+
+#### Uwagi wdrożeniowe (kontrakt vs runtime)
+
+- Demo / lokalnie: ASGI (np. uvicorn). Sync Gunicorn + wiele równoległych streamów = słabe dopasowanie.
+- Wiele workerów / instancji: bus między procesami (np. Redis) — szczegóły w [README — Na później (skalowanie)](../README.md#na-później-skalowanie).
+
+Skalowanie multi-worker: [README — Na później](../README.md#na-później-skalowanie).
 
 ---
 
@@ -297,3 +395,4 @@ Dozwolone MIME: `application/pdf`, `video/mp4`.
 2. ~~Eksport kolekcji Postman~~ -> [`postman/PhysioCare.json`](postman/PhysioCare.json), przewodnik [`postman-testing.md`](postman-testing.md)
 3. Przejście checklisty Postman (wszystkie UC + wyjątki)
 4. Walidacja kontraktu testami integracyjnymi (Faza 3)
+5. ~~Realtime SSE (web + mobile)~~. Skalowanie N×M / Redis: README „Na później”.

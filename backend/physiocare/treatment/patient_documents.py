@@ -7,6 +7,7 @@ Wystawienie przez terapeutę = automatyczna widoczność dla pacjenta
 
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -18,8 +19,8 @@ from treatment.models import (
     FundingHint,
     MedicalDeviceOrder,
     PhysicianOrderRefusal,
-    RecommendationType,
     ReceptaNaRuchReferral,
+    RecommendationType,
 )
 
 KIND_RECOMMENDATION = 'recommendation'
@@ -196,10 +197,8 @@ def serialize_recepta(ref: ReceptaNaRuchReferral) -> dict[str, Any]:
 def serialize_pdf(doc: MedicalDocument) -> dict[str, Any]:
     uploader = doc.uploaded_by
     therapist_name = f'{uploader.first_name} {uploader.last_name}'.strip() or uploader.email
-    try:
+    with contextlib.suppress(ObjectDoesNotExist):
         therapist_name = _therapist_name(uploader.therapist_profile)
-    except ObjectDoesNotExist:
-        pass
     return _item(
         kind=KIND_PDF,
         obj_id=doc.id,

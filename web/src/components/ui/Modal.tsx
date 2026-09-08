@@ -12,14 +12,7 @@ interface ModalProps {
   children: ReactNode
 }
 
-export function Modal({
-  open,
-  title,
-  description,
-  size = 'md',
-  onClose,
-  children,
-}: ModalProps) {
+export function Modal({ open, title, description, size = 'md', onClose, children }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
   const descriptionId = useId()

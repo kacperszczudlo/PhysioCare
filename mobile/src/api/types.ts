@@ -1,11 +1,6 @@
 export type UserRole = 'PATIENT' | 'THERAPIST'
 
-export type VisitStatus =
-  | 'PENDING_APPROVAL'
-  | 'SCHEDULED'
-  | 'COMPLETED'
-  | 'CANCELLED'
-  | 'NO_SHOW'
+export type VisitStatus = 'PENDING_APPROVAL' | 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
 
 export type MediaType = 'VIDEO' | 'PDF'
 
@@ -147,11 +142,7 @@ export interface MedicalDocument {
 }
 
 export type ClinicalDocumentKind =
-  | 'recommendation'
-  | 'device_order'
-  | 'refusal'
-  | 'recepta_na_ruch'
-  | 'pdf'
+  'recommendation' | 'device_order' | 'refusal' | 'recepta_na_ruch' | 'pdf'
 
 export interface ClinicalDocumentItem {
   id: string
@@ -201,7 +192,18 @@ export interface TherapistPublic {
   competences?: CompetenceSnapshot
 }
 
+export type NotificationPrefKey =
+  'visit_reminder' | 'visit_change' | 'waitlist' | 'exercise_reminder' | 'new_document'
+
 export interface NotificationPreference {
-  pref_key: string
+  pref_key: NotificationPrefKey | string
   enabled: boolean
+}
+
+export interface DeviceToken {
+  id: string
+  expo_push_token: string
+  platform: 'ios' | 'android' | 'unknown'
+  is_active: boolean
+  updated_at: string
 }

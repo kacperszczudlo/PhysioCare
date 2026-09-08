@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.physiocare.patient"
+      "bundleIdentifier": "com.physiocare.patient",
+      "infoPlist": {
+        "UIBackgroundModes": ["remote-notification"]
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -26,6 +29,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.physiocare.patient",
+      "googleServicesFile": "./google-services.json",
       "usesCleartextTraffic": true,
       "softwareKeyboardLayoutMode": "resize"
     },
@@ -43,10 +47,25 @@
           "photosPermission": "PhysioCare potrzebuje dostępu do zdjęć, aby ustawić avatar profilu."
         }
       ],
-      "expo-video"
+      "expo-video",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#3D5C32",
+          "defaultChannel": "default"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ff65be0d-9dc7-4023-a415-66e740d0beb8"
+      }
+    },
+    "owner": "szczudel"
   }
 }

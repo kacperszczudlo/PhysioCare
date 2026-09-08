@@ -51,7 +51,24 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
   auth?: boolean
 }
 
+const REQUEST_TIMEOUT_MS = 8000
+
 let refreshPromise: Promise<boolean> | null = null
+
+async function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  try {
+    return await fetch(url, { ...init, signal: controller.signal })
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new TypeError(`Przekroczono limit ${REQUEST_TIMEOUT_MS} ms`)
+    }
+    throw err
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 function firstValidationMessage(body: ApiErrorBody | null): string | null {
   if (!body) {
@@ -169,7 +186,7 @@ async function tryRefreshSession(): Promise<boolean> {
       if (!refresh) {
         return false
       }
-      const response = await fetch(`${API_BASE_URL}/auth/refresh/`, {
+      const response = await fetchWithTimeout(`${API_BASE_URL}/auth/refresh/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({ refresh }),
@@ -193,6 +210,11 @@ async function tryRefreshSession(): Promise<boolean> {
   })()
 
   return refreshPromise
+}
+
+/** Odświeża access JWT (także przed reconnectem SSE). */
+export async function refreshAccessToken(): Promise<boolean> {
+  return tryRefreshSession()
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -227,7 +249,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   let response: Response
   try {
-    response = await fetch(url, {
+    response = await fetchWithTimeout(url, {
       ...rest,
       headers,
       body: payload,

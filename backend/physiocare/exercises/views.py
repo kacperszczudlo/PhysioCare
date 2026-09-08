@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from core.mixins import PatientSelfMixin
 from core.permissions import IsPatient, IsTherapist
 from core.storage import delete_media_url, save_upload
+from notifications.events import notify_exercise_assigned
 
 from .filters import filter_exercises_queryset
 from .models import CategoryKind, Exercise, ExerciseAssignment, ExerciseCategory, ExerciseCompletion
@@ -184,7 +185,12 @@ class TherapistExerciseAssignmentListCreateView(generics.ListCreateAPIView):
             assignment = serializer.save()
         except IntegrityError as exc:
             raise _assignment_integrity_error(exc) from None
-        assignment = ExerciseAssignment.objects.select_related('exercise').get(pk=assignment.pk)
+        assignment = ExerciseAssignment.objects.select_related(
+            'exercise',
+            'patient',
+            'patient__user',
+        ).get(pk=assignment.pk)
+        notify_exercise_assigned(assignment)
         return Response(
             ExerciseAssignmentSerializer(assignment).data,
             status=status.HTTP_201_CREATED,

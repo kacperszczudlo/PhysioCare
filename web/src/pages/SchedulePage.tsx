@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { schedulingApi } from '@/api/scheduling'
 import { getErrorMessage } from '@/api/client'
@@ -17,6 +17,8 @@ import {
 import { DayCarousel } from '@/components/ui/DayCarousel'
 import { DayCalendar } from '@/pages/schedule/DayCalendar'
 import { VisitFormModal } from '@/pages/schedule/VisitFormModal'
+import { isVisitRealtimeEvent } from '@/realtime/types'
+import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
 import './SchedulePage.css'
 
 function formatPendingWhen(iso: string): string {
@@ -45,18 +47,54 @@ export function SchedulePage() {
   const [showPendingList, setShowPendingList] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)
   const [didAutoFocusPending, setDidAutoFocusPending] = useState(false)
+  const showLoadingRef = useRef(true)
+  const softReloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const dateIso = toDateInputValue(day)
 
   const reload = useCallback(() => {
+    showLoadingRef.current = true
     setReloadToken((value) => value + 1)
+  }, [])
+
+  const softReload = useCallback(() => {
+    showLoadingRef.current = false
+    setReloadToken((value) => value + 1)
+  }, [])
+
+  useRealtimeEvents(
+    useCallback(
+      (event) => {
+        if (!isVisitRealtimeEvent(event)) {
+          return
+        }
+        if (softReloadTimer.current != null) {
+          clearTimeout(softReloadTimer.current)
+        }
+        softReloadTimer.current = setTimeout(() => {
+          softReloadTimer.current = null
+          softReload()
+        }, 250)
+      },
+      [softReload],
+    ),
+  )
+
+  useEffect(() => {
+    return () => {
+      if (softReloadTimer.current != null) {
+        clearTimeout(softReloadTimer.current)
+      }
+    }
   }, [])
 
   useEffect(() => {
     let cancelled = false
 
     async function load() {
-      setLoading(true)
+      if (showLoadingRef.current) {
+        setLoading(true)
+      }
       setError(null)
       try {
         const [dayVisits, pending] = await Promise.all([
@@ -88,6 +126,7 @@ export function SchedulePage() {
         }
       } finally {
         if (!cancelled) {
+          showLoadingRef.current = true
           setLoading(false)
         }
       }

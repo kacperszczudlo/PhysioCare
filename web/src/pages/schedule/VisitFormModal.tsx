@@ -354,7 +354,11 @@ export function VisitFormModal({
             {optionsByGroup.map((group) => (
               <div key={group.group} className="visit-type-picker__group">
                 <p className="visit-type-picker__group-label">{group.label}</p>
-                <div className="visit-type-picker__tiles" role="radiogroup" aria-label={group.label}>
+                <div
+                  className="visit-type-picker__tiles"
+                  role="radiogroup"
+                  aria-label={group.label}
+                >
                   {group.items.map((type) => {
                     const selected = type.id === therapyTypeId
                     return (
@@ -364,9 +368,7 @@ export function VisitFormModal({
                         role="radio"
                         aria-checked={selected}
                         className={
-                          selected
-                            ? 'visit-type-tile visit-type-tile--selected'
-                            : 'visit-type-tile'
+                          selected ? 'visit-type-tile visit-type-tile--selected' : 'visit-type-tile'
                         }
                         title={type.description}
                         onClick={() => setTherapyTypeId(type.id)}
@@ -446,7 +448,12 @@ export function VisitFormModal({
               Anuluj
             </Button>
             {isPending ? (
-              <Button type="button" variant="secondary" onClick={() => void onReject()} disabled={busy}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => void onReject()}
+                disabled={busy}
+              >
                 Odrzuć
               </Button>
             ) : null}

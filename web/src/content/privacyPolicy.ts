@@ -10,9 +10,9 @@ export type LegalSection = {
 
 export const PRIVACY_POLICY_META = {
   title: 'Polityka prywatności',
-  version: '1.0',
+  version: '1.1',
   effectiveDate: '8 sierpnia 2026 r.',
-  updatedAt: '8 sierpnia 2026 r.',
+  updatedAt: '8 września 2026 r.',
 }
 
 export const PRIVACY_SUMMARY_ROWS: { topic: string; summary: string }[] = [
@@ -26,7 +26,8 @@ export const PRIVACY_SUMMARY_ROWS: { topic: string; summary: string }[] = [
   },
   {
     topic: 'Jakie dane',
-    summary: 'Dane konta, kontaktowe, opcjonalnie PESEL; dane zdrowotne; dane techniczne sesji.',
+    summary:
+      'Dane konta, kontaktowe, opcjonalnie PESEL; dane zdrowotne; dane techniczne sesji; przy pushu — token urządzenia.',
   },
   {
     topic: 'Zgody',
@@ -43,7 +44,8 @@ export const PRIVACY_SUMMARY_ROWS: { topic: string; summary: string }[] = [
   },
   {
     topic: 'Twoje prawa',
-    summary: 'Dostęp, sprostowanie, usunięcie, ograniczenie, przenoszenie, sprzeciw, skarga do UODO.',
+    summary:
+      'Dostęp, sprostowanie, usunięcie, ograniczenie, przenoszenie, sprzeciw, skarga do UODO.',
   },
 ]
 
@@ -72,7 +74,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     paragraphs: [
       'Dane konta: e-mail, imię, nazwisko, hasło (wyłącznie skrót), rola, opcjonalny telefon; u fizjoterapeuty także PWZFz, biogram, adres gabinetu i pokrewne pola profilu; u pacjenta opcjonalnie PESEL i powiązanie z fizjoterapeutą.',
       'Dane zdrowotne (art. 9 RODO): epizody leczenia, mapa bólu (VAS), notatki, dokumenty, ćwiczenia i compliance, dane wizyt.',
-      'Dane techniczne: tokeny JWT (cookies web lub SecureStore na mobile), ograniczone logi aplikacyjne (bez haseł), preferencje powiadomień.',
+      'Dane techniczne: tokeny JWT (cookies web lub SecureStore na mobile), ograniczone logi aplikacyjne (bez haseł), preferencje powiadomień. Przy włączonych powiadomieniach systemowych — token Expo (bez treści klinicznej w komunikacie).',
       'Stan na datę Polityki: nie używamy SDK reklamowych, analityki behawioralnej, śledzenia IDFA, GPS w tle ani dostępu do kontaktów/mikrofonu.',
     ],
   },
@@ -101,7 +103,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     title: '6. Cookies i dostęp do urządzenia (PKE)',
     paragraphs: [
       'Zgodnie z art. 399–400 PKE dostęp do informacji w urządzeniu końcowym wymaga uprzedniej zgody, z wyjątkiem technologii niezbędnych do usługi zażądanej przez użytkownika.',
-      'PhysioCare używa wyłącznie cookies/magazynu niezbędnego do sesji JWT. Szczegóły: Polityka cookies (/cookies).',
+      'PhysioCare używa cookies/magazynu niezbędnego do sesji JWT. Token powiadomień na telefonie zapisujemy dopiero po zgodzie systemu (PKE). Szczegóły: Polityka cookies (/cookies).',
       'Technologie niewymagalne — obecnie brak. W przyszłości: opt-in, parytet wizualny przycisków oraz asynchroniczna inicjalizacja SDK dopiero po zgodzie.',
     ],
   },
@@ -109,7 +111,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     id: 'recipients',
     title: '7. Odbiorcy i procesorzy',
     paragraphs: [
-      'Dane są dostępne dla przypisanego fizjoterapeuty w zakresie leczenia oraz — na podstawie DPA — dla dostawców hostingu, bazy i poczty, gdy infrastruktura jest zewnętrzna.',
+      'Dane są dostępne dla przypisanego fizjoterapeuty w zakresie leczenia oraz — na podstawie DPA — dla dostawców hostingu, bazy i poczty, gdy infrastruktura jest zewnętrzna. Usługa Expo Push — tylko gdy pacjent włączy powiadomienia systemowe.',
       'Organom publicznym — wyłącznie gdy wymaga tego prawo. Lista konkretnych procesorów produkcyjnych zostanie uzupełniona przez ADO.',
     ],
   },
@@ -124,7 +126,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     id: 'retention',
     title: '9. Okres przechowywania',
     paragraphs: [
-      'Dane konta — przez czas korzystania z usługi. Dokumentacja zdrowotna — przez czas relacji oraz okresy wynikające z przepisów. Tokeny — do wygaśnięcia/wylogowania. Logi — tak krótko, jak to potrzebne do bezpieczeństwa.',
+      'Dane konta — przez czas korzystania z usługi. Dokumentacja zdrowotna — przez czas relacji oraz okresy wynikające z przepisów. Tokeny sesji — do wygaśnięcia/wylogowania. Token Expo — do wylogowania lub wyłączenia powiadomień. Logi — tak krótko, jak to potrzebne do bezpieczeństwa.',
       'Po upływie okresu dane usuwamy lub anonimizujemy, chyba że prawo nakazuje dłuższe przechowywanie.',
     ],
   },
@@ -133,7 +135,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     title: '10. Twoje prawa',
     paragraphs: [
       'Przysługują Ci prawa dostępu, sprostowania, usunięcia, ograniczenia, przenoszenia, sprzeciwu, wycofania zgody oraz skargi do UODO (ul. Stawki 2, 00-193 Warszawa).',
-          'W aplikacji: eksport (profil, wizyty, epizody, dokumenty, ćwiczenia) i wniosek o usunięcie konta (pacjent — zapis wniosku, dezaktywacja, unieważnienie sesji), przełączniki zgód opcjonalnych, strona /account-deletion gdy nie ma aplikacji.',
+      'W aplikacji: eksport (profil, wizyty, epizody, dokumenty, ćwiczenia, preferencje powiadomień, odcisk tokenu urządzenia) i wniosek o usunięcie konta (pacjent — zapis wniosku, dezaktywacja, unieważnienie sesji), przełączniki zgód opcjonalnych, strona /account-deletion gdy nie ma aplikacji.',
       'Nie żądamy nadmiarowych danych tylko po to, by Cię zidentyfikować, jeśli wcześniej nie byliśmy w stanie Cię zidentyfikować (art. 11 RODO).',
     ],
   },

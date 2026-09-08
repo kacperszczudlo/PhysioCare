@@ -17,6 +17,7 @@ from core.field_policies import (
 from core.mixins import PatientSelfMixin, user_can_access_patient
 from core.permissions import IsPatient, IsTherapist
 from core.storage import save_upload
+from notifications.events import notify_new_document
 from scheduling.models import Visit
 from treatment.models import TreatmentEpisode
 
@@ -111,6 +112,7 @@ class TherapistDocumentUploadView(generics.CreateAPIView):
             visit_id=visit_id,
             episode_id=episode_id,
         )
+        notify_new_document(document)
         return Response(MedicalDocumentSerializer(document).data, status=status.HTTP_201_CREATED)
 
 
@@ -133,8 +135,9 @@ class DocumentDownloadView(APIView):
             raise Http404 from exc
         if not path or not os.path.isfile(path):
             raise Http404
+        # FileResponse closes the file handle after the response is sent.
         response = FileResponse(
-            open(path, 'rb'),
+            open(path, 'rb'),  # noqa: SIM115
             content_type=document.mime_type,
             as_attachment=True,
         )

@@ -5,18 +5,13 @@ const SPECIAL_CHAR_PATTERN = /[^A-Za-z0-9_]/
 export const PASSWORD_MESSAGES = {
   tooShort: `Hasło musi mieć co najmniej ${MIN_PASSWORD_LENGTH} znaków.`,
   entirelyNumeric: 'Hasło nie może składać się wyłącznie z cyfr.',
-  noSpecial:
-    'Hasło musi zawierać co najmniej jeden znak specjalny (np. ! @ # $ % & *).',
+  noSpecial: 'Hasło musi zawierać co najmniej jeden znak specjalny (np. ! @ # $ % & *).',
   tooSimilar: 'Hasło jest zbyt podobne do Twoich danych (e-mail, imię lub nazwisko).',
   mismatch: 'Hasła nie są identyczne.',
   required: 'Podaj hasło.',
 } as const
 
-export type PasswordRequirementId =
-  | 'minLength'
-  | 'notNumeric'
-  | 'hasSpecial'
-  | 'notSimilar'
+export type PasswordRequirementId = 'minLength' | 'notNumeric' | 'hasSpecial' | 'notSimilar'
 
 export interface PasswordRequirement {
   id: PasswordRequirementId
@@ -100,10 +95,7 @@ export function getPasswordRequirements(
   return requirements
 }
 
-export function getPasswordError(
-  password: string,
-  hints: PasswordUserHints = {},
-): string | null {
+export function getPasswordError(password: string, hints: PasswordUserHints = {}): string | null {
   if (!password) {
     return PASSWORD_MESSAGES.required
   }

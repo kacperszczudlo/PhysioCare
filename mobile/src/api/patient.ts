@@ -3,6 +3,7 @@ import type {
   ClinicalDocumentItem,
   ClinicalDocumentKind,
   Consent,
+  DeviceToken,
   ExerciseCompletion,
   MedicalDocument,
   NotificationPreference,
@@ -121,6 +122,19 @@ export const patientApi = {
   updateNotificationPreferences(preferences: Record<string, boolean>) {
     return api.patch<NotificationPreference[]>('/me/notification-preferences/', {
       preferences,
+    })
+  },
+
+  registerDeviceToken(expoPushToken: string, platform: DeviceToken['platform'] = 'unknown') {
+    return api.post<DeviceToken>('/me/device-tokens/', {
+      expo_push_token: expoPushToken,
+      platform,
+    })
+  },
+
+  unregisterDeviceToken(expoPushToken: string) {
+    return api.delete<void>('/me/device-tokens/', {
+      body: { expo_push_token: expoPushToken },
     })
   },
 }

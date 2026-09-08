@@ -9,8 +9,8 @@ export default function AccountDeletionScreen() {
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
       <Text style={styles.lede}>
-        Możesz usunąć konto pacjenta z Ustawień albo złożyć wniosek poza aplikacją (wymóg Google Play
-        / Apple).
+        Możesz usunąć konto pacjenta z Ustawień albo złożyć wniosek poza aplikacją (wymóg Google
+        Play / Apple).
       </Text>
 
       <Text style={styles.heading}>W aplikacji</Text>
