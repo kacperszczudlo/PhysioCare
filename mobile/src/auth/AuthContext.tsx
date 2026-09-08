@@ -82,7 +82,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function restoreSession() {
       try {
-        await hydrateFromProfile()
+        const access = await tokenStorage.getAccess()
+        if (!access) {
+          if (!cancelled) {
+            setUser(null)
+          }
+          return
+        }
+
+        const cached = await tokenStorage.getCachedUser()
+        if (!cancelled && cached) {
+          setUser(cached)
+        }
       } catch (error) {
         if (!cancelled) {
           console.error('Session restore failed', error)
@@ -92,6 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!cancelled) {
           setIsLoading(false)
         }
+      }
+
+      if (!cancelled) {
+        void hydrateFromProfile()
       }
     }
 
