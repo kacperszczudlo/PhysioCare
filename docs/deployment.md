@@ -35,6 +35,7 @@ Skopiuj z `.env.example`, w szczególności:
 - `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS`, `FRONTEND_URL`
 - `EMAIL_*` - produkcyjny SMTP (nie `console`); `EMAIL_FROM`, `PASSWORD_RESET_TIMEOUT`
 - `MOBILE_RESET_URL_BASE` - prefix deep linku resetu (domyślnie `physiocare://`)
+- `GOOGLE_CLIENT_IDS` - opcjonalnie, lista OAuth Client ID (Web + Android/iOS) do weryfikacji Sign in with Google
 - `LOG_FORMAT=json`
 - `MEDIA_ROOT` - trwały volume (**nie** wystawiaj go publicznie w nginx)
 - `SENTRY_DSN` - alerty 5xx (patrz [monitoring](monitoring.md))
@@ -59,6 +60,35 @@ Lokalnie możesz zostać przy `EMAIL_BACKEND=console` (treść w logu Django) al
    MOBILE_RESET_URL_BASE=physiocare://
    ```
 3. Request resetu z weba (`client=web`) lub appki (`client=mobile`) → otwórz mail w Mailtrap i kliknij link.
+
+### Google Sign-In
+
+Działa na **web (terapeuta)** i **mobile (pacjent)** — login oraz rejestracja z Google.
+
+1. W [Google Cloud Console](https://console.cloud.google.com/) utwórz OAuth Client ID:
+   - **Web application** — w Credentials → OAuth client (Web) ustaw **oba** pola:
+     - **Authorized JavaScript origins:** `http://localhost:5173`
+     - **Authorized redirect URIs:** `http://localhost:5173` (wymagane przez popup Sign-In)
+     - Jeśli używasz `http://127.0.0.1:5173`, dodaj ten host osobno do **obu** list
+     - Błąd `redirect_uri_mismatch` = brak dokładnego URI z paska adresu w **Authorized redirect URIs**
+     - Po zapisie odczekaj 1–2 minuty i twarde odświeżenie (`Ctrl+Shift+R`)
+   - **Android** — package `com.physiocare.patient` + SHA-1 debug/release
+   - **iOS** — bundle `com.physiocare.patient`
+2. Backend (root `.env`):
+   ```
+   GOOGLE_CLIENT_IDS=<web_id>[,<android_id>][,<ios_id>]
+   ```
+3. Web (`web/.env.local`):
+   ```
+   VITE_GOOGLE_CLIENT_ID=<web_id>
+   ```
+4. Mobile (`mobile/.env`):
+   ```
+   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=<web_id>
+   EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=<ios_id>
+   ```
+5. Mobile wymaga **development build** (nie Expo Go): po dodaniu `@react-native-google-signin/google-signin` przebuduj `npx expo run:android` / `run:ios`.
+6. Rejestracja Google: web wymaga PWZFz + oświadczenia; mobile — kod terapeuty + zgody. Login Google łączy istniejące konto po e-mailu.
 
 Deep link mobile (gdy masz już token z maila / testowy):
 

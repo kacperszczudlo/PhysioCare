@@ -12,10 +12,11 @@ interface AuthResponse {
 }
 
 export interface TherapistRegisterPayload {
-  email: string
-  password: string
-  first_name: string
-  last_name: string
+  email?: string
+  password?: string
+  google_credential?: string
+  first_name?: string
+  last_name?: string
   pwzf_number: string
   pwzf_declaration: boolean
   phone?: string
@@ -31,6 +32,14 @@ export const authApi = {
     return api.post<AuthResponse>(
       '/auth/login/',
       { email, password, token_delivery: 'cookie' },
+      { skipAuthRefresh: true },
+    )
+  },
+
+  loginWithGoogle(credential: string) {
+    return api.post<AuthResponse>(
+      '/auth/google/',
+      { credential, token_delivery: 'cookie' },
       { skipAuthRefresh: true },
     )
   },

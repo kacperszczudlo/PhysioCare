@@ -22,6 +22,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     )
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
+    google_sub = models.CharField(
+        'Google subject ID',
+        max_length=255,
+        unique=True,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

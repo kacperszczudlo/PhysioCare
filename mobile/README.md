@@ -12,14 +12,19 @@ Na Windowsie zawsze `npm.cmd` (nie `npm`) - ExecutionPolicy blokuje `npm.ps1`.
 
 ## Dwa sposoby uruchomienia
 
-| Cel                                       | Jak                           | Push na Androidzie           |
-| ----------------------------------------- | ----------------------------- | ---------------------------- |
-| Szybki UI, logowanie, wizyty, ćwiczenia   | Expo Go + `npm.cmd start`     | Nie - backend pada na e-mail |
-| Test pusha, ikona PhysioCare na telefonie | Native: `npm.cmd run android` | Tak (po zgodzie w OS)        |
+| Cel                                       | Jak                              | Push                         | Google Sign-In              |
+| ----------------------------------------- | -------------------------------- | ---------------------------- | --------------------------- |
+| Szybki UI, logowanie hasłem               | Expo Go + `npm.cmd run start:go` | Nie                          | Nie (przycisk wyłączony)    |
+| Push + Google Sign-In                     | Native: `npm.cmd run android`    | Tak (po zgodzie w OS)        | Tak (RNGoogleSignin)        |
 
 Oba wymagają działającego API: `python manage.py runserver` w `backend/physiocare`.
 
 Skopiuj `.env.example` → `.env` i ustaw `EXPO_PUBLIC_API_BASE_URL`:
+
+Dla logowania Google dodaj `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` (oraz opcjonalnie iOS/Android) — te same ID muszą być w `GOOGLE_CLIENT_IDS` na backendzie.
+
+> **Google Sign-In** wymaga **native build** (`npm.cmd run android`) z `@react-native-google-signin/google-signin`. W Expo Go przycisk Google jest ukryty (brak natywnego modułu); logowanie hasłem działa.  
+> Te same Client ID muszą być w `GOOGLE_CLIENT_IDS` na backendzie.
 
 | Środowisko               | URL                            |
 | ------------------------ | ------------------------------ |
@@ -142,7 +147,8 @@ Albo edytuj od razu w `C:\Users\kacpe\p` (git i tak commitujesz z repo).
 
 | Komenda                    | Opis                                    |
 | -------------------------- | --------------------------------------- |
-| `npm.cmd start`            | Expo Go / Metro                         |
+| `npm.cmd start`            | Metro + **dev client** (własny APK)     |
+| `npm.cmd run start:go`     | Metro pod **Expo Go**                   |
 | `npm.cmd run android`      | Native debug na urządzeniu / emulatorze |
 | `npm.cmd run ios`          | Native iOS (macOS)                      |
 | `npm.cmd run web`          | Przeglądarka                            |

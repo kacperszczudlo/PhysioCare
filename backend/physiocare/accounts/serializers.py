@@ -6,8 +6,10 @@ from rest_framework import serializers
 from accounts.email_policy import (
     EMAIL_FIELD_ERRORS,
     EMAIL_TAKEN,
+    EMAIL_TAKEN_GOOGLE,
     normalize_and_validate_email,
 )
+from accounts.google_auth import GoogleAuthError, verify_google_id_token
 from accounts.password_policy import enforce_password_policy
 from core.field_policies import (
     LAST_NAME_INVALID,
@@ -86,21 +88,79 @@ def _validate_password_value(password: str, user=None) -> str:
         raise serializers.ValidationError(list(exc.messages)) from exc
 
 
+def _apply_google_identity(attrs: dict, *, credential: str) -> dict:
+    """Verify Google credential and merge identity into registration attrs."""
+    try:
+        identity = verify_google_id_token(credential)
+    except GoogleAuthError as exc:
+        raise serializers.ValidationError({'google_credential': [exc.message]}) from exc
+
+    email = User.objects.normalize_email(identity.email)
+    existing = User.objects.filter(email__iexact=email).first()
+    if existing is not None:
+        role_label = 'pacjenta' if existing.role == 'PATIENT' else 'fizjoterapeuty'
+        raise serializers.ValidationError(
+            {
+                'email': [
+                    f'{EMAIL_TAKEN_GOOGLE} '
+                    f'To konto ma rolę {role_label}.'
+                ],
+                'google_credential': [
+                    'Konto z tym adresem Google już istnieje — użyj logowania zamiast rejestracji.'
+                ],
+            }
+        )
+
+    attrs['email'] = email
+    # Names from form first, else Google claims (no placeholder names).
+    first_name = (attrs.get('first_name') or '').strip() or (identity.given_name or '').strip()
+    last_name = (attrs.get('last_name') or '').strip() or (identity.family_name or '').strip()
+    attrs['first_name'] = first_name
+    attrs['last_name'] = last_name
+
+    name_errors: dict[str, list[str]] = {}
+    try:
+        attrs['first_name'] = normalize_and_validate_first_name(attrs['first_name'] or None)
+    except DjangoValidationError as exc:
+        name_errors['first_name'] = list(exc.messages)
+    try:
+        attrs['last_name'] = normalize_and_validate_last_name(attrs['last_name'] or None)
+    except DjangoValidationError as exc:
+        name_errors['last_name'] = list(exc.messages)
+    if name_errors:
+        raise serializers.ValidationError(name_errors)
+
+    attrs.pop('password', None)
+    attrs['_google_sub'] = identity.sub
+    return attrs
+
+
 class PatientRegistrationSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
         max_length=100,
+        required=False,
+        allow_blank=True,
         write_only=True,
         error_messages=_FIRST_NAME_FIELD_ERRORS,
     )
     last_name = serializers.CharField(
         max_length=100,
+        required=False,
+        allow_blank=True,
         write_only=True,
         error_messages=_LAST_NAME_FIELD_ERRORS,
     )
     password = serializers.CharField(
+        required=False,
+        allow_blank=True,
         write_only=True,
         style={'input_type': 'password'},
         error_messages=_PASSWORD_FIELD_ERRORS,
+    )
+    google_credential = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        write_only=True,
     )
     therapist_id = serializers.UUIDField(
         write_only=True,
@@ -118,15 +178,22 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'email', 'password', 'first_name', 'last_name',
+            'id', 'email', 'password', 'google_credential', 'first_name', 'last_name',
             'therapist_id', 'consents', 'phone',
         )
         read_only_fields = ('id',)
         extra_kwargs = {
-            'email': {'validators': [], 'error_messages': EMAIL_FIELD_ERRORS},
+            'email': {
+                'required': False,
+                'allow_blank': True,
+                'validators': [],
+                'error_messages': EMAIL_FIELD_ERRORS,
+            },
         }
 
     def validate_email(self, value):
+        if value is None or str(value).strip() == '':
+            return value
         try:
             email = normalize_and_validate_email(value)
         except DjangoValidationError as exc:
@@ -137,18 +204,24 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         return email
 
     def validate_first_name(self, value):
+        if value is None or str(value).strip() == '':
+            return value
         try:
             return normalize_and_validate_first_name(value)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
     def validate_last_name(self, value):
+        if value is None or str(value).strip() == '':
+            return value
         try:
             return normalize_and_validate_last_name(value)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
     def validate_password(self, value):
+        if value is None or str(value).strip() == '':
+            return value
         return _validate_password_value(
             value,
             user=_password_user_from_data(self.initial_data),
@@ -176,13 +249,32 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
+    def validate(self, attrs):
+        credential = (attrs.pop('google_credential', None) or '').strip()
+        if credential:
+            return _apply_google_identity(attrs, credential=credential)
+
+        errors = {}
+        if not (attrs.get('email') or '').strip():
+            errors['email'] = [EMAIL_FIELD_ERRORS.get('required', 'Podaj e-mail.')]
+        if not (attrs.get('first_name') or '').strip():
+            errors['first_name'] = [NAME_REQUIRED]
+        if not (attrs.get('last_name') or '').strip():
+            errors['last_name'] = [LAST_NAME_REQUIRED]
+        if not (attrs.get('password') or '').strip():
+            errors['password'] = ['Podaj hasło lub użyj Google.']
+        if errors:
+            raise serializers.ValidationError(errors)
+        return attrs
+
     @transaction.atomic
     def create(self, validated_data):
         first_name = validated_data.pop('first_name')
         last_name = validated_data.pop('last_name')
         therapist_id = validated_data.pop('therapist_id')
         consents_data = validated_data.pop('consents')
-        password = validated_data.pop('password')
+        password = validated_data.pop('password', None)
+        google_sub = validated_data.pop('_google_sub', None)
         phone = validated_data.pop('phone', '')
 
         user = User.objects.create_user(
@@ -191,6 +283,7 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
             role='PATIENT',
             first_name=first_name,
             last_name=last_name,
+            google_sub=google_sub,
         )
 
         PatientProfile.objects.create(
@@ -218,18 +311,29 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
 class TherapistRegistrationSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
         max_length=100,
+        required=False,
+        allow_blank=True,
         write_only=True,
         error_messages=_FIRST_NAME_FIELD_ERRORS,
     )
     last_name = serializers.CharField(
         max_length=100,
+        required=False,
+        allow_blank=True,
         write_only=True,
         error_messages=_LAST_NAME_FIELD_ERRORS,
     )
     password = serializers.CharField(
+        required=False,
+        allow_blank=True,
         write_only=True,
         style={'input_type': 'password'},
         error_messages=_PASSWORD_FIELD_ERRORS,
+    )
+    google_credential = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        write_only=True,
     )
     pwzf_number = serializers.CharField(
         max_length=20,
@@ -248,15 +352,22 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'email', 'password', 'first_name', 'last_name',
+            'id', 'email', 'password', 'google_credential', 'first_name', 'last_name',
             'pwzf_number', 'pwzf_declaration', 'phone',
         )
         read_only_fields = ('id',)
         extra_kwargs = {
-            'email': {'validators': [], 'error_messages': EMAIL_FIELD_ERRORS},
+            'email': {
+                'required': False,
+                'allow_blank': True,
+                'validators': [],
+                'error_messages': EMAIL_FIELD_ERRORS,
+            },
         }
 
     def validate_email(self, value):
+        if value is None or str(value).strip() == '':
+            return value
         try:
             email = normalize_and_validate_email(value)
         except DjangoValidationError as exc:
@@ -267,18 +378,24 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
         return email
 
     def validate_first_name(self, value):
+        if value is None or str(value).strip() == '':
+            return value
         try:
             return normalize_and_validate_first_name(value)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
     def validate_last_name(self, value):
+        if value is None or str(value).strip() == '':
+            return value
         try:
             return normalize_and_validate_last_name(value)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
     def validate_password(self, value):
+        if value is None or str(value).strip() == '':
+            return value
         return _validate_password_value(
             value,
             user=_password_user_from_data(self.initial_data),
@@ -306,13 +423,32 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
+    def validate(self, attrs):
+        credential = (attrs.pop('google_credential', None) or '').strip()
+        if credential:
+            return _apply_google_identity(attrs, credential=credential)
+
+        errors = {}
+        if not (attrs.get('email') or '').strip():
+            errors['email'] = [EMAIL_FIELD_ERRORS.get('required', 'Podaj e-mail.')]
+        if not (attrs.get('first_name') or '').strip():
+            errors['first_name'] = [NAME_REQUIRED]
+        if not (attrs.get('last_name') or '').strip():
+            errors['last_name'] = [LAST_NAME_REQUIRED]
+        if not (attrs.get('password') or '').strip():
+            errors['password'] = ['Podaj hasło lub użyj Google.']
+        if errors:
+            raise serializers.ValidationError(errors)
+        return attrs
+
     @transaction.atomic
     def create(self, validated_data):
         first_name = validated_data.pop('first_name')
         last_name = validated_data.pop('last_name')
         pwzf_number = validated_data.pop('pwzf_number')
         validated_data.pop('pwzf_declaration')
-        password = validated_data.pop('password')
+        password = validated_data.pop('password', None)
+        google_sub = validated_data.pop('_google_sub', None)
         phone = validated_data.pop('phone', '')
 
         user = User.objects.create_user(
@@ -321,6 +457,7 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
             role='THERAPIST',
             first_name=first_name,
             last_name=last_name,
+            google_sub=google_sub,
         )
 
         TherapistProfile.objects.create(

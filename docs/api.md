@@ -77,6 +77,28 @@ Login, rejestracja i refresh zwracają `access` + `refresh` w JSON, gdy klient n
 **200** - `{ "user": {...}, "access": "<jwt>", "refresh": "<jwt>" }` + cookies JWT.  
 Mobile zapisuje `access`/`refresh` (np. SecureStore) i wysyła `Authorization: Bearer`.
 
+Konta tylko-Google (bez lokalnego hasła) dostają **401** `AUTH_023` z komunikatem, żeby użyć przycisku Google.
+
+### POST `/auth/google`
+
+Wymiana Google ID token (GIS / Sign in with Google) na sesję PhysioCare.
+
+```json
+{ "credential": "<google_id_token>", "token_delivery": "cookie" }
+```
+
+`credential` albo `id_token`. `token_delivery: "cookie"` jak przy loginie webowym; mobile pomija → tokeny w body.
+
+Wymaga `GOOGLE_CLIENT_IDS` (lista audience). Serwer weryfikuje token (`google-auth`), potem:
+
+1. użytkownik po `google_sub`, albo
+2. istniejący e-mail → powiązanie `google_sub`, albo
+3. **404** `AUTH_025` — brak konta (najpierw rejestracja z PWZFz / terapeutą).
+
+**200** — jak `/auth/login`. Bez konfiguracji Google: **503** `AUTH_020`.
+
+Rejestracja z Google: w `POST /auth/register/therapist/` lub `/auth/register/patient/` wyślij `google_credential` zamiast `password` (e-mail/imię z tokenu). Web nadal wymaga PWZFz; mobile — `therapist_id` + zgody.
+
 ### POST `/auth/logout`
 
 Czyści cookies `access_token` / `refresh_token` i wpisuje przedstawiony refresh na czarną listę (body `refresh` albo cookie). **200** - `{ "detail": "Wylogowano." }`.

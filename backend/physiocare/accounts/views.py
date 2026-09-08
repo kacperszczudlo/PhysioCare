@@ -19,6 +19,7 @@ from core.throttling import (
     RegisterRateThrottle,
 )
 
+from .google_auth import GoogleAuthError, verify_google_id_token
 from .mail import send_templated_mail
 from .models import PasswordResetToken
 from .serializers import (
@@ -122,6 +123,29 @@ class LoginView(APIView):
             refresh = RefreshToken.for_user(user)
             return _auth_response(request, user, refresh)
 
+        if email:
+            google_only = (
+                User.objects.filter(email__iexact=str(email).strip())
+                .filter(google_sub__isnull=False)
+                .exclude(google_sub='')
+                .first()
+            )
+            if (
+                google_only is not None
+                and google_only.is_active
+                and not google_only.has_usable_password()
+            ):
+                return Response(
+                    {
+                        'error': {
+                            'code': 'AUTH_023',
+                            'message': 'To konto korzysta z logowania Google. Użyj przycisku „Kontynuuj z Google”.',
+                            'details': {},
+                        }
+                    },
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
         logger.info('Failed login attempt for email=%s', email)
 
         # Same message for unknown email and wrong password (no account enumeration).
@@ -135,6 +159,82 @@ class LoginView(APIView):
             },
             status=status.HTTP_401_UNAUTHORIZED,
         )
+
+
+class GoogleLoginView(APIView):
+    """Exchange a Google ID token for PhysioCare JWT session (cookie or body)."""
+
+    permission_classes = []
+    throttle_classes = [LoginRateThrottle]
+
+    def post(self, request, *args, **kwargs):
+        credential = request.data.get('credential') or request.data.get('id_token')
+        try:
+            identity = verify_google_id_token(credential)
+        except GoogleAuthError as exc:
+            return Response(
+                {
+                    'error': {
+                        'code': exc.code,
+                        'message': exc.message,
+                        'details': {},
+                    }
+                },
+                status=exc.http_status,
+            )
+
+        user = User.objects.filter(google_sub=identity.sub).first()
+        if user is None:
+            user = User.objects.filter(email__iexact=identity.email).first()
+            if user is not None:
+                if user.google_sub and user.google_sub != identity.sub:
+                    return Response(
+                        {
+                            'error': {
+                                'code': 'AUTH_024',
+                                'message': 'Ten adres e-mail jest już powiązany z innym kontem Google.',
+                                'details': {},
+                            }
+                        },
+                        status=status.HTTP_409_CONFLICT,
+                    )
+                user.google_sub = identity.sub
+                user.save(update_fields=['google_sub', 'updated_at'])
+
+        if user is None:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_025',
+                        'message': (
+                            'Brak konta PhysioCare powiązanego z tym adresem Google. '
+                            'Dokończ rejestrację w aplikacji.'
+                        ),
+                        'details': {
+                            'needs_registration': True,
+                            'email': identity.email,
+                            'first_name': identity.given_name,
+                            'last_name': identity.family_name,
+                        },
+                    }
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if not user.is_active:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_001',
+                        'message': 'Konto jest nieaktywne.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        refresh = RefreshToken.for_user(user)
+        return _auth_response(request, user, refresh)
 
 
 class LogoutView(APIView):
@@ -348,6 +448,18 @@ class ChangePasswordView(APIView):
         serializer.is_valid(raise_exception=True)
 
         user = request.user
+        if not user.has_usable_password():
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_026',
+                        'message': 'Konto korzysta z logowania Google i nie ma lokalnego hasła.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         if not user.check_password(serializer.validated_data['current_password']):
             return Response(
                 {

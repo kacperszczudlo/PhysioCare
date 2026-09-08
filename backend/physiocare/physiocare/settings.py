@@ -160,6 +160,10 @@ CSRF_TRUSTED_ORIGINS = env_list(
 
 SECURE_COOKIES = env_bool('DJANGO_SECURE_COOKIES', 'false')
 
+# Comma-separated OAuth 2.0 Client IDs (Web + Android/iOS) accepted as ID token audience.
+# Also accepts singular GOOGLE_CLIENT_ID (GastroHub-compatible).
+GOOGLE_CLIENT_IDS = env_list('GOOGLE_CLIENT_IDS') or env_list('GOOGLE_CLIENT_ID')
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(
         minutes=int(os.environ.get('JWT_ACCESS_LIFETIME_MIN', '15'))

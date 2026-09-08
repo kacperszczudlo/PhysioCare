@@ -3,10 +3,11 @@ import { tokenStorage } from './tokenStorage'
 import type { AuthResponse, User } from './types'
 
 export interface PatientRegisterPayload {
-  email: string
-  password: string
-  first_name: string
-  last_name: string
+  email?: string
+  password?: string
+  google_credential?: string
+  first_name?: string
+  last_name?: string
   therapist_id: string
   phone?: string
   consents: {
@@ -30,6 +31,15 @@ export const authApi = {
     const data = await api.post<AuthResponse>(
       '/auth/login/',
       { email, password },
+      { auth: false, skipAuthRefresh: true },
+    )
+    return persistAuth(data)
+  },
+
+  async loginWithGoogle(credential: string) {
+    const data = await api.post<AuthResponse>(
+      '/auth/google/',
+      { credential },
       { auth: false, skipAuthRefresh: true },
     )
     return persistAuth(data)

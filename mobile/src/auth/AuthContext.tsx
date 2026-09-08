@@ -22,6 +22,7 @@ interface AuthContextValue {
   isLoading: boolean
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
+  loginWithGoogle: (credential: string) => Promise<void>
   register: (payload: PatientRegisterPayload) => Promise<void>
   logout: () => Promise<void>
   requestPasswordReset: (email: string) => Promise<string>
@@ -161,6 +162,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await tokenStorage.setCachedUser(nextUser)
   }, [])
 
+  const loginWithGoogle = useCallback(async (credential: string) => {
+    const nextUser = await authApi.loginWithGoogle(credential)
+    if (nextUser.role !== 'PATIENT') {
+      await authApi.logout().catch(() => undefined)
+      throw new ApiError(403, 'Aplikacja mobilna jest dostępna tylko dla pacjentów.')
+    }
+    setUser(nextUser)
+    await tokenStorage.setCachedUser(nextUser)
+  }, [])
+
   const register = useCallback(async (payload: PatientRegisterPayload) => {
     const nextUser = await authApi.registerPatient(payload)
     setUser(nextUser)
@@ -196,12 +207,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       isAuthenticated: user !== null,
       login,
+      loginWithGoogle,
       register,
       logout,
       requestPasswordReset,
       confirmPasswordReset,
     }),
-    [user, isLoading, login, register, logout, requestPasswordReset, confirmPasswordReset],
+    [
+      user,
+      isLoading,
+      login,
+      loginWithGoogle,
+      register,
+      logout,
+      requestPasswordReset,
+      confirmPasswordReset,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

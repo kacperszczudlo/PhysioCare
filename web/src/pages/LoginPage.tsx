@@ -3,12 +3,15 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { ApiError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
+import { setGoogleRegistrationDraft } from '@/auth/googleRegistrationDraft'
+import { parseGoogleIdTokenClaims } from '@/auth/parseGoogleIdToken'
+import { GoogleSignInButton, isWebGoogleSignInConfigured } from '@/components/GoogleSignInButton'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import './auth-forms.css'
 
 export function LoginPage() {
-  const { login } = useAuth()
+  const { login, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/'
@@ -27,6 +30,42 @@ export function LoginPage() {
       navigate(from, { replace: true })
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Nie udało się zalogować.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function onGoogleCredential(credential: string) {
+    setError(null)
+    setLoading(true)
+    try {
+      await loginWithGoogle(credential)
+      navigate(from, { replace: true })
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'AUTH_025') {
+        const details = err.details as {
+          email?: string
+          first_name?: string
+          last_name?: string
+        }
+        const claims = parseGoogleIdTokenClaims(credential)
+        setGoogleRegistrationDraft({
+          credential,
+          email:
+            (typeof details.email === 'string' && details.email) || claims.email || undefined,
+          first_name:
+            (typeof details.first_name === 'string' && details.first_name) ||
+            claims.first_name ||
+            undefined,
+          last_name:
+            (typeof details.last_name === 'string' && details.last_name) ||
+            claims.last_name ||
+            undefined,
+        })
+        navigate('/register', { replace: true })
+        return
+      }
+      setError(err instanceof ApiError ? err.message : 'Nie udało się zalogować przez Google.')
     } finally {
       setLoading(false)
     }
@@ -69,6 +108,16 @@ export function LoginPage() {
           Zaloguj się
         </Button>
       </form>
+
+      {isWebGoogleSignInConfigured() ? (
+        <GoogleSignInButton
+          disabled={loading}
+          title="Kontynuuj z Google"
+          hint="Nowe konto? Google przeniesie Cię do rejestracji z uzupełnionym e-mailem i imieniem — zostaje PWZFz."
+          onCredential={onGoogleCredential}
+          onError={setError}
+        />
+      ) : null}
 
       <p className="auth-form__footer">
         <Link to="/register">Załóż konto (PWZFz)</Link>

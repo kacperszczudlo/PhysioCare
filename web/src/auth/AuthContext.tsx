@@ -22,6 +22,7 @@ interface AuthContextValue {
   isLoading: boolean
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
+  loginWithGoogle: (credential: string) => Promise<void>
   register: (payload: TherapistRegisterPayload) => Promise<void>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
@@ -93,6 +94,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const loginWithGoogle = useCallback(async (credential: string) => {
+    const { user: nextUser } = await authApi.loginWithGoogle(credential)
+    if (nextUser.role !== 'THERAPIST') {
+      await authApi.logout().catch(() => undefined)
+      throw new ApiError(403, 'Panel webowy jest dostępny tylko dla fizjoterapeutów.')
+    }
+    try {
+      setUser(await loadTherapistSession())
+    } catch {
+      setUser({ ...nextUser, avatar_url: nextUser.avatar_url ?? null })
+    }
+  }, [])
+
   const register = useCallback(async (payload: TherapistRegisterPayload) => {
     const { user: nextUser } = await authApi.registerTherapist(payload)
     try {
@@ -131,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       isAuthenticated: user !== null,
       login,
+      loginWithGoogle,
       register,
       logout,
       refreshSession,
@@ -141,6 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       isLoading,
       login,
+      loginWithGoogle,
       register,
       logout,
       refreshSession,
