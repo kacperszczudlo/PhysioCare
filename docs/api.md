@@ -291,11 +291,13 @@ PATCH przyjmuje płaską mapę `{ "visit_reminder": false }` albo `{ "preference
 | POST | `/me/device-tokens` | Rejestracja / odświeżenie tokenu (`expo_push_token`, opcjonalnie `platform`: `ios` / `android` / `unknown`) |
 | DELETE | `/me/device-tokens` | Dezaktywacja tokenu (body: `expo_push_token`) |
 
-Wysyłka: zdarzenia domenowe (`visit_change`, `new_document`, nowe przypisanie ćwiczeń) idą od razu. Push Expo, gdy jest aktywny token; w przeciwnym razie e-mail. Przypomnienia `visit_reminder` (okna 24h i 2h) oraz poranne `exercise_reminder` — komendy:
+Wysyłka: zdarzenia domenowe (`visit_change`, `new_document`, nowe przypisanie ćwiczeń) idą od razu. Push Expo, gdy jest aktywny token; w przeciwnym razie e-mail.
 
-`python manage.py notify_upcoming_visits`
+Przypomnienia `visit_reminder` (okna 24h i 2h, ±30 min) oraz `exercise_reminder` (raz dziennie, pierwsza tura po północy) odpala **osobny proces**:
 
-`python manage.py notify_today_exercises`
+`python manage.py run_notification_scheduler`
+
+Domyślnie co 900 s (`NOTIFICATION_SCHEDULER_INTERVAL_SECONDS`). Jedna tura: `--once`. Deduplikacja w bazie — bezpieczne wielokrotne odpalenie. Nie wpinaj schedulera w workery Gunicorn (zdublowałby ticki).
 
 Klucz `waitlist` jest w kontrakcie, ale w domenie nie ma jeszcze listy rezerwowej.
 

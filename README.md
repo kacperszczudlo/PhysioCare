@@ -99,6 +99,13 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+Przypomnienia (wizyta 24h/2h, ćwiczenia na dziś) wymagają **drugiego** procesu — `runserver` ich sam nie odlicza:
+
+```powershell
+cd backend\physiocare
+python manage.py run_notification_scheduler
+```
+
 **Reset bazy dev (po zmianie migracji):**
 
 ```powershell

@@ -134,6 +134,7 @@ Albo edytuj od razu w `C:\Users\kacpe\p` (git i tak commitujesz z repo).
 2. Zaloguj pacjenta.
 3. Zezwól na powiadomienia.
 4. Z panelu terapeuty utwórz wizytę / dokument / ćwiczenie — na telefonie powinien przyjść **push** (przy `EMAIL_BACKEND=console` e-mail i tak wyleci tylko na konsolę Django).
+5. Przypomnienia 24h/2h i „ćwiczenia na dziś” — drugi terminal: `python manage.py run_notification_scheduler` (cwd `backend/physiocare`).
 
 ---
 

@@ -70,6 +70,6 @@ Ma dać się układać grafik wizyt (czas zabiegu i dostępność specjalistów)
 
 ## Ograniczenia MVP (świadome)
 
-- Powiadomienia SMS poza zakresem v1. Push (Expo) i e-mail (gdy brak tokenu urządzenia); lista rezerwowa: preferencja bez zdarzenia domenowego.
+- Powiadomienia SMS poza zakresem v1. Push (Expo) i e-mail (gdy brak tokenu urządzenia); lista rezerwowa: preferencja bez zdarzenia domenowego. Przypomnienia 24h/2h i ćwiczenia dnia: proces `run_notification_scheduler` (bez Celery).
 - Oceny fizjoterapeuty - widok w mobile; pełny moduł opinii opcjonalny po MVP
 - Analityka terapii - podstawowe widgety na pulpicie; zaawansowane raporty poza zakresem v1

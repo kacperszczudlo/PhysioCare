@@ -273,6 +273,54 @@ def test_notify_today_exercises_command(therapist, patient, locmem_email):
 
 
 @pytest.mark.django_db
+def test_run_notification_scheduler_once_sends_visit_and_exercise(
+    therapist, patient, therapy_type, locmem_email,
+):
+    visit = Visit.objects.create(
+        patient=patient,
+        therapist=therapist,
+        therapy_type=therapy_type,
+        start_at=timezone.now() + timedelta(hours=24),
+        end_at=timezone.now() + timedelta(hours=24, minutes=45),
+        status=VisitStatus.SCHEDULED,
+    )
+    exercise = Exercise.objects.create(
+        therapist=therapist,
+        title='Mostek',
+        media_type=MediaType.VIDEO,
+        file_url='/media/exercises/mostek.mp4',
+        instruction='Unieś biodra.',
+    )
+    today = timezone.localdate()
+    ExerciseAssignment.objects.create(
+        exercise=exercise,
+        patient=patient,
+        dosage='3x10',
+        start_date=today,
+        end_date=today + timedelta(days=3),
+    )
+    call_command('run_notification_scheduler', '--once')
+    call_command('run_notification_scheduler', '--once')
+    assert NotificationDelivery.objects.filter(
+        user=patient.user,
+        pref_key=NotificationPreferenceKey.VISIT_REMINDER,
+        dedupe_key=f'visit-reminder:{visit.id}:24h',
+    ).count() == 1
+    assert NotificationDelivery.objects.filter(
+        user=patient.user,
+        pref_key=NotificationPreferenceKey.EXERCISE_REMINDER,
+        dedupe_key=f'exercise-today:{patient.user.pk}:{today.isoformat()}',
+    ).count() == 1
+
+
+def test_run_notification_scheduler_rejects_non_positive_interval():
+    from django.core.management.base import CommandError
+
+    with pytest.raises(CommandError):
+        call_command('run_notification_scheduler', '--once', '--interval', '0')
+
+
+@pytest.mark.django_db
 def test_stale_expo_token_is_deactivated_and_falls_back_to_email(
     patient, locmem_email, monkeypatch,
 ):

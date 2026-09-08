@@ -186,7 +186,7 @@ sequenceDiagram
 | **UC-15** Ćwiczenia | `Exercises` | create + assign | brak pliku -> **400** |
 | **UC-16** Profil terapeuty | `Therapist profile` | GET/PATCH `/therapist/profile/` | - |
 | **UC-17** Wizytówka | `Therapist profile` | `GET /therapists/{id}/public/` | - |
-| **UC-18** Powiadomienia | `Patient me` | GET/PATCH preferences, POST/DELETE device-tokens | wysyłka: push lub e-mail |
+| **UC-18** Powiadomienia | `Patient me` | GET/PATCH preferences, POST/DELETE device-tokens | wysyłka: push lub e-mail; przypomnienia: `run_notification_scheduler --once` |
 | **Security** | `Security` | - | patient -> `/patients/` **403**; no token **401** |
 
 Refresh token: `POST /auth/refresh/` -> 200 (w Setup).

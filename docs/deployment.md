@@ -58,6 +58,7 @@ Skopiuj z `.env.example`, w szczególności:
 - `certbot` dla HTTPS
 - systemd unit dla Gunicorn + Postgres jako usługa systemowa lub Docker Compose
 - Redis obok API, gdy `WEB_CONCURRENCY` > 1
+- systemd (lub drugi kontener) dla `python manage.py run_notification_scheduler` — przypomnienia wizyt i ćwiczeń; nie uruchamiaj tej komendy w każdym workerze Gunicorn
 
 ## Rollback (< 5 minut)
 

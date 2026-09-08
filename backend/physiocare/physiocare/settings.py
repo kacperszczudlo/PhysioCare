@@ -285,6 +285,9 @@ EXPO_PUSH_URL = os.environ.get(
     'https://exp.host/--/api/v2/push/send',
 )
 EXPO_PUSH_TIMEOUT = int(os.environ.get('EXPO_PUSH_TIMEOUT', '10'))
+NOTIFICATION_SCHEDULER_INTERVAL_SECONDS = int(
+    os.environ.get('NOTIFICATION_SCHEDULER_INTERVAL_SECONDS', '900'),
+)
 
 # Optional error alerting (production). Without DSN, errors stay in structured logs only.
 _SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()
