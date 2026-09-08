@@ -51,12 +51,14 @@ export const exercisesApi = {
       query.set('page', String(params.page))
     }
     const suffix = query.toString() ? `?${query.toString()}` : ''
-    return api.get<Paginated<Exercise> | Exercise[]>(`/therapist/exercises/${suffix}`).then((page) => {
-      if (Array.isArray(page)) {
-        return { count: page.length, next: null, previous: null, results: page }
-      }
-      return page
-    })
+    return api
+      .get<Paginated<Exercise> | Exercise[]>(`/therapist/exercises/${suffix}`)
+      .then((page) => {
+        if (Array.isArray(page)) {
+          return { count: page.length, next: null, previous: null, results: page }
+        }
+        return page
+      })
   },
 
   create(formData: FormData) {

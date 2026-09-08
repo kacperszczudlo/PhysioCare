@@ -1,13 +1,5 @@
 import { useMemo, useState } from 'react'
-import {
-  FlatList,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 
 import {
   COUNTRIES,

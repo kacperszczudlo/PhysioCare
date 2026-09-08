@@ -95,13 +95,11 @@ export function PasswordResetPage() {
       })
       setMessage(detail)
     } catch (err) {
-      const apiPasswordError =
-        getFieldError(err, 'new_password') ?? getFieldError(err, 'password')
+      const apiPasswordError = getFieldError(err, 'new_password') ?? getFieldError(err, 'password')
       if (apiPasswordError) {
         setFieldErrors({ password: apiPasswordError })
       }
-      const msg =
-        err instanceof ApiError ? err.message : 'Nie udało się zmienić hasła.'
+      const msg = err instanceof ApiError ? err.message : 'Nie udało się zmienić hasła.'
       setError(apiPasswordError && msg === apiPasswordError ? null : msg)
     } finally {
       setLoading(false)

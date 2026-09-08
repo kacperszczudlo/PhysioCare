@@ -100,12 +100,12 @@ export function PatientsPage() {
               <Link className="patients-row" to={`/patients/${patient.id}`}>
                 <span className="patients-row__identity">
                   {patient.avatar_url ? (
-                    <AuthMediaImg
-                      path={patient.avatar_url}
-                      className="patients-row__avatar"
-                    />
+                    <AuthMediaImg path={patient.avatar_url} className="patients-row__avatar" />
                   ) : (
-                    <span className="patients-row__avatar patients-row__avatar--placeholder" aria-hidden>
+                    <span
+                      className="patients-row__avatar patients-row__avatar--placeholder"
+                      aria-hidden
+                    >
                       {(patient.first_name?.[0] ?? '') + (patient.last_name?.[0] ?? '')}
                     </span>
                   )}

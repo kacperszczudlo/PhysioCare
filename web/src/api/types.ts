@@ -1,11 +1,6 @@
 export type UserRole = 'PATIENT' | 'THERAPIST'
 
-export type VisitStatus =
-  | 'PENDING_APPROVAL'
-  | 'SCHEDULED'
-  | 'COMPLETED'
-  | 'CANCELLED'
-  | 'NO_SHOW'
+export type VisitStatus = 'PENDING_APPROVAL' | 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
 
 export interface User {
   id: string
@@ -73,12 +68,7 @@ export interface TherapistProfile {
 }
 
 export type RecommendationType =
-  | 'SPECIALIST_CONSULTATION'
-  | 'IMAGING_MRI'
-  | 'IMAGING_CT'
-  | 'IMAGING_RTG'
-  | 'IMAGING_USG'
-  | 'OTHER'
+  'SPECIALIST_CONSULTATION' | 'IMAGING_MRI' | 'IMAGING_CT' | 'IMAGING_RTG' | 'IMAGING_USG' | 'OTHER'
 
 export type FundingHint = 'NFZ_VIA_DOCTOR' | 'PRIVATE' | 'NOT_APPLICABLE'
 

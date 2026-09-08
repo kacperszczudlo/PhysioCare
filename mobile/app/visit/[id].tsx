@@ -115,9 +115,7 @@ export default function VisitDetailScreen() {
                 setError(
                   getErrorMessage(
                     err,
-                    pending
-                      ? 'Nie udało się wycofać zgłoszenia.'
-                      : 'Nie udało się odwołać wizyty.',
+                    pending ? 'Nie udało się wycofać zgłoszenia.' : 'Nie udało się odwołać wizyty.',
                   ),
                 )
               } finally {

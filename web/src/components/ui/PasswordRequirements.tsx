@@ -16,18 +16,13 @@ export function PasswordRequirements({
       {requirements.map((req) => {
         const state = req.met ? 'met' : showErrors ? 'fail' : 'pending'
         return (
-          <li
-            key={req.id}
-            className={`password-reqs__item password-reqs__item--${state}`}
-          >
+          <li key={req.id} className={`password-reqs__item password-reqs__item--${state}`}>
             <span className="password-reqs__mark" aria-hidden="true">
               {req.met ? '✓' : '○'}
             </span>
             <span>
               {req.label}
-              <span className="sr-only">
-                {req.met ? ' - spełnione' : ' - niespełnione'}
-              </span>
+              <span className="sr-only">{req.met ? ' - spełnione' : ' - niespełnione'}</span>
             </span>
           </li>
         )

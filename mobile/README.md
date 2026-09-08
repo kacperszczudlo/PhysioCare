@@ -12,20 +12,20 @@ Na Windowsie zawsze `npm.cmd` (nie `npm`) — ExecutionPolicy blokuje `npm.ps1`.
 
 ## Dwa sposoby uruchomienia
 
-| Cel | Jak | Push na Androidzie |
-| --- | --- | --- |
-| Szybki UI, logowanie, wizyty, ćwiczenia | Expo Go + `npm.cmd start` | Nie — backend pada na e-mail |
-| Test pusha, ikona PhysioCare na telefonie | Native: `npm.cmd run android` | Tak (po zgodzie w OS) |
+| Cel                                       | Jak                           | Push na Androidzie           |
+| ----------------------------------------- | ----------------------------- | ---------------------------- |
+| Szybki UI, logowanie, wizyty, ćwiczenia   | Expo Go + `npm.cmd start`     | Nie — backend pada na e-mail |
+| Test pusha, ikona PhysioCare na telefonie | Native: `npm.cmd run android` | Tak (po zgodzie w OS)        |
 
 Oba wymagają działającego API: `python manage.py runserver` w `backend/physiocare`.
 
 Skopiuj `.env.example` → `.env` i ustaw `EXPO_PUBLIC_API_BASE_URL`:
 
-| Środowisko | URL |
-| --- | --- |
+| Środowisko               | URL                            |
+| ------------------------ | ------------------------------ |
 | Expo web / iOS simulator | `http://localhost:8000/api/v1` |
-| Android emulator | `http://10.0.2.2:8000/api/v1` |
-| Telefon (Go albo native) | `http://<IP-LAN>:8000/api/v1` |
+| Android emulator         | `http://10.0.2.2:8000/api/v1`  |
+| Telefon (Go albo native) | `http://<IP-LAN>:8000/api/v1`  |
 
 Telefon i PC w tej samej sieci Wi‑Fi. W Django `ALLOWED_HOSTS` / CORS muszą znać ten IP.
 
@@ -97,7 +97,7 @@ echo $env:ANDROID_HOME
 
 ### Build i wgranie na telefon (Windows)
 
-Sprawdzone na tym repo: kopia w `%USERPROFILE%\p` (nie junction), **świeży** `android/` wygenerowany *w tej kopii*, potem `expo run:android`. `LongPathsEnabled` nie wystarcza. Po `robocopy` **usuń** skopiowany `android` — inaczej zostaje `autolinking.json` z GitHuba.
+Sprawdzone na tym repo: kopia w `%USERPROFILE%\p` (nie junction), **świeży** `android/` wygenerowany _w tej kopii_, potem `expo run:android`. `LongPathsEnabled` nie wystarcza. Po `robocopy` **usuń** skopiowany `android` — inaczej zostaje `autolinking.json` z GitHuba.
 
 **Pierwszy raz / od zera:**
 
@@ -140,16 +140,16 @@ Albo edytuj od razu w `C:\Users\kacpe\p` (git i tak commitujesz z repo).
 
 ## Skrypty
 
-| Komenda | Opis |
-| --- | --- |
-| `npm.cmd start` | Expo Go / Metro |
-| `npm.cmd run android` | Native debug na urządzeniu / emulatorze |
-| `npm.cmd run ios` | Native iOS (macOS) |
-| `npm.cmd run web` | Przeglądarka |
-| `npm.cmd run lint` | ESLint + `tsc --noEmit` |
-| `npm.cmd run lint:fix` | Autofix ESLint |
-| `npm.cmd run format` | Prettier (write) |
-| `npm.cmd run format:check` | Prettier (check) |
+| Komenda                    | Opis                                    |
+| -------------------------- | --------------------------------------- |
+| `npm.cmd start`            | Expo Go / Metro                         |
+| `npm.cmd run android`      | Native debug na urządzeniu / emulatorze |
+| `npm.cmd run ios`          | Native iOS (macOS)                      |
+| `npm.cmd run web`          | Przeglądarka                            |
+| `npm.cmd run lint`         | ESLint + `tsc --noEmit`                 |
+| `npm.cmd run lint:fix`     | Autofix ESLint                          |
+| `npm.cmd run format`       | Prettier (write)                        |
+| `npm.cmd run format:check` | Prettier (check)                        |
 
 ## Struktura
 

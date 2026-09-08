@@ -203,9 +203,7 @@ export default function DashboardScreen() {
               </Pressable>
               <Pressable
                 style={styles.exerciseBody}
-                onPress={() =>
-                  router.push({ pathname: '/exercise/[id]', params: { id: item.id } })
-                }
+                onPress={() => router.push({ pathname: '/exercise/[id]', params: { id: item.id } })}
                 accessibilityRole="button"
                 accessibilityLabel={`Szczegóły: ${item.exercise_title}`}
               >

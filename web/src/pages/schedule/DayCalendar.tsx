@@ -148,11 +148,7 @@ export function DayCalendar({
       return 0
     }
     const rect = grid.getBoundingClientRect()
-    return clamp(
-      snapMinutes((clientY - rect.top) / PX_PER_MINUTE),
-      0,
-      dayMinutes - SNAP_MINUTES,
-    )
+    return clamp(snapMinutes((clientY - rect.top) / PX_PER_MINUTE), 0, dayMinutes - SNAP_MINUTES)
   }
 
   function beginDrag(visit: Visit, event: ReactPointerEvent<HTMLElement>) {

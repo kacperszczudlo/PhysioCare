@@ -120,7 +120,12 @@ interface WheelColumnProps {
   accessibilityLabel: string
 }
 
-function WheelColumn({ items, selectedIndex, onChangeIndex, accessibilityLabel }: WheelColumnProps) {
+function WheelColumn({
+  items,
+  selectedIndex,
+  onChangeIndex,
+  accessibilityLabel,
+}: WheelColumnProps) {
   const scrollRef = useRef<ScrollView>(null)
   const [activeIndex, setActiveIndex] = useState(selectedIndex)
   const isUserScrolling = useRef(false)
@@ -234,10 +239,7 @@ export function DateTimePickerField({
   startHour = CLINIC_START_HOUR,
   endHour = CLINIC_END_HOUR,
 }: DateTimePickerFieldProps) {
-  const minTime = useMemo(
-    () => startOfDay(minimumDate ?? new Date()).getTime(),
-    [minimumDate],
-  )
+  const minTime = useMemo(() => startOfDay(minimumDate ?? new Date()).getTime(), [minimumDate])
   const minDay = useMemo(() => new Date(minTime), [minTime])
   const days = useMemo(() => buildDays(minDay, dayCount), [minDay, dayCount])
   const hours = useMemo(() => buildHours(startHour, endHour), [startHour, endHour])
@@ -311,7 +313,9 @@ export function DateTimePickerField({
               return (
                 <Pressable
                   key={day.toISOString()}
-                  onPress={() => emit(day, hours[hourIndex] ?? startHour, minutes[minuteIndex] ?? 0)}
+                  onPress={() =>
+                    emit(day, hours[hourIndex] ?? startHour, minutes[minuteIndex] ?? 0)
+                  }
                   style={[styles.dayChip, selected ? styles.dayChipOn : null]}
                   accessibilityRole="button"
                   accessibilityState={{ selected }}

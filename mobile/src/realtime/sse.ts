@@ -145,7 +145,12 @@ export function connectPatientRealtime(): () => void {
         void refreshAccessToken().finally(scheduleReconnect)
         return
       }
-      if (err.type === 'error' && 'xhrStatus' in err && typeof err.xhrStatus === 'number' && err.xhrStatus >= 400) {
+      if (
+        err.type === 'error' &&
+        'xhrStatus' in err &&
+        typeof err.xhrStatus === 'number' &&
+        err.xhrStatus >= 400
+      ) {
         tearDownSource()
         scheduleReconnect()
       }

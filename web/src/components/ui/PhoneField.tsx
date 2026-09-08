@@ -1,6 +1,11 @@
 import { useId } from 'react'
 
-import { COUNTRIES, DEFAULT_COUNTRY_CODE, formatCountryOption, getCountryByCode } from '@/lib/countries'
+import {
+  COUNTRIES,
+  DEFAULT_COUNTRY_CODE,
+  formatCountryOption,
+  getCountryByCode,
+} from '@/lib/countries'
 
 import './Field.css'
 import './PhoneField.css'

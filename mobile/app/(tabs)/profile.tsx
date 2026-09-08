@@ -1,13 +1,7 @@
 import { useFocusEffect, useRouter } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
 import { useCallback, useEffect, useState } from 'react'
-import {
-  Image,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { Image, RefreshControl, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage, getFieldError } from '@/api/client'
 import { patientApi } from '@/api/patient'

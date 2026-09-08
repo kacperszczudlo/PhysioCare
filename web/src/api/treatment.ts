@@ -218,10 +218,7 @@ export const treatmentApi = {
       physician_notified?: boolean
     },
   ) {
-    return api.patch<PhysicianOrderRefusal>(
-      `/episodes/${episodeId}/order-refusals/${id}/`,
-      payload,
-    )
+    return api.patch<PhysicianOrderRefusal>(`/episodes/${episodeId}/order-refusals/${id}/`, payload)
   },
 
   listReceptaNaRuch(patientId: string) {

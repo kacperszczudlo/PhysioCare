@@ -126,7 +126,10 @@ export default function VisitRequestScreen() {
                     accessibilityState={{ selected }}
                   >
                     <View
-                      style={[styles.typeDot, { backgroundColor: type.color_hex || colors.primary }]}
+                      style={[
+                        styles.typeDot,
+                        { backgroundColor: type.color_hex || colors.primary },
+                      ]}
                     />
                     <View style={styles.typeBody}>
                       <Text style={styles.typeName}>{type.name}</Text>

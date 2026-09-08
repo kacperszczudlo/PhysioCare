@@ -164,9 +164,7 @@ export default function DocumentsScreen() {
             />
           }
         >
-          {error ? (
-            <ErrorBanner message={error} onRetry={() => void load(filter)} />
-          ) : null}
+          {error ? <ErrorBanner message={error} onRetry={() => void load(filter)} /> : null}
 
           {items.length === 0 ? (
             <EmptyState
@@ -181,9 +179,7 @@ export default function DocumentsScreen() {
                   key={`${doc.kind}:${doc.id}`}
                   doc={doc}
                   expanded={open}
-                  onToggle={() =>
-                    setExpandedId(open ? null : `${doc.kind}:${doc.id}`)
-                  }
+                  onToggle={() => setExpandedId(open ? null : `${doc.kind}:${doc.id}`)}
                 />
               )
             })
@@ -294,11 +290,7 @@ function DetailRows({ doc }: { doc: ClinicalDocumentItem }) {
   )
 }
 
-function pushRow(
-  rows: { label: string; value: string }[],
-  label: string,
-  value: unknown,
-) {
+function pushRow(rows: { label: string; value: string }[], label: string, value: unknown) {
   const text = detailText(value).trim()
   if (!text) {
     return

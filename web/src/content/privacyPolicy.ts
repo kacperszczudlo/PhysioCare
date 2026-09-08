@@ -26,7 +26,8 @@ export const PRIVACY_SUMMARY_ROWS: { topic: string; summary: string }[] = [
   },
   {
     topic: 'Jakie dane',
-    summary: 'Dane konta, kontaktowe, opcjonalnie PESEL; dane zdrowotne; dane techniczne sesji; przy pushu — token urządzenia.',
+    summary:
+      'Dane konta, kontaktowe, opcjonalnie PESEL; dane zdrowotne; dane techniczne sesji; przy pushu — token urządzenia.',
   },
   {
     topic: 'Zgody',
@@ -43,7 +44,8 @@ export const PRIVACY_SUMMARY_ROWS: { topic: string; summary: string }[] = [
   },
   {
     topic: 'Twoje prawa',
-    summary: 'Dostęp, sprostowanie, usunięcie, ograniczenie, przenoszenie, sprzeciw, skarga do UODO.',
+    summary:
+      'Dostęp, sprostowanie, usunięcie, ograniczenie, przenoszenie, sprzeciw, skarga do UODO.',
   },
 ]
 
@@ -133,7 +135,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     title: '10. Twoje prawa',
     paragraphs: [
       'Przysługują Ci prawa dostępu, sprostowania, usunięcia, ograniczenia, przenoszenia, sprzeciwu, wycofania zgody oraz skargi do UODO (ul. Stawki 2, 00-193 Warszawa).',
-          'W aplikacji: eksport (profil, wizyty, epizody, dokumenty, ćwiczenia, preferencje powiadomień, odcisk tokenu urządzenia) i wniosek o usunięcie konta (pacjent — zapis wniosku, dezaktywacja, unieważnienie sesji), przełączniki zgód opcjonalnych, strona /account-deletion gdy nie ma aplikacji.',
+      'W aplikacji: eksport (profil, wizyty, epizody, dokumenty, ćwiczenia, preferencje powiadomień, odcisk tokenu urządzenia) i wniosek o usunięcie konta (pacjent — zapis wniosku, dezaktywacja, unieważnienie sesji), przełączniki zgód opcjonalnych, strona /account-deletion gdy nie ma aplikacji.',
       'Nie żądamy nadmiarowych danych tylko po to, by Cię zidentyfikować, jeśli wcześniej nie byliśmy w stanie Cię zidentyfikować (art. 11 RODO).',
     ],
   },

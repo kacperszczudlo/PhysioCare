@@ -52,8 +52,7 @@ export function Field({
   const errorId = error && fieldId ? `${fieldId}-error` : undefined
   const hintId = hint && fieldId ? `${fieldId}-hint` : undefined
   const { 'aria-describedby': extraDescribedBy, ...inputProps } = rest
-  const describedBy =
-    [errorId, hintId, extraDescribedBy].filter(Boolean).join(' ') || undefined
+  const describedBy = [errorId, hintId, extraDescribedBy].filter(Boolean).join(' ') || undefined
 
   const [revealed, setRevealed] = useState(false)
   const canReveal = type === 'password' && (revealable ?? true)
@@ -64,7 +63,9 @@ export function Field({
       <label className="ui-field__label" htmlFor={fieldId}>
         {label}
       </label>
-      <div className={canReveal ? 'ui-field__control ui-field__control--reveal' : 'ui-field__control'}>
+      <div
+        className={canReveal ? 'ui-field__control ui-field__control--reveal' : 'ui-field__control'}
+      >
         <input
           id={fieldId}
           type={inputType}

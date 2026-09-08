@@ -29,13 +29,7 @@ export function AppLayout() {
     <div className="app-shell">
       <aside className="app-shell__sidebar" aria-label="Nawigacja główna">
         <Link to="/" className="app-shell__brand" aria-label="PhysioCare — Pulpit">
-          <img
-            className="app-shell__mark"
-            src="/brand/sygnet.png"
-            alt=""
-            width={48}
-            height={48}
-          />
+          <img className="app-shell__mark" src="/brand/sygnet.png" alt="" width={48} height={48} />
           <div>
             <p className="app-shell__product">PhysioCare</p>
             <p className="app-shell__product-sub">Panel fizjoterapeuty</p>
@@ -58,12 +52,13 @@ export function AppLayout() {
         </nav>
 
         <div className="app-shell__footer">
-          <NavLink to="/profile" className="app-shell__identity" aria-label={`Profil: ${displayName}`}>
+          <NavLink
+            to="/profile"
+            className="app-shell__identity"
+            aria-label={`Profil: ${displayName}`}
+          >
             {user?.avatar_url ? (
-              <AuthMediaImg
-                path={user.avatar_url}
-                className="app-shell__avatar"
-              />
+              <AuthMediaImg path={user.avatar_url} className="app-shell__avatar" />
             ) : (
               <span className="app-shell__avatar app-shell__avatar--fallback" aria-hidden="true">
                 {initials(user?.first_name, user?.last_name)}

@@ -82,7 +82,10 @@ export function SettingsPage() {
 
       <div className="settings-grid">
         <div className="settings-main">
-          <section className="settings-card settings-card--account" aria-labelledby="account-heading">
+          <section
+            className="settings-card settings-card--account"
+            aria-labelledby="account-heading"
+          >
             <header className="settings-card__head">
               <h2 id="account-heading">Konto</h2>
               <p className="settings-muted">Aktywna sesja w panelu fizjoterapeuty.</p>
@@ -90,12 +93,12 @@ export function SettingsPage() {
 
             <div className="settings-identity">
               {user?.avatar_url ? (
-                <AuthMediaImg
-                  path={user.avatar_url}
-                  className="settings-identity__avatar"
-                />
+                <AuthMediaImg path={user.avatar_url} className="settings-identity__avatar" />
               ) : (
-                <span className="settings-identity__avatar settings-identity__avatar--fallback" aria-hidden="true">
+                <span
+                  className="settings-identity__avatar settings-identity__avatar--fallback"
+                  aria-hidden="true"
+                >
                   {initials(user?.first_name, user?.last_name)}
                 </span>
               )}
@@ -153,7 +156,10 @@ export function SettingsPage() {
                   required
                 />
               </div>
-              <PasswordRequirements requirements={passwordRequirements} showErrors={passwordTouched} />
+              <PasswordRequirements
+                requirements={passwordRequirements}
+                showErrors={passwordTouched}
+              />
             </div>
 
             <div className="settings-actions">
@@ -198,12 +204,20 @@ export function SettingsPage() {
             </nav>
           </section>
 
-          <section className="settings-card settings-card--session" aria-labelledby="session-heading">
+          <section
+            className="settings-card settings-card--session"
+            aria-labelledby="session-heading"
+          >
             <header className="settings-card__head">
               <h2 id="session-heading">Sesja</h2>
               <p className="settings-muted">Kończy dostęp na tym urządzeniu.</p>
             </header>
-            <Button type="button" variant="secondary" className="settings-logout" onClick={() => void logout()}>
+            <Button
+              type="button"
+              variant="secondary"
+              className="settings-logout"
+              onClick={() => void logout()}
+            >
               Wyloguj
             </Button>
           </section>

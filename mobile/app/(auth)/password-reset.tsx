@@ -74,8 +74,7 @@ export default function PasswordResetScreen() {
       })
       setMessage(detail)
     } catch (err) {
-      const apiPasswordError =
-        getFieldError(err, 'new_password') ?? getFieldError(err, 'password')
+      const apiPasswordError = getFieldError(err, 'new_password') ?? getFieldError(err, 'password')
       if (apiPasswordError) {
         setPasswordError(apiPasswordError)
         setError(null)

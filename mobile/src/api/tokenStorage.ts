@@ -19,8 +19,7 @@ async function setItem(key: string, value: string): Promise<void> {
     memory.set(key, value)
     try {
       localStorage.setItem(key, value)
-    } catch {
-    }
+    } catch {}
     return
   }
   await SecureStore.setItemAsync(key, value)
@@ -45,8 +44,7 @@ async function deleteItem(key: string): Promise<void> {
     memory.delete(key)
     try {
       localStorage.removeItem(key)
-    } catch {
-    }
+    } catch {}
     return
   }
   await SecureStore.deleteItemAsync(key)

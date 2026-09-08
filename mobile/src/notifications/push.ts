@@ -178,7 +178,9 @@ export async function subscribeNotificationResponses(
     return () => undefined
   }
 
-  function handleResponse(response: { notification: { request: { content: { data: unknown } } } } | null) {
+  function handleResponse(
+    response: { notification: { request: { content: { data: unknown } } } } | null,
+  ) {
     if (!response) {
       return
     }
