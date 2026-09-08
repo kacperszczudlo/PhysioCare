@@ -97,6 +97,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'physiocare.wsgi.application'
+ASGI_APPLICATION = 'physiocare.asgi.application'
 
 
 def postgres_database(*, db_name=None, test_db_name=None):
@@ -288,6 +289,9 @@ EXPO_PUSH_TIMEOUT = int(os.environ.get('EXPO_PUSH_TIMEOUT', '10'))
 NOTIFICATION_SCHEDULER_INTERVAL_SECONDS = int(
     os.environ.get('NOTIFICATION_SCHEDULER_INTERVAL_SECONDS', '900'),
 )
+# SSE (/api/v1/me/events/): heartbeat + optional frame cap (tests). 0 = unlimited.
+SSE_HEARTBEAT_SECONDS = int(os.environ.get('SSE_HEARTBEAT_SECONDS', '20'))
+SSE_MAX_FRAMES = int(os.environ.get('SSE_MAX_FRAMES', '0'))
 
 # Optional error alerting (production). Without DSN, errors stay in structured logs only.
 _SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()

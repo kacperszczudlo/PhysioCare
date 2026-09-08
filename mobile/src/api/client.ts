@@ -212,6 +212,11 @@ async function tryRefreshSession(): Promise<boolean> {
   return refreshPromise
 }
 
+/** Odświeża access JWT (także przed reconnectem SSE). */
+export async function refreshAccessToken(): Promise<boolean> {
+  return tryRefreshSession()
+}
+
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, skipAuthRefresh, auth = true, headers: customHeaders, ...rest } = options
   const headers = new Headers(customHeaders)

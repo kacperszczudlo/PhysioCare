@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from 'expo-router'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
@@ -9,6 +9,9 @@ import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { formatDateTime, formatTimeRange, visitStatusLabel } from '@/lib/format'
+import { isVisitRealtimeEvent } from '@/realtime/types'
+import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
+import { useSilentPoll } from '@/realtime/useSilentPoll'
 import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
 type TabKey = 'upcoming' | 'past'
@@ -20,14 +23,24 @@ export default function VisitsScreen() {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const tabRef = useRef(tab)
+  tabRef.current = tab
+  const softReloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const load = useCallback(async (status: TabKey) => {
-    setError(null)
+  const load = useCallback(async (status: TabKey, opts?: { silent?: boolean }) => {
+    if (!opts?.silent) {
+      setError(null)
+    }
     try {
       const data = await patientApi.getVisits(status)
       setVisits(data)
+      if (opts?.silent) {
+        setError(null)
+      }
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się pobrać wizyt.'))
+      if (!opts?.silent) {
+        setError(getErrorMessage(err, 'Nie udało się pobrać wizyt.'))
+      }
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -40,6 +53,38 @@ export default function VisitsScreen() {
       void load(tab)
     }, [load, tab]),
   )
+
+  useRealtimeEvents(
+    useCallback(
+      (event) => {
+        if (!isVisitRealtimeEvent(event)) {
+          return
+        }
+        if (softReloadTimer.current != null) {
+          clearTimeout(softReloadTimer.current)
+        }
+        softReloadTimer.current = setTimeout(() => {
+          softReloadTimer.current = null
+          void load(tabRef.current, { silent: true })
+        }, 250)
+      },
+      [load],
+    ),
+  )
+
+  useSilentPoll(
+    useCallback(() => {
+      void load(tabRef.current, { silent: true })
+    }, [load]),
+  )
+
+  useEffect(() => {
+    return () => {
+      if (softReloadTimer.current != null) {
+        clearTimeout(softReloadTimer.current)
+      }
+    }
+  }, [])
 
   function switchTab(next: TabKey) {
     if (next === tab) {

@@ -35,7 +35,8 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
 
 let refreshPromise: Promise<boolean> | null = null
 
-async function tryRefreshSession(): Promise<boolean> {
+/** Odświeża access cookie (używane też przez SSE reconnect). */
+export async function refreshAccessToken(): Promise<boolean> {
   if (refreshPromise) {
     return refreshPromise
   }
@@ -57,6 +58,10 @@ async function tryRefreshSession(): Promise<boolean> {
   })()
 
   return refreshPromise
+}
+
+async function tryRefreshSession(): Promise<boolean> {
+  return refreshAccessToken()
 }
 
 const GENERIC_API_MESSAGES = new Set([

@@ -1,8 +1,13 @@
 from django.urls import path
 
-from .views import MeDeviceTokenView, MeNotificationPreferencesView
+from .views import MeDeviceTokenView, MeEventsView, MeNotificationPreferencesView
 
 me_urlpatterns = [
+    path(
+        'events/',
+        MeEventsView.as_view(),
+        name='me-events',
+    ),
     path(
         'notification-preferences/',
         MeNotificationPreferencesView.as_view(),

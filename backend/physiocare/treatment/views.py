@@ -6,11 +6,13 @@ from rest_framework.views import APIView
 
 from core.mixins import PatientSelfMixin, TherapistPatientQuerysetMixin
 from core.permissions import IsEpisodeParticipant, IsPatient, IsTherapist
+from notifications.events import publish_document_realtime
 from patients.models import PatientProfile
 from therapists.medical_devices import catalog_as_list, groups_summary
 
 from .models import (
     BodyAreaPain,
+    DeviceOrderStatus,
     DiagnosticRecommendation,
     EpisodeStatus,
     MedicalDeviceOrder,
@@ -150,6 +152,7 @@ class EpisodeDiagnosticRecommendationListCreateView(generics.ListCreateAPIView):
         if recommendation.red_flags_noted and episode.status == EpisodeStatus.IN_PROGRESS:
             episode.status = EpisodeStatus.REFERRED
             episode.save(update_fields=['status'])
+        publish_document_realtime(episode.patient, recommendation.id)
 
 
 class EpisodeDeviceOrderListCreateView(generics.ListCreateAPIView):
@@ -166,11 +169,13 @@ class EpisodeDeviceOrderListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         episode = self.get_episode()
-        serializer.save(
+        order = serializer.save(
             episode=episode,
             patient=episode.patient,
             therapist=self.request.user.therapist_profile,
         )
+        if order.status == DeviceOrderStatus.ISSUED:
+            publish_document_realtime(episode.patient, order.id)
 
 
 class EpisodeOrderRefusalListCreateView(generics.ListCreateAPIView):
@@ -184,10 +189,12 @@ class EpisodeOrderRefusalListCreateView(generics.ListCreateAPIView):
         return PhysicianOrderRefusal.objects.filter(episode=self.get_episode())
 
     def perform_create(self, serializer):
-        serializer.save(
-            episode=self.get_episode(),
+        episode = self.get_episode()
+        refusal = serializer.save(
+            episode=episode,
             therapist=self.request.user.therapist_profile,
         )
+        publish_document_realtime(episode.patient, refusal.id)
 
 
 class EpisodeDiagnosticRecommendationDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -256,10 +263,12 @@ class PatientReceptaNaRuchListCreateView(TherapistPatientQuerysetMixin, generics
         episode = serializer.validated_data.get('episode')
         if episode is not None and episode.patient_id != patient.id:
             raise ValidationError({'episode': 'Epizod nie należy do tego pacjenta.'})
-        serializer.save(
+        referral = serializer.save(
             patient=patient,
             therapist=self.request.user.therapist_profile,
         )
+        if referral.status == DeviceOrderStatus.ISSUED:
+            publish_document_realtime(patient, referral.id)
 
 
 class PatientReceptaNaRuchDetailView(TherapistPatientQuerysetMixin, generics.RetrieveUpdateDestroyAPIView):

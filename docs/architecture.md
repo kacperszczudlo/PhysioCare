@@ -2,14 +2,14 @@
 
 ## Przegląd
 
-PhysioCare składa się z trzech części: panelu React, klienta Expo i jednego backendu REST nad PostgreSQL. Oba fronty mówią z API wyłącznie przez HTTPS i JSON.
+PhysioCare składa się z trzech części: panelu React, klienta Expo i jednego backendu REST nad PostgreSQL. Fronty mówią z API przez HTTPS (JSON). Kanał **SSE** (`GET /api/v1/me/events/`) służy do live odświeżania otwartego UI — mały sygnał eventowy, potem refetch REST; push Expo/e-mail zostają na tło. Kontrakt: [api.md — Realtime SSE](api.md#realtime--sse-meevents).
 
 ```
 +-----------------+     +-----------------+
 |  Web (React)    |     | Mobile (Expo)   |
 |  Fizjoterapeuta |     | Pacjent         |
 +--------+--------+     +--------+--------+
-         |    HTTPS / JSON       |
+         |    HTTPS JSON + SSE     |
          +----------+------------+
                     v
          +----------------------+

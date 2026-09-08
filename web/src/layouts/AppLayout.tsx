@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom'
 
 import { useAuth } from '@/auth/AuthContext'
 import { AuthMediaImg } from '@/components/AuthMedia'
+import { useTherapistRealtimeConnection } from '@/realtime/useTherapistRealtimeConnection'
 import './AppLayout.css'
 
 const NAV: ReadonlyArray<{ to: string; label: string; end?: boolean }> = [
@@ -20,6 +21,7 @@ function initials(first?: string, last?: string): string {
 
 export function AppLayout() {
   const { user } = useAuth()
+  useTherapistRealtimeConnection()
   const displayName =
     [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || 'Fizjoterapeuta'
 

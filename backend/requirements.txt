@@ -6,6 +6,7 @@ psycopg2-binary>=2.9
 python-dotenv>=1.0
 redis>=5.0
 sentry-sdk>=2.0
+uvicorn>=0.32
 pytest>=8.0
 pytest-cov>=7.0
 pytest-django>=4.9

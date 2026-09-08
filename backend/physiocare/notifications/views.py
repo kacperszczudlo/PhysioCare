@@ -1,3 +1,4 @@
+from django.http import StreamingHttpResponse
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -15,6 +16,26 @@ from notifications.serializers import (
     NotificationPreferencePatchSerializer,
     NotificationPreferenceSerializer,
 )
+from notifications.renderers import ServerSentEventRenderer
+from notifications.sse import iter_sse_frames
+
+
+class MeEventsView(APIView):
+    """Server-Sent Events stream for live UI invalidation (see docs/api.md)."""
+
+    permission_classes = [IsAuthenticated]
+    # EventSource wysyła Accept: text/event-stream — bez tego DRF zwraca 406.
+    renderer_classes = [ServerSentEventRenderer]
+
+    def get(self, request):
+        response = StreamingHttpResponse(
+            iter_sse_frames(str(request.user.pk)),
+            content_type='text/event-stream',
+        )
+        response['Cache-Control'] = 'no-cache, no-transform'
+        response['X-Accel-Buffering'] = 'no'
+        # Nie ustawiaj Connection: keep-alive — to hop-by-hop header; WSGI (runserver) rzuca 500.
+        return response
 
 
 class MeNotificationPreferencesView(APIView):

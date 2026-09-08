@@ -10,6 +10,7 @@ import { OfflineBanner } from '@/components/OfflineBanner'
 import { NetworkProvider } from '@/network/NetworkContext'
 import { configureNotificationHandler } from '@/notifications/push'
 import { NotificationObserver } from '@/notifications/NotificationObserver'
+import { RealtimeObserver } from '@/realtime/RealtimeObserver'
 import { colors } from '@/theme/tokens'
 
 configureNotificationHandler()
@@ -72,6 +73,7 @@ export default function RootLayout() {
         <NetworkProvider>
           <AuthProvider>
             <NotificationObserver />
+            <RealtimeObserver />
             <RootNavigator />
           </AuthProvider>
         </NetworkProvider>

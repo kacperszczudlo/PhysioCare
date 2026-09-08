@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { therapistApi } from '@/api/auth'
@@ -12,6 +12,8 @@ import { CreateExerciseModal } from '@/pages/exercises/CreateExerciseModal'
 import { VisitFormModal } from '@/pages/schedule/VisitFormModal'
 import { AuthMediaImg } from '@/components/AuthMedia'
 import { addDays, formatTime, startOfDay, toDateInputValue } from '@/lib/scheduleTime'
+import { isVisitRealtimeEvent } from '@/realtime/types'
+import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
 import './DashboardPage.css'
 
 const UPCOMING_VISITS_PREVIEW = 5
@@ -185,6 +187,8 @@ export function DashboardPage() {
   const [reloadToken, setReloadToken] = useState(0)
   const [createExerciseOpen, setCreateExerciseOpen] = useState(false)
   const [createVisitOpen, setCreateVisitOpen] = useState(false)
+  const showLoadingRef = useRef(true)
+  const softReloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const today = useMemo(() => startOfDay(now), [now])
   const greeting = greetingForHour(now.getHours(), user?.first_name)
@@ -197,14 +201,48 @@ export function DashboardPage() {
   }, [visits])
 
   const reload = useCallback(() => {
+    showLoadingRef.current = true
     setReloadToken((value) => value + 1)
+  }, [])
+
+  const softReload = useCallback(() => {
+    showLoadingRef.current = false
+    setReloadToken((value) => value + 1)
+  }, [])
+
+  useRealtimeEvents(
+    useCallback(
+      (event) => {
+        if (!isVisitRealtimeEvent(event)) {
+          return
+        }
+        if (softReloadTimer.current != null) {
+          clearTimeout(softReloadTimer.current)
+        }
+        softReloadTimer.current = setTimeout(() => {
+          softReloadTimer.current = null
+          softReload()
+        }, 250)
+      },
+      [softReload],
+    ),
+  )
+
+  useEffect(() => {
+    return () => {
+      if (softReloadTimer.current != null) {
+        clearTimeout(softReloadTimer.current)
+      }
+    }
   }, [])
 
   useEffect(() => {
     let cancelled = false
 
     async function load() {
-      setLoading(true)
+      if (showLoadingRef.current) {
+        setLoading(true)
+      }
       setError(null)
       try {
         const [statsData, visitsData] = await Promise.all([
@@ -223,6 +261,7 @@ export function DashboardPage() {
         }
       } finally {
         if (!cancelled) {
+          showLoadingRef.current = true
           setLoading(false)
         }
       }
