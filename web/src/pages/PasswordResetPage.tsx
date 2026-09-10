@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ApiError, getFieldError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
@@ -26,6 +26,7 @@ export function PasswordResetPage() {
     logout,
     isAuthenticated,
   } = useAuth()
+  const navigate = useNavigate()
   const [params] = useSearchParams()
   const emailFromQuery = (params.get('email') ?? '').trim()
 
@@ -37,7 +38,6 @@ export function PasswordResetPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<{
     email?: string
     code?: string
@@ -57,12 +57,24 @@ export function PasswordResetPage() {
     setResetToken('')
     setPassword('')
     setConfirmPassword('')
-    setDone(false)
     setMessage(null)
     setError(null)
     setFieldErrors({})
     setPasswordTouched(false)
     setSubmitted(false)
+  }
+
+  function goToCodeStep(notice?: string | null) {
+    setStep('code')
+    setCode('')
+    setResetToken('')
+    setPassword('')
+    setConfirmPassword('')
+    setPasswordTouched(false)
+    setSubmitted(false)
+    setFieldErrors({})
+    setError(null)
+    setMessage(notice ?? null)
   }
 
   async function onRequest(event: FormEvent<HTMLFormElement>) {
@@ -78,10 +90,7 @@ export function PasswordResetPage() {
     setLoading(true)
     try {
       const detail = await requestPasswordReset(email.trim())
-      setMessage(detail)
-      setCode('')
-      setResetToken('')
-      setStep('code')
+      goToCodeStep(detail)
     } catch (err) {
       const apiEmailError = getFieldError(err, 'email')
       if (apiEmailError) {
@@ -90,6 +99,23 @@ export function PasswordResetPage() {
       } else {
         setError(err instanceof ApiError ? err.message : 'Nie udało się wysłać kodu.')
       }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function onResendCode() {
+    setError(null)
+    setMessage(null)
+    setLoading(true)
+    try {
+      const detail = await requestPasswordReset(email.trim())
+      setCode('')
+      setResetToken('')
+      setStep('code')
+      setMessage(detail)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Nie udało się wysłać kodu ponownie.')
     } finally {
       setLoading(false)
     }
@@ -112,6 +138,7 @@ export function PasswordResetPage() {
       setPassword('')
       setConfirmPassword('')
       setMessage(null)
+      setError(null)
       setStep('password')
     } catch (err) {
       const apiCodeError = getFieldError(err, 'code')
@@ -145,15 +172,14 @@ export function PasswordResetPage() {
       return
     }
     if (!resetToken) {
-      setError('Sesja resetu wygasła. Poproś o nowy kod.')
-      setStep('request')
+      goToCodeStep('Sesja resetu wygasła. Wyślij kod ponownie.')
       return
     }
 
     setFieldErrors({})
     setLoading(true)
     try {
-      const detail = await confirmPasswordReset({
+      await confirmPasswordReset({
         reset_token: resetToken,
         new_password: password,
         new_password_confirm: confirmPassword,
@@ -161,15 +187,26 @@ export function PasswordResetPage() {
       if (isAuthenticated) {
         await logout().catch(() => undefined)
       }
-      setDone(true)
-      setMessage(`${detail} Możesz się zalogować nowym hasłem.`)
+      navigate('/login', {
+        replace: true,
+        state: {
+          notice: 'Hasło zostało zmienione. Zaloguj się nowym hasłem.',
+          email: email.trim(),
+        },
+      })
     } catch (err) {
       const apiPasswordError = getFieldError(err, 'new_password') ?? getFieldError(err, 'password')
       if (apiPasswordError) {
         setFieldErrors({ password: apiPasswordError })
+        setError(null)
+        return
       }
       const msg = err instanceof ApiError ? err.message : 'Nie udało się zmienić hasła.'
-      setError(apiPasswordError && msg === apiPasswordError ? null : msg)
+      if (err instanceof ApiError && err.code === 'AUTH_028') {
+        goToCodeStep(`${msg} Wyślij kod ponownie.`)
+        return
+      }
+      setError(msg)
     } finally {
       setLoading(false)
     }
@@ -179,7 +216,7 @@ export function PasswordResetPage() {
     step === 'code' ? 'Kod z e-maila' : step === 'password' ? 'Nowe hasło' : 'Reset hasła'
   const subtitle =
     step === 'code'
-      ? 'Sprawdź skrzynkę (także Spam) i wpisz 6-cyfrowy kod.'
+      ? `Wysłaliśmy 6-cyfrowy kod${email.trim() ? ` na ${email.trim()}` : ''}. Wpisz go poniżej.`
       : step === 'password'
         ? 'Ustaw nowe hasło i powtórz je, żeby potwierdzić.'
         : 'Podaj e-mail powiązany z kontem. Wyślemy 6-cyfrowy kod resetu hasła.'
@@ -193,14 +230,6 @@ export function PasswordResetPage() {
 
       {step === 'code' ? (
         <form className="auth-form__body" onSubmit={onVerifyCode} noValidate>
-          <Field
-            label="E-mail"
-            name="email"
-            type="email"
-            autoComplete="email"
-            value={email}
-            readOnly
-          />
           <Field
             label="Kod z e-maila"
             name="code"
@@ -221,8 +250,16 @@ export function PasswordResetPage() {
           <Button type="submit" loading={loading} className="auth-form__submit">
             Potwierdź kod
           </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={loading}
+            onClick={() => void onResendCode()}
+          >
+            Wyślij kod ponownie
+          </Button>
           <Button type="button" variant="secondary" disabled={loading} onClick={goToRequest}>
-            Wróć / wyślij kod ponownie
+            Zmień e-mail
           </Button>
         </form>
       ) : step === 'password' ? (
@@ -268,21 +305,17 @@ export function PasswordResetPage() {
             />
           </div>
           {error ? <ErrorBanner message={error} /> : null}
-          {message ? <SuccessBanner message={message} /> : null}
-          {!done ? (
-            <Button type="submit" loading={loading} className="auth-form__submit">
-              Zapisz hasło
-            </Button>
-          ) : (
-            <p className="auth-form__footer" style={{ marginTop: 0 }}>
-              <Link to="/login">Przejdź do logowania</Link>
-            </p>
-          )}
-          {!done ? (
-            <Button type="button" variant="secondary" disabled={loading} onClick={goToRequest}>
-              Anuluj i zacznij od nowa
-            </Button>
-          ) : null}
+          <Button type="submit" loading={loading} className="auth-form__submit">
+            Zapisz hasło
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={loading}
+            onClick={() => void onResendCode()}
+          >
+            Wyślij kod ponownie
+          </Button>
         </form>
       ) : (
         <form className="auth-form__body" onSubmit={onRequest} noValidate>

@@ -1,8 +1,8 @@
-import { Link, useLocalSearchParams, useRouter } from 'expo-router'
+import { Link, useLocalSearchParams, useRouter, type Href } from 'expo-router'
 import { useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
-import { getErrorMessage, getFieldError } from '@/api/client'
+import { ApiError, getErrorMessage, getFieldError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
 import { ErrorBanner, SuccessBanner } from '@/components/AsyncState'
 import { BrandMark } from '@/components/BrandMark'
@@ -71,6 +71,20 @@ export default function PasswordResetScreen() {
     setPasswordTouched(false)
   }
 
+  function goToCodeStep(notice?: string | null) {
+    setStep('code')
+    setCode('')
+    setResetToken('')
+    setPassword('')
+    setConfirmPassword('')
+    setPasswordTouched(false)
+    setCodeError(null)
+    setPasswordError(null)
+    setConfirmPasswordError(null)
+    setError(null)
+    setMessage(notice ?? null)
+  }
+
   async function onRequest() {
     setError(null)
     setMessage(null)
@@ -83,10 +97,7 @@ export default function PasswordResetScreen() {
     setLoading(true)
     try {
       const detail = await requestPasswordReset(email.trim())
-      setMessage(detail)
-      setCode('')
-      setResetToken('')
-      setStep('code')
+      goToCodeStep(detail)
     } catch (err) {
       const apiEmailError = getFieldError(err, 'email')
       if (apiEmailError) {
@@ -95,6 +106,23 @@ export default function PasswordResetScreen() {
       } else {
         setError(getErrorMessage(err, 'Nie udało się wysłać kodu.'))
       }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function onResendCode() {
+    setError(null)
+    setMessage(null)
+    setLoading(true)
+    try {
+      const detail = await requestPasswordReset(email.trim())
+      setCode('')
+      setResetToken('')
+      setStep('code')
+      setMessage(detail)
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nie udało się wysłać kodu ponownie.'))
     } finally {
       setLoading(false)
     }
@@ -116,6 +144,7 @@ export default function PasswordResetScreen() {
       setPassword('')
       setConfirmPassword('')
       setMessage(null)
+      setError(null)
       setStep('password')
     } catch (err) {
       const apiCodeError = getFieldError(err, 'code')
@@ -147,15 +176,14 @@ export default function PasswordResetScreen() {
       return
     }
     if (!resetToken) {
-      setError('Sesja resetu wygasła. Poproś o nowy kod.')
-      goToRequest()
+      goToCodeStep('Sesja resetu wygasła. Wyślij kod ponownie.')
       return
     }
     setPasswordError(null)
     setConfirmPasswordError(null)
     setLoading(true)
     try {
-      const detail = await confirmPasswordReset({
+      await confirmPasswordReset({
         reset_token: resetToken,
         new_password: password,
         new_password_confirm: confirmPassword,
@@ -163,15 +191,23 @@ export default function PasswordResetScreen() {
       if (isAuthenticated) {
         await logout()
       }
-      setMessage(`${detail} Zaloguj się nowym hasłem.`)
+      const q = new URLSearchParams({
+        reset: '1',
+        email: email.trim(),
+      })
+      router.replace(`/(auth)/login?${q.toString()}` as Href)
     } catch (err) {
       const apiPasswordError = getFieldError(err, 'new_password') ?? getFieldError(err, 'password')
       if (apiPasswordError) {
         setPasswordError(apiPasswordError)
         setError(null)
-      } else {
-        setError(getErrorMessage(err, 'Nie udało się ustawić hasła.'))
+        return
       }
+      if (err instanceof ApiError && err.code === 'AUTH_028') {
+        goToCodeStep(`${err.message} Wyślij kod ponownie.`)
+        return
+      }
+      setError(getErrorMessage(err, 'Nie udało się ustawić hasła.'))
     } finally {
       setLoading(false)
     }
@@ -181,7 +217,7 @@ export default function PasswordResetScreen() {
     step === 'code' ? 'Kod z e-maila' : step === 'password' ? 'Nowe hasło' : 'Reset hasła'
   const subtitle =
     step === 'code'
-      ? 'Sprawdź skrzynkę (także Spam) i wpisz 6-cyfrowy kod.'
+      ? `Wysłaliśmy 6-cyfrowy kod${email.trim() ? ` na ${email.trim()}` : ''}. Wpisz go poniżej.`
       : step === 'password'
         ? 'Ustaw nowe hasło i powtórz je, żeby potwierdzić.'
         : 'Podaj e-mail powiązany z kontem. Wyślemy 6-cyfrowy kod resetu hasła.'
@@ -210,7 +246,13 @@ export default function PasswordResetScreen() {
             />
             <Button title="Potwierdź kod" loading={loading} onPress={() => void onVerifyCode()} />
             <Button
-              title="Wróć / wyślij kod ponownie"
+              title="Wyślij kod ponownie"
+              variant="secondary"
+              disabled={loading}
+              onPress={() => void onResendCode()}
+            />
+            <Button
+              title="Zmień e-mail"
               variant="secondary"
               disabled={loading}
               onPress={goToRequest}
@@ -247,27 +289,17 @@ export default function PasswordResetScreen() {
               secureTextEntry
               error={confirmPasswordError}
             />
-            {!message ? (
-              <>
-                <Button
-                  title="Ustaw nowe hasło"
-                  loading={loading}
-                  onPress={() => void onSetPassword()}
-                />
-                <Button
-                  title="Anuluj i zacznij od nowa"
-                  variant="secondary"
-                  disabled={loading}
-                  onPress={goToRequest}
-                />
-              </>
-            ) : (
-              <Button
-                title="Przejdź do logowania"
-                variant="secondary"
-                onPress={() => router.replace('/(auth)/login')}
-              />
-            )}
+            <Button
+              title="Ustaw nowe hasło"
+              loading={loading}
+              onPress={() => void onSetPassword()}
+            />
+            <Button
+              title="Wyślij kod ponownie"
+              variant="secondary"
+              disabled={loading}
+              onPress={() => void onResendCode()}
+            />
           </>
         ) : (
           <>

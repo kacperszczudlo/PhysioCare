@@ -176,7 +176,7 @@ export function SettingsPage() {
                 }
                 className="settings-identity__link"
               >
-                Nie pamiętam hasła — wyślij kod e-mail
+                Nie pamiętam hasła
               </Link>
               {passwordError ? <ErrorBanner message={passwordError} /> : null}
               {passwordMessage ? <SuccessBanner message={passwordMessage} /> : null}

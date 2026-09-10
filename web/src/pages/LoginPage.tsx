@@ -5,6 +5,7 @@ import { ApiError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
 import { setGoogleRegistrationDraft } from '@/auth/googleRegistrationDraft'
 import { parseGoogleIdTokenClaims } from '@/auth/parseGoogleIdToken'
+import { SuccessBanner } from '@/components/AsyncState'
 import { GoogleSignInButton, isWebGoogleSignInConfigured } from '@/components/GoogleSignInButton'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
@@ -14,9 +15,20 @@ export function LoginPage() {
   const { login, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const from = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ?? '/'
+  const locationState = location.state as {
+    from?: { pathname?: string }
+    notice?: string
+    email?: string
+  } | null
+  const from = locationState?.from?.pathname ?? '/'
+  const notice =
+    typeof locationState?.notice === 'string' && locationState.notice.trim()
+      ? locationState.notice.trim()
+      : null
 
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(
+    typeof locationState?.email === 'string' ? locationState.email : '',
+  )
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -105,6 +117,7 @@ export function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
+        {notice ? <SuccessBanner message={notice} /> : null}
         {error ? (
           <p className="auth-form__error" role="alert">
             {error}

@@ -55,7 +55,7 @@ EMAIL_USE_TLS=true
 EMAIL_HOST_USER=twoj.gmail@gmail.com
 EMAIL_HOST_PASSWORD=<haslo-aplikacji>
 EMAIL_FROM=PhysioCare <twoj.gmail@gmail.com>
-PASSWORD_RESET_TIMEOUT=900
+PASSWORD_RESET_TIMEOUT=1800
 ```
 
 Rejestracja e-mail+hasło wymaga kodu z wiadomości; Google Sign-In pomija weryfikację. Reset hasła: request → verify (kod) → confirm (`reset_token` + nowe hasło).

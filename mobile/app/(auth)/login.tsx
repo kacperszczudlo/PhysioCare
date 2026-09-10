@@ -1,4 +1,4 @@
-import { Link, useRouter, type Href } from 'expo-router'
+import { Link, useLocalSearchParams, useRouter, type Href } from 'expo-router'
 import { useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
@@ -7,16 +7,28 @@ import { useAuth } from '@/auth/AuthContext'
 import { setGoogleRegistrationDraft } from '@/auth/googleRegistrationDraft'
 import { GoogleSignInButton, isGoogleSignInConfigured } from '@/auth/googleSignIn'
 import { parseGoogleIdTokenClaims } from '@/auth/parseGoogleIdToken'
+import { SuccessBanner } from '@/components/AsyncState'
 import { BrandMark } from '@/components/BrandMark'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { colors, space, typography } from '@/theme/tokens'
 
+function firstParam(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) {
+    return (value[0] ?? '').trim()
+  }
+  return (value ?? '').trim()
+}
+
 export default function LoginScreen() {
   const { login, loginWithGoogle } = useAuth()
   const router = useRouter()
-  const [email, setEmail] = useState('')
+  const params = useLocalSearchParams<{ email?: string | string[]; reset?: string | string[] }>()
+  const emailFromParams = firstParam(params.email)
+  const resetNotice = firstParam(params.reset) === '1'
+
+  const [email, setEmail] = useState(emailFromParams)
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -102,6 +114,9 @@ export default function LoginScreen() {
           value={password}
           onChangeText={setPassword}
         />
+        {resetNotice ? (
+          <SuccessBanner message="Hasło zostało zmienione. Zaloguj się nowym hasłem." />
+        ) : null}
         {error ? (
           <Text style={styles.error} accessibilityRole="alert">
             {error}
@@ -160,5 +175,5 @@ const styles = StyleSheet.create({
     fontSize: typography.sm,
     textDecorationLine: 'underline',
   },
-  dot: { color: colors.faint },
+  dot: { color: colors.muted },
 })
