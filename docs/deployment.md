@@ -103,12 +103,16 @@ Działa na **web (terapeuta)** i **mobile (pacjent)** - login oraz rejestracja z
 2. Migracje: `python manage.py migrate` (cwd: `backend/physiocare`)
 3. Collectstatic (jeśli serwujesz admin/static): `python manage.py collectstatic --noinput`
 4. Uruchom API:
-   - **Z live UI (SSE) - rekomendowane na demo:**
+   - **Z live UI (SSE) - rekomendowane produkcyjnie i na demo (ASGI / UvicornWorker):**
      ```bash
+     # Standalone Uvicorn:
      uvicorn physiocare.asgi:application --host 0.0.0.0 --port $PORT
+
+     # Lub produkcyjny Gunicorn z workerami Uvicorn (używa gunicorn.conf.py z UvicornWorker):
+     gunicorn physiocare.asgi:application -c gunicorn.conf.py
      ```
-     Jeden proces ASGI na demo. Przy wielu workerach/instancjach in-memory bus SSE nie fan-outuje między procesami - wtedy Redis (patrz [README - skalowanie](../README.md#na-później-skalowanie)).
-   - **Bez SSE / legacy:** `gunicorn physiocare.wsgi:application --bind 0.0.0.0:$PORT`
+     Dzięki asynchronicznemu generatorowi `aiter_sse_frames` oraz workerom `UvicornWorker`, otwarte połączenia SSE nie blokują workerów synchronicznych ani nie zwalniają reszty API REST.
+   - **Głodzenie workerów (WSGI):** Nie uruchamiaj aplikacji z domyślnym `gunicorn physiocare.wsgi:application` (`SyncWorker`) jeśli włączone jest live UI (SSE), ponieważ każdy długotrwały stream SSE zablokowałby 1 workera synchronicznego na stałe.
 5. Ustaw healthcheck HTTP na `/api/v1/` (lub dedykowany endpoint)
 6. Osobny proces: `python manage.py run_notification_scheduler` (przypomnienia - nie wpinaj w workery API)
 

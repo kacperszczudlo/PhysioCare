@@ -1,3 +1,4 @@
+import asyncio
 import json
 import threading
 import time
@@ -104,3 +105,57 @@ def test_events_delivers_published_event(api_client, therapist):
 def test_publish_rejects_unknown_type(patient):
     with pytest.raises(ValueError, match='Unknown SSE'):
         publish_user_event(patient.user.pk, 'visit.unknown', resource_id=uuid4())
+
+
+@pytest.mark.django_db
+@override_settings(SSE_HEARTBEAT_SECONDS=1, SSE_MAX_FRAMES=1)
+def test_aiter_sse_frames_generates_ping(patient):
+    from notifications.sse import aiter_sse_frames
+
+    async def _run():
+        frames_raw = []
+        async for frame in aiter_sse_frames(str(patient.user.pk)):
+            frames_raw.append(frame)
+        return ''.join(frames_raw)
+
+    body = asyncio.run(_run())
+    parsed = _parse_sse_frames(body)
+    assert len(parsed) == 1
+    assert parsed[0]['type'] == 'ping'
+
+
+@pytest.mark.django_db
+@override_settings(SSE_HEARTBEAT_SECONDS=5, SSE_MAX_FRAMES=1)
+def test_aiter_sse_frames_delivers_event(therapist):
+    from notifications.sse import aiter_sse_frames
+
+    user_id = therapist.user.pk
+    resource_id = uuid4()
+
+    async def run_stream():
+        chunks = []
+        async for chunk in aiter_sse_frames(str(user_id)):
+            chunks.append(chunk)
+        return ''.join(chunks)
+
+    def publish_soon():
+        deadline = time.time() + 2
+        while time.time() < deadline:
+            if get_sse_bus().subscriber_count(str(user_id)) > 0:
+                publish_user_event(user_id, 'visit.scheduled', resource_id=resource_id)
+                return
+            time.sleep(0.02)
+
+    thread = threading.Thread(target=publish_soon)
+    thread.start()
+
+    body = asyncio.run(run_stream())
+    thread.join(timeout=5)
+    assert not thread.is_alive()
+
+    parsed = _parse_sse_frames(body)
+    assert len(parsed) == 1
+    assert parsed[0]['type'] == 'visit.scheduled'
+    assert parsed[0]['resource_id'] == str(resource_id)
+
+

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import threading
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass
 from datetime import datetime
 from queue import Empty, Full, Queue
@@ -139,3 +140,26 @@ def iter_sse_frames(user_id: str) -> Iterator[str]:
             frames += 1
     finally:
         bus.unsubscribe(user_id, queue)
+
+
+async def aiter_sse_frames(user_id: str) -> AsyncIterator[str]:
+    """Async SSE generator for ASGI execution (non-blocking for uvicorn event loop)."""
+    bus = get_sse_bus()
+    queue = bus.subscribe(user_id)
+    heartbeat = max(1, int(getattr(settings, 'SSE_HEARTBEAT_SECONDS', 20)))
+    max_frames = int(getattr(settings, 'SSE_MAX_FRAMES', 0) or 0)
+    frames = 0
+    try:
+        yield ': connected\n\n'
+        while True:
+            if max_frames and frames >= max_frames:
+                break
+            try:
+                event = await asyncio.to_thread(queue.get, True, heartbeat)
+            except Empty:
+                event = SseEvent(type='ping', resource_id=None, at=timezone.now())
+            yield format_sse_frame(event)
+            frames += 1
+    finally:
+        bus.unsubscribe(user_id, queue)
+

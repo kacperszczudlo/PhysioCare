@@ -1,3 +1,4 @@
+from django.core.handlers.asgi import ASGIRequest
 from django.http import StreamingHttpResponse
 from django.utils import timezone
 from rest_framework import status
@@ -17,7 +18,7 @@ from notifications.serializers import (
     NotificationPreferencePatchSerializer,
     NotificationPreferenceSerializer,
 )
-from notifications.sse import iter_sse_frames
+from notifications.sse import aiter_sse_frames, iter_sse_frames
 
 
 class MeEventsView(APIView):
@@ -28,8 +29,13 @@ class MeEventsView(APIView):
     renderer_classes = [ServerSentEventRenderer]
 
     def get(self, request):
+        user_id = str(request.user.pk)
+        raw_req = getattr(request, '_request', request)
+        is_asgi = isinstance(raw_req, ASGIRequest) or hasattr(raw_req, 'scope')
+        stream = aiter_sse_frames(user_id) if is_asgi else iter_sse_frames(user_id)
+
         response = StreamingHttpResponse(
-            iter_sse_frames(str(request.user.pk)),
+            stream,
             content_type='text/event-stream',
         )
         response['Cache-Control'] = 'no-cache, no-transform'
