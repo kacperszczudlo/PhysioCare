@@ -10,10 +10,12 @@ import { useAuth } from '@/auth/AuthContext'
 import { AccountDeletionModal } from '@/components/AccountDeletionModal'
 import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
+import { DataExportModal } from '@/components/DataExportModal'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { PasswordRequirements } from '@/components/PasswordRequirements'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
+import { sharePatientDataExport } from '@/lib/dataExport'
 import {
   consentLabel,
   DEFAULT_NOTIFICATION_PREFS,
@@ -47,6 +49,8 @@ export default function SettingsScreen() {
   const [pushBusy, setPushBusy] = useState(false)
   const [deletionOpen, setDeletionOpen] = useState(false)
   const [deletionBusy, setDeletionBusy] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
+  const [exportBusy, setExportBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<{ kind: FeedbackKind; message: string } | null>(null)
 
@@ -175,14 +179,34 @@ export default function SettingsScreen() {
     }
   }
 
-  async function exportData() {
+  async function runDataExport() {
     setError(null)
     setFeedback(null)
+    setExportBusy(true)
     try {
-      await patientApi.requestDataExport()
-      showSuccess('privacy', 'Eksport danych został wygenerowany.')
+      const payload = await patientApi.requestDataExport()
+      const result = await sharePatientDataExport(payload)
+      setExportOpen(false)
+      if (result.delivered && result.mode === 'saved') {
+        showSuccess(
+          'privacy',
+          `Zapisano plik ${result.fileName}. Znajdziesz go w wybranym folderze (np. Pobrane).`,
+        )
+      } else if (result.delivered) {
+        showSuccess(
+          'privacy',
+          `Plik ${result.fileName} jest gotowy — możesz go zapisać lub wysłać sobie.`,
+        )
+      } else {
+        showSuccess(
+          'privacy',
+          `Plik ${result.fileName} został przygotowany. Spróbuj ponownie, jeśli nie zapisałeś go jeszcze.`,
+        )
+      }
     } catch (err) {
       setError(getErrorMessage(err, 'Eksport nie powiódł się.'))
+    } finally {
+      setExportBusy(false)
     }
   }
 
@@ -323,7 +347,12 @@ export default function SettingsScreen() {
           </View>
         ) : null}
         {feedback?.kind === 'consents' ? <SuccessBanner message={feedback.message} /> : null}
-        <Button title="Eksport danych" variant="secondary" onPress={() => void exportData()} />
+        <Button
+          title="Eksport danych"
+          variant="secondary"
+          loading={exportBusy}
+          onPress={() => setExportOpen(true)}
+        />
         <Button
           title="Wniosek o usunięcie konta"
           variant="danger"
@@ -340,6 +369,17 @@ export default function SettingsScreen() {
         </Link>
         {feedback?.kind === 'privacy' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
+
+      <DataExportModal
+        open={exportOpen}
+        busy={exportBusy}
+        onClose={() => {
+          if (!exportBusy) {
+            setExportOpen(false)
+          }
+        }}
+        onConfirm={() => void runDataExport()}
+      />
 
       <AccountDeletionModal
         open={deletionOpen}

@@ -9,6 +9,7 @@ import type {
   MedicalDocument,
   NotificationPreference,
   Paginated,
+  PatientDataExport,
   PatientProfile,
   TherapistPublic,
   TherapyType,
@@ -51,7 +52,7 @@ export const patientApi = {
   },
 
   requestDataExport() {
-    return api.post<{ profile: PatientProfile; consents: Consent[] }>('/me/data-export/')
+    return api.post<PatientDataExport>('/me/data-export/')
   },
 
   requestAccountDeletion(reason?: string) {

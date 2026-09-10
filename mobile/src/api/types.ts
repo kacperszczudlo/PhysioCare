@@ -231,3 +231,94 @@ export interface DeviceToken {
   is_active: boolean
   updated_at: string
 }
+
+/** Sync RODO export payload from POST /me/data-export/ (Art. 15 metadata). */
+export interface PatientDataExport {
+  exported_at: string
+  profile: PatientProfile
+  consents: Consent[]
+  visits: Array<{
+    id: string
+    start_at: string
+    end_at: string
+    status: string
+    therapy_type: string | null
+    location_address: string
+    prep_instructions: string
+    patient_summary: string
+    patient_note: string
+    cancel_reason: string
+  }>
+  episodes: Array<{
+    id: string
+    icd10_code: string
+    functional_diagnosis: string
+    status: string
+    summary_note: string
+    started_at: string | null
+    ended_at: string | null
+    body_pain: Array<{
+      body_region: string
+      view_side: string
+      vas_score: number
+      pain_character: string
+      treatment_targets: string
+    }>
+  }>
+  documents: Array<{
+    id: string
+    title: string
+    mime_type: string
+    created_at: string
+    file_url: string
+  }>
+  exercise_assignments: Array<{
+    id: string
+    exercise_title: string
+    dosage: string
+    start_date: string
+    end_date: string
+    completions: Array<{
+      completed_on: string
+      done: boolean
+    }>
+  }>
+  device_orders: Array<{
+    id: string
+    device_code: string
+    device_name: string
+    access_code: string
+    status: string
+  }>
+  diagnostic_recommendations: Array<{
+    id: string
+    recommendation_type: string
+    justification: string
+  }>
+  physician_order_refusals: Array<{
+    id: string
+    refusal_reason: string
+  }>
+  recepta_na_ruch: Array<{
+    id: string
+    status: string
+    activity_notes: string
+  }>
+  notification_preferences: NotificationPreference[]
+  device_tokens: Array<{
+    id: string
+    platform: string
+    is_active: boolean
+    updated_at: string
+    token_fingerprint: string
+  }>
+  notification_deliveries: Array<{
+    pref_key: string
+    channel: string
+    status: string
+    title: string
+    body: string
+    data: Record<string, unknown>
+    created_at: string
+  }>
+}
