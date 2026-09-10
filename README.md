@@ -138,20 +138,22 @@ Stack wymaga **trzech osobnych terminali**. Kolejność ma znaczenie: najpierw A
 
 #### Terminal 1 — Backend (API)
 
-Adres: `http://127.0.0.1:8000` (REST pod `/api/v1/`).
+REST: `http://127.0.0.1:8000/api/v1/` (lokalnie) oraz `http://<IP-LAN>:8000/api/v1/` (telefon w tej samej sieci Wi‑Fi).
+
+Domyślny `runserver` bez hosta słucha tylko na `127.0.0.1` — telefon z `EXPO_PUBLIC_API_BASE_URL=http://<IP-LAN>:8000/...` wtedy **nie** połączy się z API. Dlatego startuj z `0.0.0.0:8000`:
 
 ```powershell
 cd backend
 .\venv\Scripts\Activate.ps1
 cd physiocare
-python manage.py runserver
+python manage.py runserver 0.0.0.0:8000
 ```
 
-Live UI (SSE, `GET /api/v1/me/events/`) działa na `runserver`. Przy wielu równoległych streamach (demo/prod) preferuj ASGI:
+Live UI (SSE, `GET /api/v1/me/events/`) działa na `runserver`. Przy wielu równoległych streamach (demo/prod) preferuj ASGI — też na wszystkich interfejsach, jeśli testujesz mobile na telefonie:
 
 ```powershell
 cd backend\physiocare
-uvicorn physiocare.asgi:application --reload --host 127.0.0.1 --port 8000
+uvicorn physiocare.asgi:application --reload --host 0.0.0.0 --port 8000
 ```
 
 Przypomnienia (wizyta 24h/2h, ćwiczenia na dziś) wymagają **osobnego** procesu — `runserver` / uvicorn ich nie odlicza:
