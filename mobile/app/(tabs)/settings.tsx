@@ -7,6 +7,7 @@ import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { Consent, NotificationPreference } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
+import { AccountDeletionModal } from '@/components/AccountDeletionModal'
 import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
@@ -24,6 +25,7 @@ import {
   getPushPermissionStatus,
   isRemotePushSupported,
   registerAndUploadPushToken,
+  unregisterPushToken,
   type PushPermissionStatus,
 } from '@/notifications/push'
 import { colors, space, typography } from '@/theme/tokens'
@@ -43,6 +45,8 @@ export default function SettingsScreen() {
   const [pwdLoading, setPwdLoading] = useState(false)
   const [pushPermission, setPushPermission] = useState<PushPermissionStatus>('undetermined')
   const [pushBusy, setPushBusy] = useState(false)
+  const [deletionOpen, setDeletionOpen] = useState(false)
+  const [deletionBusy, setDeletionBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<{ kind: FeedbackKind; message: string } | null>(null)
 
@@ -182,14 +186,20 @@ export default function SettingsScreen() {
     }
   }
 
-  async function requestDeletion() {
+  async function requestDeletion(reason: string) {
     setError(null)
     setFeedback(null)
+    setDeletionBusy(true)
     try {
-      await patientApi.requestAccountDeletion()
+      // Unregister push while the session is still valid (deletion deactivates the user).
+      await unregisterPushToken()
+      await patientApi.requestAccountDeletion(reason)
+      setDeletionOpen(false)
       await logout()
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się zgłosić wniosku.'))
+    } finally {
+      setDeletionBusy(false)
     }
   }
 
@@ -317,7 +327,7 @@ export default function SettingsScreen() {
         <Button
           title="Wniosek o usunięcie konta"
           variant="danger"
-          onPress={() => void requestDeletion()}
+          onPress={() => setDeletionOpen(true)}
         />
         <Link href="/legal/privacy" style={styles.legalLink}>
           Polityka prywatności
@@ -330,6 +340,17 @@ export default function SettingsScreen() {
         </Link>
         {feedback?.kind === 'privacy' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
+
+      <AccountDeletionModal
+        open={deletionOpen}
+        busy={deletionBusy}
+        onClose={() => {
+          if (!deletionBusy) {
+            setDeletionOpen(false)
+          }
+        }}
+        onConfirm={requestDeletion}
+      />
 
       <SectionCard>
         <Text style={styles.sectionTitle}>Zmiana hasła</Text>

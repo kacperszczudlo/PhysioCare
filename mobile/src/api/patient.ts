@@ -52,8 +52,10 @@ export const patientApi = {
     return api.post<{ profile: PatientProfile; consents: Consent[] }>('/me/data-export/')
   },
 
-  requestAccountDeletion() {
-    return api.post<{ detail: string }>('/me/account-deletion-request/')
+  requestAccountDeletion(reason?: string) {
+    return api.post<{ detail: string }>('/me/account-deletion-request/', {
+      reason: reason ?? '',
+    })
   },
 
   async getVisits(status: 'upcoming' | 'past') {

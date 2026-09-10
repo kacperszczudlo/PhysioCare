@@ -188,7 +188,7 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** - hasło z
 | GET | `/me/consents` | Lista zgód |
 | PATCH | `/me/consents/optional` | Marketing, badania |
 | POST | `/me/data-export` | Eksport RODO (profil, zgody, wizyty, epizody, dokumenty, ćwiczenia, preferencje i logi powiadomień) |
-| POST | `/me/account-deletion-request` | Wniosek o usunięcie (zapis + dezaktywacja konta) |
+| POST | `/me/account-deletion-request` | Wniosek o usunięcie: opcjonalne `reason`, dezaktywacja tokenów push, anonimizacja PII (e-mail zwolniony do ponownej rejestracji), unieważnienie sesji |
 
 ---
 

@@ -18,9 +18,9 @@ export function AccountDeletionPage() {
         <h2>1. W aplikacji (zalecane)</h2>
         <p>
           Zaloguj się w aplikacji mobilnej PhysioCare → Ustawienia → „Wniosek o usunięcie konta”.
-          API zapisuje wniosek (odpowiedź 202), wyłącza konto i unieważnia tokeny sesji. Dalsze
-          skasowanie albo anonimizacja danych w systemach Administratora idzie osobną procedurą, z
-          uwzględnieniem retencji wynikającej z prawa.
+          Potwierdź decyzję i podaj powód rezygnacji. System wyłącza konto, anonimizuje dane
+          osobowe (adres e-mail staje się wolny do ponownej rejestracji), wyłącza powiadomienia push
+          i unieważnia sesje. Dane medyczne mogą pozostać przez okres retencji wymagany prawem.
         </p>
       </section>
 

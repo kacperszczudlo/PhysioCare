@@ -231,8 +231,11 @@ class GoogleLoginView(APIView):
             )
 
         user = User.objects.filter(google_sub=identity.sub).first()
+        if user is not None and not user.is_active:
+            # Soft-deleted accounts must not block Google re-registration.
+            user = None
         if user is None:
-            user = User.objects.filter(email__iexact=identity.email).first()
+            user = User.objects.filter(email__iexact=identity.email, is_active=True).first()
             if user is not None:
                 if user.google_sub and user.google_sub != identity.sub:
                     return Response(

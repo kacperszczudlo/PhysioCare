@@ -27,6 +27,7 @@ from core.field_policies import (
 from core.phone_policy import PHONE_FIELD_ERRORS, normalize_and_validate_phone
 from notifications.defaults import ensure_default_preferences
 from patients.models import PatientProfile
+from privacy.account_deletion import free_inactive_email_holder
 from privacy.models import Consent, ConsentType
 from therapists.models import TherapistProfile
 from therapists.pwzf_policy import (
@@ -40,6 +41,17 @@ User = get_user_model()
 EMAIL_TAKEN_MESSAGE = EMAIL_TAKEN
 PWZF_TAKEN_MESSAGE = PWZF_TAKEN
 
+
+def _ensure_email_available(email: str) -> None:
+    """Reject only when an *active* account already uses the address."""
+    existing = User.objects.filter(email__iexact=email).first()
+    if existing is not None and existing.is_active:
+        raise serializers.ValidationError(EMAIL_TAKEN_MESSAGE)
+
+
+def _prepare_email_for_registration(email: str) -> None:
+    """Free soft-deleted holders so ``create_user`` can reuse the address."""
+    free_inactive_email_holder(email)
 _PASSWORD_FIELD_ERRORS = {
     'blank': 'Podaj hasło.',
     'required': 'Podaj hasło.',
@@ -98,7 +110,7 @@ def _apply_google_identity(attrs: dict, *, credential: str) -> dict:
 
     email = User.objects.normalize_email(identity.email)
     existing = User.objects.filter(email__iexact=email).first()
-    if existing is not None:
+    if existing is not None and existing.is_active:
         role_label = 'pacjenta' if existing.role == 'PATIENT' else 'fizjoterapeuty'
         raise serializers.ValidationError(
             {
@@ -200,8 +212,7 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
         email = User.objects.normalize_email(email)
-        if User.objects.filter(email__iexact=email).exists():
-            raise serializers.ValidationError(EMAIL_TAKEN_MESSAGE)
+        _ensure_email_available(email)
         return email
 
     def validate_first_name(self, value):
@@ -277,6 +288,8 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password', None)
         google_sub = validated_data.pop('_google_sub', None)
         phone = validated_data.pop('phone', '')
+
+        _prepare_email_for_registration(validated_data['email'])
 
         user = User.objects.create_user(
             email=validated_data['email'],
@@ -375,8 +388,7 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
         email = User.objects.normalize_email(email)
-        if User.objects.filter(email__iexact=email).exists():
-            raise serializers.ValidationError(EMAIL_TAKEN_MESSAGE)
+        _ensure_email_available(email)
         return email
 
     def validate_first_name(self, value):
@@ -452,6 +464,8 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password', None)
         google_sub = validated_data.pop('_google_sub', None)
         phone = validated_data.pop('phone', '')
+
+        _prepare_email_for_registration(validated_data['email'])
 
         user = User.objects.create_user(
             email=validated_data['email'],

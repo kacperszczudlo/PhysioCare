@@ -12,6 +12,13 @@ class ConsentAdmin(admin.ModelAdmin):
 
 @admin.register(AccountDeletionRequest)
 class AccountDeletionRequestAdmin(admin.ModelAdmin):
-    list_display = ('user', 'created_at', 'processed_at')
-    search_fields = ('user__email',)
+    list_display = ('user', 'created_at', 'processed_at', 'reason_preview')
+    search_fields = ('user__email', 'reason', 'notes')
     readonly_fields = ('created_at',)
+
+    @admin.display(description='Powód')
+    def reason_preview(self, obj):
+        text = (obj.reason or '').strip()
+        if len(text) <= 48:
+            return text
+        return f'{text[:45]}…'

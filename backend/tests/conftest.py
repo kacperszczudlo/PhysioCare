@@ -54,8 +54,11 @@ def cleanup_test_data(db):
     Visit.objects.filter(patient__user__email__endswith='@physiocare.test').delete()
     TherapyType.objects.filter(therapist__user__email__endswith='@physiocare.test').delete()
     PatientProfile.objects.filter(user__email__endswith='@physiocare.test').delete()
+    # Soft-deleted accounts use @deleted.invalid after anonymization.
+    PatientProfile.objects.filter(user__email__endswith='@deleted.invalid').delete()
     TherapistProfile.objects.filter(user__email__endswith='@physiocare.test').delete()
     User.objects.filter(email__endswith='@physiocare.test').delete()
+    User.objects.filter(email__endswith='@deleted.invalid').delete()
 
 
 @pytest.fixture

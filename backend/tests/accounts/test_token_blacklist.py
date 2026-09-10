@@ -92,9 +92,21 @@ def test_password_change_blacklists_refresh(api_client, patient):
 def test_account_deletion_persists_and_deactivates(api_client, patient):
     token = str(RefreshToken.for_user(patient.user).access_token)
     api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+    original_email = patient.user.email
 
-    response = api_client.post('/api/v1/me/account-deletion-request/', {}, format='json')
+    response = api_client.post(
+        '/api/v1/me/account-deletion-request/',
+        {'reason': 'Nie korzystam z aplikacji'},
+        format='json',
+    )
     assert response.status_code == status.HTTP_202_ACCEPTED
     assert AccountDeletionRequest.objects.filter(user=patient.user).exists()
+    deletion = AccountDeletionRequest.objects.get(user=patient.user)
+    assert deletion.reason == 'Nie korzystam z aplikacji'
     patient.user.refresh_from_db()
     assert patient.user.is_active is False
+    assert patient.user.email == f'deleted-{patient.user.pk}@deleted.invalid'
+    assert patient.user.email != original_email
+    assert not patient.user.has_usable_password()
+    # E-mail is free for a new registration.
+    assert not type(patient.user).objects.filter(email__iexact=original_email, is_active=True).exists()
