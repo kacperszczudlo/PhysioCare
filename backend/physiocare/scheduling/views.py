@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 
 from core.mixins import PatientSelfMixin, user_can_access_visit
 from core.permissions import IsPatient, IsTherapist, IsVisitParticipant
-from notifications.events import notify_visit_change, publish_visit_realtime
+from notifications.events import notify_visit_change, publish_document_realtime, publish_visit_realtime
 
 from .models import TherapyType, Visit, VisitStatus
 from .serializers import (
@@ -22,6 +22,13 @@ from .serializers import (
     VisitSerializer,
 )
 from .therapy_type_presets import ensure_therapy_type_presets, preset_payloads
+
+
+def _maybe_publish_patient_summary(visit, previous_summary: str) -> None:
+    summary = (visit.patient_summary or '').strip()
+    previous = (previous_summary or '').strip()
+    if summary and summary != previous:
+        publish_document_realtime(visit.patient, visit.id)
 
 
 def _visit_integrity_error(exc, *, overlap_message='Termin koliduje z inną wizytą tego terapeuty.'):
@@ -126,6 +133,7 @@ class TherapistVisitDetailView(generics.RetrieveUpdateAPIView):
         previous_start = instance.start_at
         previous_end = instance.end_at
         previous_status = instance.status
+        previous_summary = instance.patient_summary
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         _save_visit(lambda: self.perform_update(serializer))
@@ -134,6 +142,7 @@ class TherapistVisitDetailView(generics.RetrieveUpdateAPIView):
             notify_visit_change(visit, 'cancelled')
         elif visit.start_at != previous_start or visit.end_at != previous_end:
             notify_visit_change(visit, 'rescheduled')
+        _maybe_publish_patient_summary(visit, previous_summary)
         return Response(VisitSerializer(visit).data)
 
 

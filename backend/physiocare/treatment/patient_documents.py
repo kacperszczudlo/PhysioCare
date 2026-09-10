@@ -13,6 +13,7 @@ from typing import Any
 from django.core.exceptions import ObjectDoesNotExist
 
 from documents.models import MedicalDocument
+from scheduling.models import Visit
 from treatment.models import (
     DeviceOrderStatus,
     DiagnosticRecommendation,
@@ -28,6 +29,7 @@ KIND_DEVICE_ORDER = 'device_order'
 KIND_REFUSAL = 'refusal'
 KIND_RECEPTA = 'recepta_na_ruch'
 KIND_PDF = 'pdf'
+KIND_VISIT_SUMMARY = 'visit_summary'
 
 KIND_LABELS = {
     KIND_RECOMMENDATION: 'Kierowanie',
@@ -35,6 +37,7 @@ KIND_LABELS = {
     KIND_REFUSAL: 'Odmowa zabiegu',
     KIND_RECEPTA: 'Recepta na Ruch',
     KIND_PDF: 'Dokument PDF',
+    KIND_VISIT_SUMMARY: 'Podsumowanie wizyty',
 }
 
 REFUSAL_PATIENT_NOTICE = (
@@ -216,6 +219,28 @@ def serialize_pdf(doc: MedicalDocument) -> dict[str, Any]:
     )
 
 
+def serialize_visit_summary(visit: Visit) -> dict[str, Any]:
+    therapy_name = visit.therapy_type.name if visit.therapy_type_id else 'Wizyta'
+    text = visit.patient_summary.strip()
+    summary = text[:200] + ('…' if len(text) > 200 else '')
+    return _item(
+        kind=KIND_VISIT_SUMMARY,
+        obj_id=visit.id,
+        title=f'Podsumowanie: {therapy_name}',
+        summary=summary,
+        created_at=visit.start_at or visit.created_at,
+        therapist_name=_therapist_name(visit.therapist),
+        episode_id=visit.episode_id,
+        status=visit.status,
+        details={
+            'visit_id': str(visit.id),
+            'therapy_type_name': therapy_name,
+            'start_at': visit.start_at.isoformat() if visit.start_at else None,
+            'patient_summary': text,
+        },
+    )
+
+
 def build_clinical_documents_for_patient(patient, *, kind: str | None = None) -> list[dict[str, Any]]:
     """Zwraca chronologiczną listę dokumentów widocznych dla pacjenta."""
     items: list[dict[str, Any]] = []
@@ -265,6 +290,15 @@ def build_clinical_documents_for_patient(patient, *, kind: str | None = None) ->
             .order_by('-created_at')
         )
         items.extend(serialize_pdf(d) for d in docs)
+
+    if kind in (None, KIND_VISIT_SUMMARY):
+        visits = (
+            Visit.objects.filter(patient=patient)
+            .exclude(patient_summary='')
+            .select_related('therapist__user', 'therapy_type')
+            .order_by('-start_at')
+        )
+        items.extend(serialize_visit_summary(v) for v in visits)
 
     items.sort(key=lambda row: row['created_at'], reverse=True)
     return items

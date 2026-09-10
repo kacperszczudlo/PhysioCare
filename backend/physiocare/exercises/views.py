@@ -24,6 +24,7 @@ from .serializers import (
     ExerciseCreateSerializer,
     ExerciseSerializer,
     ExerciseUpdateSerializer,
+    PatientExerciseAssignmentSerializer,
     TodayExerciseSerializer,
 )
 
@@ -253,6 +254,44 @@ class MeExercisesTodayView(PatientSelfMixin, generics.ListAPIView):
             .annotate(completed_today=Exists(completed))
             .order_by('assigned_at')
         )
+
+
+class MeExercisesListView(PatientSelfMixin, generics.ListAPIView):
+    """
+    Pełny plan ćwiczeń pacjenta (HEP) z historią odhaczeń.
+    ?scope=active|past|all (domyślnie all).
+    """
+
+    serializer_class = PatientExerciseAssignmentSerializer
+    permission_classes = [IsAuthenticated, IsPatient]
+
+    def get_queryset(self):
+        from django.db.models import Exists, OuterRef, Prefetch
+
+        today = timezone.localdate()
+        completed = ExerciseCompletion.objects.filter(
+            assignment_id=OuterRef('pk'),
+            completed_on=today,
+            done=True,
+        )
+        qs = (
+            ExerciseAssignment.objects.filter(patient=self.get_patient_profile())
+            .select_related('exercise')
+            .prefetch_related(
+                'exercise__categories',
+                Prefetch(
+                    'completions',
+                    queryset=ExerciseCompletion.objects.order_by('-completed_on'),
+                ),
+            )
+            .annotate(completed_today=Exists(completed))
+        )
+        scope = (self.request.query_params.get('scope') or 'all').lower()
+        if scope == 'active':
+            qs = qs.filter(start_date__lte=today, end_date__gte=today)
+        elif scope == 'past':
+            qs = qs.filter(end_date__lt=today)
+        return qs.order_by('-assigned_at')
 
 
 class MeExerciseCompletionCreateView(PatientSelfMixin, APIView):

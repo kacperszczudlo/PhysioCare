@@ -12,6 +12,8 @@ from .views import (
     EpisodeOrderRefusalDetailView,
     EpisodeOrderRefusalListCreateView,
     MeClinicalDocumentsListView,
+    MeEpisodeDetailView,
+    MeEpisodeListView,
     MedicalDeviceCatalogView,
     PatientEpisodeListCreateView,
     PatientReceptaNaRuchDetailView,
@@ -93,4 +95,6 @@ me_urlpatterns = [
         MeClinicalDocumentsListView.as_view(),
         name='me-clinical-documents',
     ),
+    path('episodes/', MeEpisodeListView.as_view(), name='me-episodes'),
+    path('episodes/<uuid:pk>/', MeEpisodeDetailView.as_view(), name='me-episode-detail'),
 ]

@@ -196,6 +196,7 @@ export interface Visit {
   status: VisitStatus
   location_address: string
   prep_instructions: string
+  patient_summary: string
   patient_note: string
   cancel_reason: string
   created_at: string
@@ -215,6 +216,7 @@ export interface VisitUpdatePayload {
   start_at?: string
   end_at?: string
   prep_instructions?: string
+  patient_summary?: string
   location_address?: string
   status?: VisitStatus
 }

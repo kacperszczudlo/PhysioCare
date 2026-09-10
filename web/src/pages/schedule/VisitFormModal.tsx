@@ -67,6 +67,7 @@ export function VisitFormModal({
   const [formDay, setFormDay] = useState(() => startOfDay(day))
   const [startLocal, setStartLocal] = useState('')
   const [prep, setPrep] = useState('')
+  const [patientSummary, setPatientSummary] = useState('')
   const [location, setLocation] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -99,6 +100,7 @@ export function VisitFormModal({
       setFormDay(startOfDay(start))
       setStartLocal(timeLocalFromDate(start))
       setPrep(visit.prep_instructions || '')
+      setPatientSummary(visit.patient_summary || '')
       setLocation(visit.location_address || '')
       setPatientId(visit.patient)
       setTherapyTypeId(visit.therapy_type)
@@ -107,6 +109,7 @@ export function VisitFormModal({
       setFormDay(startOfDay(day))
       setStartLocal(timeLocalFromDate(start))
       setPrep('')
+      setPatientSummary('')
       setLocation('')
       setPatientId('')
       setTherapyTypeId('')
@@ -226,6 +229,7 @@ export function VisitFormModal({
           start_at: toIsoLocal(start),
           end_at: toIsoLocal(end),
           prep_instructions: prep.trim(),
+          patient_summary: patientSummary.trim(),
           location_address: location.trim(),
         }
         const updated = await schedulingApi.updateVisit(visit.id, payload)
@@ -423,6 +427,22 @@ export function VisitFormModal({
               placeholder="Np. wygodny strój, wyniki badań…"
             />
           </label>
+
+          {isEdit && !isPending ? (
+            <label className="ui-field">
+              <span className="ui-field__label">Podsumowanie dla pacjenta</span>
+              <textarea
+                className="ui-modal__textarea"
+                value={patientSummary}
+                onChange={(e) => setPatientSummary(e.target.value)}
+                rows={4}
+                placeholder="Prosty język: co było na wizycie, co robić w domu, na co uważać…"
+              />
+              <span className="ui-field__hint">
+                Widoczne w aplikacji pacjenta. Notatki kliniczne epizodu pozostają tylko u Ciebie.
+              </span>
+            </label>
+          ) : null}
 
           {isEdit ? (
             <label className="ui-field">

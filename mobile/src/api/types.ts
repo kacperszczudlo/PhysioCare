@@ -85,6 +85,7 @@ export interface Visit {
   status: VisitStatus
   location_address: string
   prep_instructions: string
+  patient_summary: string
   patient_note: string
   cancel_reason: string
   created_at: string
@@ -122,6 +123,25 @@ export interface TodayExercise {
   completed_today: boolean
 }
 
+export interface ExercisePlanItem extends TodayExercise {
+  completions: ExerciseCompletion[]
+  is_active: boolean
+}
+
+export type EpisodeStatus = 'IN_PROGRESS' | 'COMPLETED_SUCCESS' | 'REFERRED' | 'INTERRUPTED'
+
+export interface TreatmentEpisode {
+  id: string
+  icd10_code: string
+  functional_diagnosis: string
+  status: EpisodeStatus
+  status_label: string
+  summary_note: string
+  started_at: string
+  ended_at: string | null
+  created_at: string
+}
+
 export interface ExerciseCompletion {
   id: string
   assignment: string
@@ -142,7 +162,12 @@ export interface MedicalDocument {
 }
 
 export type ClinicalDocumentKind =
-  'recommendation' | 'device_order' | 'refusal' | 'recepta_na_ruch' | 'pdf'
+  | 'recommendation'
+  | 'device_order'
+  | 'refusal'
+  | 'recepta_na_ruch'
+  | 'pdf'
+  | 'visit_summary'
 
 export interface ClinicalDocumentItem {
   id: string

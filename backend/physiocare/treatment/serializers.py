@@ -16,6 +16,7 @@ from .models import (
     BodySide,
     DeviceOrderStatus,
     DiagnosticRecommendation,
+    EpisodeStatus,
     FundingHint,
     MedicalDeviceOrder,
     PhysicianOrderRefusal,
@@ -130,6 +131,23 @@ class TreatmentEpisodeCreateSerializer(serializers.ModelSerializer):
                 'functional_diagnosis': deny_message('functional_diagnosis', snapshot),
             })
         return attrs
+
+
+class PatientEpisodeSerializer(serializers.ModelSerializer):
+    """Read-only episode card for the patient app (no clinical visit notes)."""
+
+    status_label = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TreatmentEpisode
+        fields = [
+            'id', 'icd10_code', 'functional_diagnosis', 'status', 'status_label',
+            'summary_note', 'started_at', 'ended_at', 'created_at',
+        ]
+        read_only_fields = fields
+
+    def get_status_label(self, obj) -> str:
+        return dict(EpisodeStatus.choices).get(obj.status, obj.status)
 
 
 class BodyAreaPainSerializer(serializers.ModelSerializer):

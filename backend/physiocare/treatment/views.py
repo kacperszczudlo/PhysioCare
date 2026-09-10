@@ -26,6 +26,7 @@ from .serializers import (
     BodyAreaPainSerializer,
     DiagnosticRecommendationSerializer,
     MedicalDeviceOrderSerializer,
+    PatientEpisodeSerializer,
     PhysicianOrderRefusalSerializer,
     ReceptaNaRuchReferralSerializer,
     TreatmentEpisodeCreateSerializer,
@@ -307,7 +308,8 @@ class MedicalDeviceCatalogView(APIView):
 class MeClinicalDocumentsListView(PatientSelfMixin, APIView):
     """
     Skrzynka dokumentacji pacjenta: kierowanie, wyroby, odmowy,
-    Recepta na Ruch oraz PDF-y — widoczne automatycznie po wystawieniu.
+    Recepta na Ruch, PDF-y oraz podsumowania wizyt — widoczne automatycznie
+    po wystawieniu.
     """
 
     permission_classes = [IsAuthenticated, IsPatient]
@@ -325,3 +327,25 @@ class MeClinicalDocumentsListView(PatientSelfMixin, APIView):
             kind=kind,
         )
         return Response({'count': len(results), 'results': results})
+
+
+class MeEpisodeListView(PatientSelfMixin, generics.ListAPIView):
+    """Pacjent: lista własnych epizodów leczenia (bez notatek klinicznych)."""
+
+    serializer_class = PatientEpisodeSerializer
+    permission_classes = [IsAuthenticated, IsPatient]
+
+    def get_queryset(self):
+        return TreatmentEpisode.objects.filter(
+            patient=self.get_patient_profile(),
+        ).order_by('-created_at')
+
+
+class MeEpisodeDetailView(PatientSelfMixin, generics.RetrieveAPIView):
+    serializer_class = PatientEpisodeSerializer
+    permission_classes = [IsAuthenticated, IsPatient]
+
+    def get_queryset(self):
+        return TreatmentEpisode.objects.filter(
+            patient=self.get_patient_profile(),
+        )

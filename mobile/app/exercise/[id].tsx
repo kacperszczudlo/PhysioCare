@@ -60,11 +60,18 @@ export default function ExerciseDetailScreen() {
     setLoading(true)
     setError(null)
     try {
-      const list = await patientApi.getExercisesToday()
-      const found = list.find((ex) => ex.id === id) ?? null
+      const today = await patientApi.getExercisesToday()
+      let found = today.find((ex) => ex.id === id) ?? null
+      if (!found) {
+        const all = await patientApi.getExercises('all')
+        const plan = all.find((ex) => ex.id === id) ?? null
+        if (plan) {
+          found = plan
+        }
+      }
       setItem(found)
       if (!found) {
-        setError('Nie znaleziono tego zalecenia na dziś.')
+        setError('Nie znaleziono tego zalecenia.')
       }
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się pobrać ćwiczenia.'))

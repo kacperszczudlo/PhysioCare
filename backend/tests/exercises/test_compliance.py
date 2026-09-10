@@ -124,3 +124,37 @@ def test_duplicate_exercise_completion_updates_existing(api_client, patient, ass
     assert second.status_code == status.HTTP_200_OK
     assert second.data['done'] is True
     assert ExerciseCompletion.objects.filter(assignment=assignment).count() == 1
+
+
+@pytest.mark.django_db
+def test_patient_lists_full_exercise_plan_with_history(api_client, patient, assignment, exercise):
+    today = timezone.localdate()
+    past = ExerciseAssignment.objects.create(
+        exercise=exercise,
+        patient=patient,
+        dosage='2x8',
+        start_date=today - timedelta(days=30),
+        end_date=today - timedelta(days=10),
+    )
+    ExerciseCompletion.objects.create(
+        assignment=assignment,
+        completed_on=today,
+        done=True,
+    )
+
+    api_client.force_authenticate(user=patient.user)
+    all_resp = api_client.get('/api/v1/me/exercises/')
+    assert all_resp.status_code == status.HTTP_200_OK
+    assert all_resp.data['count'] == 2
+    active_row = next(r for r in all_resp.data['results'] if r['id'] == str(assignment.id))
+    assert active_row['is_active'] is True
+    assert active_row['completed_today'] is True
+    assert len(active_row['completions']) == 1
+
+    active_resp = api_client.get('/api/v1/me/exercises/?scope=active')
+    assert active_resp.data['count'] == 1
+    assert active_resp.data['results'][0]['id'] == str(assignment.id)
+
+    past_resp = api_client.get('/api/v1/me/exercises/?scope=past')
+    assert past_resp.data['count'] == 1
+    assert past_resp.data['results'][0]['id'] == str(past.id)

@@ -259,4 +259,26 @@ export const treatmentApi = {
   getMedicalDeviceCatalog() {
     return api.get<MedicalDeviceCatalog>('/medical-devices/catalog/')
   },
+
+  uploadDocument(payload: {
+    patientId: string
+    title: string
+    file: File
+    episodeId?: string | null
+  }) {
+    const body = new FormData()
+    body.append('patient_id', payload.patientId)
+    body.append('title', payload.title)
+    body.append('file', payload.file)
+    if (payload.episodeId) {
+      body.append('episode_id', payload.episodeId)
+    }
+    return api.post<{
+      id: string
+      title: string
+      file_url: string
+      mime_type: string
+      created_at: string
+    }>('/therapist/documents/', body)
+  },
 }
