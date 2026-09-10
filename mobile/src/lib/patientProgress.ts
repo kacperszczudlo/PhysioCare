@@ -52,9 +52,7 @@ export function buildWeekExerciseProgress(
         continue
       }
       total += 1
-      const completed = item.completions?.some(
-        (c) => c.done && c.completed_on === date,
-      )
+      const completed = item.completions?.some((c) => c.done && c.completed_on === date)
       if (completed) {
         done += 1
       }
@@ -78,7 +76,5 @@ export function countCompletedVisits(visits: Visit[]): number {
 }
 
 export function countUpcomingVisits(visits: Visit[]): number {
-  return visits.filter(
-    (v) => v.status === 'SCHEDULED' || v.status === 'PENDING_APPROVAL',
-  ).length
+  return visits.filter((v) => v.status === 'SCHEDULED' || v.status === 'PENDING_APPROVAL').length
 }

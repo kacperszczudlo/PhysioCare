@@ -254,9 +254,7 @@ export default function DocumentsScreen() {
                 description="Gdy fizjoterapeuta rozpocznie epizod, zobaczysz tu cele terapii i podsumowanie."
               />
             ) : (
-              episodes.map((episode) => (
-                <EpisodeCard key={episode.id} episode={episode} />
-              ))
+              episodes.map((episode) => <EpisodeCard key={episode.id} episode={episode} />)
             )
           ) : null}
 

@@ -233,7 +233,9 @@ export default function DashboardScreen() {
         </View>
         {exercises.length > 0 ? (
           <View style={styles.exerciseTrack}>
-            <View style={[styles.exerciseTrackFill, { width: `${Math.round(todayRatio * 100)}%` }]} />
+            <View
+              style={[styles.exerciseTrackFill, { width: `${Math.round(todayRatio * 100)}%` }]}
+            />
           </View>
         ) : null}
       </View>

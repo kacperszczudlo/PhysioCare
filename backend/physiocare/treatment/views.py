@@ -11,8 +11,8 @@ from patients.models import PatientProfile
 from therapists.medical_devices import catalog_as_list, groups_summary
 
 from .models import (
-    BodyAreaPain,
     DEVICE_ORDER_DISCLAIMER,
+    BodyAreaPain,
     DeviceOrderStatus,
     DiagnosticRecommendation,
     EpisodeStatus,

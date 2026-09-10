@@ -1,12 +1,5 @@
 import { useEffect, useState } from 'react'
-import {
-  AccessibilityInfo,
-  Animated,
-  StyleSheet,
-  Text,
-  View,
-  type ViewProps,
-} from 'react-native'
+import { AccessibilityInfo, Animated, StyleSheet, Text, View, type ViewProps } from 'react-native'
 
 import type { DayProgress } from '@/lib/patientProgress'
 import { colors, motion, radius, space, typography } from '@/theme/tokens'
@@ -73,8 +66,7 @@ function TodayMeter({
     inputRange: [0, 1],
     outputRange: ['0%', '100%'],
   })
-  const label =
-    total > 0 ? `Zalecenia na dziś: ${done} z ${total}` : 'Brak zaleceń na dziś'
+  const label = total > 0 ? `Zalecenia na dziś: ${done} z ${total}` : 'Brak zaleceń na dziś'
 
   return (
     <View
@@ -133,9 +125,7 @@ function WeekBar({ day, reduceMotion }: { day: DayProgress; reduceMotion: boolea
           ]}
         />
       </View>
-      <Text style={[styles.barLabel, day.isToday ? styles.barLabelToday : null]}>
-        {day.label}
-      </Text>
+      <Text style={[styles.barLabel, day.isToday ? styles.barLabelToday : null]}>{day.label}</Text>
     </View>
   )
 }
@@ -176,9 +166,7 @@ export function ProgressOverview({
         <View style={styles.weekBlock}>
           <View style={styles.weekHeader}>
             <Text style={styles.weekTitle}>Ostatnie 7 dni</Text>
-            <Text style={styles.weekMeta}>
-              {weekTotal > 0 ? `${weekDone}/${weekTotal}` : '—'}
-            </Text>
+            <Text style={styles.weekMeta}>{weekTotal > 0 ? `${weekDone}/${weekTotal}` : '—'}</Text>
           </View>
           {weekTotal === 0 ? (
             <Text style={styles.weekEmpty}>

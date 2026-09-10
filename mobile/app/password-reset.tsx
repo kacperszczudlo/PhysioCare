@@ -317,7 +317,11 @@ export default function PasswordResetScreen() {
               autoComplete="email"
               error={emailError}
             />
-            <Button title="Wyślij kod na e-mail" loading={loading} onPress={() => void onRequest()} />
+            <Button
+              title="Wyślij kod na e-mail"
+              loading={loading}
+              onPress={() => void onRequest()}
+            />
           </>
         )}
 

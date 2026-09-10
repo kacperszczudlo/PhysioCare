@@ -395,8 +395,8 @@ export default function SettingsScreen() {
       <SectionCard>
         <Text style={styles.sectionTitle}>Zmiana hasła</Text>
         <Text style={styles.sectionHint}>
-          Znasz obecne hasło? Zmień je poniżej. Nie pamiętasz - wyślemy 6-cyfrowy kod na e-mail
-          (tak jak przy logowaniu).
+          Znasz obecne hasło? Zmień je poniżej. Nie pamiętasz - wyślemy 6-cyfrowy kod na e-mail (tak
+          jak przy logowaniu).
         </Text>
         <Field
           label="Obecne hasło"
@@ -421,9 +421,7 @@ export default function SettingsScreen() {
           onPress={() => {
             const email = user?.email?.trim()
             router.push(
-              email
-                ? { pathname: '/password-reset', params: { email } }
-                : '/password-reset',
+              email ? { pathname: '/password-reset', params: { email } } : '/password-reset',
             )
           }}
         />

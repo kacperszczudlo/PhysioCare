@@ -165,9 +165,7 @@ export function AssignExerciseToPatientModal({
       } catch (err) {
         if (!cancelled) {
           setResults([])
-          setError(
-            err instanceof ApiError ? err.message : 'Nie udało się pobrać katalogu ćwiczeń.',
-          )
+          setError(err instanceof ApiError ? err.message : 'Nie udało się pobrać katalogu ćwiczeń.')
         }
       } finally {
         if (!cancelled) {
@@ -182,10 +180,7 @@ export function AssignExerciseToPatientModal({
   }, [open, debouncedQuery, selected])
 
   useEffect(() => {
-    if (
-      selected &&
-      isExerciseBlocked(selected.id, existingAssignments, startDate, endDate)
-    ) {
+    if (selected && isExerciseBlocked(selected.id, existingAssignments, startDate, endDate)) {
       setSelected(null)
       setError(OVERLAP_MESSAGE)
     }
@@ -193,9 +188,7 @@ export function AssignExerciseToPatientModal({
 
   const blockedExerciseIds = new Set(
     results
-      .filter((exercise) =>
-        isExerciseBlocked(exercise.id, existingAssignments, startDate, endDate),
-      )
+      .filter((exercise) => isExerciseBlocked(exercise.id, existingAssignments, startDate, endDate))
       .map((exercise) => exercise.id),
   )
 

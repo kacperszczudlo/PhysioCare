@@ -162,11 +162,7 @@ export interface MedicalDocument {
 }
 
 export type ClinicalDocumentKind =
-  | 'recommendation'
-  | 'device_order'
-  | 'refusal'
-  | 'recepta_na_ruch'
-  | 'pdf'
+  'recommendation' | 'device_order' | 'refusal' | 'recepta_na_ruch' | 'pdf'
 
 export interface ClinicalDocumentItem {
   id: string

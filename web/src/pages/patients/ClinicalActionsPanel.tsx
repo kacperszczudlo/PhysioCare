@@ -545,8 +545,8 @@ export function ClinicalActionsPanel({
               <div className="clinical-actions__compose-head">
                 <h3>Nowe zlecenie</h3>
                 <p className="clinical-actions__hint">
-                  Model e-ZWM w PhysioCare. Po wystawieniu formalnego zlecenia w systemie NFZ
-                  możesz wpisać 4-cyfrowy kod dostępu - pacjent zobaczy go w aplikacji.
+                  Model e-ZWM w PhysioCare. Po wystawieniu formalnego zlecenia w systemie NFZ możesz
+                  wpisać 4-cyfrowy kod dostępu - pacjent zobaczy go w aplikacji.
                 </p>
               </div>
               <label className="ui-field">

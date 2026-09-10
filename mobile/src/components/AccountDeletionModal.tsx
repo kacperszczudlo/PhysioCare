@@ -1,13 +1,5 @@
 import { useMemo, useState } from 'react'
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 
 import { Button } from '@/components/Button'
 import { colors, radius, space, typography } from '@/theme/tokens'
@@ -90,15 +82,12 @@ export function AccountDeletionModal({
     >
       <View style={styles.backdrop}>
         <View style={styles.sheet}>
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.content}
-          >
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
             <Text style={styles.title}>Usunąć konto?</Text>
             <Text style={styles.body}>
               Konto zostanie wyłączone, a dane osobowe zanonimizowane. Adres e-mail będzie wolny -
-              będziesz mógł założyć nowe konto tym samym adresem. Tej operacji nie cofniesz z poziomu
-              aplikacji.
+              będziesz mógł założyć nowe konto tym samym adresem. Tej operacji nie cofniesz z
+              poziomu aplikacji.
             </Text>
 
             <Text style={styles.sectionLabel}>Dlaczego rezygnujesz?</Text>
@@ -148,12 +137,7 @@ export function AccountDeletionModal({
             {localError ? <Text style={styles.error}>{localError}</Text> : null}
 
             <View style={styles.actions}>
-              <Button
-                title="Anuluj"
-                variant="secondary"
-                disabled={busy}
-                onPress={resetAndClose}
-              />
+              <Button title="Anuluj" variant="secondary" disabled={busy} onPress={resetAndClose} />
               <Button
                 title="Usuń konto na zawsze"
                 variant="danger"

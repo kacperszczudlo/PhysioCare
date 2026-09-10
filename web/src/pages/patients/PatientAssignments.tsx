@@ -24,10 +24,7 @@ function formatPeriod(start: string, end: string): string {
   return `${fmt.format(parseDateInput(start))} - ${fmt.format(parseDateInput(end))}`
 }
 
-export function PatientAssignments({
-  patientId,
-  episodeId = null,
-}: PatientAssignmentsProps) {
+export function PatientAssignments({ patientId, episodeId = null }: PatientAssignmentsProps) {
   const [items, setItems] = useState<ExerciseAssignment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

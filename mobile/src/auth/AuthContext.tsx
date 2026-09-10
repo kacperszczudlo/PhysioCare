@@ -9,7 +9,12 @@ import {
   type ReactNode,
 } from 'react'
 
-import { authApi, type PasswordResetConfirmPayload, type PatientRegisterPayload, type RegisterResult } from '@/api/auth'
+import {
+  authApi,
+  type PasswordResetConfirmPayload,
+  type PatientRegisterPayload,
+  type RegisterResult,
+} from '@/api/auth'
 import { ApiError, isNetworkFailure } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import { tokenStorage } from '@/api/tokenStorage'

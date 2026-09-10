@@ -92,7 +92,12 @@ export function EmailVerifyPage() {
         <Button type="submit" loading={loading} className="auth-form__submit">
           Potwierdź
         </Button>
-        <Button type="button" variant="secondary" disabled={loading} onClick={() => void onResend()}>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={loading}
+          onClick={() => void onResend()}
+        >
           Wyślij kod ponownie
         </Button>
       </form>

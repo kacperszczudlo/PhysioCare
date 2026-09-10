@@ -10,12 +10,7 @@ interface DataExportModalProps {
   onConfirm: () => void
 }
 
-export function DataExportModal({
-  open,
-  busy = false,
-  onClose,
-  onConfirm,
-}: DataExportModalProps) {
+export function DataExportModal({ open, busy = false, onClose, onConfirm }: DataExportModalProps) {
   function close() {
     if (!busy) {
       onClose()

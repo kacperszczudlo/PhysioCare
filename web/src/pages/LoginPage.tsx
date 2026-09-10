@@ -43,8 +43,7 @@ export function LoginPage() {
     } catch (err) {
       if (err instanceof ApiError && err.code === 'AUTH_027') {
         const details = err.details as { email?: string }
-        const verifyEmail =
-          (typeof details.email === 'string' && details.email) || email.trim()
+        const verifyEmail = (typeof details.email === 'string' && details.email) || email.trim()
         navigate(`/verify-email?email=${encodeURIComponent(verifyEmail)}`, { replace: true })
         return
       }
@@ -70,8 +69,7 @@ export function LoginPage() {
         const claims = parseGoogleIdTokenClaims(credential)
         setGoogleRegistrationDraft({
           credential,
-          email:
-            (typeof details.email === 'string' && details.email) || claims.email || undefined,
+          email: (typeof details.email === 'string' && details.email) || claims.email || undefined,
           first_name:
             (typeof details.first_name === 'string' && details.first_name) ||
             claims.first_name ||

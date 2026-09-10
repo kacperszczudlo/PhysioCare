@@ -38,7 +38,11 @@ export function requestGoogleIdTokenPopup(clientId: string): Promise<string> {
       `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no`,
     )
     if (!popup) {
-      reject(new Error('Okno Google zostało zablokowane. Zezwól na wyskakujące okna i spróbuj ponownie.'))
+      reject(
+        new Error(
+          'Okno Google zostało zablokowane. Zezwól na wyskakujące okna i spróbuj ponownie.',
+        ),
+      )
       return
     }
 
@@ -69,7 +73,9 @@ export function requestGoogleIdTokenPopup(clientId: string): Promise<string> {
         finish(() =>
           reject(
             new Error(
-              /redirect_uri/i.test(err) ? `Błąd Google (redirect_uri_mismatch). ${mismatchHint}` : err,
+              /redirect_uri/i.test(err)
+                ? `Błąd Google (redirect_uri_mismatch). ${mismatchHint}`
+                : err,
             ),
           ),
         )

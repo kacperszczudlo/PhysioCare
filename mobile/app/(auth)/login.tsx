@@ -42,11 +42,8 @@ export default function LoginScreen() {
     } catch (err) {
       if (err instanceof ApiError && err.code === 'AUTH_027') {
         const details = err.details as { email?: string }
-        const verifyEmailAddr =
-          (typeof details.email === 'string' && details.email) || email.trim()
-        router.replace(
-          `/(auth)/verify-email?email=${encodeURIComponent(verifyEmailAddr)}` as Href,
-        )
+        const verifyEmailAddr = (typeof details.email === 'string' && details.email) || email.trim()
+        router.replace(`/(auth)/verify-email?email=${encodeURIComponent(verifyEmailAddr)}` as Href)
         return
       }
       setError(getErrorMessage(err, 'Nie udało się zalogować.'))
@@ -71,8 +68,7 @@ export default function LoginScreen() {
         const claims = parseGoogleIdTokenClaims(idToken)
         setGoogleRegistrationDraft({
           credential: idToken,
-          email:
-            (typeof details.email === 'string' && details.email) || claims.email || undefined,
+          email: (typeof details.email === 'string' && details.email) || claims.email || undefined,
           first_name:
             (typeof details.first_name === 'string' && details.first_name) ||
             claims.first_name ||

@@ -50,11 +50,14 @@ export const authApi = {
   },
 
   async registerTherapist(payload: TherapistRegisterPayload): Promise<RegisterResult> {
-    const data = await api.post<AuthResponse | {
-      needs_email_verification?: boolean
-      email?: string
-      detail?: string
-    }>(
+    const data = await api.post<
+      | AuthResponse
+      | {
+          needs_email_verification?: boolean
+          email?: string
+          detail?: string
+        }
+    >(
       '/auth/register/therapist/',
       { ...payload, token_delivery: 'cookie' },
       { skipAuthRefresh: true },
@@ -81,11 +84,7 @@ export const authApi = {
   },
 
   resendEmailCode(email: string) {
-    return api.post<{ detail: string }>(
-      '/auth/email/resend/',
-      { email },
-      { skipAuthRefresh: true },
-    )
+    return api.post<{ detail: string }>('/auth/email/resend/', { email }, { skipAuthRefresh: true })
   },
 
   requestPasswordReset(email: string) {

@@ -475,7 +475,9 @@ export function PatientDetailPage() {
                     rows={3}
                     placeholder="Deficyty ruchowe, biomechanika, zakresy, siła, stabilność…"
                   />
-                  <span className="ui-field__hint">Widoczna dla pacjenta w aplikacji mobilnej.</span>
+                  <span className="ui-field__hint">
+                    Widoczna dla pacjenta w aplikacji mobilnej.
+                  </span>
                 </label>
                 <label className="ui-field">
                   <span className="ui-field__label">Podsumowanie planu (dla pacjenta)</span>

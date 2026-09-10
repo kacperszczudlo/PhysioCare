@@ -46,7 +46,11 @@ export default function EmailVerifyScreen() {
       await verifyEmail(email, cleaned)
       router.replace('/(tabs)')
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : getErrorMessage(err, 'Nie udało się potwierdzić e-maila.'))
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : getErrorMessage(err, 'Nie udało się potwierdzić e-maila.'),
+      )
     } finally {
       setLoading(false)
     }
@@ -74,7 +78,8 @@ export default function EmailVerifyScreen() {
       <BrandMark variant="logo" size="sm" style={styles.brand} />
       <Text style={styles.title}>Potwierdź e-mail</Text>
       <Text style={styles.subtitle}>
-        Wysłaliśmy 6-cyfrowy kod{email ? ` na ${email}` : ''}. Wpisz go poniżej, aby aktywować konto.
+        Wysłaliśmy 6-cyfrowy kod{email ? ` na ${email}` : ''}. Wpisz go poniżej, aby aktywować
+        konto.
       </Text>
 
       <View style={styles.form}>

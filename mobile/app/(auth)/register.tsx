@@ -126,9 +126,7 @@ export default function RegisterScreen() {
       })
       setGoogleDraft(null)
       if (result.kind === 'needs_email_verification') {
-        router.replace(
-          `/(auth)/verify-email?email=${encodeURIComponent(result.email)}` as Href,
-        )
+        router.replace(`/(auth)/verify-email?email=${encodeURIComponent(result.email)}` as Href)
         return
       }
       router.replace('/(tabs)')
@@ -267,9 +265,7 @@ export default function RegisterScreen() {
         consents: { terms, medical_data: medical },
       })
       if (result.kind === 'needs_email_verification') {
-        router.replace(
-          `/(auth)/verify-email?email=${encodeURIComponent(result.email)}` as Href,
-        )
+        router.replace(`/(auth)/verify-email?email=${encodeURIComponent(result.email)}` as Href)
         return
       }
       router.replace('/(tabs)')
@@ -320,8 +316,7 @@ export default function RegisterScreen() {
       return
     }
 
-    const message =
-      apiGoogleError || getErrorMessage(err, 'Rejestracja nie powiodła się.')
+    const message = apiGoogleError || getErrorMessage(err, 'Rejestracja nie powiodła się.')
     const duplicate =
       (apiEmailError && message === apiEmailError) ||
       (apiPasswordError && message === apiPasswordError)
@@ -514,9 +509,9 @@ export default function RegisterScreen() {
         {!googleMode && isGoogleSignInConfigured ? (
           <GoogleSignInButton
             loading={loading}
-          title="Zarejestruj przez Google"
-          hint="Kliknij Google - e-mail, imię i nazwisko uzupełnią się same. Potem podaj kod terapeuty i zgody."
-          onSuccess={onGoogleSuccess}
+            title="Zarejestruj przez Google"
+            hint="Kliknij Google - e-mail, imię i nazwisko uzupełnią się same. Potem podaj kod terapeuty i zgody."
+            onSuccess={onGoogleSuccess}
             onError={setError}
           />
         ) : null}

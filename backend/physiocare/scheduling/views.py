@@ -9,7 +9,11 @@ from rest_framework.views import APIView
 
 from core.mixins import PatientSelfMixin, user_can_access_visit
 from core.permissions import IsPatient, IsTherapist, IsVisitParticipant
-from notifications.events import notify_visit_change, publish_document_realtime, publish_visit_realtime
+from notifications.events import (
+    notify_visit_change,
+    publish_document_realtime,
+    publish_visit_realtime,
+)
 
 from .models import TherapyType, Visit, VisitStatus
 from .serializers import (

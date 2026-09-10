@@ -16,8 +16,8 @@ export default function AccountDeletionScreen() {
       <Text style={styles.heading}>W aplikacji</Text>
       <Text style={styles.paragraph}>
         Ustawienia → „Wniosek o usunięcie konta” → wybierz powód i potwierdź. Konto zostaje
-        wyłączone, dane osobowe zanonimizowane, a ten sam e-mail można ponownie zarejestrować.
-        Dane medyczne mogą pozostać w systemie przez okres retencji wymagany prawem.
+        wyłączone, dane osobowe zanonimizowane, a ten sam e-mail można ponownie zarejestrować. Dane
+        medyczne mogą pozostać w systemie przez okres retencji wymagany prawem.
       </Text>
 
       <Text style={styles.heading}>Bez aplikacji</Text>

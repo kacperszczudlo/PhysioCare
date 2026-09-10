@@ -12,10 +12,10 @@ Na Windowsie zawsze `npm.cmd` (nie `npm`) - ExecutionPolicy blokuje `npm.ps1`.
 
 ## Dwa sposoby uruchomienia
 
-| Cel                                       | Jak                              | Push                         | Google Sign-In              |
-| ----------------------------------------- | -------------------------------- | ---------------------------- | --------------------------- |
-| Szybki UI, logowanie hasłem               | Expo Go + `npm.cmd run start:go` | Nie                          | Nie (przycisk wyłączony)    |
-| Push + Google Sign-In                     | Native: `npm.cmd run android`    | Tak (po zgodzie w OS)        | Tak (RNGoogleSignin)        |
+| Cel                         | Jak                              | Push                  | Google Sign-In           |
+| --------------------------- | -------------------------------- | --------------------- | ------------------------ |
+| Szybki UI, logowanie hasłem | Expo Go + `npm.cmd run start:go` | Nie                   | Nie (przycisk wyłączony) |
+| Push + Google Sign-In       | Native: `npm.cmd run android`    | Tak (po zgodzie w OS) | Tak (RNGoogleSignin)     |
 
 Oba wymagają działającego API: `python manage.py runserver` w `backend/physiocare`.
 

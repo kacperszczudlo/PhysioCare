@@ -9,17 +9,14 @@ export type DataExportResult =
 
 function exportFileName(exportedAt?: string): string {
   const raw = exportedAt?.slice(0, 10)
-  const date =
-    raw && /^\d{4}-\d{2}-\d{2}$/.test(raw)
-      ? raw
-      : new Date().toISOString().slice(0, 10)
+  const date = raw && /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : new Date().toISOString().slice(0, 10)
   return `physiocare-dane-${date}.json`
 }
 
 function hasExpoSharingNativeModule(): boolean {
   return Boolean(
     (NativeModules as Record<string, unknown>).ExpoSharing ??
-      (NativeModules as Record<string, unknown>).ExpoSharingModule,
+    (NativeModules as Record<string, unknown>).ExpoSharingModule,
   )
 }
 
@@ -65,8 +62,7 @@ async function saveJsonViaSaf(
   contents: string,
 ): Promise<{ saved: true; uri: string } | { saved: false }> {
   try {
-    const permissions =
-      await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync()
+    const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync()
     if (!permissions.granted) {
       return { saved: false }
     }

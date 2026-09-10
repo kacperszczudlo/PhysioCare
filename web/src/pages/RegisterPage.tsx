@@ -193,7 +193,9 @@ export function RegisterPage() {
       nextFieldErrors.pwzf
     ) {
       setFieldErrors(nextFieldErrors)
-      setError('Uzupełnij wymagane pola (imię, nazwisko, PWZFz), żeby dokończyć rejestrację Google.')
+      setError(
+        'Uzupełnij wymagane pola (imię, nazwisko, PWZFz), żeby dokończyć rejestrację Google.',
+      )
       return
     }
 
