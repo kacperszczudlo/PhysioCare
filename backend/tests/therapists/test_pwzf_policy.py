@@ -1,5 +1,5 @@
-from django.core.exceptions import ValidationError as DjangoValidationError
 import pytest
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 from therapists.pwzf_policy import (
     PWZF_INVALID,

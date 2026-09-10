@@ -1,7 +1,7 @@
 from datetime import date
 
-from django.core.exceptions import ValidationError as DjangoValidationError
 import pytest
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 from patients.pesel_policy import (
     PESEL_INVALID_CHECKSUM,
@@ -10,7 +10,6 @@ from patients.pesel_policy import (
     PESEL_REQUIRED,
     PESEL_TOO_LONG,
     _decode_pesel_birth_date,
-    _has_valid_checksum,
     normalize_and_validate_pesel,
 )
 

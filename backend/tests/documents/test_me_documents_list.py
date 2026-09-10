@@ -7,14 +7,14 @@ from documents.models import MedicalDocument
 @pytest.mark.django_db
 def test_patient_lists_own_medical_documents(api_client, patient, therapist):
     # Arrange
-    doc1 = MedicalDocument.objects.create(
+    MedicalDocument.objects.create(
         patient=patient,
         uploaded_by=therapist.user,
         title='Wynik RTG Kręgosłupa',
         file_url='/media/documents/rtg.pdf',
         mime_type='application/pdf',
     )
-    doc2 = MedicalDocument.objects.create(
+    MedicalDocument.objects.create(
         patient=patient,
         uploaded_by=therapist.user,
         title='Karta USG',

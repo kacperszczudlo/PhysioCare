@@ -1,7 +1,7 @@
+import pytest
 from django.db import IntegrityError, connection
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
-import pytest
 from rest_framework import status
 
 from scheduling.models import Visit, VisitStatus
@@ -28,16 +28,15 @@ def test_create_overlapping_visit_for_same_therapist_raises_integrity_error(
     )
 
     # Act & Assert - Attempt to create an overlapping visit inside atomic savepoint
-    with transaction.atomic():
-        with pytest.raises(IntegrityError):
-            Visit.objects.create(
-                patient=patient,
-                therapist=therapist,
-                therapy_type=therapy_type,
-                start_at=start_at + timezone.timedelta(minutes=15),
-                end_at=end_at + timezone.timedelta(minutes=15),
-                status=VisitStatus.SCHEDULED,
-            )
+    with transaction.atomic(), pytest.raises(IntegrityError):
+        Visit.objects.create(
+            patient=patient,
+            therapist=therapist,
+            therapy_type=therapy_type,
+            start_at=start_at + timezone.timedelta(minutes=15),
+            end_at=end_at + timezone.timedelta(minutes=15),
+            status=VisitStatus.SCHEDULED,
+        )
 
 
 @pytest.mark.django_db
