@@ -73,8 +73,6 @@ export function PhoneField({
           onChangeText={onNationalNumberChange}
           keyboardType="phone-pad"
           autoComplete="tel"
-          placeholder="512 345 678"
-          placeholderTextColor={colors.faint}
           style={styles.numberInput}
         />
       </View>

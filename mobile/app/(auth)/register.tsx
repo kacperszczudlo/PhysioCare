@@ -1,4 +1,4 @@
-import { Link, useRouter } from 'expo-router'
+import { Link, useRouter, type Href } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
@@ -116,7 +116,7 @@ export default function RegisterScreen() {
     setFieldErrors({})
     setLoading(true)
     try {
-      await register({
+      const result = await register({
         google_credential: credential,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
@@ -125,6 +125,12 @@ export default function RegisterScreen() {
         consents: { terms, medical_data: medical },
       })
       setGoogleDraft(null)
+      if (result.kind === 'needs_email_verification') {
+        router.replace(
+          `/(auth)/verify-email?email=${encodeURIComponent(result.email)}` as Href,
+        )
+        return
+      }
       router.replace('/(tabs)')
     } catch (err) {
       handleRegisterError(err)
@@ -251,7 +257,7 @@ export default function RegisterScreen() {
     setFieldErrors({})
     setLoading(true)
     try {
-      await register({
+      const result = await register({
         email: email.trim(),
         password,
         first_name: firstName.trim(),
@@ -260,6 +266,12 @@ export default function RegisterScreen() {
         phone: formatPhoneForApi(phoneNational, countryCode) || undefined,
         consents: { terms, medical_data: medical },
       })
+      if (result.kind === 'needs_email_verification') {
+        router.replace(
+          `/(auth)/verify-email?email=${encodeURIComponent(result.email)}` as Href,
+        )
+        return
+      }
       router.replace('/(tabs)')
     } catch (err) {
       handleRegisterError(err)

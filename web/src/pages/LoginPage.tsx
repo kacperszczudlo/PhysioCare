@@ -29,6 +29,13 @@ export function LoginPage() {
       await login(email.trim(), password)
       navigate(from, { replace: true })
     } catch (err) {
+      if (err instanceof ApiError && err.code === 'AUTH_027') {
+        const details = err.details as { email?: string }
+        const verifyEmail =
+          (typeof details.email === 'string' && details.email) || email.trim()
+        navigate(`/verify-email?email=${encodeURIComponent(verifyEmail)}`, { replace: true })
+        return
+      }
       setError(err instanceof ApiError ? err.message : 'Nie udało się zalogować.')
     } finally {
       setLoading(false)

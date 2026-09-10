@@ -168,8 +168,15 @@ export function SettingsPage() {
               <Button type="submit" loading={passwordBusy}>
                 Zmień hasło
               </Button>
-              <Link to="/password-reset" className="settings-identity__link">
-                Nie pamiętam hasła
+              <Link
+                to={
+                  user?.email
+                    ? `/password-reset?email=${encodeURIComponent(user.email)}`
+                    : '/password-reset'
+                }
+                className="settings-identity__link"
+              >
+                Nie pamiętam hasła — wyślij kod e-mail
               </Link>
               {passwordError ? <ErrorBanner message={passwordError} /> : null}
               {passwordMessage ? <SuccessBanner message={passwordMessage} /> : null}

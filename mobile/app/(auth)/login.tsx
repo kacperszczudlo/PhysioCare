@@ -1,4 +1,4 @@
-import { Link, useRouter } from 'expo-router'
+import { Link, useRouter, type Href } from 'expo-router'
 import { useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
@@ -28,6 +28,15 @@ export default function LoginScreen() {
       await login(email.trim(), password)
       router.replace('/(tabs)')
     } catch (err) {
+      if (err instanceof ApiError && err.code === 'AUTH_027') {
+        const details = err.details as { email?: string }
+        const verifyEmailAddr =
+          (typeof details.email === 'string' && details.email) || email.trim()
+        router.replace(
+          `/(auth)/verify-email?email=${encodeURIComponent(verifyEmailAddr)}` as Href,
+        )
+        return
+      }
       setError(getErrorMessage(err, 'Nie udało się zalogować.'))
     } finally {
       setLoading(false)

@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django.utils import timezone
 from rest_framework import serializers
 
 from accounts.email_policy import (
@@ -284,6 +285,7 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
             first_name=first_name,
             last_name=last_name,
             google_sub=google_sub,
+            email_verified_at=timezone.now() if google_sub else None,
         )
 
         PatientProfile.objects.create(
@@ -458,6 +460,7 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
             first_name=first_name,
             last_name=last_name,
             google_sub=google_sub,
+            email_verified_at=timezone.now() if google_sub else None,
         )
 
         TherapistProfile.objects.create(
@@ -484,16 +487,82 @@ class PasswordResetRequestSerializer(serializers.Serializer):
             raise serializers.ValidationError(list(exc.messages)) from exc
 
 
+class PasswordResetVerifySerializer(serializers.Serializer):
+    email = serializers.EmailField(error_messages=EMAIL_FIELD_ERRORS)
+    code = serializers.CharField()
+
+    def validate_email(self, value):
+        try:
+            return User.objects.normalize_email(normalize_and_validate_email(value))
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def validate_code(self, value):
+        cleaned = (value or '').strip()
+        if not cleaned.isdigit() or len(cleaned) != 6:
+            raise serializers.ValidationError('Kod musi składać się z 6 cyfr.')
+        return cleaned
+
+
 class PasswordResetConfirmSerializer(serializers.Serializer):
-    token = serializers.CharField()
+    reset_token = serializers.CharField(
+        error_messages={
+            'blank': 'Sesja resetu wygasła. Poproś o nowy kod.',
+            'required': 'Sesja resetu wygasła. Poproś o nowy kod.',
+            'null': 'Sesja resetu wygasła. Poproś o nowy kod.',
+        },
+    )
     new_password = serializers.CharField(
         style={'input_type': 'password'},
         error_messages=_PASSWORD_FIELD_ERRORS,
     )
+    new_password_confirm = serializers.CharField(
+        style={'input_type': 'password'},
+        error_messages={
+            'blank': 'Powtórz nowe hasło.',
+            'required': 'Powtórz nowe hasło.',
+            'null': 'Powtórz nowe hasło.',
+        },
+    )
 
-    def validate_new_password(self, value):
+    def validate_reset_token(self, value):
+        return (value or '').strip()
+
+    def validate(self, attrs):
+        if attrs.get('new_password') != attrs.get('new_password_confirm'):
+            raise serializers.ValidationError(
+                {'new_password_confirm': ['Hasła muszą być takie same.']}
+            )
         user = self.context.get('user')
-        return _validate_password_value(value, user=user)
+        attrs['new_password'] = _validate_password_value(attrs['new_password'], user=user)
+        return attrs
+
+
+class EmailVerifySerializer(serializers.Serializer):
+    email = serializers.EmailField(error_messages=EMAIL_FIELD_ERRORS)
+    code = serializers.CharField()
+
+    def validate_email(self, value):
+        try:
+            return User.objects.normalize_email(normalize_and_validate_email(value))
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def validate_code(self, value):
+        cleaned = (value or '').strip()
+        if not cleaned.isdigit() or len(cleaned) != 6:
+            raise serializers.ValidationError('Kod musi składać się z 6 cyfr.')
+        return cleaned
+
+
+class EmailResendSerializer(serializers.Serializer):
+    email = serializers.EmailField(error_messages=EMAIL_FIELD_ERRORS)
+
+    def validate_email(self, value):
+        try:
+            return User.objects.normalize_email(normalize_and_validate_email(value))
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
 
 
 class ChangePasswordSerializer(serializers.Serializer):

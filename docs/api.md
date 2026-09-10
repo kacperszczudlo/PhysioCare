@@ -117,20 +117,60 @@ Cookie `refresh_token` też jest akceptowane (body opcjonalne).
 { "email": "...", "client": "web" }
 ```
 
-`client` opcjonalne: `web` (domyślnie) lub `mobile`. Decyduje o linku w e-mailu:
+`client` opcjonalne (`web` / `mobile`) — tylko dla logów/diagnostyki. Na e-mail idzie **6-cyfrowy kod** (TTL: `PASSWORD_RESET_TIMEOUT`).
 
-- `web` → `{FRONTEND_URL}/reset?token=…`
-- `mobile` → `{MOBILE_RESET_URL_BASE}password-reset?token=…` (np. `physiocare://password-reset?token=…`)
+**200** — `{ "detail": "Wysłaliśmy 6-cyfrowy kod…" }`  
+**404** `AUTH_029` — brak konta z tym e-mailem.  
+**400** `AUTH_023` — konto tylko-Google (bez lokalnego hasła).  
+**503** `AUTH_030` — błąd wysyłki SMTP.
 
-**200** - zawsze ten sam komunikat (anti-enumeration): jeśli konto istnieje, wysyłamy mail z klikalnym linkiem (bez raw tokena w treści do skopiowania). Hasło można zmienić tylko po otwarciu linku.
+### POST `/auth/password-reset/verify`
+
+```json
+{ "email": "...", "code": "123456" }
+```
+
+Sprawdza kod z e-maila. Po sukcesie kod jest zużyty; klient dostaje krótkotrwały `reset_token` do ustawienia hasła.
+
+**200** — `{ "detail": "Kod jest poprawny…", "reset_token": "..." }`  
+**400** `AUTH_028` — zły / wygasły kod lub przekroczony limit prób.
 
 ### POST `/auth/password-reset/confirm`
 
 ```json
-{ "token": "...", "new_password": "..." }
+{
+  "reset_token": "...",
+  "new_password": "...",
+  "new_password_confirm": "..."
+}
 ```
 
-Token pochodzi wyłącznie z query w linku z e-maila (web `/reset?token=` lub deep link mobile).
+Po sukcesie hasło zmienione, sesje unieważnione. Niezweryfikowany e-mail zostaje oznaczony jako zweryfikowany.  
+**400** `AUTH_028` — wygasła / zużyta sesja resetu (`reset_token`).
+
+### POST `/auth/email/verify`
+
+```json
+{ "email": "...", "code": "123456", "token_delivery": "cookie" }
+```
+
+Potwierdza adres po rejestracji e-mail+hasło. **200** — sesja jak przy loginie. Konta Google pomijają ten krok (`email_verified_at` ustawiane od razu).
+
+### POST `/auth/email/resend`
+
+```json
+{ "email": "..." }
+```
+
+Ponowny kod weryfikacyjny (anti-enumeration).
+
+Rejestracja patient/therapist **bez** Google zwraca **201**:
+
+```json
+{ "needs_email_verification": true, "email": "...", "detail": "..." }
+```
+
+bez JWT. Logowanie hasłem przy braku weryfikacji: **403** `AUTH_027`.
 
 ### POST `/auth/password-change`
 

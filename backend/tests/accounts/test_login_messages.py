@@ -1,8 +1,16 @@
 import pytest
+from django.core.cache import cache
 from django.urls import reverse
 from rest_framework import status
 
 LOGIN_FAIL_MESSAGE = 'Nieprawidłowy e-mail lub hasło.'
+
+
+@pytest.fixture(autouse=True)
+def _clear_login_throttle():
+    cache.clear()
+    yield
+    cache.clear()
 
 
 @pytest.mark.django_db

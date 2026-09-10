@@ -195,17 +195,13 @@ Android **wymaga FCM** (Expo Go ma to wbudowane, nasz APK nie):
 
 Bez kroku 4 Metro JS nic nie zmieni - Firebase musi być w binarium.
 
-## Reset hasła (deep link)
+## Reset hasła (kod e-mail)
 
-1. W appce: **Nie pamiętam hasła** → podaj e-mail → **Wyślij link** (backend wysyła mail z `physiocare://password-reset?token=…`).
-2. Otwórz mail (Mailtrap / skrzynka) i kliknij link - OS powinien otworzyć PhysioCare na ekranie nowego hasła (hasło + powtórz).
-3. Test bez maila (dev):
+1. W appce: **Nie pamiętam hasła** → podaj e-mail → **Wyślij kod**.
+2. Odbierz 6-cyfrowy kod (skrzynka albo log Django przy `EMAIL_BACKEND=console`).
+3. Wpisz kod + nowe hasło + powtórzenie.
 
-```bash
-npx uri-scheme open "physiocare://password-reset?token=TEST_TOKEN" --android
-```
-
-Scheme jest w `app.json` (`physiocare`). Bez kliknięcia w link z maila nie ma jak ustawić hasła w UI.
+Weryfikacja konta po rejestracji e-mail+hasło: ekran **Potwierdź e-mail** z tym samym mechanizmem kodu. Google Sign-In pomija weryfikację.
 
 ## Status (Faza 5)
 

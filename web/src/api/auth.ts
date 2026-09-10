@@ -22,9 +22,14 @@ export interface TherapistRegisterPayload {
   phone?: string
 }
 
+export type RegisterResult =
+  | { kind: 'authenticated'; user: User }
+  | { kind: 'needs_email_verification'; email: string; detail: string }
+
 export interface PasswordResetConfirmPayload {
-  token: string
+  reset_token: string
   new_password: string
+  new_password_confirm: string
 }
 
 export const authApi = {
@@ -44,13 +49,42 @@ export const authApi = {
     )
   },
 
-  registerTherapist(payload: TherapistRegisterPayload) {
-    return api.post<AuthResponse>(
+  async registerTherapist(payload: TherapistRegisterPayload): Promise<RegisterResult> {
+    const data = await api.post<AuthResponse | {
+      needs_email_verification?: boolean
+      email?: string
+      detail?: string
+    }>(
       '/auth/register/therapist/',
       { ...payload, token_delivery: 'cookie' },
-      {
-        skipAuthRefresh: true,
-      },
+      { skipAuthRefresh: true },
+    )
+    if (data && 'needs_email_verification' in data && data.needs_email_verification) {
+      return {
+        kind: 'needs_email_verification',
+        email: typeof data.email === 'string' ? data.email : '',
+        detail: typeof data.detail === 'string' ? data.detail : 'Sprawdź e-mail i wpisz kod.',
+      }
+    }
+    if (data && 'user' in data && data.user) {
+      return { kind: 'authenticated', user: data.user }
+    }
+    throw new Error('Nieoczekiwana odpowiedź rejestracji.')
+  },
+
+  verifyEmail(email: string, code: string) {
+    return api.post<AuthResponse>(
+      '/auth/email/verify/',
+      { email, code, token_delivery: 'cookie' },
+      { skipAuthRefresh: true },
+    )
+  },
+
+  resendEmailCode(email: string) {
+    return api.post<{ detail: string }>(
+      '/auth/email/resend/',
+      { email },
+      { skipAuthRefresh: true },
     )
   },
 
@@ -58,6 +92,14 @@ export const authApi = {
     return api.post<{ detail: string }>(
       '/auth/password-reset/request/',
       { email, client: 'web' },
+      { skipAuthRefresh: true },
+    )
+  },
+
+  verifyPasswordResetCode(email: string, code: string) {
+    return api.post<{ detail: string; reset_token: string }>(
+      '/auth/password-reset/verify/',
+      { email, code },
       { skipAuthRefresh: true },
     )
   },

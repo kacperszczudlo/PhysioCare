@@ -33,8 +33,7 @@ Skopiuj z `.env.example`, w szczególności:
 - `DJANGO_ADMIN_ENABLED=false` **lub** `DJANGO_ADMIN_ALLOWED_IPS=<twoje IP>` (bez MFA admin jest ryzykiem)
 - `POSTGRES_*` / `DATABASE_URL`
 - `CORS_ALLOWED_ORIGINS`, `CSRF_TRUSTED_ORIGINS`, `FRONTEND_URL`
-- `EMAIL_*` - produkcyjny SMTP (nie `console`); `EMAIL_FROM`, `PASSWORD_RESET_TIMEOUT`
-- `MOBILE_RESET_URL_BASE` - prefix deep linku resetu (domyślnie `physiocare://`)
+- `EMAIL_*` - SMTP (nie `console` poza lokalnym debugiem); `EMAIL_FROM`, `PASSWORD_RESET_TIMEOUT` (TTL kodu OTP)
 - `GOOGLE_CLIENT_IDS` - opcjonalnie, lista OAuth Client ID (Web + Android/iOS) do weryfikacji Sign in with Google
 - `LOG_FORMAT=json`
 - `MEDIA_ROOT` - trwały volume (**nie** wystawiaj go publicznie w nginx)
@@ -42,24 +41,26 @@ Skopiuj z `.env.example`, w szczególności:
 - `REDIS_URL` - gdy uruchamiasz wiele workerów (throttle; później SSE bus)
 - `SSE_HEARTBEAT_SECONDS` - opcjonalnie (domyślnie 20)
 
-### E-mail (reset hasła)
+### E-mail (weryfikacja konta + reset hasła — kod 6 cyfr)
 
-Lokalnie możesz zostać przy `EMAIL_BACKEND=console` (treść w logu Django) albo użyć **Mailtrap**:
+Lokalnie: `EMAIL_BACKEND=console` (kod w logu Django).
 
-1. Utwórz inbox na [mailtrap.io](https://mailtrap.io).
-2. W `.env`:
-   ```
-   EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-   EMAIL_HOST=sandbox.smtp.mailtrap.io
-   EMAIL_PORT=587
-   EMAIL_HOST_USER=...
-   EMAIL_HOST_PASSWORD=...
-   EMAIL_USE_TLS=true
-   EMAIL_FROM=noreply@physiocare.local
-   FRONTEND_URL=http://localhost:5173
-   MOBILE_RESET_URL_BASE=physiocare://
-   ```
-3. Request resetu z weba (`client=web`) lub appki (`client=mobile`) → otwórz mail w Mailtrap i kliknij link.
+**Demo / praca inżynierska (bez domeny, bez opłat):** Gmail SMTP + [hasło aplikacji](https://myaccount.google.com/apppasswords):
+
+```
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=true
+EMAIL_HOST_USER=twoj.gmail@gmail.com
+EMAIL_HOST_PASSWORD=<haslo-aplikacji>
+EMAIL_FROM=PhysioCare <twoj.gmail@gmail.com>
+PASSWORD_RESET_TIMEOUT=900
+```
+
+Rejestracja e-mail+hasło wymaga kodu z wiadomości; Google Sign-In pomija weryfikację. Reset hasła: request → verify (kod) → confirm (`reset_token` + nowe hasło).
+
+Na koniec projektu (własna domena): podmień `EMAIL_*` na Resend/Brevo — logika OTP bez zmian.
 
 ### Google Sign-In
 
@@ -89,13 +90,6 @@ Działa na **web (terapeuta)** i **mobile (pacjent)** — login oraz rejestracja
    ```
 5. Mobile wymaga **development build** (nie Expo Go): po dodaniu `@react-native-google-signin/google-signin` przebuduj `npx expo run:android` / `run:ios`.
 6. Rejestracja Google: web wymaga PWZFz + oświadczenia; mobile — kod terapeuty + zgody. Login Google łączy istniejące konto po e-mailu.
-
-Deep link mobile (gdy masz już token z maila / testowy):
-
-```bash
-npx uri-scheme open "physiocare://password-reset?token=TEST_TOKEN" --android
-# lub --ios
-```
 
 ### Media i pliki medyczne
 

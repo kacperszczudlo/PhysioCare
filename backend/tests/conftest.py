@@ -1,6 +1,7 @@
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from exercises.models import Exercise, ExerciseAssignment, ExerciseCompletion
@@ -70,6 +71,7 @@ def therapist(db):
         role='THERAPIST',
         first_name='Jan',
         last_name='Kowalski',
+        email_verified_at=timezone.now(),
     )
     return TherapistProfile.objects.create(
         user=user,
@@ -85,6 +87,7 @@ def therapist_b(db):
         role='THERAPIST',
         first_name='Anna',
         last_name='Nowak',
+        email_verified_at=timezone.now(),
     )
     return TherapistProfile.objects.create(
         user=user,
@@ -108,6 +111,7 @@ def patient(db, therapist):
         role='PATIENT',
         first_name='Pacjent',
         last_name='Testowy',
+        email_verified_at=timezone.now(),
     )
     return PatientProfile.objects.create(
         user=user,
@@ -125,6 +129,7 @@ def patient_profiles(db, therapist):
             role='PATIENT',
             first_name=f'Pacjent{index}',
             last_name='Testowy',
+            email_verified_at=timezone.now(),
         )
         patients.append(
             PatientProfile.objects.create(

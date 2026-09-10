@@ -12,6 +12,7 @@ import {
   authApi,
   therapistApi,
   type PasswordResetConfirmPayload,
+  type RegisterResult,
   type TherapistRegisterPayload,
 } from '@/api/auth'
 import { ApiError } from '@/api/client'
@@ -23,10 +24,13 @@ interface AuthContextValue {
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
   loginWithGoogle: (credential: string) => Promise<void>
-  register: (payload: TherapistRegisterPayload) => Promise<void>
+  register: (payload: TherapistRegisterPayload) => Promise<RegisterResult>
+  verifyEmail: (email: string, code: string) => Promise<void>
+  resendEmailCode: (email: string) => Promise<string>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
   requestPasswordReset: (email: string) => Promise<string>
+  verifyPasswordResetCode: (email: string, code: string) => Promise<string>
   confirmPasswordReset: (payload: PasswordResetConfirmPayload) => Promise<string>
 }
 
@@ -46,6 +50,21 @@ function profileToUser(profile: TherapistProfile): User {
 async function loadTherapistSession(): Promise<User> {
   const profile = await therapistApi.getProfile()
   return profileToUser(profile)
+}
+
+async function establishTherapistSession(
+  setUser: (user: User) => void,
+  nextUser: User,
+): Promise<void> {
+  if (nextUser.role !== 'THERAPIST') {
+    await authApi.logout().catch(() => undefined)
+    throw new ApiError(403, 'Panel webowy jest dostępny tylko dla fizjoterapeutów.')
+  }
+  try {
+    setUser(await loadTherapistSession())
+  } catch {
+    setUser({ ...nextUser, avatar_url: nextUser.avatar_url ?? null })
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -83,37 +102,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const { user: nextUser } = await authApi.login(email, password)
-    if (nextUser.role !== 'THERAPIST') {
-      await authApi.logout().catch(() => undefined)
-      throw new ApiError(403, 'Panel webowy jest dostępny tylko dla fizjoterapeutów.')
-    }
-    try {
-      setUser(await loadTherapistSession())
-    } catch {
-      setUser({ ...nextUser, avatar_url: nextUser.avatar_url ?? null })
-    }
+    await establishTherapistSession(setUser, nextUser)
   }, [])
 
   const loginWithGoogle = useCallback(async (credential: string) => {
     const { user: nextUser } = await authApi.loginWithGoogle(credential)
-    if (nextUser.role !== 'THERAPIST') {
-      await authApi.logout().catch(() => undefined)
-      throw new ApiError(403, 'Panel webowy jest dostępny tylko dla fizjoterapeutów.')
-    }
-    try {
-      setUser(await loadTherapistSession())
-    } catch {
-      setUser({ ...nextUser, avatar_url: nextUser.avatar_url ?? null })
-    }
+    await establishTherapistSession(setUser, nextUser)
   }, [])
 
   const register = useCallback(async (payload: TherapistRegisterPayload) => {
-    const { user: nextUser } = await authApi.registerTherapist(payload)
-    try {
-      setUser(await loadTherapistSession())
-    } catch {
-      setUser({ ...nextUser, avatar_url: nextUser.avatar_url ?? null })
+    const result = await authApi.registerTherapist(payload)
+    if (result.kind === 'authenticated') {
+      await establishTherapistSession(setUser, result.user)
     }
+    return result
+  }, [])
+
+  const verifyEmail = useCallback(async (email: string, code: string) => {
+    const { user: nextUser } = await authApi.verifyEmail(email, code)
+    await establishTherapistSession(setUser, nextUser)
+  }, [])
+
+  const resendEmailCode = useCallback(async (email: string) => {
+    const { detail } = await authApi.resendEmailCode(email)
+    return detail
   }, [])
 
   const logout = useCallback(async () => {
@@ -134,6 +146,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return detail
   }, [])
 
+  const verifyPasswordResetCode = useCallback(async (email: string, code: string) => {
+    const { reset_token } = await authApi.verifyPasswordResetCode(email, code)
+    return reset_token
+  }, [])
+
   const confirmPasswordReset = useCallback(async (payload: PasswordResetConfirmPayload) => {
     const { detail } = await authApi.confirmPasswordReset(payload)
     return detail
@@ -147,9 +164,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       loginWithGoogle,
       register,
+      verifyEmail,
+      resendEmailCode,
       logout,
       refreshSession,
       requestPasswordReset,
+      verifyPasswordResetCode,
       confirmPasswordReset,
     }),
     [
@@ -158,9 +178,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       loginWithGoogle,
       register,
+      verifyEmail,
+      resendEmailCode,
       logout,
       refreshSession,
       requestPasswordReset,
+      verifyPasswordResetCode,
       confirmPasswordReset,
     ],
   )

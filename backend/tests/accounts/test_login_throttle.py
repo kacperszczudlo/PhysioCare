@@ -5,8 +5,9 @@ from rest_framework import status
 
 
 @pytest.mark.django_db
-def test_login_throttle_blocks_repeated_failures(api_client):
+def test_login_throttle_blocks_repeated_failures(api_client, settings):
     cache.clear()
+    settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['login'] = '5/minute'
     url = reverse('login')
 
     for _ in range(5):

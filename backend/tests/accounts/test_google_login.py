@@ -9,13 +9,15 @@ from accounts.google_auth import GoogleAuthError, GoogleIdentity
 
 @pytest.fixture(autouse=True)
 def _raise_login_throttle(settings):
-    rates = dict(settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'])
+    rates = settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']
+    previous = {key: rates.get(key) for key in ('login', 'register', 'password_reset')}
     rates['login'] = '1000/minute'
     rates['register'] = '1000/minute'
-    settings.REST_FRAMEWORK = {
-        **settings.REST_FRAMEWORK,
-        'DEFAULT_THROTTLE_RATES': rates,
-    }
+    rates['password_reset'] = '1000/minute'
+    yield
+    for key, value in previous.items():
+        if value is not None:
+            rates[key] = value
 
 
 def _google_url():

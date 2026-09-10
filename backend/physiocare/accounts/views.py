@@ -1,7 +1,4 @@
-import hashlib
 import logging
-import secrets
-from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
@@ -19,13 +16,24 @@ from core.throttling import (
     RegisterRateThrottle,
 )
 
+from .email_codes import (
+    EmailCodeError,
+    consume_email_code,
+    consume_password_reset_token,
+    issue_password_reset_token,
+    lookup_password_reset_token,
+    send_password_reset_code,
+    send_verify_email_code,
+)
 from .google_auth import GoogleAuthError, verify_google_id_token
-from .mail import send_templated_mail
-from .models import PasswordResetToken
+from .models import EmailCodePurpose
 from .serializers import (
     ChangePasswordSerializer,
+    EmailResendSerializer,
+    EmailVerifySerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
+    PasswordResetVerifySerializer,
     PatientRegistrationSerializer,
     TherapistRegistrationSerializer,
 )
@@ -109,6 +117,29 @@ def _auth_response(request, user, refresh: RefreshToken, *, status_code=status.H
     )
 
 
+def _needs_verification_response(*, email: str, status_code=status.HTTP_201_CREATED):
+    detail = 'Konto utworzone. Sprawdź e-mail i wpisz kod weryfikacyjny.'
+    if settings.DEBUG and 'console' in settings.EMAIL_BACKEND.lower():
+        detail = (
+            f'{detail} '
+            '(DEBUG: EMAIL_BACKEND=console — kod jest w logu Django.)'
+        )
+    return Response(
+        {
+            'needs_email_verification': True,
+            'email': email,
+            'detail': detail,
+        },
+        status=status_code,
+    )
+
+
+def _mark_email_verified(user) -> None:
+    if user.email_verified_at is None:
+        user.email_verified_at = timezone.now()
+        user.save(update_fields=['email_verified_at', 'updated_at'])
+
+
 class LoginView(APIView):
     permission_classes = []
     throttle_classes = [LoginRateThrottle]
@@ -120,6 +151,23 @@ class LoginView(APIView):
         user = authenticate(request, email=email, password=password)
 
         if user is not None and user.is_active:
+            if user.email_verified_at is None:
+                return Response(
+                    {
+                        'error': {
+                            'code': 'AUTH_027',
+                            'message': (
+                                'Potwierdź adres e-mail kodem z wiadomości, '
+                                'zanim się zalogujesz.'
+                            ),
+                            'details': {
+                                'needs_email_verification': True,
+                                'email': user.email,
+                            },
+                        }
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
             refresh = RefreshToken.for_user(user)
             return _auth_response(request, user, refresh)
 
@@ -148,7 +196,6 @@ class LoginView(APIView):
 
         logger.info('Failed login attempt for email=%s', email)
 
-        # Same message for unknown email and wrong password (no account enumeration).
         return Response(
             {
                 'error': {
@@ -199,7 +246,11 @@ class GoogleLoginView(APIView):
                         status=status.HTTP_409_CONFLICT,
                     )
                 user.google_sub = identity.sub
-                user.save(update_fields=['google_sub', 'updated_at'])
+                update_fields = ['google_sub', 'updated_at']
+                if user.email_verified_at is None:
+                    user.email_verified_at = timezone.now()
+                    update_fields.append('email_verified_at')
+                user.save(update_fields=update_fields)
 
         if user is None:
             return Response(
@@ -233,6 +284,7 @@ class GoogleLoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
+        _mark_email_verified(user)
         refresh = RefreshToken.for_user(user)
         return _auth_response(request, user, refresh)
 
@@ -256,8 +308,11 @@ class PatientRegisterView(APIView):
         serializer = PatientRegistrationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        refresh = RefreshToken.for_user(user)
-        return _auth_response(request, user, refresh, status_code=status.HTTP_201_CREATED)
+        if user.email_verified_at is not None:
+            refresh = RefreshToken.for_user(user)
+            return _auth_response(request, user, refresh, status_code=status.HTTP_201_CREATED)
+        send_verify_email_code(user=user)
+        return _needs_verification_response(email=user.email)
 
 
 class TherapistRegisterView(APIView):
@@ -268,8 +323,83 @@ class TherapistRegisterView(APIView):
         serializer = TherapistRegistrationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        if user.email_verified_at is not None:
+            refresh = RefreshToken.for_user(user)
+            return _auth_response(request, user, refresh, status_code=status.HTTP_201_CREATED)
+        send_verify_email_code(user=user)
+        return _needs_verification_response(email=user.email)
+
+
+class EmailVerifyView(APIView):
+    permission_classes = []
+    throttle_classes = [PasswordResetRateThrottle]
+
+    def post(self, request, *args, **kwargs):
+        serializer = EmailVerifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        code = serializer.validated_data['code']
+
+        user = User.objects.filter(email__iexact=email, is_active=True).first()
+        if user is None:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_028',
+                        'message': 'Kod jest nieprawidłowy lub wygasł.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if user.email_verified_at is not None:
+            refresh = RefreshToken.for_user(user)
+            return _auth_response(request, user, refresh)
+
+        try:
+            consume_email_code(
+                user=user,
+                purpose=EmailCodePurpose.VERIFY_EMAIL,
+                raw_code=code,
+            )
+        except EmailCodeError as exc:
+            return Response(
+                {
+                    'error': {
+                        'code': exc.code,
+                        'message': exc.message,
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        _mark_email_verified(user)
         refresh = RefreshToken.for_user(user)
-        return _auth_response(request, user, refresh, status_code=status.HTTP_201_CREATED)
+        return _auth_response(request, user, refresh)
+
+
+class EmailResendView(APIView):
+    permission_classes = []
+    throttle_classes = [PasswordResetRateThrottle]
+
+    def post(self, request, *args, **kwargs):
+        serializer = EmailResendSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+
+        user = User.objects.filter(email__iexact=email, is_active=True).first()
+        if user is not None and user.email_verified_at is None:
+            send_verify_email_code(user=user)
+
+        detail = 'Jeśli konto wymaga weryfikacji, wysłaliśmy nowy kod.'
+        if settings.DEBUG and 'console' in settings.EMAIL_BACKEND.lower():
+            detail = (
+                f'{detail} '
+                '(DEBUG: EMAIL_BACKEND=console — kod jest w logu Django.)'
+            )
+        return Response({'detail': detail}, status=status.HTTP_200_OK)
 
 
 class CookieTokenRefreshView(TokenRefreshView):
@@ -316,24 +446,6 @@ class CookieTokenRefreshView(TokenRefreshView):
         return _set_auth_cookies(response, access_token=access, refresh_token=new_refresh)
 
 
-def _hash_token(raw_token: str) -> str:
-    return hashlib.sha256(raw_token.encode()).hexdigest()
-
-
-def _build_password_reset_url(*, client: str, raw_token: str) -> str:
-    if client == 'mobile':
-        base = settings.MOBILE_RESET_URL_BASE
-        path = 'password-reset'
-        if base.endswith('://') or base.endswith(':/'):
-            return f'{base}{path}?token={raw_token}'
-        return f'{base.rstrip("/")}/{path}?token={raw_token}'
-    return f'{settings.FRONTEND_URL}/reset?token={raw_token}'
-
-
-def _build_web_password_reset_url(raw_token: str) -> str:
-    return f'{settings.FRONTEND_URL}/reset?token={raw_token}'
-
-
 class PasswordResetRequestView(APIView):
     permission_classes = []
     throttle_classes = [PasswordResetRateThrottle]
@@ -342,41 +454,131 @@ class PasswordResetRequestView(APIView):
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
-        client = serializer.validated_data.get('client', 'web')
 
         user = User.objects.filter(email__iexact=email, is_active=True).first()
-        if user:
-            raw_token = secrets.token_urlsafe(32)
-            PasswordResetToken.objects.create(
-                user=user,
-                token_hash=_hash_token(raw_token),
-                expires_at=timezone.now() + timedelta(seconds=settings.PASSWORD_RESET_TIMEOUT),
-            )
-            reset_url = _build_password_reset_url(client=client, raw_token=raw_token)
-            web_reset_url = _build_web_password_reset_url(raw_token)
-            validity_minutes = max(1, settings.PASSWORD_RESET_TIMEOUT // 60)
-            send_templated_mail(
-                subject='PhysioCare - reset hasła',
-                to=[user.email],
-                template_basename='accounts/email/password_reset',
-                context={
-                    'reset_url': reset_url,
-                    'web_reset_url': web_reset_url,
-                    'is_mobile_client': client == 'mobile',
-                    'validity_minutes': validity_minutes,
+        if user is None:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_029',
+                        'message': (
+                            'Nie mamy konta z tym adresem e-mail. '
+                            'Załóż konto albo sprawdź pisownię adresu.'
+                        ),
+                        'details': {'email': ['Nie znaleziono konta z tym e-mailem.']},
+                    }
                 },
+                status=status.HTTP_404_NOT_FOUND,
             )
 
-        detail = 'Jeśli konto istnieje, wysłaliśmy instrukcje resetu hasła.'
-        if settings.DEBUG and 'console' in settings.EMAIL_BACKEND.lower():
-            detail = (
-                f'{detail} '
-                '(DEBUG: EMAIL_BACKEND=console - wiadomość jest w logu Django, '
-                'nie na skrzynce. Ustaw SMTP/Mailtrap w .env.)'
+        if not user.has_usable_password():
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_023',
+                        'message': (
+                            'To konto korzysta z logowania Google i nie ma lokalnego hasła. '
+                            'Użyj przycisku „Kontynuuj z Google”.'
+                        ),
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
+        sent = send_password_reset_code(user=user)
+        detail = 'Wysłaliśmy 6-cyfrowy kod resetu hasła na podany e-mail.'
+        if settings.DEBUG:
+            if 'console' in settings.EMAIL_BACKEND.lower():
+                detail = (
+                    f'{detail} '
+                    '(DEBUG: EMAIL_BACKEND=console — kod jest w logu Django.)'
+                )
+            elif not sent:
+                detail = (
+                    f'{detail} '
+                    '(DEBUG: wysyłka SMTP nie powiodła się — sprawdź log Django / EMAIL_* w .env.)'
+                )
+                return Response(
+                    {
+                        'error': {
+                            'code': 'AUTH_030',
+                            'message': (
+                                'Nie udało się wysłać e-maila. '
+                                'Spróbuj ponownie za chwilę lub sprawdź konfigurację poczty.'
+                            ),
+                            'details': {},
+                        }
+                    },
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
+
+        if not sent:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_030',
+                        'message': (
+                            'Nie udało się wysłać e-maila. '
+                            'Spróbuj ponownie za chwilę.'
+                        ),
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response({'detail': detail}, status=status.HTTP_200_OK)
+
+
+class PasswordResetVerifyView(APIView):
+    permission_classes = []
+    throttle_classes = [PasswordResetRateThrottle]
+
+    def post(self, request, *args, **kwargs):
+        serializer = PasswordResetVerifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = User.objects.filter(
+            email__iexact=serializer.validated_data['email'],
+            is_active=True,
+        ).first()
+        if user is None:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_028',
+                        'message': 'Kod jest nieprawidłowy lub wygasł.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            consume_email_code(
+                user=user,
+                purpose=EmailCodePurpose.PASSWORD_RESET,
+                raw_code=serializer.validated_data['code'],
+            )
+        except EmailCodeError as exc:
+            return Response(
+                {
+                    'error': {
+                        'code': exc.code,
+                        'message': exc.message,
+                        'details': {'code': [exc.message]},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        reset_token = issue_password_reset_token(user=user)
         return Response(
-            {'detail': detail},
+            {
+                'detail': 'Kod jest poprawny. Ustaw nowe hasło.',
+                'reset_token': reset_token,
+            },
             status=status.HTTP_200_OK,
         )
 
@@ -386,43 +588,41 @@ class PasswordResetConfirmView(APIView):
     throttle_classes = [PasswordResetRateThrottle]
 
     def post(self, request, *args, **kwargs):
-        raw_token = request.data.get('token')
-        reset_token = None
-        if isinstance(raw_token, str) and raw_token.strip():
-            reset_token = PasswordResetToken.objects.filter(
-                token_hash=_hash_token(raw_token.strip()),
-                used_at__isnull=True,
-                expires_at__gt=timezone.now(),
-            ).select_related('user').first()
+        token_raw = request.data.get('reset_token')
+        peek = lookup_password_reset_token(
+            raw_token=token_raw if isinstance(token_raw, str) else '',
+        )
+        user = peek.user if peek is not None else None
 
         serializer = PasswordResetConfirmSerializer(
             data=request.data,
-            context={'user': reset_token.user if reset_token is not None else None},
+            context={'user': user},
         )
         serializer.is_valid(raise_exception=True)
 
-        if reset_token is None:
+        try:
+            user = consume_password_reset_token(
+                raw_token=serializer.validated_data['reset_token'],
+            )
+        except EmailCodeError as exc:
             return Response(
                 {
                     'error': {
-                        'code': 'AUTH_002',
-                        'message': 'Token resetu jest nieprawidłowy lub wygasł.',
+                        'code': exc.code,
+                        'message': exc.message,
                         'details': {},
                     }
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        user = reset_token.user
         user.set_password(serializer.validated_data['new_password'])
-        user.save(update_fields=['password'])
+        update_fields = ['password']
+        if user.email_verified_at is None:
+            user.email_verified_at = timezone.now()
+            update_fields.append('email_verified_at')
+        user.save(update_fields=update_fields)
         blacklist_user_refresh_tokens(user)
-
-        reset_token.used_at = timezone.now()
-        reset_token.save(update_fields=['used_at'])
-        PasswordResetToken.objects.filter(user=user, used_at__isnull=True).exclude(
-            id=reset_token.id
-        ).update(used_at=timezone.now())
 
         return Response({'detail': 'Hasło zostało zmienione.'}, status=status.HTTP_200_OK)
 
@@ -477,4 +677,3 @@ class ChangePasswordView(APIView):
         blacklist_user_refresh_tokens(user)
         response = Response({'detail': 'Hasło zostało zmienione. Zaloguj się ponownie.'})
         return _clear_auth_cookies(response)
-

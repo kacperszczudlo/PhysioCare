@@ -19,6 +19,8 @@ import {
 } from '@/lib/passwordPolicy'
 import { colors, space, typography } from '@/theme/tokens'
 
+type Step = 'request' | 'code' | 'password'
+
 function firstParam(value: string | string[] | undefined): string {
   if (Array.isArray(value)) {
     return (value[0] ?? '').trim()
@@ -27,25 +29,47 @@ function firstParam(value: string | string[] | undefined): string {
 }
 
 export default function PasswordResetScreen() {
-  const { requestPasswordReset, confirmPasswordReset, logout, isAuthenticated } = useAuth()
+  const {
+    requestPasswordReset,
+    verifyPasswordResetCode,
+    confirmPasswordReset,
+    logout,
+    isAuthenticated,
+  } = useAuth()
   const router = useRouter()
-  const params = useLocalSearchParams<{ token?: string | string[]; email?: string | string[] }>()
-  const tokenFromLink = firstParam(params.token)
+  const params = useLocalSearchParams<{ email?: string | string[] }>()
   const emailFromParams = firstParam(params.email)
 
+  const [step, setStep] = useState<Step>('request')
   const [email, setEmail] = useState(emailFromParams)
+  const [code, setCode] = useState('')
+  const [resetToken, setResetToken] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [codeError, setCodeError] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null)
   const [passwordTouched, setPasswordTouched] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const isConfirmMode = Boolean(tokenFromLink)
   const passwordRequirements = getPasswordRequirements(password)
+
+  function goToRequest() {
+    setStep('request')
+    setCode('')
+    setResetToken('')
+    setPassword('')
+    setConfirmPassword('')
+    setMessage(null)
+    setError(null)
+    setCodeError(null)
+    setPasswordError(null)
+    setConfirmPasswordError(null)
+    setPasswordTouched(false)
+  }
 
   async function onRequest() {
     setError(null)
@@ -58,30 +82,58 @@ export default function PasswordResetScreen() {
     setEmailError(null)
     setLoading(true)
     try {
-      await requestPasswordReset(email.trim())
-      setMessage('Wysłaliśmy link resetujący. Sprawdź e-mail i kliknij link w wiadomości.')
+      const detail = await requestPasswordReset(email.trim())
+      setMessage(detail)
+      setCode('')
+      setResetToken('')
+      setStep('code')
     } catch (err) {
       const apiEmailError = getFieldError(err, 'email')
       if (apiEmailError) {
         setEmailError(apiEmailError)
         setError(null)
       } else {
-        setError(getErrorMessage(err, 'Nie udało się wysłać linku.'))
+        setError(getErrorMessage(err, 'Nie udało się wysłać kodu.'))
       }
     } finally {
       setLoading(false)
     }
   }
 
-  async function onConfirm() {
+  async function onVerifyCode() {
+    setError(null)
+    setMessage(null)
+    const cleaned = code.trim()
+    if (!/^\d{6}$/.test(cleaned)) {
+      setCodeError('Wpisz 6-cyfrowy kod z e-maila.')
+      return
+    }
+    setCodeError(null)
+    setLoading(true)
+    try {
+      const token = await verifyPasswordResetCode(email.trim(), cleaned)
+      setResetToken(token)
+      setPassword('')
+      setConfirmPassword('')
+      setMessage(null)
+      setStep('password')
+    } catch (err) {
+      const apiCodeError = getFieldError(err, 'code')
+      if (apiCodeError) {
+        setCodeError(apiCodeError)
+        setError(null)
+      } else {
+        setError(getErrorMessage(err, 'Nie udało się zweryfikować kodu.'))
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function onSetPassword() {
     setError(null)
     setMessage(null)
     setPasswordTouched(true)
-
-    if (!tokenFromLink) {
-      setError('Użyj linku z wiadomości e-mail, aby ustawić nowe hasło.')
-      return
-    }
 
     const localPasswordError = getPasswordError(password)
     if (localPasswordError) {
@@ -94,13 +146,19 @@ export default function PasswordResetScreen() {
       setConfirmPasswordError(PASSWORD_MESSAGES.mismatch)
       return
     }
+    if (!resetToken) {
+      setError('Sesja resetu wygasła. Poproś o nowy kod.')
+      goToRequest()
+      return
+    }
     setPasswordError(null)
     setConfirmPasswordError(null)
     setLoading(true)
     try {
       const detail = await confirmPasswordReset({
-        token: tokenFromLink,
+        reset_token: resetToken,
         new_password: password,
+        new_password_confirm: confirmPassword,
       })
       if (isAuthenticated) {
         await logout()
@@ -119,18 +177,46 @@ export default function PasswordResetScreen() {
     }
   }
 
+  const title =
+    step === 'code' ? 'Kod z e-maila' : step === 'password' ? 'Nowe hasło' : 'Reset hasła'
+  const subtitle =
+    step === 'code'
+      ? 'Sprawdź skrzynkę (także Spam) i wpisz 6-cyfrowy kod.'
+      : step === 'password'
+        ? 'Ustaw nowe hasło i powtórz je, żeby potwierdzić.'
+        : 'Podaj e-mail powiązany z kontem. Wyślemy 6-cyfrowy kod resetu hasła.'
+
   return (
     <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.container}>
       <BrandMark variant="logo" size="sm" style={styles.brand} />
-      <Text style={styles.title}>{isConfirmMode ? 'Nowe hasło' : 'Reset hasła'}</Text>
-      <Text style={styles.subtitle}>
-        {isConfirmMode
-          ? 'Ustaw nowe hasło. Link pochodzi z wiadomości e-mail.'
-          : 'Wyślemy link resetujący na Twój e-mail, jeśli konto istnieje.'}
-      </Text>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.subtitle}>{subtitle}</Text>
 
       <View style={styles.form}>
-        {isConfirmMode ? (
+        {step === 'code' ? (
+          <>
+            <Field
+              label="Kod z e-maila"
+              value={code}
+              onChangeText={(value) => {
+                setCode(value.replace(/\D/g, '').slice(0, 6))
+                if (codeError) {
+                  setCodeError(null)
+                }
+              }}
+              keyboardType="number-pad"
+              autoComplete="one-time-code"
+              error={codeError}
+            />
+            <Button title="Potwierdź kod" loading={loading} onPress={() => void onVerifyCode()} />
+            <Button
+              title="Wróć / wyślij kod ponownie"
+              variant="secondary"
+              disabled={loading}
+              onPress={goToRequest}
+            />
+          </>
+        ) : step === 'password' ? (
           <>
             <Field
               label="Nowe hasło"
@@ -161,14 +247,27 @@ export default function PasswordResetScreen() {
               secureTextEntry
               error={confirmPasswordError}
             />
-            <Button title="Ustaw nowe hasło" loading={loading} onPress={() => void onConfirm()} />
-            {message ? (
+            {!message ? (
+              <>
+                <Button
+                  title="Ustaw nowe hasło"
+                  loading={loading}
+                  onPress={() => void onSetPassword()}
+                />
+                <Button
+                  title="Anuluj i zacznij od nowa"
+                  variant="secondary"
+                  disabled={loading}
+                  onPress={goToRequest}
+                />
+              </>
+            ) : (
               <Button
                 title="Przejdź do logowania"
                 variant="secondary"
                 onPress={() => router.replace('/(auth)/login')}
               />
-            ) : null}
+            )}
           </>
         ) : (
           <>
@@ -186,7 +285,7 @@ export default function PasswordResetScreen() {
               autoComplete="email"
               error={emailError}
             />
-            <Button title="Wyślij link" loading={loading} onPress={() => void onRequest()} />
+            <Button title="Wyślij kod na e-mail" loading={loading} onPress={() => void onRequest()} />
           </>
         )}
 

@@ -17,6 +17,8 @@ W dev Vite proxy przekierowuje `/api` i `/media` -> `http://localhost:8000` (str
 
 Logowanie Google: ustaw `VITE_GOOGLE_CLIENT_ID` (Web Client ID) oraz `GOOGLE_CLIENT_IDS` na backendzie — bez tego przycisk Google jest ukryty.
 
+Weryfikacja e-mail / reset hasła: kody 6 cyfr przez SMTP (lokalnie `EMAIL_BACKEND=console` albo Gmail App Password — patrz root `.env.example` / `docs/deployment.md`).
+
 ## Skrypty
 
 | Komenda                | Opis              |

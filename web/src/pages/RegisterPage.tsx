@@ -200,7 +200,7 @@ export function RegisterPage() {
     setFieldErrors({})
     setLoading(true)
     try {
-      await register({
+      const result = await register({
         google_credential: credential,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
@@ -209,6 +209,10 @@ export function RegisterPage() {
         phone: formatPhoneForApi(phoneNational, countryCode) || undefined,
       })
       setGoogleDraft(null)
+      if (result.kind === 'needs_email_verification') {
+        navigate(`/verify-email?email=${encodeURIComponent(result.email)}`, { replace: true })
+        return
+      }
       navigate('/', { replace: true })
     } catch (err) {
       handleRegisterError(err)
@@ -251,7 +255,7 @@ export function RegisterPage() {
     setFieldErrors({})
     setLoading(true)
     try {
-      await register({
+      const result = await register({
         email: email.trim(),
         password,
         first_name: firstName.trim(),
@@ -260,6 +264,10 @@ export function RegisterPage() {
         pwzf_declaration: true,
         phone: formatPhoneForApi(phoneNational, countryCode) || undefined,
       })
+      if (result.kind === 'needs_email_verification') {
+        navigate(`/verify-email?email=${encodeURIComponent(result.email)}`, { replace: true })
+        return
+      }
       navigate('/', { replace: true })
     } catch (err) {
       handleRegisterError(err)
