@@ -262,7 +262,7 @@ export function PatientDetailPage() {
 
       {error ? <ErrorBanner message={error} /> : null}
 
-      <PatientAssignments patientId={patient.id} />
+      <PatientAssignments patientId={patient.id} episodeId={selected?.id ?? null} />
 
       <section className="patient-pdf-upload" aria-label="Udostępnij PDF pacjentowi">
         <h2>Dokument PDF dla pacjenta</h2>

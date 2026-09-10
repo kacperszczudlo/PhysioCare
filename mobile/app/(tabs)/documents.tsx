@@ -86,7 +86,7 @@ export default function DocumentsScreen() {
       if (tab === 'treatment') {
         setEpisodes(await patientApi.getEpisodes())
       } else if (tab === 'exercises') {
-        setExercises(await patientApi.getExercises('all'))
+        setExercises(await patientApi.getExercises('active'))
       } else {
         const kind = docFilterRef.current === 'all' ? undefined : docFilterRef.current
         setDocs(await patientApi.getClinicalDocuments(kind))
@@ -264,8 +264,8 @@ export default function DocumentsScreen() {
           {mainTab === 'exercises' ? (
             exercises.length === 0 ? (
               <EmptyState
-                title="Brak zaleceń"
-                description="Przypisane ćwiczenia pojawią się tutaj wraz z historią odhaczeń."
+                title="Brak aktywnych ćwiczeń"
+                description="Gdy fizjoterapeuta przypisze ćwiczenia, zobaczysz je tutaj."
               />
             ) : (
               exercises.map((item) => (
@@ -363,7 +363,7 @@ function ExercisePlanCard({
       accessibilityLabel={item.exercise_title}
     >
       <View style={styles.rowBetween}>
-        <Text style={styles.kind}>{item.is_active ? 'Aktywne' : 'Zakończone'}</Text>
+        <Text style={styles.kind}>Ćwiczenie</Text>
         <Text style={styles.date}>
           {formatDate(item.start_date)} – {formatDate(item.end_date)}
         </Text>
@@ -372,24 +372,22 @@ function ExercisePlanCard({
       <Text style={styles.summary}>{item.dosage || 'Bez dawki'}</Text>
       <Text style={styles.meta}>
         Odhaczenia: {doneCount}
-        {item.is_active ? (item.completed_today ? ' · dziś zrobione' : ' · dziś do zrobienia') : ''}
+        {item.completed_today ? ' · dziś zrobione' : ' · dziś do zrobienia'}
       </Text>
-      {item.is_active ? (
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation?.()
-            onToggle()
-          }}
-          disabled={busy}
-          style={[styles.pdfBtn, item.completed_today ? styles.toggleDone : null]}
-          accessibilityRole="button"
-          accessibilityLabel={item.completed_today ? 'Cofnij odhaczenie' : 'Oznacz jako zrobione'}
-        >
-          <Text style={styles.pdfBtnLabel}>
-            {item.completed_today ? 'Cofnij dzisiejsze' : 'Oznacz na dziś'}
-          </Text>
-        </Pressable>
-      ) : null}
+      <Pressable
+        onPress={(e) => {
+          e.stopPropagation?.()
+          onToggle()
+        }}
+        disabled={busy}
+        style={[styles.pdfBtn, item.completed_today ? styles.toggleDone : null]}
+        accessibilityRole="button"
+        accessibilityLabel={item.completed_today ? 'Cofnij odhaczenie' : 'Oznacz jako zrobione'}
+      >
+        <Text style={styles.pdfBtnLabel}>
+          {item.completed_today ? 'Cofnij dzisiejsze' : 'Oznacz na dziś'}
+        </Text>
+      </Pressable>
     </Pressable>
   )
 }

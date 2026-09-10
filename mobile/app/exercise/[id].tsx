@@ -63,8 +63,8 @@ export default function ExerciseDetailScreen() {
       const today = await patientApi.getExercisesToday()
       let found = today.find((ex) => ex.id === id) ?? null
       if (!found) {
-        const all = await patientApi.getExercises('all')
-        const plan = all.find((ex) => ex.id === id) ?? null
+        const active = await patientApi.getExercises('active')
+        const plan = active.find((ex) => ex.id === id) ?? null
         if (plan) {
           found = plan
         }
