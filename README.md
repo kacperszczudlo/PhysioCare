@@ -65,30 +65,40 @@ Otwórz pliki `.drawio` w [diagrams.net](https://app.diagrams.net) lub rozszerze
 
 ## Uruchomienie lokalne
 
+Poniżej pełna ścieżka od zera do działającego stacku: **API + panel web + aplikacja pacjenta**.  
+Wszystkie komendy zakładają katalog główny repo (`PhysioCare/`) i **PowerShell** na Windowsie.  
+Na Windowsie używaj zawsze `npm.cmd` (nie `npm`) — ExecutionPolicy blokuje `npm.ps1`.
+
 ### Wymagania
 
-- Python 3.12+
-- PostgreSQL 16+ (+ rozszerzenie `btree_gist` / Stack Builder -> *PostgreSQL Database Server Contrib*)
-- Node.js 20 LTS (web/mobile - Faza 4+)
-- (Mobile) Expo CLI
-- (Windows) PowerShell 5.1+; binaria `psql` / `pg_dump` w PATH lub w `C:\Program Files\PostgreSQL\<wersja>\bin`
+| Narzędzie | Wersja / uwagi |
+|-----------|----------------|
+| Python | 3.12+ |
+| PostgreSQL | 16+ z rozszerzeniem `btree_gist` (Stack Builder → *PostgreSQL Database Server Contrib*) |
+| Node.js | 20 LTS |
+| PowerShell | 5.1+ |
+| `psql` / `pg_dump` | w PATH albo w `C:\Program Files\PostgreSQL\<wersja>\bin` |
+| (Mobile) | Expo Go **albo** Android Studio / urządzenie z development buildem — szczegóły w [mobile/README.md](mobile/README.md) |
 
-### Konfiguracja
+### 1. Konfiguracja środowiska (raz)
+
+Skopiuj szablon i uzupełnij sekrety oraz dane bazy:
 
 ```powershell
 Copy-Item .env.example .env
-# Uzupelnij wartosci w .env (POSTGRES_*, DJANGO_SECRET_KEY)
-# Opcjonalnie EMAIL_* (Mailtrap) - reset hasła przez link; patrz docs/deployment.md
 ```
 
-**Pierwsza konfiguracja PostgreSQL:**
+W `.env` ustaw co najmniej: `POSTGRES_*`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`.  
+Opcjonalnie: `EMAIL_*` (reset hasła), `GOOGLE_CLIENT_IDS` (logowanie Google) — patrz [docs/deployment.md](docs/deployment.md).
+
+Jeśli PostgreSQL jest świeżo zainstalowany, utwórz użytkownika, bazę i `btree_gist`:
 
 ```powershell
 # W .env: POSTGRES_ADMIN_USER=postgres + POSTGRES_ADMIN_PASSWORD=haslo-z-instalatora
 python scripts/setup_postgres_auth.py
 ```
 
-### Backend
+### 2. Pierwsze uruchomienie backendu
 
 ```powershell
 cd backend
@@ -97,104 +107,155 @@ python -m venv venv
 pip install -r requirements.txt
 cd physiocare
 python manage.py migrate
+```
+
+Na tym etapie API jest gotowe do startu (`python manage.py runserver` — krok 4).
+
+### 3. Zależności frontu (raz lub po zmianie `package.json`)
+
+```powershell
+cd web
+npm.cmd install
+
+cd ..\mobile
+npm.cmd install
+Copy-Item .env.example .env   # jeśli jeszcze nie ma mobile/.env
+```
+
+W `mobile/.env` ustaw `EXPO_PUBLIC_API_BASE_URL`:
+
+| Gdzie działa appka | Wartość |
+|--------------------|---------|
+| Emulator Android | `http://10.0.2.2:8000/api/v1` |
+| Telefon / fizyczne urządzenie (ta sama sieć Wi‑Fi co PC) | `http://<IP-LAN-PC>:8000/api/v1` |
+| Expo web / iOS simulator | `http://localhost:8000/api/v1` |
+
+Ten sam adres IP dodaj do `DJANGO_ALLOWED_HOSTS` w rootowym `.env` (np. `localhost,127.0.0.1,192.168.1.45`).
+
+### 4. Codzienny start — trzy procesy
+
+Stack wymaga **trzech osobnych terminali**. Kolejność ma znaczenie: najpierw API, potem klienci.
+
+#### Terminal 1 — Backend (API)
+
+Adres: `http://127.0.0.1:8000` (REST pod `/api/v1/`).
+
+```powershell
+cd backend
+.\venv\Scripts\Activate.ps1
+cd physiocare
 python manage.py runserver
 ```
 
-Live UI (SSE, `GET /api/v1/me/events/`) działa też na `runserver`. Przy wielu równoległych streamach (demo/prod) preferuj ASGI:
+Live UI (SSE, `GET /api/v1/me/events/`) działa na `runserver`. Przy wielu równoległych streamach (demo/prod) preferuj ASGI:
 
 ```powershell
 cd backend\physiocare
 uvicorn physiocare.asgi:application --reload --host 127.0.0.1 --port 8000
 ```
 
-Przypomnienia (wizyta 24h/2h, ćwiczenia na dziś) wymagają **drugiego** procesu - `runserver` / uvicorn ich sam nie odlicza:
+Przypomnienia (wizyta 24h/2h, ćwiczenia na dziś) wymagają **osobnego** procesu — `runserver` / uvicorn ich nie odlicza:
 
 ```powershell
 cd backend\physiocare
 python manage.py run_notification_scheduler
 ```
 
-**Reset bazy dev (po zmianie migracji):**
+#### Terminal 2 — Web (panel terapeuty)
+
+Adres: `http://localhost:5173`. Vite proxy przekierowuje `/api` i `/media` na backend (`:8000`).
+
+```powershell
+cd web
+npm.cmd run dev
+```
+
+Szczegóły (Google Sign-In, proxy SSE): [web/README.md](web/README.md).
+
+#### Terminal 3 — Mobile (aplikacja pacjenta)
+
+```powershell
+cd mobile
+npm.cmd start
+```
+
+Metro startuje w trybie **dev client** (`expo start --dev-client`). W terminalu Metro:
+
+| Klawisz | Działanie |
+|---------|-----------|
+| `a` | otwórz na Androidzie (development build) |
+| `w` | otwórz w przeglądarce |
+| `s` | przełącz na Expo Go |
+| `r` | przeładuj aplikację |
+
+Szybki UI bez native builda (tylko hasło, bez push / Google):
+
+```powershell
+npm.cmd run start:go
+```
+
+Pełny opis (Expo Go vs native, push, Google): [mobile/README.md](mobile/README.md).
+
+### 5. Narzędzia developerskie
+
+**Reset bazy dev** (po konfliktach migracji):
 
 ```powershell
 python scripts/reset_db.py
 ```
 
-**Synchronizacja `database/schema.sql` po migrate:**
+**Synchronizacja** `database/schema.sql` po `migrate`:
 
 ```powershell
 python scripts/sync_schema_sql.py
 ```
 
-### Jakość kodu (lint / format)
+**Lint / format**
 
 ```powershell
-# Backend - Ruff (z katalogu `backend/`, venv aktywny)
+# Backend — Ruff (katalog `backend/`, venv aktywny)
 pip install -r requirements.txt
 ruff check physiocare tests
 ruff format --check physiocare tests
 
-# Web - ESLint + Prettier (+ Oxlint)
+# Web
 cd web
-npm install
-npm run lint
-npm run format:check
+npm.cmd run lint
+npm.cmd run format:check
 
-# Mobile - ESLint + Prettier + tsc
+# Mobile
 cd mobile
-npm install
-npm run lint
-npm run format:check
+npm.cmd run lint
+npm.cmd run format:check
 ```
 
-### Testy
-
-Wszystkie komendy z katalogu głównego repo (`PhysioCare/`), przy działającym PostgreSQL i venv w `backend/venv`.
-
-**1) Testy jednostkowe / integracyjne (pytest + coverage)**
+**Testy** (z roota repo, PostgreSQL działa, venv w `backend/venv`):
 
 ```powershell
 python scripts/run_tests.py
 ```
 
-Raporty:
-- `backend/reports/pytest-report.html`
-- `backend/reports/coverage/index.html`
+Raporty: `backend/reports/pytest-report.html`, `backend/reports/coverage/index.html`.
 
-**2) Kolekcja Postman** - import `docs/postman/PhysioCare.json`, `baseUrl=http://localhost:8000/api/v1`, Cookie Jar ON. URL-e ze slashami na końcu.
+**Postman** — import [docs/postman/PhysioCare.json](docs/postman/PhysioCare.json), `baseUrl=http://localhost:8000/api/v1`, Cookie Jar ON, URL-e ze slashami na końcu. Przewodnik: [docs/postman-testing.md](docs/postman-testing.md).
 
-### Web
-
-```powershell
-cd web
-npm install
-npm run dev
-```
-
-### Mobile
-
-```powershell
-cd mobile
-npm install
-npx expo start
-```
-
-### Skrypty (`scripts/`) - Python
+### Skrypty (`scripts/`)
 
 | Skrypt | Opis |
 |--------|------|
 | `setup_postgres_auth.py` | User, baza, `btree_gist` |
 | `reset_db.py` | Drop/create DB + migrate |
-| `sync_schema_sql.py` | Dump schematu -> `database/schema.sql` |
+| `sync_schema_sql.py` | Dump schematu → `database/schema.sql` |
 | `run_tests.py` | pytest + coverage HTML |
 
-Uruchamianie (zawsze z roota repo):
+Uruchamianie zawsze z roota repo:
 
 ```powershell
 python scripts/<nazwa>.py
 ```
 
-Na Windows nie odpalaj dwuklikiem - użyj PowerShell / terminala Cursor.
+Na Windowsie nie odpalaj skryptów dwuklikiem — użyj PowerShell / terminala Cursor.
+
 ## Mockup UI
 
 Referencja wizualna ekranów: plik `mockup_systemu_fizjoterapii.tsx` (poza repo - lokalny prototyp).
