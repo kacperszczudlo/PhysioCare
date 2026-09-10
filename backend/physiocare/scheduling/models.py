@@ -74,7 +74,7 @@ class Visit(TimestampedModel):
     )
     location_address = models.CharField(max_length=300, blank=True, default='')
     prep_instructions = models.TextField(blank=True, default='')
-    # After-visit summary for the patient (plain language) — not the clinical VisitNote.
+    # After-visit summary for the patient (plain language) - not the clinical VisitNote.
     patient_summary = models.TextField(blank=True, default='')
     patient_note = models.TextField(blank=True, default='')
     cancel_reason = models.TextField(blank=True, default='')

@@ -189,7 +189,7 @@ export default function DocumentsScreen() {
 
   const subtitle =
     mainTab === 'treatment'
-      ? 'Twój plan leczenia — diagnoza funkcjonalna i cele terapii.'
+      ? 'Twój plan leczenia - diagnoza funkcjonalna i cele terapii.'
       : mainTab === 'exercises'
         ? 'Pełny plan ćwiczeń i historia wykonania.'
         : 'Dokumenty i podsumowania wystawione przez fizjoterapeutę.'
@@ -334,7 +334,7 @@ function EpisodeCard({ episode }: { episode: TreatmentEpisode }) {
         </>
       ) : null}
       {!episode.functional_diagnosis && !episode.summary_note ? (
-        <Text style={styles.summary}>Epizod w trakcie — szczegóły uzupełni terapeuta.</Text>
+        <Text style={styles.summary}>Epizod w trakcie - szczegóły uzupełni terapeuta.</Text>
       ) : null}
       {episode.ended_at ? (
         <Text style={styles.meta}>Zakończony: {formatDate(episode.ended_at)}</Text>
@@ -365,7 +365,7 @@ function ExercisePlanCard({
       <View style={styles.rowBetween}>
         <Text style={styles.kind}>Ćwiczenie</Text>
         <Text style={styles.date}>
-          {formatDate(item.start_date)} – {formatDate(item.end_date)}
+          {formatDate(item.start_date)} - {formatDate(item.end_date)}
         </Text>
       </View>
       <Text style={styles.title}>{item.exercise_title}</Text>
@@ -472,13 +472,44 @@ function DetailRows({ doc }: { doc: ClinicalDocumentItem }) {
     pushRow(rows, 'Finansowanie', d.funding_hint_label)
     pushRow(rows, 'Uwaga', d.disclaimer)
   } else if (doc.kind === 'device_order') {
-    pushRow(rows, 'Kod', d.device_code)
-    pushRow(rows, 'Grupa', d.device_group)
-    pushRow(rows, 'Strona', d.side_label)
-    pushRow(rows, 'Ilość', d.quantity)
-    pushRow(rows, 'ICD-10', d.icd10_code)
-    pushRow(rows, 'Notatka', d.notes)
-    pushRow(rows, 'Uwaga', d.disclaimer)
+    const accessCode = detailText(d.access_code)
+    const pickupHint = detailText(d.pickup_hint)
+    const disclaimer = detailText(d.disclaimer)
+    const deviceRows: { label: string; value: string }[] = []
+    pushRow(deviceRows, 'Kod wyrobu', d.device_code)
+    pushRow(deviceRows, 'Grupa', d.device_group)
+    pushRow(deviceRows, 'Strona', d.side_label)
+    pushRow(deviceRows, 'Ilość', d.quantity)
+    pushRow(deviceRows, 'ICD-10', d.icd10_code)
+    pushRow(deviceRows, 'Notatka', d.notes)
+    return (
+      <View style={styles.detailList}>
+        {accessCode ? (
+          <View style={styles.accessCodeBox} accessibilityLabel={`Kod odbioru ${accessCode}`}>
+            <Text style={styles.accessCodeLabel}>Kod do odbioru (e-ZWM)</Text>
+            <Text style={styles.accessCodeValue}>{accessCode}</Text>
+            {pickupHint ? <Text style={styles.accessCodeHint}>{pickupHint}</Text> : null}
+          </View>
+        ) : pickupHint ? (
+          <View style={styles.pickupHintBox}>
+            <Text style={styles.detailLabel}>Odbiór</Text>
+            <Text style={styles.detailValue}>{pickupHint}</Text>
+          </View>
+        ) : null}
+        {deviceRows.map((row) => (
+          <View key={row.label} style={styles.detailRow}>
+            <Text style={styles.detailLabel}>{row.label}</Text>
+            <Text style={styles.detailValue}>{row.value}</Text>
+          </View>
+        ))}
+        {disclaimer ? (
+          <View style={styles.disclaimerBox}>
+            <Text style={styles.disclaimerLabel}>Ważne</Text>
+            <Text style={styles.disclaimerText}>{disclaimer}</Text>
+          </View>
+        ) : null}
+      </View>
+    )
   } else if (doc.kind === 'refusal') {
     pushRow(rows, 'Informacja', d.patient_notice)
     pushRow(rows, 'Zlecenie', d.physician_order_description)
@@ -645,6 +676,61 @@ const styles = StyleSheet.create({
     fontSize: typography.base,
     color: colors.ink,
     lineHeight: 22,
+  },
+  accessCodeBox: {
+    backgroundColor: colors.primarySubtle,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    padding: space.base,
+    gap: space.sm,
+    alignItems: 'center',
+  },
+  accessCodeLabel: {
+    fontSize: typography.xs,
+    fontWeight: '700',
+    color: colors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  accessCodeValue: {
+    fontSize: 36,
+    fontWeight: '800',
+    color: colors.ink,
+    letterSpacing: 8,
+    fontVariant: ['tabular-nums'],
+  },
+  accessCodeHint: {
+    fontSize: typography.sm,
+    color: colors.muted,
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  pickupHintBox: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    padding: space.base,
+    gap: space.xs,
+  },
+  disclaimerBox: {
+    backgroundColor: colors.accentSubtle,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.warning,
+    padding: space.base,
+    gap: space.xs,
+  },
+  disclaimerLabel: {
+    fontSize: typography.xs,
+    fontWeight: '700',
+    color: colors.warning,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  disclaimerText: {
+    fontSize: typography.sm,
+    color: colors.ink,
+    lineHeight: 20,
   },
   pdfBtn: {
     alignSelf: 'flex-start',

@@ -122,7 +122,7 @@ def _needs_verification_response(*, email: str, status_code=status.HTTP_201_CREA
     if settings.DEBUG and 'console' in settings.EMAIL_BACKEND.lower():
         detail = (
             f'{detail} '
-            '(DEBUG: EMAIL_BACKEND=console — kod jest w logu Django.)'
+            '(DEBUG: EMAIL_BACKEND=console - kod jest w logu Django.)'
         )
     return Response(
         {
@@ -400,7 +400,7 @@ class EmailResendView(APIView):
         if settings.DEBUG and 'console' in settings.EMAIL_BACKEND.lower():
             detail = (
                 f'{detail} '
-                '(DEBUG: EMAIL_BACKEND=console — kod jest w logu Django.)'
+                '(DEBUG: EMAIL_BACKEND=console - kod jest w logu Django.)'
             )
         return Response({'detail': detail}, status=status.HTTP_200_OK)
 
@@ -495,12 +495,12 @@ class PasswordResetRequestView(APIView):
             if 'console' in settings.EMAIL_BACKEND.lower():
                 detail = (
                     f'{detail} '
-                    '(DEBUG: EMAIL_BACKEND=console — kod jest w logu Django.)'
+                    '(DEBUG: EMAIL_BACKEND=console - kod jest w logu Django.)'
                 )
             elif not sent:
                 detail = (
                     f'{detail} '
-                    '(DEBUG: wysyłka SMTP nie powiodła się — sprawdź log Django / EMAIL_* w .env.)'
+                    '(DEBUG: wysyłka SMTP nie powiodła się - sprawdź log Django / EMAIL_* w .env.)'
                 )
                 return Response(
                     {

@@ -119,7 +119,7 @@ def _apply_google_identity(attrs: dict, *, credential: str) -> dict:
                     f'To konto ma rolę {role_label}.'
                 ],
                 'google_credential': [
-                    'Konto z tym adresem Google już istnieje — użyj logowania zamiast rejestracji.'
+                    'Konto z tym adresem Google już istnieje - użyj logowania zamiast rejestracji.'
                 ],
             }
         )

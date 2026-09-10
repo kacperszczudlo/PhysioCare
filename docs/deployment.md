@@ -41,7 +41,7 @@ Skopiuj z `.env.example`, w szczególności:
 - `REDIS_URL` - gdy uruchamiasz wiele workerów (throttle; później SSE bus)
 - `SSE_HEARTBEAT_SECONDS` - opcjonalnie (domyślnie 20)
 
-### E-mail (weryfikacja konta + reset hasła — kod 6 cyfr)
+### E-mail (weryfikacja konta + reset hasła - kod 6 cyfr)
 
 Lokalnie: `EMAIL_BACKEND=console` (kod w logu Django).
 
@@ -60,21 +60,21 @@ PASSWORD_RESET_TIMEOUT=1800
 
 Rejestracja e-mail+hasło wymaga kodu z wiadomości; Google Sign-In pomija weryfikację. Reset hasła: request → verify (kod) → confirm (`reset_token` + nowe hasło).
 
-Na koniec projektu (własna domena): podmień `EMAIL_*` na Resend/Brevo — logika OTP bez zmian.
+Na koniec projektu (własna domena): podmień `EMAIL_*` na Resend/Brevo - logika OTP bez zmian.
 
 ### Google Sign-In
 
-Działa na **web (terapeuta)** i **mobile (pacjent)** — login oraz rejestracja z Google.
+Działa na **web (terapeuta)** i **mobile (pacjent)** - login oraz rejestracja z Google.
 
 1. W [Google Cloud Console](https://console.cloud.google.com/) utwórz OAuth Client ID:
-   - **Web application** — w Credentials → OAuth client (Web) ustaw **oba** pola:
+   - **Web application** - w Credentials → OAuth client (Web) ustaw **oba** pola:
      - **Authorized JavaScript origins:** `http://localhost:5173`
      - **Authorized redirect URIs:** `http://localhost:5173` (wymagane przez popup Sign-In)
      - Jeśli używasz `http://127.0.0.1:5173`, dodaj ten host osobno do **obu** list
      - Błąd `redirect_uri_mismatch` = brak dokładnego URI z paska adresu w **Authorized redirect URIs**
-     - Po zapisie odczekaj 1–2 minuty i twarde odświeżenie (`Ctrl+Shift+R`)
-   - **Android** — package `com.physiocare.patient` + SHA-1 debug/release
-   - **iOS** — bundle `com.physiocare.patient`
+     - Po zapisie odczekaj 1-2 minuty i twarde odświeżenie (`Ctrl+Shift+R`)
+   - **Android** - package `com.physiocare.patient` + SHA-1 debug/release
+   - **iOS** - bundle `com.physiocare.patient`
 2. Backend (root `.env`):
    ```
    GOOGLE_CLIENT_IDS=<web_id>[,<android_id>][,<ios_id>]
@@ -89,7 +89,7 @@ Działa na **web (terapeuta)** i **mobile (pacjent)** — login oraz rejestracja
    EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=<ios_id>
    ```
 5. Mobile wymaga **development build** (nie Expo Go): po dodaniu `@react-native-google-signin/google-signin` przebuduj `npx expo run:android` / `run:ios`.
-6. Rejestracja Google: web wymaga PWZFz + oświadczenia; mobile — kod terapeuty + zgody. Login Google łączy istniejące konto po e-mailu.
+6. Rejestracja Google: web wymaga PWZFz + oświadczenia; mobile - kod terapeuty + zgody. Login Google łączy istniejące konto po e-mailu.
 
 ### Media i pliki medyczne
 

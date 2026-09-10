@@ -78,7 +78,7 @@ export function RegisterPage() {
       setLastName(draft.last_name)
     }
     setError(
-      'Dane z Google (e-mail, imię, nazwisko) są uzupełnione. Podaj PWZFz i oświadczenie — telefon tylko jeśli chcesz.',
+      'Dane z Google (e-mail, imię, nazwisko) są uzupełnione. Podaj PWZFz i oświadczenie - telefon tylko jeśli chcesz.',
     )
   }, [])
 
@@ -378,7 +378,7 @@ export function RegisterPage() {
           error={fieldErrors.phone}
           hint={
             googleMode
-              ? 'Opcjonalnie — Google zwykle nie przekazuje telefonu, możesz dodać go tutaj.'
+              ? 'Opcjonalnie - Google zwykle nie przekazuje telefonu, możesz dodać go tutaj.'
               : 'Opcjonalnie. Wybierz kraj, żeby ustawić prefix numeru.'
           }
         />
@@ -471,7 +471,7 @@ export function RegisterPage() {
         <GoogleSignInButton
           disabled={loading}
           title="Zarejestruj przez Google"
-          hint="Kliknij Google — e-mail, imię i nazwisko uzupełnią się same. Potem podaj tylko PWZFz i oświadczenie."
+          hint="Kliknij Google - e-mail, imię i nazwisko uzupełnią się same. Potem podaj tylko PWZFz i oświadczenie."
           onCredential={onGoogleCredential}
           onError={setError}
         />

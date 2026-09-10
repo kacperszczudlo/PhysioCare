@@ -286,7 +286,7 @@ class MeVisitListCreateView(PatientSelfMixin, generics.ListCreateAPIView):
             'patient',
             'patient__user',
         ).get(pk=visit.pk)
-        # Pacjent sam zgłasza termin — bez push/e-mail do siebie; SSE dla obu stron (live UI).
+        # Pacjent sam zgłasza termin - bez push/e-mail do siebie; SSE dla obu stron (live UI).
         publish_visit_realtime(visit, 'scheduled')
         return Response(VisitSerializer(visit).data, status=status.HTTP_201_CREATED)
 
@@ -374,7 +374,7 @@ class VisitCancelView(APIView):
         if request.user.role == 'THERAPIST':
             notify_visit_change(visit, 'cancelled')
         else:
-            # Pacjent odwołuje — push/e-mail do pacjenta zbędny; SSE dla terapeuty (i pacjenta).
+            # Pacjent odwołuje - push/e-mail do pacjenta zbędny; SSE dla terapeuty (i pacjenta).
             publish_visit_realtime(visit, 'cancelled')
         return Response(VisitSerializer(visit).data)
 

@@ -29,7 +29,7 @@ export function requestGoogleIdTokenPopup(clientId: string): Promise<string> {
 
   const mismatchHint =
     `Dodaj w Google Cloud (klient Web) Authorized redirect URI dokładnie: ${redirectUri} ` +
-    `(oraz Authorized JavaScript origins: ${redirectUri}). Zapisz i poczekaj 1–2 min.`
+    `(oraz Authorized JavaScript origins: ${redirectUri}). Zapisz i poczekaj 1-2 min.`
 
   return new Promise((resolve, reject) => {
     const popup = window.open(

@@ -93,11 +93,11 @@ Wymaga `GOOGLE_CLIENT_IDS` (lista audience). Serwer weryfikuje token (`google-au
 
 1. użytkownik po `google_sub`, albo
 2. istniejący e-mail → powiązanie `google_sub`, albo
-3. **404** `AUTH_025` — brak konta (najpierw rejestracja z PWZFz / terapeutą).
+3. **404** `AUTH_025` - brak konta (najpierw rejestracja z PWZFz / terapeutą).
 
-**200** — jak `/auth/login`. Bez konfiguracji Google: **503** `AUTH_020`.
+**200** - jak `/auth/login`. Bez konfiguracji Google: **503** `AUTH_020`.
 
-Rejestracja z Google: w `POST /auth/register/therapist/` lub `/auth/register/patient/` wyślij `google_credential` zamiast `password` (e-mail/imię z tokenu). Web nadal wymaga PWZFz; mobile — `therapist_id` + zgody.
+Rejestracja z Google: w `POST /auth/register/therapist/` lub `/auth/register/patient/` wyślij `google_credential` zamiast `password` (e-mail/imię z tokenu). Web nadal wymaga PWZFz; mobile - `therapist_id` + zgody.
 
 ### POST `/auth/logout`
 
@@ -117,12 +117,12 @@ Cookie `refresh_token` też jest akceptowane (body opcjonalne).
 { "email": "...", "client": "web" }
 ```
 
-`client` opcjonalne (`web` / `mobile`) — tylko dla logów/diagnostyki. Na e-mail idzie **6-cyfrowy kod** (TTL: `PASSWORD_RESET_TIMEOUT`).
+`client` opcjonalne (`web` / `mobile`) - tylko dla logów/diagnostyki. Na e-mail idzie **6-cyfrowy kod** (TTL: `PASSWORD_RESET_TIMEOUT`).
 
-**200** — `{ "detail": "Wysłaliśmy 6-cyfrowy kod…" }`  
-**404** `AUTH_029` — brak konta z tym e-mailem.  
-**400** `AUTH_023` — konto tylko-Google (bez lokalnego hasła).  
-**503** `AUTH_030` — błąd wysyłki SMTP.
+**200** - `{ "detail": "Wysłaliśmy 6-cyfrowy kod…" }`  
+**404** `AUTH_029` - brak konta z tym e-mailem.  
+**400** `AUTH_023` - konto tylko-Google (bez lokalnego hasła).  
+**503** `AUTH_030` - błąd wysyłki SMTP.
 
 ### POST `/auth/password-reset/verify`
 
@@ -132,8 +132,8 @@ Cookie `refresh_token` też jest akceptowane (body opcjonalne).
 
 Sprawdza kod z e-maila. Po sukcesie kod jest zużyty; klient dostaje krótkotrwały `reset_token` do ustawienia hasła.
 
-**200** — `{ "detail": "Kod jest poprawny…", "reset_token": "..." }`  
-**400** `AUTH_028` — zły / wygasły kod lub przekroczony limit prób.
+**200** - `{ "detail": "Kod jest poprawny…", "reset_token": "..." }`  
+**400** `AUTH_028` - zły / wygasły kod lub przekroczony limit prób.
 
 ### POST `/auth/password-reset/confirm`
 
@@ -146,7 +146,7 @@ Sprawdza kod z e-maila. Po sukcesie kod jest zużyty; klient dostaje krótkotrwa
 ```
 
 Po sukcesie hasło zmienione, sesje unieważnione. Niezweryfikowany e-mail zostaje oznaczony jako zweryfikowany.  
-**400** `AUTH_028` — wygasła / zużyta sesja resetu (`reset_token`).
+**400** `AUTH_028` - wygasła / zużyta sesja resetu (`reset_token`).
 
 ### POST `/auth/email/verify`
 
@@ -154,7 +154,7 @@ Po sukcesie hasło zmienione, sesje unieważnione. Niezweryfikowany e-mail zosta
 { "email": "...", "code": "123456", "token_delivery": "cookie" }
 ```
 
-Potwierdza adres po rejestracji e-mail+hasło. **200** — sesja jak przy loginie. Konta Google pomijają ten krok (`email_verified_at` ustawiane od razu).
+Potwierdza adres po rejestracji e-mail+hasło. **200** - sesja jak przy loginie. Konta Google pomijają ten krok (`email_verified_at` ustawiane od razu).
 
 ### POST `/auth/email/resend`
 
@@ -237,7 +237,7 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** - hasło z
 | GET | `/episodes/{id}/notes` | THERAPIST | Lista notatek epizodu |
 | GET/POST | `/episodes/{id}/diagnostic-recommendations` | THERAPIST | Kierowanie pośrednie (opinia) |
 | PATCH/DELETE | `/episodes/{id}/diagnostic-recommendations/{item_id}` | THERAPIST | Edycja / usunięcie kierowania |
-| GET/POST | `/episodes/{id}/device-orders` | THERAPIST | Zlecenia wyrobów (e-ZWM model) |
+| GET/POST | `/episodes/{id}/device-orders` | THERAPIST | Zlecenia wyrobów (e-ZWM model); opcjonalny `access_code` (4 cyfry z NFZ) |
 | PATCH/DELETE | `/episodes/{id}/device-orders/{item_id}` | THERAPIST | Edycja / usunięcie zlecenia |
 | GET/POST | `/episodes/{id}/order-refusals` | THERAPIST | Odmowa zlecenia lekarskiego |
 | PATCH/DELETE | `/episodes/{id}/order-refusals/{item_id}` | THERAPIST | Edycja / usunięcie odmowy |

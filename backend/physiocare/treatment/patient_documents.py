@@ -15,6 +15,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from documents.models import MedicalDocument
 from scheduling.models import Visit
 from treatment.models import (
+    DEVICE_ORDER_DISCLAIMER,
+    DEVICE_PICKUP_HINT,
     DeviceOrderStatus,
     DiagnosticRecommendation,
     FundingHint,
@@ -127,7 +129,11 @@ def serialize_device_order(order: MedicalDeviceOrder) -> dict[str, Any]:
         ),
         order.side,
     )
-    summary = f'{order.device_name} · strona: {side_label}'
+    access_code = (order.access_code or '').strip()
+    if access_code:
+        summary = f'{order.device_name} · kod odbioru: {access_code}'
+    else:
+        summary = f'{order.device_name} · strona: {side_label}'
     return _item(
         kind=KIND_DEVICE_ORDER,
         obj_id=order.id,
@@ -145,11 +151,14 @@ def serialize_device_order(order: MedicalDeviceOrder) -> dict[str, Any]:
             'side_label': side_label,
             'quantity': order.quantity,
             'icd10_code': order.icd10_code,
-            'notes': order.notes,
-            'disclaimer': (
-                'Zlecenie modelowane w PhysioCare. Formalne e-ZWM wymaga '
-                'podpisu i weryfikacji w systemie P1/NFZ.'
+            'access_code': access_code,
+            'pickup_hint': DEVICE_PICKUP_HINT if access_code else (
+                'Kod dostępu 4-cyfrowy znajdziesz w SMS/e-mailu z NFZ, '
+                'na druku informacyjnym albo w IKP (Apteczka). '
+                'Terapeuta może też wpisać go tutaj po wystawieniu e-ZWM.'
             ),
+            'notes': order.notes,
+            'disclaimer': DEVICE_ORDER_DISCLAIMER,
         },
     )
 

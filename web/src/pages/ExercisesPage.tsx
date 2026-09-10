@@ -149,7 +149,7 @@ export function ExercisesPage() {
     <section className="exercises-page">
       <PageHeader
         title="Baza ćwiczeń"
-        description="Katalog wideo i PDF — filtruj, potem wysyłaj pacjentom."
+        description="Katalog wideo i PDF - filtruj, potem wysyłaj pacjentom."
         actions={
           <Button type="button" onClick={() => setCreateOpen(true)}>
             + Dodaj ćwiczenie

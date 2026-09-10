@@ -12,6 +12,7 @@ from therapists.medical_devices import catalog_as_list, groups_summary
 
 from .models import (
     BodyAreaPain,
+    DEVICE_ORDER_DISCLAIMER,
     DeviceOrderStatus,
     DiagnosticRecommendation,
     EpisodeStatus,
@@ -297,18 +298,14 @@ class MedicalDeviceCatalogView(APIView):
             'groups': groups_summary(),
             'items': catalog_as_list(qualification_level=therapist.qualification_level),
             'competences': therapist.competence_snapshot().to_dict(),
-            'disclaimer': (
-                'PhysioCare modeluje uprawnienia ordynacyjne wyrobów medycznych. '
-                'Nie służy do wystawiania recept na leki ani maści farmaceutyczne. '
-                'Formalne e-ZWM wymaga podpisu i weryfikacji w systemie P1/NFZ.'
-            ),
+            'disclaimer': DEVICE_ORDER_DISCLAIMER,
         })
 
 
 class MeClinicalDocumentsListView(PatientSelfMixin, APIView):
     """
     Skrzynka dokumentacji pacjenta: kierowanie, wyroby, odmowy,
-    Recepta na Ruch, PDF-y oraz podsumowania wizyt — widoczne automatycznie
+    Recepta na Ruch, PDF-y oraz podsumowania wizyt - widoczne automatycznie
     po wystawieniu.
     """
 

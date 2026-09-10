@@ -12,7 +12,7 @@ const memory = new Map<string, string>()
 
 /**
  * Native: SecureStore (Keychain / Keystore).
- * Expo web: localStorage — tylko do dev; produkcyjny klient to native build.
+ * Expo web: localStorage - tylko do dev; produkcyjny klient to native build.
  */
 async function setItem(key: string, value: string): Promise<void> {
   if (Platform.OS === 'web') {

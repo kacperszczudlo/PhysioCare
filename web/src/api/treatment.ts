@@ -165,6 +165,7 @@ export const treatmentApi = {
       side?: BodySide
       quantity?: number
       icd10_code: string
+      access_code?: string
       notes?: string
     },
   ) {
@@ -183,6 +184,7 @@ export const treatmentApi = {
       side?: BodySide
       quantity?: number
       icd10_code?: string
+      access_code?: string
       notes?: string
       status?: string
     },

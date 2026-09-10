@@ -12,7 +12,7 @@ logger = logging.getLogger('physiocare.notifications')
 class Command(BaseCommand):
     help = (
         'Pętla przypomnień: wizyty (24h/2h) i ćwiczenia na dziś. '
-        'Uruchamiaj obok runserver / Gunicorn — nie w workerze HTTP.'
+        'Uruchamiaj obok runserver / Gunicorn - nie w workerze HTTP.'
     )
 
     def add_arguments(self, parser):

@@ -16,7 +16,7 @@ def test_patient_lists_own_episodes(api_client, patient, therapist):
         functional_diagnosis='Ograniczenie zgięcia lędźwiowego',
         summary_note='Pracujemy nad mobilnością i siłą.',
     )
-    VisitNote.objects.create(episode=episode, content='Notatka kliniczna — ukryta')
+    VisitNote.objects.create(episode=episode, content='Notatka kliniczna - ukryta')
 
     api_client.force_authenticate(user=patient.user)
     response = api_client.get('/api/v1/me/episodes/')

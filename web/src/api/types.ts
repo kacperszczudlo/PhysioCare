@@ -100,6 +100,7 @@ export interface MedicalDeviceOrder {
   side: BodySide
   quantity: number
   icd10_code: string
+  access_code: string
   status: DeviceOrderStatus
   notes: string
   created_at: string

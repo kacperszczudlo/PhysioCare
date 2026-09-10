@@ -101,6 +101,7 @@ def build_patient_export(user, profile) -> dict:
                 'id': str(order.id),
                 'device_code': order.device_code,
                 'device_name': order.device_name,
+                'access_code': order.access_code,
                 'status': order.status,
             }
             for order in device_orders

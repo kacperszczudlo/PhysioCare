@@ -28,7 +28,7 @@ export function AppLayout() {
   return (
     <div className="app-shell">
       <aside className="app-shell__sidebar" aria-label="Nawigacja główna">
-        <Link to="/" className="app-shell__brand" aria-label="PhysioCare — Pulpit">
+        <Link to="/" className="app-shell__brand" aria-label="PhysioCare - Pulpit">
           <img className="app-shell__mark" src="/brand/sygnet.png" alt="" width={48} height={48} />
           <div>
             <p className="app-shell__product">PhysioCare</p>

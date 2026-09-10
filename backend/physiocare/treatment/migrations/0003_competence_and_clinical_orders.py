@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                 ('body_area', models.CharField(blank=True, default='', max_length=120)),
                 ('justification', models.TextField()),
                 ('red_flags_noted', models.BooleanField(default=False)),
-                ('funding_hint', models.CharField(choices=[('NFZ_VIA_DOCTOR', 'NFZ — formalne skierowanie wystawia lekarz'), ('PRIVATE', 'Ścieżka prywatna'), ('NOT_APPLICABLE', 'Nie dotyczy')], default='NFZ_VIA_DOCTOR', max_length=30)),
+                ('funding_hint', models.CharField(choices=[('NFZ_VIA_DOCTOR', 'NFZ - formalne skierowanie wystawia lekarz'), ('PRIVATE', 'Ścieżka prywatna'), ('NOT_APPLICABLE', 'Nie dotyczy')], default='NFZ_VIA_DOCTOR', max_length=30)),
                 ('episode', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='diagnostic_recommendations', to='treatment.treatmentepisode')),
                 ('therapist', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='diagnostic_recommendations', to='therapists.therapistprofile')),
             ],

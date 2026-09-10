@@ -96,7 +96,7 @@ export function AccountDeletionModal({
           >
             <Text style={styles.title}>Usunąć konto?</Text>
             <Text style={styles.body}>
-              Konto zostanie wyłączone, a dane osobowe zanonimizowane. Adres e-mail będzie wolny —
+              Konto zostanie wyłączone, a dane osobowe zanonimizowane. Adres e-mail będzie wolny -
               będziesz mógł założyć nowe konto tym samym adresem. Tej operacji nie cofniesz z poziomu
               aplikacji.
             </Text>

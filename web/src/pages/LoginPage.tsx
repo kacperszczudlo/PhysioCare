@@ -133,7 +133,7 @@ export function LoginPage() {
         <GoogleSignInButton
           disabled={loading}
           title="Kontynuuj z Google"
-          hint="Nowe konto? Google przeniesie Cię do rejestracji z uzupełnionym e-mailem i imieniem — zostaje PWZFz."
+          hint="Nowe konto? Google przeniesie Cię do rejestracji z uzupełnionym e-mailem i imieniem - zostaje PWZFz."
           onCredential={onGoogleCredential}
           onError={setError}
         />

@@ -22,7 +22,7 @@ export default function AccountDeletionScreen() {
 
       <Text style={styles.heading}>Bez aplikacji</Text>
       <Text style={styles.paragraph}>
-        Napisz do {DATA_CONTROLLER.name} (temat: „Usunięcie konta PhysioCare”). Podaj e-mail konta —
+        Napisz do {DATA_CONTROLLER.name} (temat: „Usunięcie konta PhysioCare”). Podaj e-mail konta -
         nie wysyłaj hasła.
       </Text>
       <Pressable

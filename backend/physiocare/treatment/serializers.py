@@ -303,7 +303,7 @@ class DiagnosticRecommendationSerializer(serializers.ModelSerializer):
         if funding is None:
             funding = FundingHint.NFZ_VIA_DOCTOR
 
-        # Formalne skierowanie NFZ na obrazowanie — zawsze niedozwolone w aplikacji.
+        # Formalne skierowanie NFZ na obrazowanie - zawsze niedozwolone w aplikacji.
         if rec_type in (
             RecommendationType.IMAGING_MRI,
             RecommendationType.IMAGING_CT,
@@ -322,6 +322,7 @@ class MedicalDeviceOrderSerializer(serializers.ModelSerializer):
     device_code = serializers.CharField(max_length=40)
     side = serializers.ChoiceField(choices=BodySide.choices, required=False, default=BodySide.NA)
     quantity = serializers.IntegerField(min_value=1, max_value=24, default=1)
+    access_code = serializers.CharField(required=False, allow_blank=True, default='')
     status = serializers.ChoiceField(
         choices=DeviceOrderStatus.choices,
         required=False,
@@ -332,12 +333,24 @@ class MedicalDeviceOrderSerializer(serializers.ModelSerializer):
         model = MedicalDeviceOrder
         fields = [
             'id', 'episode', 'patient', 'therapist', 'device_code', 'device_group',
-            'device_name', 'side', 'quantity', 'icd10_code', 'status', 'notes', 'created_at',
+            'device_name', 'side', 'quantity', 'icd10_code', 'access_code',
+            'status', 'notes', 'created_at',
         ]
         read_only_fields = [
             'id', 'episode', 'patient', 'therapist', 'device_group',
             'device_name', 'created_at',
         ]
+
+    def validate_access_code(self, value):
+        cleaned = (value or '').strip()
+        if not cleaned:
+            return ''
+        if not cleaned.isdigit() or len(cleaned) != 4:
+            raise serializers.ValidationError(
+                'Kod dostępu e-ZWM musi składać się z dokładnie 4 cyfr '
+                '(z SMS/e-mail/druku NFZ) albo pozostać pusty.',
+            )
+        return cleaned
 
     def validate_icd10_code(self, value):
         try:

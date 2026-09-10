@@ -18,7 +18,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     title: 'W skrócie',
     paragraphs: [
       'Przetwarzamy dane konta, opcjonalnie telefon/PESEL oraz dane zdrowotne potrzebne do fizjoterapii.',
-      'Zgody wymagane: regulamin + dane medyczne. Opcjonalne (marketing, badania) — osobne przełączniki w Ustawieniach.',
+      'Zgody wymagane: regulamin + dane medyczne. Opcjonalne (marketing, badania) - osobne przełączniki w Ustawieniach.',
       'Nie używamy SDK reklamowych ani analityki behawioralnej. Sesja: SecureStore / cookies niezbędne (PKE).',
       'Usunięcie konta: Ustawienia → wniosek (konto zostaje wyłączone), albo strona WWW /account-deletion.',
     ],
@@ -52,7 +52,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     id: 'consent',
     title: 'Zgody i dark patterns',
     paragraphs: [
-      'Zgoda to aktywne działanie — nie scroll ani bierność. Brak cookie walls i wiązania zgód opcjonalnych z dostępem do leczenia.',
+      'Zgoda to aktywne działanie - nie scroll ani bierność. Brak cookie walls i wiązania zgód opcjonalnych z dostępem do leczenia.',
       'Wycofanie zgód opcjonalnych jest tak samo proste jak ich udzielenie (przełączniki).',
     ],
   },
@@ -60,7 +60,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
     id: 'device',
     title: 'Urządzenie (PKE)',
     paragraphs: [
-      'Dostęp do magazynu urządzenia tylko dla niezbędnej sesji. Token powiadomień — dopiero po zgodzie systemu. Trackingowe SDK — obecnie brak.',
+      'Dostęp do magazynu urządzenia tylko dla niezbędnej sesji. Token powiadomień - dopiero po zgodzie systemu. Trackingowe SDK - obecnie brak.',
     ],
   },
   {

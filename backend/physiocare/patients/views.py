@@ -113,7 +113,7 @@ class MeAccountDeletionRequestView(PatientSelfMixin, APIView):
         return Response(
             {
                 'detail': (
-                    'Konto zostało wyłączone. Adres e-mail jest wolny — '
+                    'Konto zostało wyłączone. Adres e-mail jest wolny - '
                     'możesz założyć nowe konto tym samym adresem.'
                 ),
             },

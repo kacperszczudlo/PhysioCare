@@ -29,12 +29,12 @@ export function AccountDeletionPage() {
         <p>
           Wyślij wiadomość e-mail do Administratora ({DATA_CONTROLLER.name}) na adres{' '}
           <a href={ACCOUNT_DELETION_MAILTO}>{DATA_CONTROLLER.email}</a> z tematem „Usunięcie konta
-          PhysioCare”. Podaj adres e-mail konta oraz — jeśli pamiętasz — imię i nazwisko. Nie
+          PhysioCare”. Podaj adres e-mail konta oraz - jeśli pamiętasz - imię i nazwisko. Nie
           prosimy o hasło.
         </p>
         <p>
           Zweryfikujemy tożsamość w zakresie niezbędnym i potwierdzimy przyjęcie wniosku. Usunięcie
-          nie jest tożsame z samym „zawieszeniem” profilu — chodzi o skasowanie danych, o ile prawo
+          nie jest tożsame z samym „zawieszeniem” profilu - chodzi o skasowanie danych, o ile prawo
           nie nakazuje ich dłuższego przechowywania (np. dokumentacja medyczna / roszczenia).
         </p>
       </section>
@@ -42,12 +42,12 @@ export function AccountDeletionPage() {
       <section className="legal-doc__section">
         <h2>3. Co się dzieje z danymi</h2>
         <ul>
-          <li>dane konta i preferencje — usuwane po zakończeniu procedury,</li>
+          <li>dane konta i preferencje - usuwane po zakończeniu procedury,</li>
           <li>
-            dane zdrowotne — usuwane lub anonimizowane z uwzględnieniem przepisów retencyjnych,
+            dane zdrowotne - usuwane lub anonimizowane z uwzględnieniem przepisów retencyjnych,
           </li>
           <li>
-            tokeny sesji — unieważniane; w razie zewnętrznych procesorów żądanie jest propagowane w
+            tokeny sesji - unieważniane; w razie zewnętrznych procesorów żądanie jest propagowane w
             zakresie umów powierzenia.
           </li>
         </ul>

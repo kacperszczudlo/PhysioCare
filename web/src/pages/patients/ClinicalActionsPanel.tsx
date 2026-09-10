@@ -81,6 +81,7 @@ export function ClinicalActionsPanel({
   const [deviceCode, setDeviceCode] = useState('')
   const [deviceSide, setDeviceSide] = useState<BodySide>('NA')
   const [deviceIcd10, setDeviceIcd10] = useState('')
+  const [deviceAccessCode, setDeviceAccessCode] = useState('')
   const [deviceNotes, setDeviceNotes] = useState('')
 
   const [orderDesc, setOrderDesc] = useState('')
@@ -103,6 +104,7 @@ export function ClinicalActionsPanel({
   const [editDeviceCode, setEditDeviceCode] = useState('')
   const [editDeviceSide, setEditDeviceSide] = useState<BodySide>('NA')
   const [editDeviceIcd10, setEditDeviceIcd10] = useState('')
+  const [editDeviceAccessCode, setEditDeviceAccessCode] = useState('')
   const [editDeviceNotes, setEditDeviceNotes] = useState('')
 
   const [editOrderDesc, setEditOrderDesc] = useState('')
@@ -157,6 +159,7 @@ export function ClinicalActionsPanel({
       setEditDeviceCode(target.item.device_code)
       setEditDeviceSide(target.item.side)
       setEditDeviceIcd10(target.item.icd10_code)
+      setEditDeviceAccessCode(target.item.access_code || '')
       setEditDeviceNotes(target.item.notes)
     } else if (target.kind === 'refusal') {
       setEditOrderDesc(target.item.physician_order_description)
@@ -203,9 +206,11 @@ export function ClinicalActionsPanel({
         device_code: deviceCode,
         side: deviceSide,
         icd10_code: deviceIcd10.trim().toUpperCase(),
+        access_code: deviceAccessCode.trim(),
         notes: deviceNotes.trim(),
       })
       setDeviceNotes('')
+      setDeviceAccessCode('')
       await load()
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się wystawić zlecenia na wyrób.'))
@@ -303,6 +308,7 @@ export function ClinicalActionsPanel({
           device_code: editDeviceCode,
           side: editDeviceSide,
           icd10_code: editDeviceIcd10.trim().toUpperCase(),
+          access_code: editDeviceAccessCode.trim(),
           notes: editDeviceNotes.trim(),
         })
       } else if (editTarget.kind === 'refusal') {
@@ -353,7 +359,7 @@ export function ClinicalActionsPanel({
         <div>
           <h2>Kompetencje kliniczne</h2>
           <p className="clinical-actions__lead">
-            Kierowanie pośrednie, wyroby (e-ZWM), odmowa zlecenia i Recepta na Ruch — bez ordynacji
+            Kierowanie pośrednie, wyroby (e-ZWM), odmowa zlecenia i Recepta na Ruch - bez ordynacji
             leków. Wystawione wpisy są od razu widoczne pacjentowi w aplikacji (zakładka
             Dokumentacja).
           </p>
@@ -411,7 +417,7 @@ export function ClinicalActionsPanel({
               <div className="clinical-actions__compose-head">
                 <h3>Nowa rekomendacja</h3>
                 <p className="clinical-actions__hint">
-                  Opinia dla lekarza — nie jest formalnym e-skierowaniem NFZ na MRI/RTG/TK.
+                  Opinia dla lekarza - nie jest formalnym e-skierowaniem NFZ na MRI/RTG/TK.
                 </p>
               </div>
               <label className="ui-field">
@@ -460,7 +466,7 @@ export function ClinicalActionsPanel({
                   value={recFunding}
                   onChange={(e) => setRecFunding(e.target.value as FundingHint)}
                 >
-                  <option value="NFZ_VIA_DOCTOR">NFZ — skierowanie wystawia lekarz</option>
+                  <option value="NFZ_VIA_DOCTOR">NFZ - skierowanie wystawia lekarz</option>
                   <option value="PRIVATE">Ścieżka prywatna</option>
                   <option value="NOT_APPLICABLE">Nie dotyczy</option>
                 </select>
@@ -471,7 +477,7 @@ export function ClinicalActionsPanel({
                   checked={recRedFlags}
                   onChange={(e) => setRecRedFlags(e.target.checked)}
                 />
-                Czerwone flagi — wstrzymaj terapię i skieruj do lekarza
+                Czerwone flagi - wstrzymaj terapię i skieruj do lekarza
               </label>
               <Button type="submit" size="sm" loading={busy}>
                 Zapisz rekomendację
@@ -539,7 +545,8 @@ export function ClinicalActionsPanel({
               <div className="clinical-actions__compose-head">
                 <h3>Nowe zlecenie</h3>
                 <p className="clinical-actions__hint">
-                  Model e-ZWM. Katalog filtrowany wg kwalifikacji (magister / FIZJO SPEC).
+                  Model e-ZWM w PhysioCare. Po wystawieniu formalnego zlecenia w systemie NFZ
+                  możesz wpisać 4-cyfrowy kod dostępu - pacjent zobaczy go w aplikacji.
                 </p>
               </div>
               <label className="ui-field">
@@ -586,6 +593,16 @@ export function ClinicalActionsPanel({
                   required
                 />
               </div>
+              <Field
+                label="Kod dostępu e-ZWM (4 cyfry)"
+                name="device_access_code"
+                value={deviceAccessCode}
+                onChange={(e) => setDeviceAccessCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                placeholder="np. 4821"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                hint="Opcjonalnie - kod z SMS/e-mail/druku NFZ po formalnym e-ZWM"
+              />
               <label className="ui-field">
                 <span className="ui-field__label">Notatka</span>
                 <textarea
@@ -643,6 +660,9 @@ export function ClinicalActionsPanel({
                   </div>
                   <p className="clinical-actions__meta">
                     {item.icd10_code} · {SIDE_LABELS[item.side]}
+                    {item.access_code
+                      ? ` · kod odbioru: ${item.access_code}`
+                      : ' · brak kodu odbioru'}
                   </p>
                   {item.notes ? <p>{item.notes}</p> : null}
                 </li>
@@ -657,7 +677,7 @@ export function ClinicalActionsPanel({
               <div className="clinical-actions__compose-head">
                 <h3>Nowa odmowa</h3>
                 <p className="clinical-actions__hint">
-                  Art. 6 ust. 2 — uzasadnienie w dokumentacji + informacja dla lekarza.
+                  Art. 6 ust. 2 - uzasadnienie w dokumentacji + informacja dla lekarza.
                 </p>
               </div>
               <label className="ui-field">
@@ -753,7 +773,7 @@ export function ClinicalActionsPanel({
               <div className="clinical-actions__compose-head">
                 <h3>Nowe skierowanie</h3>
                 <p className="clinical-actions__hint">
-                  Program profilaktyczny (mojeIKP) — fizjoterapeuta jest uprawniony.
+                  Program profilaktyczny (mojeIKP) - fizjoterapeuta jest uprawniony.
                 </p>
               </div>
               <label className="ui-field">
@@ -878,7 +898,7 @@ export function ClinicalActionsPanel({
                   value={editRecFunding}
                   onChange={(e) => setEditRecFunding(e.target.value as FundingHint)}
                 >
-                  <option value="NFZ_VIA_DOCTOR">NFZ — skierowanie wystawia lekarz</option>
+                  <option value="NFZ_VIA_DOCTOR">NFZ - skierowanie wystawia lekarz</option>
                   <option value="PRIVATE">Ścieżka prywatna</option>
                   <option value="NOT_APPLICABLE">Nie dotyczy</option>
                 </select>
@@ -935,6 +955,18 @@ export function ClinicalActionsPanel({
                 value={editDeviceIcd10}
                 onChange={(e) => setEditDeviceIcd10(e.target.value)}
                 required
+              />
+              <Field
+                label="Kod dostępu e-ZWM (4 cyfry)"
+                name="edit_device_access_code"
+                value={editDeviceAccessCode}
+                onChange={(e) =>
+                  setEditDeviceAccessCode(e.target.value.replace(/\D/g, '').slice(0, 4))
+                }
+                placeholder="np. 4821"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                hint="Opcjonalnie - kod z formalnego e-ZWM w NFZ"
               />
               <label className="ui-field">
                 <span className="ui-field__label">Notatka</span>

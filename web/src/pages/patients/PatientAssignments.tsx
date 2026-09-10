@@ -147,7 +147,7 @@ export function PatientAssignments({
       {!loading && !error && items.length === 0 ? (
         <EmptyState
           title="Brak aktywnych ćwiczeń"
-          description="Dodaj ćwiczenie z katalogu — pacjent zobaczy je od razu w aplikacji."
+          description="Dodaj ćwiczenie z katalogu - pacjent zobaczy je od razu w aplikacji."
         />
       ) : null}
 

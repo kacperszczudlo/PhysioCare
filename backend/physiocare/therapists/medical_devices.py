@@ -143,42 +143,42 @@ DEVICE_CATALOG: tuple[dict, ...] = (
         'group': 'K',
         'name': 'Orteza CROW (stopa Charcota)',
         'min_qualification': QualificationLevel.FIZJO_SPEC,
-        'usage_hint': 'Na miarę — FIZJO SPEC.',
+        'usage_hint': 'Na miarę - FIZJO SPEC.',
     },
     {
         'code': 'N.SCOLIOSIS',
         'group': 'N',
         'name': 'Gorset korekcyjny w leczeniu skolioz',
         'min_qualification': QualificationLevel.FIZJO_SPEC,
-        'usage_hint': 'Na miarę — FIZJO SPEC.',
+        'usage_hint': 'Na miarę - FIZJO SPEC.',
     },
     {
         'code': 'S.18.01',
         'group': 'S',
         'name': 'Wózek inwalidzki specjalny (stabilizacja głowy/pleców)',
         'min_qualification': QualificationLevel.FIZJO_SPEC,
-        'usage_hint': 'Limit przykładowy 4000 zł / 4 lata — FIZJO SPEC.',
+        'usage_hint': 'Limit przykładowy 4000 zł / 4 lata - FIZJO SPEC.',
     },
     {
         'code': 'P.STAND',
         'group': 'P',
         'name': 'Pionizator / urządzenie multifunkcyjne',
         'min_qualification': QualificationLevel.FIZJO_SPEC,
-        'usage_hint': 'Zaawansowany sprzęt rehabilitacyjny — FIZJO SPEC.',
+        'usage_hint': 'Zaawansowany sprzęt rehabilitacyjny - FIZJO SPEC.',
     },
     {
         'code': 'W.BRA.POSTOP',
         'group': 'W',
         'name': 'Biustonosz pooperacyjny / do protezy piersi',
         'min_qualification': QualificationLevel.FIZJO_SPEC,
-        'usage_hint': 'Od 2024 — FIZJO SPEC; limit przykładowy 120 zł / rok.',
+        'usage_hint': 'Od 2024 - FIZJO SPEC; limit przykładowy 120 zł / rok.',
     },
     {
         'code': 'W.02.02',
         'group': 'W',
         'name': 'Zaopatrzenie stomijne (pierwszorazowe)',
         'min_qualification': QualificationLevel.FIZJO_SPEC,
-        'usage_hint': 'Od 2024 — FIZJO SPEC może wystawić pierwszorazowe zlecenie.',
+        'usage_hint': 'Od 2024 - FIZJO SPEC może wystawić pierwszorazowe zlecenie.',
     },
 )
 
@@ -192,8 +192,8 @@ def catalog_as_list(*, qualification_level: str | None = None) -> list[dict]:
         allowed = True
         if qualification_level:
             allowed = can_order_device_group(qualification_level, entry['group'])
-            # Standardowy wózek S jest w grupie S — magister może S pomocniczy,
-            # ale S.18.01 jest oznaczony min FIZJO_SPEC — sprawdź min_qualification.
+            # Standardowy wózek S jest w grupie S - magister może S pomocniczy,
+            # ale S.18.01 jest oznaczony min FIZJO_SPEC - sprawdź min_qualification.
             if entry['min_qualification'] == QualificationLevel.FIZJO_SPEC:
                 allowed = qualification_level == QualificationLevel.FIZJO_SPEC
             elif entry['min_qualification'] == QualificationLevel.MAGISTER:

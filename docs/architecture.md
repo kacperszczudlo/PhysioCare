@@ -2,7 +2,7 @@
 
 ## Przegląd
 
-PhysioCare składa się z trzech części: panelu React, klienta Expo i jednego backendu REST nad PostgreSQL. Fronty mówią z API przez HTTPS (JSON). Kanał **SSE** (`GET /api/v1/me/events/`) służy do live odświeżania otwartego UI — mały sygnał eventowy, potem refetch REST; push Expo/e-mail zostają na tło. Kontrakt: [api.md — Realtime SSE](api.md#realtime--sse-meevents).
+PhysioCare składa się z trzech części: panelu React, klienta Expo i jednego backendu REST nad PostgreSQL. Fronty mówią z API przez HTTPS (JSON). Kanał **SSE** (`GET /api/v1/me/events/`) służy do live odświeżania otwartego UI - mały sygnał eventowy, potem refetch REST; push Expo/e-mail zostają na tło. Kontrakt: [api.md - Realtime SSE](api.md#realtime--sse-meevents).
 
 ```
 +-----------------+     +-----------------+
@@ -71,7 +71,7 @@ Slot w kalendarzu terapeuty. Statusy: `SCHEDULED`, `COMPLETED`, `CANCELLED`, `NO
 
 ### Compliance ćwiczeń
 
-`ExerciseAssignment` ustala dawkę i przedział dat. Pacjent zaznacza wykonanie dnia — `ExerciseCompletion` (unikalność: assignment + data).
+`ExerciseAssignment` ustala dawkę i przedział dat. Pacjent zaznacza wykonanie dnia - `ExerciseCompletion` (unikalność: assignment + data).
 
 ### Zgody RODO
 
@@ -118,7 +118,7 @@ Terapeuta: widok w harmonogramie i karcie pacjenta (ten sam zasób Visit)
 
 ## Stack technologiczny
 
-Zgodnie z tematem zatwierdzonym przez prowadzącego — [topic-selection.md](topic-selection.md).
+Zgodnie z tematem zatwierdzonym przez prowadzącego - [topic-selection.md](topic-selection.md).
 
 ## Powiązane dokumenty
 

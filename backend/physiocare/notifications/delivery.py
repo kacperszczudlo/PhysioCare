@@ -153,7 +153,7 @@ def _send_email(user, pref_key, title, body, *, data, dedupe_key):
     message = body
     try:
         send_mail(
-            subject=f'PhysioCare — {title}',
+            subject=f'PhysioCare - {title}',
             message=message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],

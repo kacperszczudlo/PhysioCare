@@ -21,7 +21,7 @@ Oba wymagają działającego API: `python manage.py runserver` w `backend/physio
 
 Skopiuj `.env.example` → `.env` i ustaw `EXPO_PUBLIC_API_BASE_URL`:
 
-Dla logowania Google dodaj `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` (oraz opcjonalnie iOS/Android) — te same ID muszą być w `GOOGLE_CLIENT_IDS` na backendzie.
+Dla logowania Google dodaj `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` (oraz opcjonalnie iOS/Android) - te same ID muszą być w `GOOGLE_CLIENT_IDS` na backendzie.
 
 > **Google Sign-In** wymaga **native build** (`npm.cmd run android`) z `@react-native-google-signin/google-signin`. W Expo Go przycisk Google jest ukryty (brak natywnego modułu); logowanie hasłem działa.  
 > Te same Client ID muszą być w `GOOGLE_CLIENT_IDS` na backendzie.

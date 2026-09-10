@@ -449,7 +449,7 @@ export function PatientDetailPage() {
                       }
                     }}
                     error={icd10Error ?? undefined}
-                    hint="Kod z skierowania/dokumentacji lekarskiej — nie zastępuje diagnozy nozologicznej lekarza"
+                    hint="Kod z skierowania/dokumentacji lekarskiej - nie zastępuje diagnozy nozologicznej lekarza"
                   />
                   <label className="ui-field">
                     <span className="ui-field__label">Status</span>

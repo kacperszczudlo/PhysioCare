@@ -5,7 +5,7 @@ import App from './App'
 import './styles/global.css'
 import './app-boot.css'
 
-/** OAuth popup returns here with #id_token=… — hand off to opener and close. */
+/** OAuth popup returns here with #id_token=… - hand off to opener and close. */
 function relayGooglePopupToken(): boolean {
   if (!window.opener || window.opener === window) {
     return false

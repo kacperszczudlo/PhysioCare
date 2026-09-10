@@ -1,4 +1,4 @@
-"""Authenticated media serving — never expose PHI files anonymously."""
+"""Authenticated media serving - never expose PHI files anonymously."""
 
 from __future__ import annotations
 
