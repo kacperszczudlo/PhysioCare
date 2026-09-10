@@ -1,4 +1,4 @@
-"""Sniff MIME from file magic bytes — do not trust the client Content-Type."""
+"""Sniff MIME from file magic bytes - do not trust the client Content-Type."""
 
 MIME_PNG = 'image/png'
 MIME_JPEG = 'image/jpeg'

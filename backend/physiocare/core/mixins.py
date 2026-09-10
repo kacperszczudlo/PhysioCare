@@ -10,9 +10,13 @@ class TherapistPatientQuerysetMixin:
     def therapist_patients(self):
         from patients.models import PatientProfile
 
-        return PatientProfile.objects.filter(
-            therapist=self.get_therapist_profile(),
-        ).select_related('user')
+        return (
+            PatientProfile.objects.filter(
+                therapist=self.get_therapist_profile(),
+            )
+            .active()
+            .select_related('user')
+        )
 
 
 class PatientSelfMixin:

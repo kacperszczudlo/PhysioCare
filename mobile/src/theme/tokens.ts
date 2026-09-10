@@ -48,7 +48,7 @@ export const typography = {
   '3xl': 30,
 } as const
 
-/** Hit target floor — M3 / Web recommended (meets iOS 44). */
+/** Hit target floor - M3 / Web recommended (meets iOS 44). */
 export const controlSize = 48
 
 export const iconSize = {

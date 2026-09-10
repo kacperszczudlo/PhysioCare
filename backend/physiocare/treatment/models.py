@@ -25,7 +25,7 @@ class RecommendationType(models.TextChoices):
 
 
 class FundingHint(models.TextChoices):
-    NFZ_VIA_DOCTOR = 'NFZ_VIA_DOCTOR', 'NFZ — formalne skierowanie wystawia lekarz'
+    NFZ_VIA_DOCTOR = 'NFZ_VIA_DOCTOR', 'NFZ - formalne skierowanie wystawia lekarz'
     PRIVATE = 'PRIVATE', 'Ścieżka prywatna'
     NOT_APPLICABLE = 'NOT_APPLICABLE', 'Nie dotyczy'
 
@@ -34,6 +34,19 @@ class DeviceOrderStatus(models.TextChoices):
     DRAFT = 'DRAFT', 'Szkic'
     ISSUED = 'ISSUED', 'Wystawione'
     CANCELLED = 'CANCELLED', 'Anulowane'
+
+
+# Tekst prawny / produktowy - wspólny dla katalogu, API pacjenta i UI.
+DEVICE_ORDER_DISCLAIMER = (
+    'PhysioCare modeluje uprawnienia ordynacyjne wyrobów medycznych. '
+    'Nie służy do wystawiania recept na leki ani maści farmaceutyczne. '
+    'Formalne e-ZWM wymaga podpisu i weryfikacji w systemie P1/NFZ.'
+)
+
+DEVICE_PICKUP_HINT = (
+    'W aptece lub sklepie medycznym z umową NFZ podaj PESEL oraz ten 4-cyfrowy kod dostępu. '
+    'Kod pochodzi z systemu NFZ (SMS, e-mail, druk lub IKP) - PhysioCare go tylko pokazuje.'
+)
 
 
 class BodySide(models.TextChoices):
@@ -49,9 +62,9 @@ class TreatmentEpisode(TimestampedModel):
         on_delete=models.CASCADE,
         related_name='episodes',
     )
-    # Kod roboczy / z dokumentacji lekarskiej — nie jest samodzielną diagnozą nozologiczną.
+    # Kod roboczy / z dokumentacji lekarskiej - nie jest samodzielną diagnozą nozologiczną.
     icd10_code = models.CharField(max_length=10, blank=True, default='')
-    # Diagnoza funkcjonalna — domena fizjoterapeuty (art. 4 u.o.z.f.).
+    # Diagnoza funkcjonalna - domena fizjoterapeuty (art. 4 u.o.z.f.).
     functional_diagnosis = models.TextField(blank=True, default='')
     status = models.CharField(
         max_length=30,
@@ -166,7 +179,7 @@ class DiagnosticRecommendation(TimestampedModel):
 
 
 class MedicalDeviceOrder(TimestampedModel):
-    """Zlecenie na wyrób medyczny (model e-ZWM w aplikacji — bez integracji P1)."""
+    """Zlecenie na wyrób medyczny (model e-ZWM w aplikacji - bez integracji P1)."""
 
     episode = models.ForeignKey(
         TreatmentEpisode,
@@ -193,6 +206,12 @@ class MedicalDeviceOrder(TimestampedModel):
     )
     quantity = models.PositiveSmallIntegerField(default=1)
     icd10_code = models.CharField(max_length=10)
+    access_code = models.CharField(
+        max_length=4,
+        blank=True,
+        default='',
+        help_text='Opcjonalny 4-cyfrowy kod dostępu e-ZWM z NFZ (nie generowany lokalnie).',
+    )
     status = models.CharField(
         max_length=20,
         choices=DeviceOrderStatus.choices,
@@ -209,7 +228,7 @@ class MedicalDeviceOrder(TimestampedModel):
 
 
 class PhysicianOrderRefusal(TimestampedModel):
-    """Odmowa wykonania zlecenia lekarskiego — art. 6 ust. 2 u.o.z.f."""
+    """Odmowa wykonania zlecenia lekarskiego - art. 6 ust. 2 u.o.z.f."""
 
     episode = models.ForeignKey(
         TreatmentEpisode,
@@ -234,7 +253,7 @@ class PhysicianOrderRefusal(TimestampedModel):
 
 
 class ReceptaNaRuchReferral(TimestampedModel):
-    """Skierowanie do programu Recepta na Ruch (mojeIKP) — model dokumentacyjny."""
+    """Skierowanie do programu Recepta na Ruch (mojeIKP) - model dokumentacyjny."""
 
     patient = models.ForeignKey(
         'patients.PatientProfile',

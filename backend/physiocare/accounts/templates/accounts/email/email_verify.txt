@@ -1,0 +1,13 @@
+PhysioCare - potwierdź adres e-mail
+
+{% if first_name %}Cześć {{ first_name }},{% else %}Cześć,{% endif %}
+
+Twój kod weryfikacyjny PhysioCare:
+
+{{ code }}
+
+Kod jest ważny przez {{ validity_minutes }} minut. Wpisz go w aplikacji, aby aktywować konto.
+
+Jeśli to nie Ty zakładałeś konto, zignoruj tę wiadomość.
+
+PhysioCare

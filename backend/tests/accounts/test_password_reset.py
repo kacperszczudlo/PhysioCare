@@ -1,44 +1,235 @@
-import hashlib
 from datetime import timedelta
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.core import mail
+from django.core.cache import cache
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from accounts.models import PasswordResetToken
+from accounts.email_codes import hash_email_code, issue_email_code, issue_password_reset_token
+from accounts.models import EmailCode, EmailCodePurpose, PasswordResetToken
 
 User = get_user_model()
 
 
-def _hash_token(raw_token: str) -> str:
-    return hashlib.sha256(raw_token.encode()).hexdigest()
+@pytest.fixture(autouse=True)
+def _clear_password_reset_throttle(settings):
+    cache.clear()
+    rates = settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']
+    previous = rates.get('password_reset')
+    rates['password_reset'] = '1000/minute'
+    yield
+    if previous is not None:
+        rates['password_reset'] = previous
+    cache.clear()
 
 
-@pytest.mark.django_db
-def test_password_reset_token_expires():
-    user = User.objects.create_user(
+@pytest.fixture
+def api_client():
+    return APIClient()
+
+
+@pytest.fixture
+def patient_user(db):
+    return User.objects.create_user(
         email='reset@physiocare.test',
-        password='old-pass-123',
+        password='old-pass-123!',
         role='PATIENT',
         first_name='Test',
         last_name='User',
+        email_verified_at=timezone.now(),
     )
-    raw_token = 'expired-token-value'
-    PasswordResetToken.objects.create(
-        user=user,
-        token_hash=_hash_token(raw_token),
+
+
+@pytest.mark.django_db
+def test_password_reset_code_expires(api_client, patient_user):
+    raw = '123456'
+    EmailCode.objects.create(
+        user=patient_user,
+        purpose=EmailCodePurpose.PASSWORD_RESET,
+        code_hash=hash_email_code(raw),
         expires_at=timezone.now() - timedelta(minutes=1),
     )
 
-    client = APIClient()
-    response = client.post(
-        '/api/v1/auth/password-reset/confirm/',
-        {'token': raw_token, 'new_password': 'new-pass-456'},
+    response = api_client.post(
+        '/api/v1/auth/password-reset/verify/',
+        {'email': patient_user.email, 'code': raw},
         format='json',
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
-    user.refresh_from_db()
-    assert user.check_password('old-pass-123')
+    patient_user.refresh_from_db()
+    assert patient_user.check_password('old-pass-123!')
+
+
+@pytest.mark.django_db
+def test_password_reset_request_sends_code(api_client, patient_user, settings):
+    settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+
+    response = api_client.post(
+        '/api/v1/auth/password-reset/request/',
+        {'email': patient_user.email, 'client': 'web'},
+        format='json',
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert len(mail.outbox) == 1
+    body = mail.outbox[0].body
+    assert 'kod' in body.lower() or any(ch.isdigit() for ch in body)
+    assert patient_user.email in mail.outbox[0].to
+    assert EmailCode.objects.filter(
+        user=patient_user,
+        purpose=EmailCodePurpose.PASSWORD_RESET,
+        used_at__isnull=True,
+    ).exists()
+    assert any(
+        part.isdigit() and len(part) == 6
+        for part in mail.outbox[0].body.replace('\n', ' ').split()
+    )
+
+
+@pytest.mark.django_db
+def test_password_reset_request_email_iexact(api_client, patient_user, settings):
+    settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+
+    response = api_client.post(
+        '/api/v1/auth/password-reset/request/',
+        {'email': patient_user.email.upper(), 'client': 'web'},
+        format='json',
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert len(mail.outbox) == 1
+
+
+@pytest.mark.django_db
+def test_password_reset_request_unknown_email_no_mail(api_client, settings):
+    settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+
+    response = api_client.post(
+        '/api/v1/auth/password-reset/request/',
+        {'email': 'nobody@physiocare.test', 'client': 'web'},
+        format='json',
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.data['error']['code'] == 'AUTH_029'
+    assert 'Nie mamy konta' in response.data['error']['message']
+    assert len(mail.outbox) == 0
+
+
+@pytest.mark.django_db
+def test_password_reset_request_google_only_account(api_client, settings):
+    settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+    user = User.objects.create_user(
+        email='google.only@physiocare.test',
+        password=None,
+        role='PATIENT',
+        first_name='G',
+        last_name='Only',
+        google_sub='google-sub-reset-1',
+        email_verified_at=timezone.now(),
+    )
+
+    response = api_client.post(
+        '/api/v1/auth/password-reset/request/',
+        {'email': user.email, 'client': 'mobile'},
+        format='json',
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.data['error']['code'] == 'AUTH_023'
+    assert len(mail.outbox) == 0
+
+
+@pytest.mark.django_db
+def test_password_reset_verify_success(api_client, patient_user):
+    raw = issue_email_code(user=patient_user, purpose=EmailCodePurpose.PASSWORD_RESET)
+
+    response = api_client.post(
+        '/api/v1/auth/password-reset/verify/',
+        {'email': patient_user.email, 'code': raw},
+        format='json',
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data['reset_token']
+    assert EmailCode.objects.filter(
+        user=patient_user,
+        purpose=EmailCodePurpose.PASSWORD_RESET,
+        used_at__isnull=False,
+    ).exists()
+    assert PasswordResetToken.objects.filter(
+        user=patient_user,
+        used_at__isnull=True,
+    ).exists()
+
+
+@pytest.mark.django_db
+def test_password_reset_confirm_success(api_client, patient_user):
+    reset_token = issue_password_reset_token(user=patient_user)
+
+    response = api_client.post(
+        '/api/v1/auth/password-reset/confirm/',
+        {
+            'reset_token': reset_token,
+            'new_password': 'new-pass-456!',
+            'new_password_confirm': 'new-pass-456!',
+        },
+        format='json',
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    patient_user.refresh_from_db()
+    assert patient_user.check_password('new-pass-456!')
+    assert PasswordResetToken.objects.filter(
+        user=patient_user,
+        used_at__isnull=False,
+    ).exists()
+
+
+@pytest.mark.django_db
+def test_password_reset_full_flow(api_client, patient_user):
+    raw = issue_email_code(user=patient_user, purpose=EmailCodePurpose.PASSWORD_RESET)
+
+    verify = api_client.post(
+        '/api/v1/auth/password-reset/verify/',
+        {'email': patient_user.email, 'code': raw},
+        format='json',
+    )
+    assert verify.status_code == status.HTTP_200_OK
+    reset_token = verify.data['reset_token']
+
+    confirm = api_client.post(
+        '/api/v1/auth/password-reset/confirm/',
+        {
+            'reset_token': reset_token,
+            'new_password': 'new-pass-789!',
+            'new_password_confirm': 'new-pass-789!',
+        },
+        format='json',
+    )
+    assert confirm.status_code == status.HTTP_200_OK
+    patient_user.refresh_from_db()
+    assert patient_user.check_password('new-pass-789!')
+
+
+@pytest.mark.django_db
+def test_password_reset_confirm_mismatch(api_client, patient_user):
+    reset_token = issue_password_reset_token(user=patient_user)
+
+    response = api_client.post(
+        '/api/v1/auth/password-reset/confirm/',
+        {
+            'reset_token': reset_token,
+            'new_password': 'new-pass-456!',
+            'new_password_confirm': 'other-pass-456!',
+        },
+        format='json',
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    patient_user.refresh_from_db()
+    assert patient_user.check_password('old-pass-123!')

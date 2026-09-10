@@ -93,7 +93,6 @@ export function PhoneField({
             value={nationalNumber}
             disabled={disabled}
             required={required}
-            placeholder="512 345 678"
             aria-invalid={error ? true : undefined}
             aria-describedby={describedBy}
             onChange={(e) => onNationalNumberChange(e.target.value)}

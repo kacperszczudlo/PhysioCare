@@ -70,12 +70,14 @@ def test_magister_can_issue_serial_device_order(api_client, therapist, patient):
             'side': 'LEFT',
             'quantity': 1,
             'icd10_code': 'M25.5',
+            'access_code': '9012',
             'notes': 'Stabilizacja pourazowa',
         },
         format='json',
     )
     assert response.status_code == 201
     assert response.data['device_group'] == 'J'
+    assert response.data['access_code'] == '9012'
     assert MedicalDeviceOrder.objects.filter(episode=episode).count() == 1
 
 
@@ -116,7 +118,7 @@ def test_diagnostic_recommendation_marks_referred_on_red_flags(
             'recommendation_type': 'SPECIALIST_CONSULTATION',
             'target_specialty': 'Neurolog',
             'body_area': 'Kręgosłup lędźwiowy',
-            'justification': 'Objawy siodłowe — czerwone flagi.',
+            'justification': 'Objawy siodłowe - czerwone flagi.',
             'red_flags_noted': True,
             'funding_hint': 'NFZ_VIA_DOCTOR',
         },

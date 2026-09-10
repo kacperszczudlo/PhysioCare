@@ -15,13 +15,14 @@ export default function AccountDeletionScreen() {
 
       <Text style={styles.heading}>W aplikacji</Text>
       <Text style={styles.paragraph}>
-        Ustawienia → „Wniosek o usunięcie konta”. System rejestruje wniosek i prowadzi procedurę
-        usunięcia z zastrzeżeniem obowiązków retencyjnych.
+        Ustawienia → „Wniosek o usunięcie konta” → wybierz powód i potwierdź. Konto zostaje
+        wyłączone, dane osobowe zanonimizowane, a ten sam e-mail można ponownie zarejestrować. Dane
+        medyczne mogą pozostać w systemie przez okres retencji wymagany prawem.
       </Text>
 
       <Text style={styles.heading}>Bez aplikacji</Text>
       <Text style={styles.paragraph}>
-        Napisz do {DATA_CONTROLLER.name} (temat: „Usunięcie konta PhysioCare”). Podaj e-mail konta —
+        Napisz do {DATA_CONTROLLER.name} (temat: „Usunięcie konta PhysioCare”). Podaj e-mail konta -
         nie wysyłaj hasła.
       </Text>
       <Pressable

@@ -7,7 +7,7 @@ const MIN_RETRY_MS = 1000
 const MAX_RETRY_MS = 30_000
 
 /**
- * W DEV EventSource idzie prosto na Django (:8000), omijając proxy Vite —
+ * W DEV EventSource idzie prosto na Django (:8000), omijając proxy Vite -
  * http-proxy często buforuje SSE i UI „nie żyje”.
  * Cookies JWT są host-only dla localhost (port nieistotny).
  */

@@ -11,9 +11,9 @@ export type AuthenticatedMediaSource = {
 }
 
 /**
- * Build a media source that sends Bearer JWT (required — /media is auth-gated).
+ * Build a media source that sends Bearer JWT (required - /media is auth-gated).
  * Suitable for expo-video. For Image / PDF use downloadAuthenticatedMediaToCache
- * or useAuthenticatedCachedUri — RN Image often ignores custom headers.
+ * or useAuthenticatedCachedUri - RN Image often ignores custom headers.
  */
 export async function getAuthenticatedMediaSource(
   path: string | null | undefined,
@@ -56,7 +56,7 @@ function filenameFromPath(path: string, fallback: string): string {
 
 /**
  * Download an auth-protected file to the device cache and return a local file:// URI.
- * Prefer this for RN Image — native image loaders frequently drop Authorization headers.
+ * Prefer this for RN Image - native image loaders frequently drop Authorization headers.
  */
 export async function downloadAuthenticatedMediaToCache(
   path: string | null | undefined,

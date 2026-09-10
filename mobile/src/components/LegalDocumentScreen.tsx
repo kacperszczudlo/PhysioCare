@@ -19,7 +19,7 @@ export function LegalDocumentScreen({ doc }: { doc: Doc }) {
             Wersja {PRIVACY_META.version} · Aktualizacja: {PRIVACY_META.updatedAt}
           </Text>
         ) : (
-          <Text style={styles.meta}>Technologie w urządzeniu końcowym (PKE) — PhysioCare</Text>
+          <Text style={styles.meta}>Technologie w urządzeniu końcowym (PKE) - PhysioCare</Text>
         )}
 
         {sections.map((section) => (

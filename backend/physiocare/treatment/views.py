@@ -11,6 +11,7 @@ from patients.models import PatientProfile
 from therapists.medical_devices import catalog_as_list, groups_summary
 
 from .models import (
+    DEVICE_ORDER_DISCLAIMER,
     BodyAreaPain,
     DeviceOrderStatus,
     DiagnosticRecommendation,
@@ -26,6 +27,7 @@ from .serializers import (
     BodyAreaPainSerializer,
     DiagnosticRecommendationSerializer,
     MedicalDeviceOrderSerializer,
+    PatientEpisodeSerializer,
     PhysicianOrderRefusalSerializer,
     ReceptaNaRuchReferralSerializer,
     TreatmentEpisodeCreateSerializer,
@@ -49,10 +51,7 @@ class PatientEpisodeListCreateView(TherapistPatientQuerysetMixin, generics.ListC
 
     def get_patient(self):
         try:
-            return PatientProfile.objects.get(
-                pk=self.kwargs['patient_id'],
-                therapist=self.get_therapist_profile(),
-            )
+            return self.therapist_patients().get(pk=self.kwargs['patient_id'])
         except PatientProfile.DoesNotExist as exc:
             raise NotFound() from exc
 
@@ -246,10 +245,7 @@ class PatientReceptaNaRuchListCreateView(TherapistPatientQuerysetMixin, generics
 
     def get_patient(self):
         try:
-            return PatientProfile.objects.get(
-                pk=self.kwargs['patient_id'],
-                therapist=self.get_therapist_profile(),
-            )
+            return self.therapist_patients().get(pk=self.kwargs['patient_id'])
         except PatientProfile.DoesNotExist as exc:
             raise NotFound() from exc
 
@@ -280,13 +276,11 @@ class PatientReceptaNaRuchDetailView(TherapistPatientQuerysetMixin, generics.Ret
         return ReceptaNaRuchReferral.objects.filter(
             patient_id=self.kwargs['patient_id'],
             patient__therapist=self.get_therapist_profile(),
+            patient__user__is_active=True,
         )
 
     def perform_update(self, serializer):
-        patient = PatientProfile.objects.filter(
-            pk=self.kwargs['patient_id'],
-            therapist=self.get_therapist_profile(),
-        ).first()
+        patient = self.therapist_patients().filter(pk=self.kwargs['patient_id']).first()
         if patient is None:
             raise NotFound()
         episode = serializer.validated_data.get('episode')
@@ -304,18 +298,15 @@ class MedicalDeviceCatalogView(APIView):
             'groups': groups_summary(),
             'items': catalog_as_list(qualification_level=therapist.qualification_level),
             'competences': therapist.competence_snapshot().to_dict(),
-            'disclaimer': (
-                'PhysioCare modeluje uprawnienia ordynacyjne wyrobów medycznych. '
-                'Nie służy do wystawiania recept na leki ani maści farmaceutyczne. '
-                'Formalne e-ZWM wymaga podpisu i weryfikacji w systemie P1/NFZ.'
-            ),
+            'disclaimer': DEVICE_ORDER_DISCLAIMER,
         })
 
 
 class MeClinicalDocumentsListView(PatientSelfMixin, APIView):
     """
     Skrzynka dokumentacji pacjenta: kierowanie, wyroby, odmowy,
-    Recepta na Ruch oraz PDF-y — widoczne automatycznie po wystawieniu.
+    Recepta na Ruch i PDF-y - widoczne automatycznie po wystawieniu.
+    Podsumowania wizyt są tylko na karcie wizyty.
     """
 
     permission_classes = [IsAuthenticated, IsPatient]
@@ -333,3 +324,25 @@ class MeClinicalDocumentsListView(PatientSelfMixin, APIView):
             kind=kind,
         )
         return Response({'count': len(results), 'results': results})
+
+
+class MeEpisodeListView(PatientSelfMixin, generics.ListAPIView):
+    """Pacjent: lista własnych epizodów leczenia (bez notatek klinicznych)."""
+
+    serializer_class = PatientEpisodeSerializer
+    permission_classes = [IsAuthenticated, IsPatient]
+
+    def get_queryset(self):
+        return TreatmentEpisode.objects.filter(
+            patient=self.get_patient_profile(),
+        ).order_by('-created_at')
+
+
+class MeEpisodeDetailView(PatientSelfMixin, generics.RetrieveAPIView):
+    serializer_class = PatientEpisodeSerializer
+    permission_classes = [IsAuthenticated, IsPatient]
+
+    def get_queryset(self):
+        return TreatmentEpisode.objects.filter(
+            patient=self.get_patient_profile(),
+        )

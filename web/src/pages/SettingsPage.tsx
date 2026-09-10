@@ -119,7 +119,9 @@ export function SettingsPage() {
           >
             <header className="settings-card__head">
               <h2 id="security-heading">Bezpieczeństwo</h2>
-              <p className="settings-muted">Zmień hasło logowania do panelu.</p>
+              <p className="settings-muted">
+                Znasz obecne hasło - zmień je poniżej. Nie pamiętasz - wyślemy link na e-mail.
+              </p>
             </header>
 
             <div className="settings-fields">
@@ -166,6 +168,16 @@ export function SettingsPage() {
               <Button type="submit" loading={passwordBusy}>
                 Zmień hasło
               </Button>
+              <Link
+                to={
+                  user?.email
+                    ? `/password-reset?email=${encodeURIComponent(user.email)}`
+                    : '/password-reset'
+                }
+                className="settings-identity__link"
+              >
+                Nie pamiętam hasła
+              </Link>
               {passwordError ? <ErrorBanner message={passwordError} /> : null}
               {passwordMessage ? <SuccessBanner message={passwordMessage} /> : null}
             </div>

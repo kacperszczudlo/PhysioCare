@@ -128,7 +128,7 @@ export async function getExpoPushToken(): Promise<string | null> {
   }
   const projectId = expoProjectId()
   if (!projectId) {
-    console.warn('Brak EAS projectId — nie można pobrać tokenu Expo Push.')
+    console.warn('Brak EAS projectId - nie można pobrać tokenu Expo Push.')
     return null
   }
   const token = await NotificationsApi.getExpoPushTokenAsync({ projectId })

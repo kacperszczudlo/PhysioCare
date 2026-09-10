@@ -14,8 +14,8 @@ Dokument stanowi warstwę pełnej informacji (art. 13 i 14 RODO). Na górze jest
 |-------|-----------|
 | Kto przetwarza dane | Kacper Szczudło (ADO); kontakt: kacper.szczudlo@gmail.com |
 | Po co | Świadczenie usług PhysioCare: konto, wizyty, dokumentacja fizjoterapeutyczna, ćwiczenia. |
-| Jakie dane | Dane konta, kontaktowe, opcjonalnie PESEL; dane zdrowotne w karcie leczenia; dane techniczne sesji; przy włączonym pushu — token urządzenia (Expo). |
-| Zgody | Wymagane: regulamin + dane medyczne. Opcjonalne: marketing, badania — osobne przełączniki, wycofanie w ustawieniach. |
+| Jakie dane | Dane konta, kontaktowe, opcjonalnie PESEL; dane zdrowotne w karcie leczenia; dane techniczne sesji; przy włączonym pushu - token urządzenia (Expo). |
+| Zgody | Wymagane: regulamin + dane medyczne. Opcjonalne: marketing, badania - osobne przełączniki, wycofanie w ustawieniach. |
 | Cookies / urządzenie | Tylko technologie niezbędne do logowania i bezpieczeństwa (PKE). Brak SDK reklamowych i analityki behawioralnej. |
 | Usunięcie konta | Wniosek w aplikacji mobilnej (pacjent) oraz strona WWW `/account-deletion`. |
 | Twoje prawa | Dostęp, sprostowanie, usunięcie, ograniczenie, przenoszenie, sprzeciw, skarga do UODO. |
@@ -47,7 +47,7 @@ Polityka dotyczy przetwarzania danych w:
 3. **Backendzie API** obsługującym obie aplikacje,
 4. Komunikacji e-mail związanej z kontem (np. reset hasła).
 
-Nie dotyczy niezależnych stron trzecich, do których użytkownik może zostać przekierowany (np. mapa adresu wizyty w aplikacji systemowej urządzenia) — te podmioty stosują własne polityki.
+Nie dotyczy niezależnych stron trzecich, do których użytkownik może zostać przekierowany (np. mapa adresu wizyty w aplikacji systemowej urządzenia) - te podmioty stosują własne polityki.
 
 ---
 
@@ -63,7 +63,7 @@ Nie dotyczy niezależnych stron trzecich, do których użytkownik może zostać 
 - dla fizjoterapeuty: numer PWZFz oraz oświadczenie zawodowe, opcjonalnie adres gabinetu, biogram, kursy, poziom kwalifikacji, lata doświadczenia, zdjęcie profilowe,
 - dla pacjenta: opcjonalnie PESEL, zdjęcie profilowe, powiązanie z przypisanym terapeutą.
 
-### 3.2. Dane dotyczące zdrowia (szczególna kategoria — art. 9 RODO)
+### 3.2. Dane dotyczące zdrowia (szczególna kategoria - art. 9 RODO)
 
 W zakresie niezbędnym do prowadzenia dokumentacji fizjoterapeutycznej mogą być przetwarzane m.in.:
 
@@ -103,12 +103,12 @@ W razie wprowadzenia takich narzędzi Polityka zostanie zaktualizowana, a techno
 |-----|------------------|-----------------|
 | Założenie i utrzymanie konta, uwierzytelnienie | e-mail, hasło, imię, nazwisko, rola | art. 6 ust. 1 lit. b RODO (umowa / świadczenie usługi) |
 | Świadczenie funkcji gabinetu (wizyty, ćwiczenia, dokumenty) | dane wizyt, ćwiczenia, dokumenty | art. 6 ust. 1 lit. b RODO |
-| Prowadzenie dokumentacji fizjoterapeutycznej | dane zdrowotne z § 3.2 | art. 9 ust. 2 lit. a RODO (wyraźna zgoda) oraz — w zakresie wymaganym przepisami — art. 9 ust. 2 lit. h RODO |
+| Prowadzenie dokumentacji fizjoterapeutycznej | dane zdrowotne z § 3.2 | art. 9 ust. 2 lit. a RODO (wyraźna zgoda) oraz - w zakresie wymaganym przepisami - art. 9 ust. 2 lit. h RODO |
 | Bezpieczeństwo, zapobieganie nadużyciom, logi | dane techniczne sesji, logi | art. 6 ust. 1 lit. f RODO (prawnie uzasadniony interes: integralność i poufność systemu); interes ten nie obejmuje profilowania marketingowego |
 | Reset hasła / komunikacja serwisowa | e-mail | art. 6 ust. 1 lit. b RODO |
-| Powiadomienia o wizycie, dokumencie i ćwiczeniach (zgodnie z preferencjami) | e-mail i/lub token Expo | art. 6 ust. 1 lit. b RODO; dostęp do powiadomień systemowych — zgoda systemu operacyjnego (PKE) |
+| Powiadomienia o wizycie, dokumencie i ćwiczeniach (zgodnie z preferencjami) | e-mail i/lub token Expo | art. 6 ust. 1 lit. b RODO; dostęp do powiadomień systemowych - zgoda systemu operacyjnego (PKE) |
 | Marketing (jeśli włączony) | e-mail / telefon wg zakresu zgody | art. 6 ust. 1 lit. a RODO (zgoda opcjonalna) |
-| Badania naukowe / rozwojowe (jeśli włączone) | dane wskazane w zgodzie | art. 6 ust. 1 lit. a oraz — gdy dotyczy zdrowia — art. 9 ust. 2 lit. a RODO |
+| Badania naukowe / rozwojowe (jeśli włączone) | dane wskazane w zgodzie | art. 6 ust. 1 lit. a oraz - gdy dotyczy zdrowia - art. 9 ust. 2 lit. a RODO |
 | Dochodzenie / obrona roszczeń, obowiązki prawne | dane rozliczeniowe i archiwalne w niezbędnym zakresie | art. 6 ust. 1 lit. c i/lub f RODO |
 
 **Minimalizacja danych:** przy rejestracji zbieramy wyłącznie pola niezbędne do działania usługi. Pola takie jak telefon czy PESEL są opcjonalne, o ile nie wynikają z odrębnego obowiązku prawnego lub decyzji użytkownika.
@@ -126,7 +126,7 @@ Przy rejestracji pacjenta wymagane są osobne, aktywne oświadczenia:
 1. **Akceptacja regulaminu** (`TERMS_REQUIRED`),
 2. **Zgoda na przetwarzanie danych medycznych** (`MEDICAL_DATA_REQUIRED`).
 
-Bez tych zgód konto pacjenta nie zostanie utworzone — są one niezbędne do świadczenia usługi dokumentacji fizjoterapeutycznej. Cofnięcie zgody na dane medyczne jest równoznaczne z żądaniem zakończenia korzystania z usługi i usunięcia konta (z zastrzeżeniem § 10 — okresy retencji wynikające z prawa).
+Bez tych zgód konto pacjenta nie zostanie utworzone - są one niezbędne do świadczenia usługi dokumentacji fizjoterapeutycznej. Cofnięcie zgody na dane medyczne jest równoznaczne z żądaniem zakończenia korzystania z usługi i usunięcia konta (z zastrzeżeniem § 10 - okresy retencji wynikające z prawa).
 
 ### 5.2. Zgody opcjonalne (granularne)
 
@@ -141,7 +141,7 @@ Udzielenie i wycofanie jest możliwe w ustawieniach aplikacji mobilnej. Wycofani
 
 Zgodnie z wytycznymi EROD dotyczącymi zgody oraz zakazem dark patterns (m.in. EDPB 03/2022, DSA):
 
-- zgoda to wyraźne działanie potwierdzające (np. zaznaczenie checkboxa / przycisk) — **nie** scroll, bierność ani zamknięcie okna,
+- zgoda to wyraźne działanie potwierdzające (np. zaznaczenie checkboxa / przycisk) - **nie** scroll, bierność ani zamknięcie okna,
 - nie stosujemy „cookie walls” uzależniających dostęp do usługi od zgód marketingowych / analitycznych,
 - opcje akceptacji i odrzucenia technologii niewymaganych mają mieć **parytet wizualny**, gdy takie technologie zostaną wprowadzone,
 - domyślnie technologie niewymagalne są wyłączone (**privacy by default / off by default**),
@@ -170,7 +170,7 @@ Token powiadomień zapisywany jest dopiero po zgodzie systemu operacyjnego (dial
 
 ### 6.2. Technologie niewymagalne
 
-Obecnie **nie** instalujemy cookies analitycznych, reklamowych ani preferencyjnych śledzących. Gdyby miały się pojawić, uruchomienie nastąpi dopiero po **uprzedniej, granularnej zgodzie opt-in**, a biblioteki zewnętrzne (SDK) będą inicjalizowane **asynchronicznie** — dopiero po sygnale z warstwy zarządzania zgodami (CMP), nigdy automatycznie przy starcie aplikacji przed wyborem użytkownika.
+Obecnie **nie** instalujemy cookies analitycznych, reklamowych ani preferencyjnych śledzących. Gdyby miały się pojawić, uruchomienie nastąpi dopiero po **uprzedniej, granularnej zgodzie opt-in**, a biblioteki zewnętrzne (SDK) będą inicjalizowane **asynchronicznie** - dopiero po sygnale z warstwy zarządzania zgodami (CMP), nigdy automatycznie przy starcie aplikacji przed wyborem użytkownika.
 
 ---
 
@@ -178,12 +178,12 @@ Obecnie **nie** instalujemy cookies analitycznych, reklamowych ani preferencyjny
 
 Dane mogą być powierzane lub udostępniane wyłącznie w niezbędnym zakresie:
 
-- **przypisanemu fizjoterapeucie** — w zakresie karty pacjenta, wizyt, dokumentów i zaleceń (cel leczenia),
-- **dostawcom hostingu / bazy danych / poczty e-mail** — na podstawie umów powierzenia (DPA), gdy środowisko produkcyjne korzysta z zewnętrznej infrastruktury,
-- **usłudze Expo Push** — wyłącznie gdy pacjent włączy powiadomienia systemowe i zarejestruje token; treść komunikatu jest ogólna (bez rozpoznania klinicznego),
-- **organom publicznym** — wyłącznie gdy wymaga tego prawo.
+- **przypisanemu fizjoterapeucie** - w zakresie karty pacjenta, wizyt, dokumentów i zaleceń (cel leczenia),
+- **dostawcom hostingu / bazy danych / poczty e-mail** - na podstawie umów powierzenia (DPA), gdy środowisko produkcyjne korzysta z zewnętrznej infrastruktury,
+- **usłudze Expo Push** - wyłącznie gdy pacjent włączy powiadomienia systemowe i zarejestruje token; treść komunikatu jest ogólna (bez rozpoznania klinicznego),
+- **organom publicznym** - wyłącznie gdy wymaga tego prawo.
 
-Aktualny model referencyjny projektu: PostgreSQL, lokalne lub kontenerowe przechowywanie plików mediów, opcjonalnie hosting wskazany w dokumentacji wdrożeniowej (np. Railway / VPS / Cloudflare Pages / Expo EAS). Usługa Expo może oznaczać transfer poza EOG — wtedy stosuje się § 8. Przed produkcją Administrator uzupełni listę konkretnych procesorów.
+Aktualny model referencyjny projektu: PostgreSQL, lokalne lub kontenerowe przechowywanie plików mediów, opcjonalnie hosting wskazany w dokumentacji wdrożeniowej (np. Railway / VPS / Cloudflare Pages / Expo EAS). Usługa Expo może oznaczać transfer poza EOG - wtedy stosuje się § 8. Przed produkcją Administrator uzupełni listę konkretnych procesorów.
 
 **Współadministrowanie:** w razie użycia SDK, które samodzielnie określają cele przetwarzania, stosunek prawny (powierzenie / współadministrowanie / odrębny administrator) zostanie opisany w aktualizacji Polityki oraz w umowach.
 
@@ -193,9 +193,9 @@ Aktualny model referencyjny projektu: PostgreSQL, lokalne lub kontenerowe przech
 
 Domyślnie dążymy do przetwarzania danych na terenie **EOG**.
 
-Jeżeli dojdzie do transferu poza EOG (w tym dostęp zdalny z państwa trzeciego do danych hostowanych w EOG — zgodnie z wytycznymi EROD dotyczącymi transferów), transfer odbędzie się wyłącznie przy zachowaniu rozdziału V RODO, w szczególności:
+Jeżeli dojdzie do transferu poza EOG (w tym dostęp zdalny z państwa trzeciego do danych hostowanych w EOG - zgodnie z wytycznymi EROD dotyczącymi transferów), transfer odbędzie się wyłącznie przy zachowaniu rozdziału V RODO, w szczególności:
 
-- decyzji o adekwatności (np. **EU–US Data Privacy Framework**, gdy odbiorca jest certyfikowany), lub
+- decyzji o adekwatności (np. **EU-US Data Privacy Framework**, gdy odbiorca jest certyfikowany), lub
 - **standardowych klauzul umownych (SCC)** wraz z oceną wpływu transferu (**TIA**), lub
 - innych prawnych mechanizmów art. 46+ RODO.
 
@@ -214,7 +214,7 @@ Użytkownik zostanie poinformowany o konkretnych transferach w aktualizacji nini
 | Logi dostarczenia powiadomień | przez okres niezbędny do diagnostyki i rozliczenia zgód / preferencji (zasada minimalizacji) |
 | Logi techniczne | przez okres niezbędny do bezpieczeństwa i diagnostyki (zasada minimalizacji) |
 | Wnioski o usunięcie konta | do zakończenia procedury usunięcia oraz ewentualnej obrony roszczeń |
-| Zgody | wraz z dowodem udzielenia/wycofania — przez okres niezbędny do wykazania zgodności |
+| Zgody | wraz z dowodem udzielenia/wycofania - przez okres niezbędny do wykazania zgodności |
 
 Po zakończeniu okresu dane są usuwane lub anonimizowane, z wyjątkiem sytuacji, w których prawo nakazuje dłuższe przechowywanie.
 
@@ -226,7 +226,7 @@ Masz prawo do:
 
 1. **dostępu** do danych,
 2. **sprostowania**,
-3. **usunięcia** („prawo do bycia zapomnianym”) — z ograniczeniami ustawowymi,
+3. **usunięcia** („prawo do bycia zapomnianym”) - z ograniczeniami ustawowymi,
 4. **ograniczenia** przetwarzania,
 5. **przenoszenia** danych (w zakresie art. 20 RODO),
 6. **sprzeciwu** wobec przetwarzania opartego na art. 6 ust. 1 lit. f RODO,
@@ -235,10 +235,10 @@ Masz prawo do:
 
 ### 10.1. Realizacja w PhysioCare
 
-- **Eksport danych (pacjent):** `POST /api/v1/me/data-export/` oraz przycisk w ustawieniach aplikacji mobilnej — zwraca profil, zgody, wizyty, epizody (w tym mapę bólu), metadane dokumentów, przypisania ćwiczeń, wyroby, skierowania, odmowy, preferencje powiadomień, odcisk tokenu urządzenia (bez pełnego tokenu Expo) oraz ostatnie logi dostarczenia. Same pliki PDF/wideo pobiera się osobnymi, autoryzowanymi URL.
+- **Eksport danych (pacjent):** `POST /api/v1/me/data-export/` oraz przycisk w ustawieniach aplikacji mobilnej - zwraca profil, zgody, wizyty, epizody (w tym mapę bólu), metadane dokumentów, przypisania ćwiczeń, wyroby, skierowania, odmowy, preferencje powiadomień, odcisk tokenu urządzenia (bez pełnego tokenu Expo) oraz ostatnie logi dostarczenia. Same pliki PDF/wideo pobiera się osobnymi, autoryzowanymi URL.
 - **Usunięcie konta (pacjent):**
-  - **w aplikacji** — „Wniosek o usunięcie konta” w ustawieniach,
-  - **poza aplikacją (wymóg sklepów mobilnych)** — strona WWW `/account-deletion`,
+  - **w aplikacji** - „Wniosek o usunięcie konta” w ustawieniach,
+  - **poza aplikacją (wymóg sklepów mobilnych)** - strona WWW `/account-deletion`,
   - wniosek trafia do bazy; konto pacjenta jest dezaktywowane, a tokeny sesji unieważniane. Skasowanie albo anonimizacja danych zdrowotnych następuje w procedurze Administratora, z uwzględnieniem retencji ustawowej; przy procesorach zewnętrznych żądanie idzie dalej w granicach umów powierzenia.
 - **Zgody opcjonalne:** przełączniki w ustawieniach mobilnych.
 - **DSAR:** kontakt e-mail do ADO; nie żądamy danych nadmiarowych wyłącznie w celu identyfikacji, jeśli użytkownik nie był wcześniej identyfikowany w ten sposób (art. 11 RODO).
@@ -270,7 +270,7 @@ Zgodnie z zasadami Privacy by Design (minimalizuj, ukrywaj, separuj, abstrahuj):
 
 - nie ładujemy trackingowych SDK przed zgodą,
 - prowadzimy świadomość zależności (SBOM / rejestr komponentów w praktyce deweloperskiej),
-- nowe funkcje wymagają aktualizacji rejestru czynności i — w razie potrzeby — Polityki.
+- nowe funkcje wymagają aktualizacji rejestru czynności i - w razie potrzeby - Polityki.
 
 ---
 
@@ -281,7 +281,7 @@ W zakresie publikacji mobilnej respektujemy m.in.:
 - minimalizację danych przy rejestracji (Core Functionality / Guideline 5.1.1),
 - zgodność deklaracji prywatności z faktycznym przetwarzaniem (App Privacy / Data Safety),
 - **usuwanie konta w aplikacji** oraz **publiczny URL usuwania konta** (Google Play Data Safety; analogiczne wymagania Apple),
-- brak równoważności ATT z zgodą RODO/PKE — w razie trackingu wymagane będą **oba** mechanizmy.
+- brak równoważności ATT z zgodą RODO/PKE - w razie trackingu wymagane będą **oba** mechanizmy.
 
 ---
 

@@ -108,7 +108,7 @@ Ustaw `SENTRY_DSN` w środowisku produkcyjnym / staging. SDK inicjuje się w `se
 | `SENTRY_ENVIRONMENT` | np. `staging` / `production` |
 | `SENTRY_TRACES_SAMPLE_RATE` | domyślnie `0.1` |
 
-Bez DSN błędy nadal trafiają do strukturalnych logów (`physiocare.api` / `physiocare.auth`) — skonfiguruj alert hostingu na spike ERROR / 5xx.
+Bez DSN błędy nadal trafiają do strukturalnych logów (`physiocare.api` / `physiocare.auth`) - skonfiguruj alert hostingu na spike ERROR / 5xx.
 
 ## Shared cache (Redis)
 

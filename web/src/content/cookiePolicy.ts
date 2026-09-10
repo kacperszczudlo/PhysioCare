@@ -9,7 +9,7 @@ export const COOKIE_SECTIONS = [
     id: 'purpose',
     title: '1. Cel',
     paragraphs: [
-      'Dokument wyjaśnia przechowywanie informacji i dostęp do urządzenia końcowego (przeglądarka / aplikacja) zgodnie z PKE (art. 399–400) oraz RODO.',
+      'Dokument wyjaśnia przechowywanie informacji i dostęp do urządzenia końcowego (przeglądarka / aplikacja) zgodnie z PKE (art. 399-400) oraz RODO.',
     ],
   },
   {
@@ -31,7 +31,7 @@ export const COOKIE_SECTIONS = [
     id: 'optional',
     title: '3. Analityka i reklama',
     paragraphs: [
-      'Obecnie nieużywane. Gdyby miały się pojawić: off by default, granularny opt-in, parytet wizualny „Akceptuj/Odrzuć” oraz asynchroniczna inicjalizacja SDK dopiero po zgodzie — bez cookie walls i zgody domniemanej.',
+      'Obecnie nieużywane. Gdyby miały się pojawić: off by default, granularny opt-in, parytet wizualny „Akceptuj/Odrzuć” oraz asynchroniczna inicjalizacja SDK dopiero po zgodzie - bez cookie walls i zgody domniemanej.',
     ],
   },
   {

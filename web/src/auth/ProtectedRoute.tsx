@@ -35,7 +35,10 @@ export function GuestRoute() {
     )
   }
 
-  const isPasswordReset = location.pathname === '/reset' || location.pathname === '/password-reset'
+  const isPasswordReset =
+    location.pathname === '/reset' ||
+    location.pathname === '/password-reset' ||
+    location.pathname === '/verify-email'
   if (isAuthenticated && !isPasswordReset) {
     return <Navigate to="/" replace />
   }

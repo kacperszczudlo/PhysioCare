@@ -4,12 +4,18 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 
 import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
-import type { TodayExercise, Visit } from '@/api/types'
+import type { ExercisePlanItem, TodayExercise, Visit } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { BrandMark } from '@/components/BrandMark'
+import { ProgressOverview } from '@/components/ProgressOverview'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
-import { formatDateTime, formatTimeRange } from '@/lib/format'
+import { formatDateTime, formatTimeRange, todayISODate } from '@/lib/format'
+import {
+  buildWeekExerciseProgress,
+  countCompletedVisits,
+  countUpcomingVisits,
+} from '@/lib/patientProgress'
 import { isDashboardRealtimeEvent } from '@/realtime/types'
 import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
 import { useSilentPoll } from '@/realtime/useSilentPoll'
@@ -19,7 +25,9 @@ export default function DashboardScreen() {
   const { user } = useAuth()
   const router = useRouter()
   const [visits, setVisits] = useState<Visit[]>([])
+  const [pastVisits, setPastVisits] = useState<Visit[]>([])
   const [exercises, setExercises] = useState<TodayExercise[]>([])
+  const [activePlan, setActivePlan] = useState<ExercisePlanItem[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,12 +39,16 @@ export default function DashboardScreen() {
       setError(null)
     }
     try {
-      const [upcoming, today] = await Promise.all([
+      const [upcoming, past, today, plan] = await Promise.all([
         patientApi.getVisits('upcoming'),
+        patientApi.getVisits('past'),
         patientApi.getExercisesToday(),
+        patientApi.getExercises('active'),
       ])
       setVisits(upcoming)
+      setPastVisits(past)
       setExercises(today)
+      setActivePlan(plan)
       if (opts?.silent) {
         setError(null)
       }
@@ -94,9 +106,36 @@ export default function DashboardScreen() {
       return
     }
     const nextDone = !item.completed_today
+    const completedOn = todayISODate()
+    const previousPlan = activePlan
+
     setBusyId(item.id)
     setExercises((prev) =>
       prev.map((ex) => (ex.id === item.id ? { ...ex, completed_today: nextDone } : ex)),
+    )
+    setActivePlan((prev) =>
+      prev.map((ex) => {
+        if (ex.id !== item.id) {
+          return ex
+        }
+        const withoutToday = (ex.completions ?? []).filter((c) => c.completed_on !== completedOn)
+        return {
+          ...ex,
+          completed_today: nextDone,
+          completions: nextDone
+            ? [
+                ...withoutToday,
+                {
+                  id: `local-${item.id}-${completedOn}`,
+                  assignment: item.id,
+                  completed_on: completedOn,
+                  done: true,
+                  completed_at: new Date().toISOString(),
+                },
+              ]
+            : withoutToday,
+        }
+      }),
     )
     try {
       await patientApi.completeExercise(item.id, undefined, nextDone)
@@ -106,6 +145,7 @@ export default function DashboardScreen() {
           ex.id === item.id ? { ...ex, completed_today: item.completed_today } : ex,
         ),
       )
+      setActivePlan(previousPlan)
       setError(getErrorMessage(err, 'Nie udało się zaktualizować zalecenia.'))
     } finally {
       setBusyId(null)
@@ -114,6 +154,10 @@ export default function DashboardScreen() {
 
   const nextVisit = visits[0] ?? null
   const doneCount = exercises.filter((e) => e.completed_today).length
+  const weekDays = buildWeekExerciseProgress(activePlan)
+  const completedVisitCount = countCompletedVisits(pastVisits)
+  const upcomingVisitCount = countUpcomingVisits(visits)
+  const todayRatio = exercises.length > 0 ? doneCount / exercises.length : 0
 
   if (loading) {
     return <LoadingBlock label="Ładowanie pulpitu…" />
@@ -137,10 +181,18 @@ export default function DashboardScreen() {
       <BrandMark variant="sygnet" size="sm" style={styles.brand} />
       <ScreenHeader
         title={`Cześć, ${user?.first_name ?? 'Pacjencie'}`}
-        subtitle="Najbliższa wizyta i zalecenia na dziś."
+        subtitle="Postęp, najbliższa wizyta i zalecenia na dziś."
       />
 
       {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
+
+      <ProgressOverview
+        todayDone={doneCount}
+        todayTotal={exercises.length}
+        weekDays={weekDays}
+        completedVisits={completedVisitCount}
+        upcomingVisits={upcomingVisitCount}
+      />
 
       <Text style={styles.sectionLabel}>Najbliższa wizyta</Text>
       {nextVisit ? (
@@ -172,11 +224,20 @@ export default function DashboardScreen() {
         />
       )}
 
-      <View style={styles.rowBetween}>
-        <Text style={styles.sectionLabel}>Zalecenia na dziś</Text>
-        <Text style={styles.progress}>
-          {doneCount}/{exercises.length}
-        </Text>
+      <View style={styles.exerciseHeader}>
+        <View style={styles.rowBetween}>
+          <Text style={[styles.sectionLabel, styles.sectionLabelFlush]}>Zalecenia na dziś</Text>
+          <Text style={styles.progress}>
+            {doneCount}/{exercises.length}
+          </Text>
+        </View>
+        {exercises.length > 0 ? (
+          <View style={styles.exerciseTrack}>
+            <View
+              style={[styles.exerciseTrackFill, { width: `${Math.round(todayRatio * 100)}%` }]}
+            />
+          </View>
+        ) : null}
       </View>
 
       {exercises.length === 0 ? (
@@ -245,7 +306,20 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.4,
   },
-  progress: { color: colors.primary, fontWeight: '700', marginTop: space.md },
+  sectionLabelFlush: { marginTop: 0 },
+  exerciseHeader: { marginTop: space.md, gap: space.sm },
+  exerciseTrack: {
+    height: 6,
+    borderRadius: radius.sm,
+    backgroundColor: colors.primarySubtle,
+    overflow: 'hidden',
+  },
+  exerciseTrackFill: {
+    height: '100%',
+    borderRadius: radius.sm,
+    backgroundColor: colors.primary,
+  },
+  progress: { color: colors.primary, fontWeight: '700' },
   rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',

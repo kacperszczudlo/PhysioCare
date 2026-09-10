@@ -1,4 +1,4 @@
-# Wybór tematu — PhysioCare
+# Wybór tematu - PhysioCare
 
 > Treść zgodna z zatwierdzonym formularzem zgłoszenia tematu pracy dyplomowej (rok akademicki 2026/2027).
 
@@ -37,7 +37,7 @@ Ma dać się układać grafik wizyt (czas zabiegu i dostępność specjalistów)
 | Pulpit | Najbliższa wizyta, zalecenia na dziś (compliance), skrót do historii |
 | Wizyty | Nadchodzące / zakończone, szczegóły, zmiana terminu, odwołanie |
 | Profil | Dane kontaktowe, preferencje powiadomień, zgody RODO |
-| Dokumentacja | Kierowanie, wyroby, Recepta na Ruch, odmowy i PDF — widoczne po wystawieniu przez terapeutę |
+| Dokumentacja | Kierowanie, wyroby, Recepta na Ruch, odmowy i PDF - widoczne po wystawieniu przez terapeutę |
 | Pod-widoki | Szczegóły wizyty, profil fizjoterapeuty |
 
 ### Wspólne (backend)

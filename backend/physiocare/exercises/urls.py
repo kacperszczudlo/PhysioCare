@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (
     MeExerciseCompletionCreateView,
+    MeExercisesListView,
     MeExercisesTodayView,
     TherapistExerciseAssignmentDetailView,
     TherapistExerciseAssignmentListCreateView,
@@ -39,6 +40,7 @@ urlpatterns = [
 ]
 
 me_urlpatterns = [
+    path('exercises/', MeExercisesListView.as_view(), name='me-exercises'),
     path('exercises/today/', MeExercisesTodayView.as_view(), name='me-exercises-today'),
     path(
         'exercise-completions/',

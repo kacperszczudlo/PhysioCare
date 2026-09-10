@@ -160,6 +160,10 @@ CSRF_TRUSTED_ORIGINS = env_list(
 
 SECURE_COOKIES = env_bool('DJANGO_SECURE_COOKIES', 'false')
 
+# Comma-separated OAuth 2.0 Client IDs (Web + Android/iOS) accepted as ID token audience.
+# Also accepts singular GOOGLE_CLIENT_ID (GastroHub-compatible).
+GOOGLE_CLIENT_IDS = env_list('GOOGLE_CLIENT_IDS') or env_list('GOOGLE_CLIENT_ID')
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(
         minutes=int(os.environ.get('JWT_ACCESS_LIFETIME_MIN', '15'))
@@ -252,7 +256,7 @@ if not DEBUG:
 
 _REDIS_URL = os.environ.get('REDIS_URL', '').strip()
 if _REDIS_URL:
-    # Shared cache across Gunicorn workers — required for correct rate limits in multi-process.
+    # Shared cache across Gunicorn workers - required for correct rate limits in multi-process.
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.redis.RedisCache',
@@ -279,7 +283,10 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', 'true')
 
+# TTL for email OTP (verify + password reset) and post-verify reset token, seconds.
+# 30 minutes is a common default for e-mail codes (SMS is usually shorter).
 PASSWORD_RESET_TIMEOUT = int(os.environ.get('PASSWORD_RESET_TIMEOUT', '1800'))
+EMAIL_CODE_MAX_ATTEMPTS = int(os.environ.get('EMAIL_CODE_MAX_ATTEMPTS', '5'))
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173').rstrip('/')
 EXPO_PUSH_URL = os.environ.get(
     'EXPO_PUSH_URL',

@@ -8,6 +8,7 @@ import { LegalLayout } from '@/layouts/LegalLayout'
 import { AccountDeletionPage } from '@/pages/AccountDeletionPage'
 import { CookiePolicyPage } from '@/pages/CookiePolicyPage'
 import { DashboardPage } from '@/pages/DashboardPage'
+import { EmailVerifyPage } from '@/pages/EmailVerifyPage'
 import { ExercisesPage } from '@/pages/ExercisesPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { PasswordResetPage } from '@/pages/PasswordResetPage'
@@ -34,6 +35,7 @@ export default function App() {
             <Route element={<AuthLayout />}>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/verify-email" element={<EmailVerifyPage />} />
               <Route path="/password-reset" element={<PasswordResetPage />} />
               <Route path="/reset" element={<PasswordResetPage />} />
             </Route>

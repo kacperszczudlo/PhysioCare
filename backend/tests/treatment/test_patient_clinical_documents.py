@@ -40,6 +40,7 @@ def test_patient_sees_clinical_documents_after_therapist_issues(
         side='LEFT',
         quantity=1,
         icd10_code='M25.5',
+        access_code='4821',
         status=DeviceOrderStatus.ISSUED,
         notes='Stabilizacja',
     )
@@ -49,7 +50,7 @@ def test_patient_sees_clinical_documents_after_therapist_issues(
         therapist=therapist,
         device_code='J.ANKLE',
         device_group='J',
-        device_name='Szkic — niewidoczny',
+        device_name='Szkic - niewidoczny',
         side='LEFT',
         quantity=1,
         icd10_code='M25.5',
@@ -94,10 +95,58 @@ def test_patient_sees_clinical_documents_after_therapist_issues(
     device = next(i for i in response.data['results'] if i['kind'] == 'device_order')
     assert device['title'] == 'Orteza stawu skokowego'
     assert 'Szkic' not in device['title']
+    assert device['details']['access_code'] == '4821'
+    assert 'PESEL' in device['details']['pickup_hint']
+    assert 'PhysioCare modeluje uprawnienia ordynacyjne' in device['details']['disclaimer']
+    assert 'recept na leki' in device['details']['disclaimer']
 
     refusal = next(i for i in response.data['results'] if i['kind'] == 'refusal')
     assert 'patient_notice' in refusal['details']
     assert refusal['details']['physician_notified'] is True
+
+
+@pytest.mark.django_db
+def test_device_order_access_code_validation(api_client, therapist, patient):
+    from treatment.models import TreatmentEpisode
+
+    therapist.qualification_level = 'MAGISTER'
+    therapist.experience_years = 5
+    therapist.save()
+    episode = TreatmentEpisode.objects.create(patient=patient, icd10_code='M25.5')
+
+    api_client.force_authenticate(user=therapist.user)
+    bad = api_client.post(
+        f'/api/v1/episodes/{episode.id}/device-orders/',
+        {
+            'device_code': 'J.ANKLE',
+            'side': 'LEFT',
+            'icd10_code': 'M25.5',
+            'access_code': '12',
+        },
+        format='json',
+    )
+    assert bad.status_code == 400
+    assert 'access_code' in bad.data['error']['details']
+
+    ok = api_client.post(
+        f'/api/v1/episodes/{episode.id}/device-orders/',
+        {
+            'device_code': 'J.ANKLE',
+            'side': 'LEFT',
+            'icd10_code': 'M25.5',
+            'access_code': '4821',
+            'notes': 'Z kodem NFZ',
+        },
+        format='json',
+    )
+    assert ok.status_code == 201
+    assert ok.data['access_code'] == '4821'
+
+    api_client.force_authenticate(user=patient.user)
+    docs = api_client.get('/api/v1/me/clinical-documents/?kind=device_order')
+    assert docs.status_code == 200
+    assert docs.data['count'] == 1
+    assert docs.data['results'][0]['details']['access_code'] == '4821'
 
 
 @pytest.mark.django_db

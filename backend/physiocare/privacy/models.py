@@ -40,6 +40,11 @@ class AccountDeletionRequest(TimestampedModel):
         on_delete=models.CASCADE,
         related_name='account_deletion_request',
     )
+    reason = models.TextField(
+        blank=True,
+        default='',
+        help_text='Powód rezygnacji podany przez użytkownika.',
+    )
     processed_at = models.DateTimeField(null=True, blank=True)
     notes = models.TextField(blank=True, default='')
 

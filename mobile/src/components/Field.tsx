@@ -93,20 +93,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   inputWithReveal: {
-    paddingRight: controlSize,
+    paddingRight: controlSize - 2,
   },
   inputError: {
     borderColor: colors.danger,
   },
   reveal: {
     position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: controlSize,
+    right: 1,
+    top: 1,
+    bottom: 1,
+    width: controlSize - 2,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.sm,
+    borderRadius: radius.md - 1,
   },
   revealPressed: {
     backgroundColor: colors.surfaceMuted,

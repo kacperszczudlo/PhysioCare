@@ -1,9 +1,16 @@
-import { Link, useRouter } from 'expo-router'
-import { useMemo, useState } from 'react'
+import { Link, useRouter, type Href } from 'expo-router'
+import { useEffect, useMemo, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage, getFieldError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
+import {
+  peekGoogleRegistrationDraft,
+  takeGoogleRegistrationDraft,
+  type GoogleRegistrationDraft,
+} from '@/auth/googleRegistrationDraft'
+import { GoogleSignInButton, isGoogleSignInConfigured } from '@/auth/googleSignIn'
+import { parseGoogleIdTokenClaims } from '@/auth/parseGoogleIdToken'
 import { BrandMark } from '@/components/BrandMark'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
@@ -26,9 +33,12 @@ export default function RegisterScreen() {
   const { register } = useAuth()
   const router = useRouter()
 
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
+  const [googleDraft, setGoogleDraft] = useState<GoogleRegistrationDraft | null>(() =>
+    peekGoogleRegistrationDraft(),
+  )
+  const [firstName, setFirstName] = useState(() => peekGoogleRegistrationDraft()?.first_name ?? '')
+  const [lastName, setLastName] = useState(() => peekGoogleRegistrationDraft()?.last_name ?? '')
+  const [email, setEmail] = useState(() => peekGoogleRegistrationDraft()?.email ?? '')
   const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [phoneNational, setPhoneNational] = useState('')
   const [password, setPassword] = useState('')
@@ -50,26 +60,137 @@ export default function RegisterScreen() {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  const googleMode = Boolean(googleDraft?.credential)
   const passwordHints = { email, firstName, lastName }
   const passwordRequirements = getPasswordRequirements(password, passwordHints)
   const showRequirementErrors = submitted || passwordTouched
 
-  const canSubmit = useMemo(
-    () =>
-      terms &&
-      medical &&
-      firstName.trim() &&
-      lastName.trim() &&
-      email.trim() &&
-      password.length > 0 &&
-      confirmPassword.length > 0 &&
-      therapistId.trim(),
-    [terms, medical, firstName, lastName, email, password, confirmPassword, therapistId],
-  )
+  useEffect(() => {
+    const draft = takeGoogleRegistrationDraft()
+    if (!draft) {
+      return
+    }
+    setGoogleDraft(draft)
+    if (draft.email) {
+      setEmail(draft.email)
+    }
+    if (draft.first_name) {
+      setFirstName(draft.first_name)
+    }
+    if (draft.last_name) {
+      setLastName(draft.last_name)
+    }
+    setError(
+      'Dane z Google (e-mail, imię, nazwisko) są uzupełnione. Podaj kod terapeuty i zaznacz zgody - telefon opcjonalnie.',
+    )
+  }, [])
+
+  const canSubmit = useMemo(() => {
+    if (!(terms && medical && therapistId.trim())) {
+      return false
+    }
+    if (!(firstName.trim() && lastName.trim())) {
+      return false
+    }
+    if (googleMode) {
+      return true
+    }
+    return Boolean(email.trim() && password.length > 0 && confirmPassword.length > 0)
+  }, [
+    terms,
+    medical,
+    therapistId,
+    googleMode,
+    firstName,
+    lastName,
+    email,
+    password,
+    confirmPassword,
+  ])
+
+  async function finishGoogleRegistration(credential: string) {
+    if (!validateGoogleRegistrationFields()) {
+      return
+    }
+
+    setFieldErrors({})
+    setLoading(true)
+    try {
+      const result = await register({
+        google_credential: credential,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        therapist_id: therapistId.trim(),
+        phone: formatPhoneForApi(phoneNational, countryCode) || undefined,
+        consents: { terms, medical_data: medical },
+      })
+      setGoogleDraft(null)
+      if (result.kind === 'needs_email_verification') {
+        router.replace(`/(auth)/verify-email?email=${encodeURIComponent(result.email)}` as Href)
+        return
+      }
+      router.replace('/(tabs)')
+    } catch (err) {
+      handleRegisterError(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function validateGoogleRegistrationFields(): boolean {
+    if (!terms || !medical) {
+      setError('Zaznacz wymagane zgody RODO, żeby dokończyć rejestrację Google.')
+      return false
+    }
+
+    const nextFieldErrors: {
+      firstName?: string
+      lastName?: string
+      phone?: string
+      therapistId?: string
+    } = {}
+    const firstNameError = getFirstNameError(firstName)
+    if (firstNameError) {
+      nextFieldErrors.firstName = firstNameError
+    }
+    const lastNameError = getLastNameError(lastName)
+    if (lastNameError) {
+      nextFieldErrors.lastName = lastNameError
+    }
+    const phoneError = getPhoneError(phoneNational, countryCode)
+    if (phoneError) {
+      nextFieldErrors.phone = phoneError
+    }
+    if (!therapistId.trim()) {
+      nextFieldErrors.therapistId = 'Podaj kod terapeuty.'
+    } else if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        therapistId.trim(),
+      )
+    ) {
+      nextFieldErrors.therapistId = 'Podaj prawidłowy kod terapeuty (UUID z panelu terapeuty).'
+    }
+    if (
+      nextFieldErrors.firstName ||
+      nextFieldErrors.lastName ||
+      nextFieldErrors.phone ||
+      nextFieldErrors.therapistId
+    ) {
+      setFieldErrors((prev) => ({ ...prev, ...nextFieldErrors }))
+      setError('Uzupełnij kod terapeuty i zgody (oraz imię/nazwisko, jeśli Google ich nie podało).')
+      return false
+    }
+    return true
+  }
 
   async function onSubmit() {
     setSubmitted(true)
     setError(null)
+
+    if (googleMode && googleDraft?.credential) {
+      await finishGoogleRegistration(googleDraft.credential)
+      return
+    }
 
     if (!terms || !medical) {
       setError('Uzupełnij formularz i zaznacz wymagane zgody RODO.')
@@ -134,7 +255,7 @@ export default function RegisterScreen() {
     setFieldErrors({})
     setLoading(true)
     try {
-      await register({
+      const result = await register({
         email: email.trim(),
         password,
         first_name: firstName.trim(),
@@ -143,39 +264,88 @@ export default function RegisterScreen() {
         phone: formatPhoneForApi(phoneNational, countryCode) || undefined,
         consents: { terms, medical_data: medical },
       })
+      if (result.kind === 'needs_email_verification') {
+        router.replace(`/(auth)/verify-email?email=${encodeURIComponent(result.email)}` as Href)
+        return
+      }
       router.replace('/(tabs)')
     } catch (err) {
-      const apiFirstNameError = getFieldError(err, 'first_name')
-      const apiLastNameError = getFieldError(err, 'last_name')
-      const apiEmailError = getFieldError(err, 'email')
-      const apiPhoneError = getFieldError(err, 'phone')
-      const apiPasswordError = getFieldError(err, 'password')
-      const apiTherapistError = getFieldError(err, 'therapist_id')
-      if (
-        apiFirstNameError ||
-        apiLastNameError ||
-        apiEmailError ||
-        apiPhoneError ||
-        apiPasswordError ||
-        apiTherapistError
-      ) {
-        setFieldErrors({
-          firstName: apiFirstNameError ?? undefined,
-          lastName: apiLastNameError ?? undefined,
-          email: apiEmailError ?? undefined,
-          phone: apiPhoneError ?? undefined,
-          password: apiPasswordError ?? undefined,
-          therapistId: apiTherapistError ?? undefined,
-        })
-      }
-      const message = getErrorMessage(err, 'Rejestracja nie powiodła się.')
-      const duplicate =
-        (apiEmailError && message === apiEmailError) ||
-        (apiPasswordError && message === apiPasswordError)
-      setError(duplicate ? null : message)
+      handleRegisterError(err)
     } finally {
       setLoading(false)
     }
+  }
+
+  function handleRegisterError(err: unknown) {
+    const apiFirstNameError = getFieldError(err, 'first_name')
+    const apiLastNameError = getFieldError(err, 'last_name')
+    const apiEmailError = getFieldError(err, 'email')
+    const apiPhoneError = getFieldError(err, 'phone')
+    const apiPasswordError = getFieldError(err, 'password')
+    const apiTherapistError = getFieldError(err, 'therapist_id')
+    const apiGoogleError = getFieldError(err, 'google_credential')
+    if (
+      apiFirstNameError ||
+      apiLastNameError ||
+      apiEmailError ||
+      apiPhoneError ||
+      apiPasswordError ||
+      apiTherapistError
+    ) {
+      setFieldErrors({
+        firstName: apiFirstNameError ?? undefined,
+        lastName: apiLastNameError ?? undefined,
+        email: apiEmailError ?? undefined,
+        phone: apiPhoneError ?? undefined,
+        password: apiPasswordError ?? undefined,
+        therapistId: apiTherapistError ?? undefined,
+      })
+    }
+
+    const accountExists =
+      Boolean(apiEmailError && /już zarejestrowany/i.test(apiEmailError)) ||
+      Boolean(apiGoogleError && /już istnieje/i.test(apiGoogleError))
+
+    if (accountExists) {
+      setGoogleDraft(null)
+      setError(
+        apiEmailError ||
+          apiGoogleError ||
+          'Ten adres e-mail jest już zarejestrowany. Użyj logowania zamiast rejestracji.',
+      )
+      return
+    }
+
+    const message = apiGoogleError || getErrorMessage(err, 'Rejestracja nie powiodła się.')
+    const duplicate =
+      (apiEmailError && message === apiEmailError) ||
+      (apiPasswordError && message === apiPasswordError)
+    setError(duplicate ? null : message)
+  }
+
+  async function onGoogleSuccess(idToken: string) {
+    setSubmitted(false)
+    setError(null)
+    const claims = parseGoogleIdTokenClaims(idToken)
+    const nextEmail = claims.email?.trim() || email.trim()
+    const nextFirst = claims.first_name?.trim() || firstName.trim()
+    const nextLast = claims.last_name?.trim() || lastName.trim()
+
+    setEmail(nextEmail)
+    setFirstName(nextFirst)
+    setLastName(nextLast)
+    setGoogleDraft({
+      credential: idToken,
+      email: nextEmail || undefined,
+      first_name: nextFirst || undefined,
+      last_name: nextLast || undefined,
+    })
+    setFieldErrors({})
+    setError(
+      nextFirst && nextLast && nextEmail
+        ? 'Dane z Google zapisane. Został kod terapeuty i zgody (telefon opcjonalnie).'
+        : 'Konto Google połączone. Uzupełnij brakujące imię/nazwisko, kod terapeuty i zgody.',
+    )
   }
 
   return (
@@ -183,12 +353,14 @@ export default function RegisterScreen() {
       <BrandMark variant="logo" size="md" style={styles.brand} />
       <Text style={styles.title}>Rejestracja pacjenta</Text>
       <Text style={styles.subtitle}>
-        Załóż konto i zaakceptuj wymagane zgody, aby korzystać z zaleceń terapeuty.
+        {googleMode
+          ? 'E-mail, imię i nazwisko z Google. Uzupełnij kod terapeuty i zgody (telefon opcjonalnie).'
+          : 'Załóż konto i zaakceptuj wymagane zgody, aby korzystać z zaleceń terapeuty.'}
       </Text>
 
       <View style={styles.form}>
         <Field
-          label="Imię"
+          label="Imię *"
           value={firstName}
           onChangeText={(value) => {
             setFirstName(value)
@@ -197,10 +369,11 @@ export default function RegisterScreen() {
             }
           }}
           autoComplete="given-name"
+          editable={!(googleMode && Boolean(firstName.trim()))}
           error={fieldErrors.firstName}
         />
         <Field
-          label="Nazwisko"
+          label="Nazwisko *"
           value={lastName}
           onChangeText={(value) => {
             setLastName(value)
@@ -209,10 +382,11 @@ export default function RegisterScreen() {
             }
           }}
           autoComplete="family-name"
+          editable={!(googleMode && Boolean(lastName.trim()))}
           error={fieldErrors.lastName}
         />
         <Field
-          label="E-mail"
+          label={googleMode ? 'E-mail (z Google)' : 'E-mail *'}
           value={email}
           onChangeText={(value) => {
             setEmail(value)
@@ -223,6 +397,7 @@ export default function RegisterScreen() {
           autoCapitalize="none"
           keyboardType="email-address"
           autoComplete="email"
+          editable={!googleMode}
           error={fieldErrors.email}
         />
         <PhoneField
@@ -241,41 +416,49 @@ export default function RegisterScreen() {
             }
           }}
           error={fieldErrors.phone}
-          hint="Opcjonalnie. Wybierz kraj, żeby ustawić prefix numeru."
+          hint={
+            googleMode
+              ? 'Opcjonalnie - Google zwykle nie przekazuje telefonu, możesz dodać go tutaj.'
+              : 'Opcjonalnie. Wybierz kraj, żeby ustawić prefix numeru.'
+          }
         />
+        {!googleMode ? (
+          <>
+            <Field
+              label="Hasło *"
+              value={password}
+              onChangeText={(value) => {
+                setPassword(value)
+                if (fieldErrors.password) {
+                  setFieldErrors((prev) => ({ ...prev, password: undefined }))
+                }
+              }}
+              onBlur={() => setPasswordTouched(true)}
+              secureTextEntry
+              autoComplete="new-password"
+              error={fieldErrors.password}
+            />
+            <PasswordRequirements
+              requirements={passwordRequirements}
+              showErrors={showRequirementErrors}
+            />
+            <Field
+              label="Powtórz hasło *"
+              value={confirmPassword}
+              onChangeText={(value) => {
+                setConfirmPassword(value)
+                if (fieldErrors.confirmPassword) {
+                  setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }))
+                }
+              }}
+              secureTextEntry
+              autoComplete="new-password"
+              error={fieldErrors.confirmPassword}
+            />
+          </>
+        ) : null}
         <Field
-          label="Hasło"
-          value={password}
-          onChangeText={(value) => {
-            setPassword(value)
-            if (fieldErrors.password) {
-              setFieldErrors((prev) => ({ ...prev, password: undefined }))
-            }
-          }}
-          onBlur={() => setPasswordTouched(true)}
-          secureTextEntry
-          autoComplete="new-password"
-          error={fieldErrors.password}
-        />
-        <PasswordRequirements
-          requirements={passwordRequirements}
-          showErrors={showRequirementErrors}
-        />
-        <Field
-          label="Powtórz hasło"
-          value={confirmPassword}
-          onChangeText={(value) => {
-            setConfirmPassword(value)
-            if (fieldErrors.confirmPassword) {
-              setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }))
-            }
-          }}
-          secureTextEntry
-          autoComplete="new-password"
-          error={fieldErrors.confirmPassword}
-        />
-        <Field
-          label="Kod terapeuty"
+          label="Kod terapeuty *"
           value={therapistId}
           onChangeText={(value) => {
             setTherapistId(value)
@@ -317,11 +500,21 @@ export default function RegisterScreen() {
         ) : null}
 
         <Button
-          title="Utwórz konto"
+          title={googleMode ? 'Dokończ rejestrację Google' : 'Utwórz konto'}
           loading={loading}
           disabled={!canSubmit}
           onPress={() => void onSubmit()}
         />
+
+        {!googleMode && isGoogleSignInConfigured ? (
+          <GoogleSignInButton
+            loading={loading}
+            title="Zarejestruj przez Google"
+            hint="Kliknij Google - e-mail, imię i nazwisko uzupełnią się same. Potem podaj kod terapeuty i zgody."
+            onSuccess={onGoogleSuccess}
+            onError={setError}
+          />
+        ) : null}
       </View>
 
       <Link href="/(auth)/login" style={styles.link}>

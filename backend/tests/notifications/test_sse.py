@@ -22,7 +22,7 @@ def _parse_sse_frames(body: str) -> list[dict]:
     for block in body.strip().split('\n\n'):
         if not block.strip():
             continue
-        # SSE comments (np. ": connected") — pomijamy
+        # SSE comments (np. ": connected") - pomijamy
         if all(line.startswith(':') or not line.strip() for line in block.splitlines()):
             continue
         event_name = None
@@ -49,7 +49,7 @@ def test_events_requires_auth(api_client):
 @pytest.mark.django_db
 @override_settings(SSE_HEARTBEAT_SECONDS=1, SSE_MAX_FRAMES=1)
 def test_events_accepts_event_stream_header(api_client, patient):
-    """EventSource sends Accept: text/event-stream — must not 406."""
+    """EventSource sends Accept: text/event-stream - must not 406."""
     api_client.force_authenticate(user=patient.user)
     response = api_client.get(
         '/api/v1/me/events/',

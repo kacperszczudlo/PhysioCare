@@ -1,4 +1,4 @@
-# Przypadki użycia — PhysioCare
+# Przypadki użycia - PhysioCare
 
 Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
@@ -94,9 +94,9 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Pole | Wartość |
 |------|---------|
 | Aktor | Pacjent |
-| Przebieg | 1. Zakładka **Dokumentacja**. 2. Lista dokumentów klinicznych (kierowanie, wyroby, Recepta na Ruch, odmowy) oraz PDF-ów — widocznych automatycznie po wystawieniu przez terapeutę. 3. Szczegóły wpisu / otwarcie PDF. |
+| Przebieg | 1. Zakładka **Dokumentacja**. 2. Lista dokumentów klinicznych (kierowanie, wyroby, Recepta na Ruch, odmowy) oraz PDF-ów - widocznych automatycznie po wystawieniu przez terapeutę. 3. Szczegóły wpisu / otwarcie PDF. Dla wyrobów: opcjonalny 4-cyfrowy kod odbioru e-ZWM + disclaimer (model P1/NFZ). |
 | Bezpieczeństwo | Tylko dokumenty przypisane do zalogowanego pacjenta. |
-| Uwagi | Fizjoterapeuta nie wykonuje osobnego kroku „wyślij”; wystawienie w karcie pacjenta = publikacja dla pacjenta. Szkice (`DRAFT`) wyrobów / Recepty na Ruch nie są widoczne. |
+| Uwagi | Fizjoterapeuta nie wykonuje osobnego kroku „wyślij”; wystawienie w karcie pacjenta = publikacja dla pacjenta. Szkice (`DRAFT`) wyrobów / Recepty na Ruch nie są widoczne. Kod dostępu to kopia informacyjna z NFZ - PhysioCare nie wystawia formalnego e-ZWM ani recept na leki. |
 
 ---
 

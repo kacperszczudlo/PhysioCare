@@ -100,6 +100,7 @@ export interface MedicalDeviceOrder {
   side: BodySide
   quantity: number
   icd10_code: string
+  access_code: string
   status: DeviceOrderStatus
   notes: string
   created_at: string
@@ -196,6 +197,7 @@ export interface Visit {
   status: VisitStatus
   location_address: string
   prep_instructions: string
+  patient_summary: string
   patient_note: string
   cancel_reason: string
   created_at: string
@@ -215,6 +217,7 @@ export interface VisitUpdatePayload {
   start_at?: string
   end_at?: string
   prep_instructions?: string
+  patient_summary?: string
   location_address?: string
   status?: VisitStatus
 }

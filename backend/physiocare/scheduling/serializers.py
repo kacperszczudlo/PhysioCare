@@ -92,7 +92,8 @@ class VisitSerializer(serializers.ModelSerializer):
             'therapist_first_name', 'therapist_last_name',
             'therapy_type_name', 'therapy_type_color', 'therapy_type_duration_min',
             'start_at', 'end_at', 'status', 'location_address',
-            'prep_instructions', 'patient_note', 'cancel_reason', 'created_at',
+            'prep_instructions', 'patient_summary', 'patient_note', 'cancel_reason',
+            'created_at',
         ]
         read_only_fields = [
             'id', 'patient', 'therapist', 'episode', 'therapy_type',
@@ -121,6 +122,16 @@ class VisitSerializer(serializers.ModelSerializer):
                 value,
                 max_length=2000,
                 too_long_message=PREP_TOO_LONG,
+            )
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def validate_patient_summary(self, value):
+        try:
+            return normalize_optional_text(
+                value,
+                max_length=5000,
+                too_long_message=NOTE_TOO_LONG,
             )
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
@@ -174,7 +185,9 @@ class VisitCreateSerializer(serializers.ModelSerializer):
         therapy_type_id = attrs['therapy_type_id']
         episode_id = attrs.get('episode_id')
 
-        if not PatientProfile.objects.filter(pk=patient_id, therapist=therapist).exists():
+        if not PatientProfile.objects.active().filter(
+            pk=patient_id, therapist=therapist
+        ).exists():
             raise serializers.ValidationError(
                 {'patient_id': 'Pacjent nie należy do tego terapeuty.'}
             )

@@ -1,4 +1,4 @@
-# REST API — PhysioCare (kontrakt)
+# REST API - PhysioCare (kontrakt)
 
 > Wersja dokumentu: **0.5**.  
 > Kolekcja Postman: [`postman/PhysioCare.json`](postman/PhysioCare.json) · przewodnik: [`postman-testing.md`](postman-testing.md).
@@ -77,6 +77,28 @@ Login, rejestracja i refresh zwracają `access` + `refresh` w JSON, gdy klient n
 **200** - `{ "user": {...}, "access": "<jwt>", "refresh": "<jwt>" }` + cookies JWT.  
 Mobile zapisuje `access`/`refresh` (np. SecureStore) i wysyła `Authorization: Bearer`.
 
+Konta tylko-Google (bez lokalnego hasła) dostają **401** `AUTH_023` z komunikatem, żeby użyć przycisku Google.
+
+### POST `/auth/google`
+
+Wymiana Google ID token (GIS / Sign in with Google) na sesję PhysioCare.
+
+```json
+{ "credential": "<google_id_token>", "token_delivery": "cookie" }
+```
+
+`credential` albo `id_token`. `token_delivery: "cookie"` jak przy loginie webowym; mobile pomija → tokeny w body.
+
+Wymaga `GOOGLE_CLIENT_IDS` (lista audience). Serwer weryfikuje token (`google-auth`), potem:
+
+1. użytkownik po `google_sub`, albo
+2. istniejący e-mail → powiązanie `google_sub`, albo
+3. **404** `AUTH_025` - brak konta (najpierw rejestracja z PWZFz / terapeutą).
+
+**200** - jak `/auth/login`. Bez konfiguracji Google: **503** `AUTH_020`.
+
+Rejestracja z Google: w `POST /auth/register/therapist/` lub `/auth/register/patient/` wyślij `google_credential` zamiast `password` (e-mail/imię z tokenu). Web nadal wymaga PWZFz; mobile - `therapist_id` + zgody.
+
 ### POST `/auth/logout`
 
 Czyści cookies `access_token` / `refresh_token` i wpisuje przedstawiony refresh na czarną listę (body `refresh` albo cookie). **200** - `{ "detail": "Wylogowano." }`.
@@ -92,18 +114,67 @@ Cookie `refresh_token` też jest akceptowane (body opcjonalne).
 ### POST `/auth/password-reset/request`
 
 ```json
-{ "email": "..." }
+{ "email": "...", "client": "web" }
 ```
+
+`client` opcjonalne (`web` / `mobile`) - tylko dla logów/diagnostyki. Na e-mail idzie **6-cyfrowy kod** (TTL: `PASSWORD_RESET_TIMEOUT`).
+
+**200** - `{ "detail": "Wysłaliśmy 6-cyfrowy kod…" }`  
+**404** `AUTH_029` - brak konta z tym e-mailem.  
+**400** `AUTH_023` - konto tylko-Google (bez lokalnego hasła).  
+**503** `AUTH_030` - błąd wysyłki SMTP.
+
+### POST `/auth/password-reset/verify`
+
+```json
+{ "email": "...", "code": "123456" }
+```
+
+Sprawdza kod z e-maila. Po sukcesie kod jest zużyty; klient dostaje krótkotrwały `reset_token` do ustawienia hasła.
+
+**200** - `{ "detail": "Kod jest poprawny…", "reset_token": "..." }`  
+**400** `AUTH_028` - zły / wygasły kod lub przekroczony limit prób.
 
 ### POST `/auth/password-reset/confirm`
 
 ```json
-{ "token": "...", "new_password": "..." }
+{
+  "reset_token": "...",
+  "new_password": "...",
+  "new_password_confirm": "..."
+}
 ```
+
+Po sukcesie hasło zmienione, sesje unieważnione. Niezweryfikowany e-mail zostaje oznaczony jako zweryfikowany.  
+**400** `AUTH_028` - wygasła / zużyta sesja resetu (`reset_token`).
+
+### POST `/auth/email/verify`
+
+```json
+{ "email": "...", "code": "123456", "token_delivery": "cookie" }
+```
+
+Potwierdza adres po rejestracji e-mail+hasło. **200** - sesja jak przy loginie. Konta Google pomijają ten krok (`email_verified_at` ustawiane od razu).
+
+### POST `/auth/email/resend`
+
+```json
+{ "email": "..." }
+```
+
+Ponowny kod weryfikacyjny (anti-enumeration).
+
+Rejestracja patient/therapist **bez** Google zwraca **201**:
+
+```json
+{ "needs_email_verification": true, "email": "...", "detail": "..." }
+```
+
+bez JWT. Logowanie hasłem przy braku weryfikacji: **403** `AUTH_027`.
 
 ### POST `/auth/password-change`
 
-Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło zmienione, sesje unieważnione; trzeba zalogować się ponownie.
+Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** - hasło zmienione, sesje unieważnione; trzeba zalogować się ponownie.
 
 ---
 
@@ -117,7 +188,7 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 | GET | `/me/consents` | Lista zgód |
 | PATCH | `/me/consents/optional` | Marketing, badania |
 | POST | `/me/data-export` | Eksport RODO (profil, zgody, wizyty, epizody, dokumenty, ćwiczenia, preferencje i logi powiadomień) |
-| POST | `/me/account-deletion-request` | Wniosek o usunięcie (zapis + dezaktywacja konta) |
+| POST | `/me/account-deletion-request` | Wniosek o usunięcie: opcjonalne `reason`, dezaktywacja tokenów push, anonimizacja PII (e-mail zwolniony do ponownej rejestracji), unieważnienie sesji |
 
 ---
 
@@ -166,7 +237,7 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** — hasło
 | GET | `/episodes/{id}/notes` | THERAPIST | Lista notatek epizodu |
 | GET/POST | `/episodes/{id}/diagnostic-recommendations` | THERAPIST | Kierowanie pośrednie (opinia) |
 | PATCH/DELETE | `/episodes/{id}/diagnostic-recommendations/{item_id}` | THERAPIST | Edycja / usunięcie kierowania |
-| GET/POST | `/episodes/{id}/device-orders` | THERAPIST | Zlecenia wyrobów (e-ZWM model) |
+| GET/POST | `/episodes/{id}/device-orders` | THERAPIST | Zlecenia wyrobów (e-ZWM model); opcjonalny `access_code` (4 cyfry z NFZ) |
 | PATCH/DELETE | `/episodes/{id}/device-orders/{item_id}` | THERAPIST | Edycja / usunięcie zlecenia |
 | GET/POST | `/episodes/{id}/order-refusals` | THERAPIST | Odmowa zlecenia lekarskiego |
 | PATCH/DELETE | `/episodes/{id}/order-refusals/{item_id}` | THERAPIST | Edycja / usunięcie odmowy |
@@ -183,7 +254,7 @@ Wystawienie przez terapeutę udostępnia wpis pacjentowi automatycznie (bez osob
 |-------|-----------|
 | `kind` | Opcjonalnie: `recommendation` \| `device_order` \| `refusal` \| `recepta_na_ruch` \| `pdf` |
 
-Odpowiedź: `{ count, results[] }` gdzie każdy element ma `id`, `kind`, `kind_label`, `title`, `summary`, `created_at`, `therapist_name`, `episode_id`, `status`, `file_url` (PDF), `details`. Wyroby i Recepta na Ruch tylko ze statusem `ISSUED`.
+Odpowiedź: `{ count, results[] }` gdzie każdy element ma `id`, `kind`, `kind_label`, `title`, `summary`, `created_at`, `therapist_name`, `episode_id`, `status`, `file_url` (PDF), `details`. Wyroby i Recepta na Ruch tylko ze statusem `ISSUED`. Podsumowania wizyt (`patient_summary`) są wyłącznie na karcie wizyty, nie w tej skrzynce.
 
 **Body pain:**
 
@@ -297,15 +368,15 @@ Przypomnienia `visit_reminder` (okna 24h i 2h, ±30 min) oraz `exercise_reminder
 
 `python manage.py run_notification_scheduler`
 
-Domyślnie co 900 s (`NOTIFICATION_SCHEDULER_INTERVAL_SECONDS`). Jedna tura: `--once`. Deduplikacja w bazie — bezpieczne wielokrotne odpalenie. Nie wpinaj schedulera w workery Gunicorn (zdublowałby ticki).
+Domyślnie co 900 s (`NOTIFICATION_SCHEDULER_INTERVAL_SECONDS`). Jedna tura: `--once`. Deduplikacja w bazie - bezpieczne wielokrotne odpalenie. Nie wpinaj schedulera w workery Gunicorn (zdublowałby ticki).
 
 Klucz `waitlist` jest w kontrakcie, ale w domenie nie ma jeszcze listy rezerwowej.
 
 ---
 
-## Realtime — SSE (`/me/events/`)
+## Realtime - SSE (`/me/events/`)
 
-Live odświeżanie UI (bez F5 / bez zmiany zakładki). **Nie zastępuje** push Expo ani e-mail — te kanały zostają na tło / zamkniętą apkę.
+Live odświeżanie UI (bez F5 / bez zmiany zakładki). **Nie zastępuje** push Expo ani e-mail - te kanały zostają na tło / zamkniętą apkę.
 
 ### GET `/me/events/`
 
@@ -329,7 +400,7 @@ data: {"type":"<type>","resource_id":"<uuid|null>","at":"<ISO8601>"}
 
 - `event` i pole `type` w JSON są zawsze takie same.
 - `resource_id`: UUID zasobu domenowego albo `null` (np. `ping`).
-- Brak pełnego stanu kalendarza / list w streamie — tylko sygnał.
+- Brak pełnego stanu kalendarza / list w streamie - tylko sygnał.
 
 #### Typy eventów (v1)
 
@@ -342,7 +413,7 @@ data: {"type":"<type>","resource_id":"<uuid|null>","at":"<ISO8601>"}
 | `visit.rejected` | Odrzucenie pending | j.w. | j.w. |
 | `document.created` | Nowy PDF lub pozycja skrzynki klinicznej (kierowanie, wyrób ISSUED, odmowa, Recepta ISSUED) | Pacjent-właściciel | Mobile: Dokumenty |
 | `exercise.assigned` | Nowe przypisanie ćwiczenia | Pacjent | Mobile: Pulpit („Zalecenia na dziś”) |
-| `ping` | Heartbeat serwera (ok. co 15–30 s) | Abonent streamu | Nic (utrzymanie połączenia) |
+| `ping` | Heartbeat serwera (ok. co 15-30 s) | Abonent streamu | Nic (utrzymanie połączenia) |
 
 Przykład `data` dla wizyty:
 
@@ -366,18 +437,18 @@ Przykład `ping`:
 
 #### Zasady dostarczania
 
-- Publikacja **per `user_id`** (tylko zainteresowani użytkownicy danej wizyty / dokumentu / przypisania) — nie broadcast całej kliniki.
+- Publikacja **per `user_id`** (tylko zainteresowani użytkownicy danej wizyty / dokumentu / przypisania) - nie broadcast całej kliniki.
 - Wizyty: SSE zawsze do **pacjenta i terapeuty** wizyty (`publish_visit_realtime`). Push/e-mail do pacjenta nadal tylko przez `notify_visit_change` (np. prośba pacjenta o termin = SSE bez maila do siebie).
 - Emit przy mutacjach domenowych (create/approve/reject/reschedule/cancel wizyty, upload PDF, przypisanie ćwiczenia).
-- Preferencje powiadomień (`visit_change` itd.) **nie wyciszają** SSE — SSE to synchronizacja otwartego UI, nie kanał marketingowy.
+- Preferencje powiadomień (`visit_change` itd.) **nie wyciszają** SSE - SSE to synchronizacja otwartego UI, nie kanał marketingowy.
 - Błędy auth na starcie streamu: `401` / `403` jak w REST (bez otwarcia streamu).
 
 #### Uwagi wdrożeniowe (kontrakt vs runtime)
 
 - Demo / lokalnie: ASGI (np. uvicorn). Sync Gunicorn + wiele równoległych streamów = słabe dopasowanie.
-- Wiele workerów / instancji: bus między procesami (np. Redis) — szczegóły w [README — Na później (skalowanie)](../README.md#na-później-skalowanie).
+- Wiele workerów / instancji: bus między procesami (np. Redis) - szczegóły w [README - Na później (skalowanie)](../README.md#na-później-skalowanie).
 
-Skalowanie multi-worker: [README — Na później](../README.md#na-później-skalowanie).
+Skalowanie multi-worker: [README - Na później](../README.md#na-później-skalowanie).
 
 ---
 

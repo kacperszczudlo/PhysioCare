@@ -8,7 +8,7 @@ import { REALTIME_EVENT_TYPES, type RealtimeEvent, type RealtimeEventType } from
 
 const MIN_RETRY_MS = 1000
 const MAX_RETRY_MS = 30_000
-/** Android XHR często buforuje SSE — cykliczny timeout zmusza do odczytu bufora. */
+/** Android XHR często buforuje SSE - cykliczny timeout zmusza do odczytu bufora. */
 const SSE_CYCLE_MS = 12_000
 
 function eventsUrl(): string {
@@ -133,7 +133,7 @@ export function connectPatientRealtime(): () => void {
       if (__DEV__) {
         console.warn('[sse] error', err)
       }
-      // timeout → biblioteka robi close() bez auto-reconnect — wznawiamy my
+      // timeout → biblioteka robi close() bez auto-reconnect - wznawiamy my
       if (err.type === 'timeout') {
         tearDownSource()
         retryDelay = MIN_RETRY_MS

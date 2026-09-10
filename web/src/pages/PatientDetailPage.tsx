@@ -43,6 +43,10 @@ export function PatientDetailPage() {
   const [icd10Error, setIcd10Error] = useState<string | null>(null)
   const [newIcd10Error, setNewIcd10Error] = useState<string | null>(null)
   const [noteError, setNoteError] = useState<string | null>(null)
+  const [pdfTitle, setPdfTitle] = useState('')
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
+  const [pdfBusy, setPdfBusy] = useState(false)
+  const [pdfMessage, setPdfMessage] = useState<string | null>(null)
 
   const selected = episodes.find((episode) => episode.id === selectedId) ?? null
 
@@ -195,6 +199,33 @@ export function PatientDetailPage() {
     }
   }
 
+  async function uploadPdf(event: FormEvent) {
+    event.preventDefault()
+    if (!pdfFile) {
+      setPdfMessage('Wybierz plik PDF.')
+      return
+    }
+    const title = pdfTitle.trim() || pdfFile.name.replace(/\.pdf$/i, '')
+    setPdfBusy(true)
+    setPdfMessage(null)
+    setError(null)
+    try {
+      await treatmentApi.uploadDocument({
+        patientId,
+        title,
+        file: pdfFile,
+        episodeId: selectedId,
+      })
+      setPdfTitle('')
+      setPdfFile(null)
+      setPdfMessage('PDF udostępniony pacjentowi w skrzynce dokumentacji.')
+    } catch (err) {
+      setError(getErrorMessage(err, 'Nie udało się wgrać dokumentu PDF.'))
+    } finally {
+      setPdfBusy(false)
+    }
+  }
+
   if (loading) {
     return (
       <section>
@@ -231,7 +262,39 @@ export function PatientDetailPage() {
 
       {error ? <ErrorBanner message={error} /> : null}
 
-      <PatientAssignments patientId={patient.id} />
+      <PatientAssignments patientId={patient.id} episodeId={selected?.id ?? null} />
+
+      <section className="patient-pdf-upload" aria-label="Udostępnij PDF pacjentowi">
+        <h2>Dokument PDF dla pacjenta</h2>
+        <p className="patient-notes__lead">
+          Plik trafia od razu do skrzynki dokumentacji w aplikacji pacjenta.
+        </p>
+        <form className="patient-pdf-upload__form" onSubmit={(e) => void uploadPdf(e)}>
+          <Field
+            label="Tytuł"
+            name="pdf_title"
+            value={pdfTitle}
+            onChange={(e) => setPdfTitle(e.target.value)}
+            placeholder="np. Karta oceny funkcjonalnej"
+          />
+          <label className="ui-field">
+            <span className="ui-field__label">Plik PDF</span>
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          <Button type="submit" size="sm" loading={pdfBusy} disabled={!pdfFile}>
+            Udostępnij PDF
+          </Button>
+          {pdfMessage ? (
+            <p className="patient-muted" role="status">
+              {pdfMessage}
+            </p>
+          ) : null}
+        </form>
+      </section>
 
       <div className="patient-layout">
         <aside className="patient-rail" aria-label="Epizody i notatki">
@@ -302,8 +365,10 @@ export function PatientDetailPage() {
             <section className="patient-notes" aria-label="Notatki z wizyt">
               <header className="patient-notes__header">
                 <div>
-                  <h2>Notatki z wizyt</h2>
-                  <p className="patient-notes__lead">Zapis z wizyty w tym epizodzie.</p>
+                  <h2>Notatki kliniczne</h2>
+                  <p className="patient-notes__lead">
+                    Tylko dla Ciebie. Podsumowanie dla pacjenta wpisz w edycji wizyty w kalendarzu.
+                  </p>
                 </div>
                 {!notesLoading && notes.length > 0 ? (
                   <span className="patient-notes__count" aria-label={`${notes.length} notatek`}>
@@ -384,7 +449,7 @@ export function PatientDetailPage() {
                       }
                     }}
                     error={icd10Error ?? undefined}
-                    hint="Kod z skierowania/dokumentacji lekarskiej — nie zastępuje diagnozy nozologicznej lekarza"
+                    hint="Kod z skierowania/dokumentacji lekarskiej - nie zastępuje diagnozy nozologicznej lekarza"
                   />
                   <label className="ui-field">
                     <span className="ui-field__label">Status</span>
@@ -410,14 +475,18 @@ export function PatientDetailPage() {
                     rows={3}
                     placeholder="Deficyty ruchowe, biomechanika, zakresy, siła, stabilność…"
                   />
+                  <span className="ui-field__hint">
+                    Widoczna dla pacjenta w aplikacji mobilnej.
+                  </span>
                 </label>
                 <label className="ui-field">
-                  <span className="ui-field__label">Notatka zbiorcza</span>
+                  <span className="ui-field__label">Podsumowanie planu (dla pacjenta)</span>
                   <textarea
                     className="patient-textarea"
                     value={summary}
                     onChange={(e) => setSummary(e.target.value)}
                     rows={4}
+                    placeholder="Krótko i zrozumiale: cele terapii, na czym się skupiacie…"
                   />
                 </label>
                 <Button type="submit" loading={busy}>

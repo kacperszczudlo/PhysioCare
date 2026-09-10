@@ -1,4 +1,4 @@
-/** Dane Administratora danych osobowych (ADO) — PhysioCare */
+/** Dane Administratora danych osobowych (ADO) - PhysioCare */
 export const DATA_CONTROLLER = {
   name: 'Kacper Szczudło',
   email: 'kacper.szczudlo@gmail.com',

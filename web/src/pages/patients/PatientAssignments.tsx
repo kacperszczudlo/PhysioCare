@@ -11,10 +11,12 @@ import { Modal } from '@/components/ui/Modal'
 import { AuthMediaPdfLink, AuthMediaVideo } from '@/components/AuthMedia'
 import { getDosageError } from '@/lib/fieldPolicy'
 import { addDays, parseDateInput, toDateInputValue } from '@/lib/scheduleTime'
+import { AssignExerciseToPatientModal } from '@/pages/patients/AssignExerciseToPatientModal'
 import './PatientAssignments.css'
 
 interface PatientAssignmentsProps {
   patientId: string
+  episodeId?: string | null
 }
 
 function formatPeriod(start: string, end: string): string {
@@ -22,18 +24,11 @@ function formatPeriod(start: string, end: string): string {
   return `${fmt.format(parseDateInput(start))} - ${fmt.format(parseDateInput(end))}`
 }
 
-function isActive(assignment: ExerciseAssignment): boolean {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const start = parseDateInput(assignment.start_date)
-  const end = parseDateInput(assignment.end_date)
-  return start <= today && end >= today
-}
-
-export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
+export function PatientAssignments({ patientId, episodeId = null }: PatientAssignmentsProps) {
   const [items, setItems] = useState<ExerciseAssignment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [assignOpen, setAssignOpen] = useState(false)
   const [editTarget, setEditTarget] = useState<ExerciseAssignment | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<ExerciseAssignment | null>(null)
   const [dosage, setDosage] = useState('')
@@ -47,7 +42,7 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
     setLoading(true)
     setError(null)
     try {
-      const data = await exercisesApi.listAssignments(patientId)
+      const data = await exercisesApi.listAssignments(patientId, { active: true })
       setItems(data)
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się pobrać zaleceń.'))
@@ -129,11 +124,16 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
       <div className="patient-assignments__head">
         <div>
           <h2>Zalecenia ćwiczeń</h2>
-          <p>Okres, dawkowanie i materiał widoczny u pacjenta w aplikacji.</p>
+          <p>Aktywne zalecenia widoczne u pacjenta w aplikacji.</p>
         </div>
-        <Button type="button" size="sm" variant="secondary" onClick={() => void load()}>
-          Odśwież
-        </Button>
+        <div className="patient-assignments__head-actions">
+          <Button type="button" size="sm" variant="secondary" onClick={() => void load()}>
+            Odśwież
+          </Button>
+          <Button type="button" size="sm" onClick={() => setAssignOpen(true)}>
+            Dodaj ćwiczenie
+          </Button>
+        </div>
       </div>
 
       {loading ? <LoadingBlock label="Ładowanie zaleceń…" /> : null}
@@ -143,8 +143,8 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
 
       {!loading && !error && items.length === 0 ? (
         <EmptyState
-          title="Brak przypisanych ćwiczeń"
-          description="Przypisz ćwiczenie z katalogu „Ćwiczenia”, a pojawi się tutaj do edycji okresu i usunięcia."
+          title="Brak aktywnych ćwiczeń"
+          description="Dodaj ćwiczenie z katalogu - pacjent zobaczy je od razu w aplikacji."
         />
       ) : null}
 
@@ -156,13 +156,6 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
                 <div className="patient-assignments__meta">
                   <div className="patient-assignments__title-row">
                     <h3>{assignment.exercise_title}</h3>
-                    {isActive(assignment) ? (
-                      <span className="patient-assignments__badge">Aktywne</span>
-                    ) : (
-                      <span className="patient-assignments__badge patient-assignments__badge--muted">
-                        Poza okresem
-                      </span>
-                    )}
                   </div>
                   <p className="patient-assignments__dosage">{assignment.dosage}</p>
                   <p className="patient-assignments__period">
@@ -196,7 +189,7 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
                       variant="secondary"
                       onClick={() => openEdit(assignment)}
                     >
-                      Okres
+                      Edytuj
                     </Button>
                     <Button
                       type="button"
@@ -216,6 +209,17 @@ export function PatientAssignments({ patientId }: PatientAssignmentsProps) {
           })}
         </ul>
       ) : null}
+
+      <AssignExerciseToPatientModal
+        open={assignOpen}
+        patientId={patientId}
+        episodeId={episodeId}
+        onClose={() => setAssignOpen(false)}
+        onAssigned={() => {
+          setSuccessMessage('Ćwiczenie zostało przypisane.')
+          void load()
+        }}
+      />
 
       <Modal
         open={editTarget !== null}

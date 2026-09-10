@@ -197,7 +197,9 @@ class ExerciseAssignmentCreateSerializer(serializers.ModelSerializer):
                 {'exercise_id': 'Ćwiczenie nie należy do tego terapeuty.'}
             )
 
-        if not PatientProfile.objects.filter(pk=patient_id, therapist=therapist).exists():
+        if not PatientProfile.objects.active().filter(
+            pk=patient_id, therapist=therapist
+        ).exists():
             raise serializers.ValidationError(
                 {'patient_id': 'Pacjent nie należy do tego terapeuty.'}
             )
@@ -316,6 +318,33 @@ class ExerciseCompletionSerializer(serializers.ModelSerializer):
         model = ExerciseCompletion
         fields = ['id', 'assignment', 'completed_on', 'done', 'completed_at']
         read_only_fields = ['id', 'completed_at']
+
+
+class PatientExerciseAssignmentSerializer(serializers.ModelSerializer):
+    """Full HEP assignment for the patient, with completion history."""
+
+    exercise_title = serializers.CharField(source='exercise.title', read_only=True)
+    exercise_instruction = serializers.CharField(source='exercise.instruction', read_only=True)
+    exercise_file_url = serializers.CharField(source='exercise.file_url', read_only=True)
+    exercise_media_type = serializers.CharField(source='exercise.media_type', read_only=True)
+    categories = ExerciseCategorySerializer(source='exercise.categories', many=True, read_only=True)
+    completed_today = serializers.BooleanField(read_only=True)
+    completions = ExerciseCompletionSerializer(many=True, read_only=True)
+    is_active = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ExerciseAssignment
+        fields = [
+            'id', 'exercise', 'exercise_title', 'exercise_instruction',
+            'exercise_file_url', 'exercise_media_type', 'categories',
+            'patient', 'episode', 'dosage', 'start_date', 'end_date',
+            'assigned_at', 'completed_today', 'completions', 'is_active',
+        ]
+        read_only_fields = fields
+
+    def get_is_active(self, obj) -> bool:
+        today = timezone.localdate()
+        return obj.start_date <= today <= obj.end_date
 
 
 class ExerciseCompletionCreateSerializer(serializers.ModelSerializer):

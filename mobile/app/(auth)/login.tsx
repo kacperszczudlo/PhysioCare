@@ -1,19 +1,34 @@
-import { Link, useRouter } from 'expo-router'
+import { Link, useLocalSearchParams, useRouter, type Href } from 'expo-router'
 import { useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
-import { getErrorMessage } from '@/api/client'
+import { ApiError, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
+import { setGoogleRegistrationDraft } from '@/auth/googleRegistrationDraft'
+import { GoogleSignInButton, isGoogleSignInConfigured } from '@/auth/googleSignIn'
+import { parseGoogleIdTokenClaims } from '@/auth/parseGoogleIdToken'
+import { SuccessBanner } from '@/components/AsyncState'
 import { BrandMark } from '@/components/BrandMark'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { colors, space, typography } from '@/theme/tokens'
 
+function firstParam(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) {
+    return (value[0] ?? '').trim()
+  }
+  return (value ?? '').trim()
+}
+
 export default function LoginScreen() {
-  const { login } = useAuth()
+  const { login, loginWithGoogle } = useAuth()
   const router = useRouter()
-  const [email, setEmail] = useState('')
+  const params = useLocalSearchParams<{ email?: string | string[]; reset?: string | string[] }>()
+  const emailFromParams = firstParam(params.email)
+  const resetNotice = firstParam(params.reset) === '1'
+
+  const [email, setEmail] = useState(emailFromParams)
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -25,7 +40,48 @@ export default function LoginScreen() {
       await login(email.trim(), password)
       router.replace('/(tabs)')
     } catch (err) {
+      if (err instanceof ApiError && err.code === 'AUTH_027') {
+        const details = err.details as { email?: string }
+        const verifyEmailAddr = (typeof details.email === 'string' && details.email) || email.trim()
+        router.replace(`/(auth)/verify-email?email=${encodeURIComponent(verifyEmailAddr)}` as Href)
+        return
+      }
       setError(getErrorMessage(err, 'Nie udało się zalogować.'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function onGoogleSuccess(idToken: string) {
+    setError(null)
+    setLoading(true)
+    try {
+      await loginWithGoogle(idToken)
+      router.replace('/(tabs)')
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'AUTH_025') {
+        const details = err.details as {
+          email?: string
+          first_name?: string
+          last_name?: string
+        }
+        const claims = parseGoogleIdTokenClaims(idToken)
+        setGoogleRegistrationDraft({
+          credential: idToken,
+          email: (typeof details.email === 'string' && details.email) || claims.email || undefined,
+          first_name:
+            (typeof details.first_name === 'string' && details.first_name) ||
+            claims.first_name ||
+            undefined,
+          last_name:
+            (typeof details.last_name === 'string' && details.last_name) ||
+            claims.last_name ||
+            undefined,
+        })
+        router.replace('/(auth)/register')
+        return
+      }
+      setError(getErrorMessage(err, 'Nie udało się zalogować przez Google.'))
     } finally {
       setLoading(false)
     }
@@ -54,12 +110,25 @@ export default function LoginScreen() {
           value={password}
           onChangeText={setPassword}
         />
+        {resetNotice ? (
+          <SuccessBanner message="Hasło zostało zmienione. Zaloguj się nowym hasłem." />
+        ) : null}
         {error ? (
           <Text style={styles.error} accessibilityRole="alert">
             {error}
           </Text>
         ) : null}
         <Button title="Zaloguj się" loading={loading} onPress={onSubmit} />
+
+        {isGoogleSignInConfigured ? (
+          <GoogleSignInButton
+            loading={loading}
+            title="Kontynuuj z Google"
+            hint="Nowe konto? Google przeniesie Cię do rejestracji (kod terapeuty + zgody)."
+            onSuccess={onGoogleSuccess}
+            onError={setError}
+          />
+        ) : null}
       </View>
 
       <View style={styles.footer}>
@@ -67,7 +136,7 @@ export default function LoginScreen() {
           Załóż konto
         </Link>
         <Text style={styles.dot}>·</Text>
-        <Link href="/(auth)/password-reset" style={styles.link}>
+        <Link href="/password-reset" style={styles.link}>
           Nie pamiętam hasła
         </Link>
       </View>
@@ -102,5 +171,5 @@ const styles = StyleSheet.create({
     fontSize: typography.sm,
     textDecorationLine: 'underline',
   },
-  dot: { color: colors.faint },
+  dot: { color: colors.muted },
 })

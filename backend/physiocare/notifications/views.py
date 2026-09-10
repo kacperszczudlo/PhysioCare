@@ -24,7 +24,7 @@ class MeEventsView(APIView):
     """Server-Sent Events stream for live UI invalidation (see docs/api.md)."""
 
     permission_classes = [IsAuthenticated]
-    # EventSource wysyła Accept: text/event-stream — bez tego DRF zwraca 406.
+    # EventSource wysyła Accept: text/event-stream - bez tego DRF zwraca 406.
     renderer_classes = [ServerSentEventRenderer]
 
     def get(self, request):
@@ -34,7 +34,7 @@ class MeEventsView(APIView):
         )
         response['Cache-Control'] = 'no-cache, no-transform'
         response['X-Accel-Buffering'] = 'no'
-        # Nie ustawiaj Connection: keep-alive — to hop-by-hop header; WSGI (runserver) rzuca 500.
+        # Nie ustawiaj Connection: keep-alive - to hop-by-hop header; WSGI (runserver) rzuca 500.
         return response
 
 

@@ -5,13 +5,16 @@ import type {
   Consent,
   DeviceToken,
   ExerciseCompletion,
+  ExercisePlanItem,
   MedicalDocument,
   NotificationPreference,
   Paginated,
+  PatientDataExport,
   PatientProfile,
   TherapistPublic,
   TherapyType,
   TodayExercise,
+  TreatmentEpisode,
   Visit,
   VisitRequestPayload,
 } from './types'
@@ -49,11 +52,13 @@ export const patientApi = {
   },
 
   requestDataExport() {
-    return api.post<{ profile: PatientProfile; consents: Consent[] }>('/me/data-export/')
+    return api.post<PatientDataExport>('/me/data-export/')
   },
 
-  requestAccountDeletion() {
-    return api.post<{ detail: string }>('/me/account-deletion-request/')
+  requestAccountDeletion(reason?: string) {
+    return api.post<{ detail: string }>('/me/account-deletion-request/', {
+      reason: reason ?? '',
+    })
   },
 
   async getVisits(status: 'upcoming' | 'past') {
@@ -85,6 +90,23 @@ export const patientApi = {
   async getExercisesToday() {
     const data = await api.get<TodayExercise[] | Paginated<TodayExercise>>('/me/exercises/today/')
     return unwrapList(data)
+  },
+
+  async getExercises(scope: 'all' | 'active' | 'past' = 'all') {
+    const query = scope === 'all' ? '' : `?scope=${scope}`
+    const data = await api.get<ExercisePlanItem[] | Paginated<ExercisePlanItem>>(
+      `/me/exercises/${query}`,
+    )
+    return unwrapList(data)
+  },
+
+  async getEpisodes() {
+    const data = await api.get<TreatmentEpisode[] | Paginated<TreatmentEpisode>>('/me/episodes/')
+    return unwrapList(data)
+  },
+
+  getEpisode(id: string) {
+    return api.get<TreatmentEpisode>(`/me/episodes/${id}/`)
   },
 
   completeExercise(assignment_id: string, completed_on?: string, done = true) {

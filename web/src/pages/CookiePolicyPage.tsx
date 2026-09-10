@@ -11,7 +11,7 @@ export function CookiePolicyPage() {
           Wersja {COOKIE_POLICY_META.version} · {COOKIE_POLICY_META.effectiveDate}
         </p>
         <p className="legal-doc__lede">
-          Informacja o cookies i technologiach w urządzeniu końcowym (PKE art. 399–400) dla
+          Informacja o cookies i technologiach w urządzeniu końcowym (PKE art. 399-400) dla
           PhysioCare.
         </p>
       </header>

@@ -1,6 +1,7 @@
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
+from django.utils import timezone
 from rest_framework.test import APIClient
 
 from exercises.models import Exercise, ExerciseAssignment, ExerciseCompletion
@@ -53,8 +54,11 @@ def cleanup_test_data(db):
     Visit.objects.filter(patient__user__email__endswith='@physiocare.test').delete()
     TherapyType.objects.filter(therapist__user__email__endswith='@physiocare.test').delete()
     PatientProfile.objects.filter(user__email__endswith='@physiocare.test').delete()
+    # Soft-deleted accounts use @deleted.invalid after anonymization.
+    PatientProfile.objects.filter(user__email__endswith='@deleted.invalid').delete()
     TherapistProfile.objects.filter(user__email__endswith='@physiocare.test').delete()
     User.objects.filter(email__endswith='@physiocare.test').delete()
+    User.objects.filter(email__endswith='@deleted.invalid').delete()
 
 
 @pytest.fixture
@@ -70,6 +74,7 @@ def therapist(db):
         role='THERAPIST',
         first_name='Jan',
         last_name='Kowalski',
+        email_verified_at=timezone.now(),
     )
     return TherapistProfile.objects.create(
         user=user,
@@ -85,6 +90,7 @@ def therapist_b(db):
         role='THERAPIST',
         first_name='Anna',
         last_name='Nowak',
+        email_verified_at=timezone.now(),
     )
     return TherapistProfile.objects.create(
         user=user,
@@ -108,6 +114,7 @@ def patient(db, therapist):
         role='PATIENT',
         first_name='Pacjent',
         last_name='Testowy',
+        email_verified_at=timezone.now(),
     )
     return PatientProfile.objects.create(
         user=user,
@@ -125,6 +132,7 @@ def patient_profiles(db, therapist):
             role='PATIENT',
             first_name=f'Pacjent{index}',
             last_name='Testowy',
+            email_verified_at=timezone.now(),
         )
         patients.append(
             PatientProfile.objects.create(

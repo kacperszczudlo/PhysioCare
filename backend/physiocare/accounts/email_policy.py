@@ -10,6 +10,10 @@ EMAIL_INVALID = 'Podaj prawidłowy adres e-mail (np. jan.kowalski@example.com).'
 EMAIL_TAKEN = (
     'Ten adres e-mail jest już zarejestrowany. Zaloguj się lub użyj innego adresu.'
 )
+EMAIL_TAKEN_GOOGLE = (
+    'Ten adres e-mail jest już zarejestrowany w PhysioCare. '
+    'Zamiast rejestracji użyj logowania (Google lub hasło).'
+)
 EMAIL_TOO_LONG = 'Adres e-mail może mieć co najwyżej 254 znaki.'
 
 EMAIL_FIELD_ERRORS = {

@@ -2,7 +2,7 @@
 Kompetencje fizjoterapeuty wg ustawy o zawodzie fizjoterapeuty
 oraz rozporządzeń MZ w sprawie wyrobów medycznych (stan interpretacyjny 2024).
 
-To nie jest poradnictwo prawne — reguły modelują granice produktu PhysioCare.
+To nie jest poradnictwo prawne - reguły modelują granice produktu PhysioCare.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ class QualificationLevel:
     LABELS = dict(CHOICES)
 
 
-# Magistrowie: grupy seryjne (J, L, M/L, O, S) — stan na 2024 z raportu.
+# Magistrowie: grupy seryjne (J, L, M/L, O, S) - stan na 2024 z raportu.
 MAGISTER_DEVICE_GROUPS = frozenset({'J', 'L', 'M', 'O', 'S'})
 
 # Specjalista: dodatkowo protezy, ortezy na miarę, zaawansowany sprzęt, grupa W.
@@ -125,7 +125,7 @@ def build_competence_snapshot(
             label='Planowanie i modyfikacja terapii (NFZ)',
             detail=(
                 f'Wymagany magister z ≥{YEARS_FOR_INDEPENDENT_PLANNING} latami doświadczenia '
-                'lub specjalista fizjoterapii. Licencjat/technik — tylko wykonanie planu.'
+                'lub specjalista fizjoterapii. Licencjat/technik - tylko wykonanie planu.'
             ),
         ),
         CompetenceCapability(
@@ -140,7 +140,7 @@ def build_competence_snapshot(
             label='Formalne skierowanie NFZ na RTG/MRI/TK',
             detail=(
                 'Fizjoterapeuta nie wystawia e-skierowania NFZ na badania obrazowe. '
-                'RTG/TK dodatkowo ogranicza Prawo atomowe — skierowanie wystawia lekarz.'
+                'RTG/TK dodatkowo ogranicza Prawo atomowe - skierowanie wystawia lekarz.'
             ),
         ),
         CompetenceCapability(
@@ -179,7 +179,7 @@ def build_competence_snapshot(
             label='Odmowa wykonania zlecenia lekarskiego (art. 6)',
             detail=(
                 'Przy uzasadnionych wątpliwościach można żądać uzasadnienia i odmówić zabiegu '
-                'zagrażającego pacjentowi — z wpisem w dokumentacji i powiadomieniem lekarza.'
+                'zagrażającego pacjentowi - z wpisem w dokumentacji i powiadomieniem lekarza.'
             ),
         ),
         CompetenceCapability(

@@ -196,6 +196,12 @@ export default function VisitDetailScreen() {
           ) : null}
           <Text style={styles.section}>Przygotowanie</Text>
           <Text style={styles.body}>{visit.prep_instructions || 'Brak instrukcji.'}</Text>
+          {visit.patient_summary ? (
+            <>
+              <Text style={styles.section}>Podsumowanie po wizycie</Text>
+              <Text style={styles.body}>{visit.patient_summary}</Text>
+            </>
+          ) : null}
           {visit.cancel_reason ? (
             <>
               <Text style={styles.section}>Powód odwołania</Text>

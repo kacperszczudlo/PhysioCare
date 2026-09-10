@@ -56,9 +56,10 @@ class TherapistDashboardStatsView(APIView):
             start_at__date=today,
             status=VisitStatus.SCHEDULED,
         ).count()
-        patients_count = therapist.patients.count()
+        patients_count = therapist.patients.active().count()
         assignments_active = ExerciseAssignment.objects.filter(
             patient__therapist=therapist,
+            patient__user__is_active=True,
             start_date__lte=today,
             end_date__gte=today,
         ).count()

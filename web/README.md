@@ -11,9 +11,13 @@ npm.cmd run dev
 ```
 
 Aplikacja: http://localhost:5173  
-API (osobny terminal): `python manage.py runserver` w `backend/physiocare` (SSE działa też na runserver; przy wielu streamach: uvicorn — patrz root README).
+API (osobny terminal): `python manage.py runserver` w `backend/physiocare` (SSE działa też na runserver; przy wielu streamach: uvicorn - patrz root README).
 
 W dev Vite proxy przekierowuje `/api` i `/media` -> `http://localhost:8000` (stream SSE bez timeoutu). Opcjonalnie ustaw `VITE_API_BASE_URL` w `.env.local` (szablon: `.env.example`). Preferuj pusty / względny base URL, żeby EventSource szedł same-origin przez proxy.
+
+Logowanie Google: ustaw `VITE_GOOGLE_CLIENT_ID` (Web Client ID) oraz `GOOGLE_CLIENT_IDS` na backendzie - bez tego przycisk Google jest ukryty.
+
+Weryfikacja e-mail / reset hasła: kody 6 cyfr przez SMTP (lokalnie `EMAIL_BACKEND=console` albo Gmail App Password - patrz root `.env.example` / `docs/deployment.md`).
 
 ## Skrypty
 

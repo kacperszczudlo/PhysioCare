@@ -63,7 +63,7 @@ class TherapistProfileUpdateSerializer(serializers.ModelSerializer):
         max_value=60,
         error_messages={
             'min_value': 'Staż nie może być ujemny.',
-            'max_value': 'Podaj realistyczny staż (0–60 lat).',
+            'max_value': 'Podaj realistyczny staż (0-60 lat).',
             'invalid': 'Staż musi być liczbą całkowitą.',
         },
     )

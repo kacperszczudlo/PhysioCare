@@ -6,8 +6,9 @@ from rest_framework.views import APIView
 from accounts.token_ops import blacklist_user_refresh_tokens
 from core.mixins import PatientSelfMixin, TherapistPatientQuerysetMixin
 from core.permissions import IsOwnerPatientProfile, IsPatient, IsTherapist
+from privacy.account_deletion import submit_account_deletion
 from privacy.export import build_patient_export
-from privacy.models import AccountDeletionRequest, Consent, ConsentType
+from privacy.models import Consent, ConsentType
 
 from .serializers import (
     ConsentSerializer,
@@ -101,13 +102,20 @@ class MeAccountDeletionRequestView(PatientSelfMixin, APIView):
     permission_classes = [IsAuthenticated, IsPatient]
 
     def post(self, request, *args, **kwargs):
-        AccountDeletionRequest.objects.get_or_create(user=request.user)
+        reason = ''
+        if isinstance(request.data, dict):
+            raw = request.data.get('reason')
+            if raw is not None:
+                reason = str(raw)
         user = request.user
-        if user.is_active:
-            user.is_active = False
-            user.save(update_fields=['is_active'])
+        submit_account_deletion(user, reason=reason)
         blacklist_user_refresh_tokens(user)
         return Response(
-            {'detail': 'Wniosek o usunięcie konta został zarejestrowany.'},
+            {
+                'detail': (
+                    'Konto zostało wyłączone. Adres e-mail jest wolny - '
+                    'możesz założyć nowe konto tym samym adresem.'
+                ),
+            },
             status=status.HTTP_202_ACCEPTED,
         )

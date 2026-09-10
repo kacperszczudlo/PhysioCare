@@ -40,6 +40,8 @@ def build_patient_export(user, profile) -> dict:
                 'status': visit.status,
                 'therapy_type': visit.therapy_type.name if visit.therapy_type_id else None,
                 'location_address': visit.location_address,
+                'prep_instructions': visit.prep_instructions,
+                'patient_summary': visit.patient_summary,
                 'patient_note': visit.patient_note,
                 'cancel_reason': visit.cancel_reason,
             }
@@ -99,6 +101,7 @@ def build_patient_export(user, profile) -> dict:
                 'id': str(order.id),
                 'device_code': order.device_code,
                 'device_name': order.device_name,
+                'access_code': order.access_code,
                 'status': order.status,
             }
             for order in device_orders

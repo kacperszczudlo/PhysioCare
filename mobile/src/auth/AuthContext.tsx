@@ -9,7 +9,12 @@ import {
   type ReactNode,
 } from 'react'
 
-import { authApi, type PasswordResetConfirmPayload, type PatientRegisterPayload } from '@/api/auth'
+import {
+  authApi,
+  type PasswordResetConfirmPayload,
+  type PatientRegisterPayload,
+  type RegisterResult,
+} from '@/api/auth'
 import { ApiError, isNetworkFailure } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import { tokenStorage } from '@/api/tokenStorage'
@@ -22,9 +27,13 @@ interface AuthContextValue {
   isLoading: boolean
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (payload: PatientRegisterPayload) => Promise<void>
+  loginWithGoogle: (credential: string) => Promise<void>
+  register: (payload: PatientRegisterPayload) => Promise<RegisterResult>
+  verifyEmail: (email: string, code: string) => Promise<void>
+  resendEmailCode: (email: string) => Promise<string>
   logout: () => Promise<void>
   requestPasswordReset: (email: string) => Promise<string>
+  verifyPasswordResetCode: (email: string, code: string) => Promise<string>
   confirmPasswordReset: (payload: PasswordResetConfirmPayload) => Promise<string>
 }
 
@@ -161,10 +170,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await tokenStorage.setCachedUser(nextUser)
   }, [])
 
-  const register = useCallback(async (payload: PatientRegisterPayload) => {
-    const nextUser = await authApi.registerPatient(payload)
+  const loginWithGoogle = useCallback(async (credential: string) => {
+    const nextUser = await authApi.loginWithGoogle(credential)
+    if (nextUser.role !== 'PATIENT') {
+      await authApi.logout().catch(() => undefined)
+      throw new ApiError(403, 'Aplikacja mobilna jest dostępna tylko dla pacjentów.')
+    }
     setUser(nextUser)
     await tokenStorage.setCachedUser(nextUser)
+  }, [])
+
+  const register = useCallback(async (payload: PatientRegisterPayload) => {
+    const result = await authApi.registerPatient(payload)
+    if (result.kind === 'authenticated') {
+      if (result.user.role !== 'PATIENT') {
+        await authApi.logout().catch(() => undefined)
+        throw new ApiError(403, 'Aplikacja mobilna jest dostępna tylko dla pacjentów.')
+      }
+      setUser(result.user)
+      await tokenStorage.setCachedUser(result.user)
+    }
+    return result
+  }, [])
+
+  const verifyEmail = useCallback(async (email: string, code: string) => {
+    const nextUser = await authApi.verifyEmail(email, code)
+    if (nextUser.role !== 'PATIENT') {
+      await authApi.logout().catch(() => undefined)
+      throw new ApiError(403, 'Aplikacja mobilna jest dostępna tylko dla pacjentów.')
+    }
+    setUser(nextUser)
+    await tokenStorage.setCachedUser(nextUser)
+  }, [])
+
+  const resendEmailCode = useCallback(async (email: string) => {
+    const { detail } = await authApi.resendEmailCode(email)
+    return detail
   }, [])
 
   const logout = useCallback(async () => {
@@ -185,6 +226,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return detail
   }, [])
 
+  const verifyPasswordResetCode = useCallback(async (email: string, code: string) => {
+    const { reset_token } = await authApi.verifyPasswordResetCode(email, code)
+    return reset_token
+  }, [])
+
   const confirmPasswordReset = useCallback(async (payload: PasswordResetConfirmPayload) => {
     const { detail } = await authApi.confirmPasswordReset(payload)
     return detail
@@ -196,12 +242,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       isAuthenticated: user !== null,
       login,
+      loginWithGoogle,
       register,
+      verifyEmail,
+      resendEmailCode,
       logout,
       requestPasswordReset,
+      verifyPasswordResetCode,
       confirmPasswordReset,
     }),
-    [user, isLoading, login, register, logout, requestPasswordReset, confirmPasswordReset],
+    [
+      user,
+      isLoading,
+      login,
+      loginWithGoogle,
+      register,
+      verifyEmail,
+      resendEmailCode,
+      logout,
+      requestPasswordReset,
+      verifyPasswordResetCode,
+      confirmPasswordReset,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

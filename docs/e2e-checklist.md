@@ -53,7 +53,7 @@ Automatyczne wsparcie: Postman (`docs/postman/`), pytest backend.
 
 ## Live UI (SSE)
 
-Scenariusze Etapu 6 — obie aplikacje **zostają na tym samym ekranie** (bez F5 / bez zmiany taba / bez pull). Kontrakt: [api.md — Realtime SSE](api.md#realtime--sse-meevents).
+Scenariusze Etapu 6 - obie aplikacje **zostają na tym samym ekranie** (bez F5 / bez zmiany taba / bez pull). Kontrakt: [api.md - Realtime SSE](api.md#realtime--sse-meevents).
 
 | # | Akcja | Oczekiwany rezultat |
 |---|--------|---------------------|

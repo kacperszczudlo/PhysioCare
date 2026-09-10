@@ -28,6 +28,6 @@ urlpatterns = [
     path('api/v1/', include('exercises.urls')),
     path('api/v1/', include('documents.urls')),
     path('api/v1/', include('therapists.urls')),
-    # Always authenticated — never use django.conf.urls.static for MEDIA.
+    # Always authenticated - never use django.conf.urls.static for MEDIA.
     path('media/<path:path>', ProtectedMediaServeView.as_view(), name='protected-media'),
 ]

@@ -1,4 +1,5 @@
 from django.contrib.auth.base_user import BaseUserManager
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -9,7 +10,10 @@ class CustomUserManager(BaseUserManager):
 
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
-        user.set_password(password)
+        if password is None:
+            user.set_unusable_password()
+        else:
+            user.set_password(password)
         user.save(using=self._db)
         return user
 
@@ -20,6 +24,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('role', 'THERAPIST')
         extra_fields.setdefault('first_name', 'Admin')
         extra_fields.setdefault('last_name', 'System')
+        extra_fields.setdefault('email_verified_at', timezone.now())
 
         if extra_fields.get('is_staff') is not True:
             raise ValueError(_('Konto typu Superuser musi posiadać flagę is_staff=True.'))

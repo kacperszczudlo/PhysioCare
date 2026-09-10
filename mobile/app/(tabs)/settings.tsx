@@ -1,4 +1,4 @@
-import { Link, useFocusEffect } from 'expo-router'
+import { Link, useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Linking, Platform, RefreshControl, StyleSheet, Switch, Text, View } from 'react-native'
 
@@ -7,12 +7,15 @@ import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { Consent, NotificationPreference } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
+import { AccountDeletionModal } from '@/components/AccountDeletionModal'
 import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
+import { DataExportModal } from '@/components/DataExportModal'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { PasswordRequirements } from '@/components/PasswordRequirements'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
+import { sharePatientDataExport } from '@/lib/dataExport'
 import {
   consentLabel,
   DEFAULT_NOTIFICATION_PREFS,
@@ -24,6 +27,7 @@ import {
   getPushPermissionStatus,
   isRemotePushSupported,
   registerAndUploadPushToken,
+  unregisterPushToken,
   type PushPermissionStatus,
 } from '@/notifications/push'
 import { colors, space, typography } from '@/theme/tokens'
@@ -31,7 +35,8 @@ import { colors, space, typography } from '@/theme/tokens'
 type FeedbackKind = 'notifications' | 'consents' | 'privacy' | 'password'
 
 export default function SettingsScreen() {
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
+  const router = useRouter()
 
   const [consents, setConsents] = useState<Consent[]>([])
   const [prefs, setPrefs] = useState<NotificationPreference[]>([])
@@ -42,6 +47,10 @@ export default function SettingsScreen() {
   const [pwdLoading, setPwdLoading] = useState(false)
   const [pushPermission, setPushPermission] = useState<PushPermissionStatus>('undetermined')
   const [pushBusy, setPushBusy] = useState(false)
+  const [deletionOpen, setDeletionOpen] = useState(false)
+  const [deletionBusy, setDeletionBusy] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
+  const [exportBusy, setExportBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [feedback, setFeedback] = useState<{ kind: FeedbackKind; message: string } | null>(null)
 
@@ -170,25 +179,51 @@ export default function SettingsScreen() {
     }
   }
 
-  async function exportData() {
+  async function runDataExport() {
     setError(null)
     setFeedback(null)
+    setExportBusy(true)
     try {
-      await patientApi.requestDataExport()
-      showSuccess('privacy', 'Eksport danych został wygenerowany.')
+      const payload = await patientApi.requestDataExport()
+      const result = await sharePatientDataExport(payload)
+      setExportOpen(false)
+      if (result.delivered && result.mode === 'saved') {
+        showSuccess(
+          'privacy',
+          `Zapisano plik ${result.fileName}. Znajdziesz go w wybranym folderze (np. Pobrane).`,
+        )
+      } else if (result.delivered) {
+        showSuccess(
+          'privacy',
+          `Plik ${result.fileName} jest gotowy — możesz go zapisać lub wysłać sobie.`,
+        )
+      } else {
+        showSuccess(
+          'privacy',
+          `Plik ${result.fileName} został przygotowany. Spróbuj ponownie, jeśli nie zapisałeś go jeszcze.`,
+        )
+      }
     } catch (err) {
       setError(getErrorMessage(err, 'Eksport nie powiódł się.'))
+    } finally {
+      setExportBusy(false)
     }
   }
 
-  async function requestDeletion() {
+  async function requestDeletion(reason: string) {
     setError(null)
     setFeedback(null)
+    setDeletionBusy(true)
     try {
-      await patientApi.requestAccountDeletion()
+      // Unregister push while the session is still valid (deletion deactivates the user).
+      await unregisterPushToken()
+      await patientApi.requestAccountDeletion(reason)
+      setDeletionOpen(false)
       await logout()
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się zgłosić wniosku.'))
+    } finally {
+      setDeletionBusy(false)
     }
   }
 
@@ -224,7 +259,7 @@ export default function SettingsScreen() {
           <Text style={styles.muted}>
             {Platform.OS === 'web'
               ? 'Push działa w aplikacji na telefonie. Tutaj przypomnienia mogą iść na e-mail.'
-              : 'Expo Go od SDK 53 nie obsługuje zdalnego pusha (szczególnie Android). Zgoda systemowa nic tu nie zmienia — przypomnienia idą na e-mail. Żeby dostać push, zbuduj aplikację: npx expo run:android.'}
+              : 'Expo Go od SDK 53 nie obsługuje zdalnego pusha (szczególnie Android). Zgoda systemowa nic tu nie zmienia - przypomnienia idą na e-mail. Żeby dostać push, zbuduj aplikację: npx expo run:android.'}
           </Text>
         ) : (
           <>
@@ -312,11 +347,16 @@ export default function SettingsScreen() {
           </View>
         ) : null}
         {feedback?.kind === 'consents' ? <SuccessBanner message={feedback.message} /> : null}
-        <Button title="Eksport danych" variant="secondary" onPress={() => void exportData()} />
+        <Button
+          title="Eksport danych"
+          variant="secondary"
+          loading={exportBusy}
+          onPress={() => setExportOpen(true)}
+        />
         <Button
           title="Wniosek o usunięcie konta"
           variant="danger"
-          onPress={() => void requestDeletion()}
+          onPress={() => setDeletionOpen(true)}
         />
         <Link href="/legal/privacy" style={styles.legalLink}>
           Polityka prywatności
@@ -330,8 +370,34 @@ export default function SettingsScreen() {
         {feedback?.kind === 'privacy' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
 
+      <DataExportModal
+        open={exportOpen}
+        busy={exportBusy}
+        onClose={() => {
+          if (!exportBusy) {
+            setExportOpen(false)
+          }
+        }}
+        onConfirm={() => void runDataExport()}
+      />
+
+      <AccountDeletionModal
+        open={deletionOpen}
+        busy={deletionBusy}
+        onClose={() => {
+          if (!deletionBusy) {
+            setDeletionOpen(false)
+          }
+        }}
+        onConfirm={requestDeletion}
+      />
+
       <SectionCard>
         <Text style={styles.sectionTitle}>Zmiana hasła</Text>
+        <Text style={styles.sectionHint}>
+          Znasz obecne hasło? Zmień je poniżej. Nie pamiętasz - wyślemy 6-cyfrowy kod na e-mail (tak
+          jak przy logowaniu).
+        </Text>
         <Field
           label="Obecne hasło"
           value={currentPassword}
@@ -349,16 +415,30 @@ export default function SettingsScreen() {
           showErrors={newPassword.length > 0}
         />
         <Button title="Zmień hasło" loading={pwdLoading} onPress={() => void changePassword()} />
+        <Button
+          title="Nie pamiętam hasła"
+          variant="secondary"
+          onPress={() => {
+            const email = user?.email?.trim()
+            router.push(
+              email ? { pathname: '/password-reset', params: { email } } : '/password-reset',
+            )
+          }}
+        />
         {feedback?.kind === 'password' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
 
-      <Button
-        title="Wyloguj"
-        variant="ghost"
-        onPress={() => {
-          void logout()
-        }}
-      />
+      <SectionCard accessibilityLabel="Sesja">
+        <Text style={styles.sectionTitle}>Sesja</Text>
+        <Text style={styles.sectionHint}>Kończy dostęp na tym urządzeniu.</Text>
+        <Button
+          title="Wyloguj"
+          variant="secondary"
+          onPress={() => {
+            void logout()
+          }}
+        />
+      </SectionCard>
     </KeyboardAwareForm>
   )
 }
@@ -367,6 +447,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
   content: { padding: space.lg, gap: space.base, paddingBottom: space['4xl'] },
   sectionTitle: { fontSize: typography.lg, fontWeight: '700', color: colors.ink },
+  sectionHint: { fontSize: typography.sm, color: colors.muted, marginBottom: space.xs },
   muted: { fontSize: typography.sm, color: colors.muted },
   switchRow: {
     flexDirection: 'row',

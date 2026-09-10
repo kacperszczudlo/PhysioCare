@@ -30,7 +30,8 @@
 }
 
 .patient-episodes,
-.patient-notes {
+.patient-notes,
+.patient-pdf-upload {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -40,6 +41,18 @@
   background: var(--color-surface);
   min-width: 0;
   flex-shrink: 0;
+}
+
+.patient-pdf-upload h2 {
+  font-size: var(--text-base);
+  margin: 0;
+}
+
+.patient-pdf-upload__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 32rem;
 }
 
 .patient-notes {
