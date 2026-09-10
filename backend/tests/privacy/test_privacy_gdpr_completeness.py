@@ -1,4 +1,5 @@
 import json
+
 import pytest
 
 from documents.models import MedicalDocument
@@ -12,14 +13,14 @@ def test_build_patient_export_contains_all_sections_and_no_secrets(
     patient, therapist, therapy_type
 ):
     # Arrange
-    doc = MedicalDocument.objects.create(
+    MedicalDocument.objects.create(
         patient=patient,
         uploaded_by=therapist.user,
         title='USG Kolana',
         file_url='/media/documents/usg.pdf',
         mime_type='application/pdf',
     )
-    episode = TreatmentEpisode.objects.create(
+    TreatmentEpisode.objects.create(
         patient=patient,
         icd10_code='M17.1',
         summary_note='Choroba zwyrodnieniowa kolana',

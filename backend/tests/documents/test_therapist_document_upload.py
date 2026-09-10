@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from django.core.files.uploadedfile import SimpleUploadedFile
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 
 from documents.models import MedicalDocument

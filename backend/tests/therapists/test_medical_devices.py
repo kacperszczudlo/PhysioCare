@@ -1,4 +1,3 @@
-import pytest
 
 from therapists.competence import QualificationLevel
 from therapists.medical_devices import (

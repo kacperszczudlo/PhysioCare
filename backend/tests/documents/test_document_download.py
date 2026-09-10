@@ -1,9 +1,8 @@
 from pathlib import Path
-from unittest.mock import patch
 
+import pytest
 from django.conf import settings
 from django.urls import reverse
-import pytest
 from rest_framework import status
 
 from documents.models import MedicalDocument
