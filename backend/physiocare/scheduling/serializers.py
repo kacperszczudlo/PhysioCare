@@ -174,7 +174,9 @@ class VisitCreateSerializer(serializers.ModelSerializer):
         therapy_type_id = attrs['therapy_type_id']
         episode_id = attrs.get('episode_id')
 
-        if not PatientProfile.objects.filter(pk=patient_id, therapist=therapist).exists():
+        if not PatientProfile.objects.active().filter(
+            pk=patient_id, therapist=therapist
+        ).exists():
             raise serializers.ValidationError(
                 {'patient_id': 'Pacjent nie należy do tego terapeuty.'}
             )

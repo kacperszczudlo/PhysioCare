@@ -49,10 +49,7 @@ class PatientEpisodeListCreateView(TherapistPatientQuerysetMixin, generics.ListC
 
     def get_patient(self):
         try:
-            return PatientProfile.objects.get(
-                pk=self.kwargs['patient_id'],
-                therapist=self.get_therapist_profile(),
-            )
+            return self.therapist_patients().get(pk=self.kwargs['patient_id'])
         except PatientProfile.DoesNotExist as exc:
             raise NotFound() from exc
 
@@ -246,10 +243,7 @@ class PatientReceptaNaRuchListCreateView(TherapistPatientQuerysetMixin, generics
 
     def get_patient(self):
         try:
-            return PatientProfile.objects.get(
-                pk=self.kwargs['patient_id'],
-                therapist=self.get_therapist_profile(),
-            )
+            return self.therapist_patients().get(pk=self.kwargs['patient_id'])
         except PatientProfile.DoesNotExist as exc:
             raise NotFound() from exc
 
@@ -280,13 +274,11 @@ class PatientReceptaNaRuchDetailView(TherapistPatientQuerysetMixin, generics.Ret
         return ReceptaNaRuchReferral.objects.filter(
             patient_id=self.kwargs['patient_id'],
             patient__therapist=self.get_therapist_profile(),
+            patient__user__is_active=True,
         )
 
     def perform_update(self, serializer):
-        patient = PatientProfile.objects.filter(
-            pk=self.kwargs['patient_id'],
-            therapist=self.get_therapist_profile(),
-        ).first()
+        patient = self.therapist_patients().filter(pk=self.kwargs['patient_id']).first()
         if patient is None:
             raise NotFound()
         episode = serializer.validated_data.get('episode')

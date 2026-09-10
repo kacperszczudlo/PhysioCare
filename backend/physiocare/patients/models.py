@@ -4,6 +4,12 @@ from django.db import models
 from core.models import TimestampedModel
 
 
+class PatientProfileQuerySet(models.QuerySet):
+    def active(self):
+        """Exclude soft-deleted / anonymized accounts (user.is_active=False)."""
+        return self.filter(user__is_active=True)
+
+
 class PatientProfile(TimestampedModel):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -18,6 +24,8 @@ class PatientProfile(TimestampedModel):
     pesel = models.CharField(max_length=11, blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, default='')
     avatar_url = models.CharField(max_length=500, blank=True, default='')
+
+    objects = PatientProfileQuerySet.as_manager()
 
     class Meta:
         db_table = 'patient_profiles'

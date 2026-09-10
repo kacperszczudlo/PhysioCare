@@ -197,7 +197,9 @@ class ExerciseAssignmentCreateSerializer(serializers.ModelSerializer):
                 {'exercise_id': 'Ćwiczenie nie należy do tego terapeuty.'}
             )
 
-        if not PatientProfile.objects.filter(pk=patient_id, therapist=therapist).exists():
+        if not PatientProfile.objects.active().filter(
+            pk=patient_id, therapist=therapist
+        ).exists():
             raise serializers.ValidationError(
                 {'patient_id': 'Pacjent nie należy do tego terapeuty.'}
             )
