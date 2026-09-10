@@ -1,10 +1,12 @@
-"""In-memory per-user SSE fan-out (single process)."""
+"""In-memory per-user SSE fan-out (single process) and Redis Pub/Sub fan-out (multi-worker)."""
 
 from __future__ import annotations
 
 import asyncio
 import json
+import os
 import threading
+import time
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass
 from datetime import datetime
@@ -51,6 +53,8 @@ def format_sse_frame(event: SseEvent) -> str:
 
 
 class InMemorySseBus:
+    """Single-process in-memory SSE bus."""
+
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._subscribers: dict[str, list[Queue[SseEvent]]] = {}
@@ -94,11 +98,130 @@ class InMemorySseBus:
             self._subscribers.clear()
 
 
-_bus = InMemorySseBus()
+class RedisPubSubSseBus:
+    """Multi-process SSE bus backed by Redis Pub/Sub with local in-memory fanout."""
+
+    def __init__(
+        self,
+        redis_client: Any = None,
+        channel_prefix: str | None = None,
+    ) -> None:
+        self._local_bus = InMemorySseBus()
+        self._redis_client = redis_client
+        self._channel_prefix = (
+            channel_prefix
+            if channel_prefix is not None
+            else getattr(settings, 'SSE_REDIS_CHANNEL_PREFIX', 'physiocare:sse:')
+        )
+        self._pubsub_thread: threading.Thread | None = None
+        self._stop_event = threading.Event()
+
+    def _get_redis(self) -> Any:
+        if self._redis_client is None:
+            import redis
+
+            redis_url = getattr(settings, '_REDIS_URL', '') or os.environ.get('REDIS_URL', '').strip()
+            if not redis_url:
+                raise ValueError('REDIS_URL is not configured for RedisPubSubSseBus')
+            self._redis_client = redis.Redis.from_url(redis_url)
+        return self._redis_client
+
+    def _ensure_listener(self) -> None:
+        if self._pubsub_thread is not None and self._pubsub_thread.is_alive():
+            return
+        self._stop_event.clear()
+        self._pubsub_thread = threading.Thread(
+            target=self._listen_loop,
+            name='sse-redis-pubsub-listener',
+            daemon=True,
+        )
+        self._pubsub_thread.start()
+
+    def _listen_loop(self) -> None:
+        pattern = f'{self._channel_prefix}*'
+        prefix_len = len(self._channel_prefix)
+        while not self._stop_event.is_set():
+            try:
+                r = self._get_redis()
+                pubsub = r.pubsub()
+                pubsub.psubscribe(pattern)
+                while not self._stop_event.is_set():
+                    msg = pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                    if msg and msg.get('type') == 'pmessage':
+                        channel = msg['channel']
+                        if isinstance(channel, bytes):
+                            channel = channel.decode('utf-8')
+                        data = msg['data']
+                        if isinstance(data, bytes):
+                            data = data.decode('utf-8')
+                        user_id = channel[prefix_len:]
+                        try:
+                            payload = json.loads(data)
+                            event = SseEvent(
+                                type=payload['type'],
+                                resource_id=payload.get('resource_id'),
+                                at=datetime.fromisoformat(payload['at']),
+                            )
+                            self._local_bus.publish(user_id, event)
+                        except Exception:
+                            pass
+            except Exception:
+                time.sleep(1.0)
+
+    def subscribe(self, user_id: str) -> Queue[SseEvent]:
+        self._ensure_listener()
+        return self._local_bus.subscribe(user_id)
+
+    def unsubscribe(self, user_id: str, queue: Queue[SseEvent]) -> None:
+        self._local_bus.unsubscribe(user_id, queue)
+
+    def publish(self, user_id: str, event: SseEvent) -> int:
+        channel = f'{self._channel_prefix}{user_id}'
+        payload = json.dumps(event.to_payload(), ensure_ascii=False, separators=(',', ':'))
+        try:
+            r = self._get_redis()
+            r.publish(channel, payload)
+            return self.subscriber_count(user_id)
+        except Exception:
+            return self._local_bus.publish(user_id, event)
+
+    def subscriber_count(self, user_id: str) -> int:
+        return self._local_bus.subscriber_count(user_id)
+
+    def clear(self) -> None:
+        self._stop_event.set()
+        if self._pubsub_thread and self._pubsub_thread.is_alive():
+            self._pubsub_thread.join(timeout=1.0)
+        self._local_bus.clear()
 
 
-def get_sse_bus() -> InMemorySseBus:
-    return _bus
+_inmemory_bus: InMemorySseBus | None = None
+_redis_bus: RedisPubSubSseBus | None = None
+
+
+def get_sse_bus() -> InMemorySseBus | RedisPubSubSseBus:
+    global _inmemory_bus, _redis_bus
+    engine = getattr(settings, 'SSE_BUS_ENGINE', 'auto').lower()
+    redis_url = getattr(settings, '_REDIS_URL', '') or os.environ.get('REDIS_URL', '').strip()
+
+    if engine == 'redis' or (engine == 'auto' and redis_url):
+        if _redis_bus is None:
+            _redis_bus = RedisPubSubSseBus()
+        return _redis_bus
+
+    if _inmemory_bus is None:
+        _inmemory_bus = InMemorySseBus()
+    return _inmemory_bus
+
+
+def reset_sse_bus() -> None:
+    global _inmemory_bus, _redis_bus
+    if _redis_bus is not None:
+        _redis_bus.clear()
+        _redis_bus = None
+    if _inmemory_bus is not None:
+        _inmemory_bus.clear()
+        _inmemory_bus = None
 
 
 def publish_user_event(
@@ -162,4 +285,3 @@ async def aiter_sse_frames(user_id: str) -> AsyncIterator[str]:
             frames += 1
     finally:
         bus.unsubscribe(user_id, queue)
-

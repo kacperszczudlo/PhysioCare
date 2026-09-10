@@ -299,6 +299,8 @@ NOTIFICATION_SCHEDULER_INTERVAL_SECONDS = int(
 # SSE (/api/v1/me/events/): heartbeat + optional frame cap (tests). 0 = unlimited.
 SSE_HEARTBEAT_SECONDS = int(os.environ.get('SSE_HEARTBEAT_SECONDS', '20'))
 SSE_MAX_FRAMES = int(os.environ.get('SSE_MAX_FRAMES', '0'))
+SSE_BUS_ENGINE = os.environ.get('SSE_BUS_ENGINE', 'auto').lower()
+SSE_REDIS_CHANNEL_PREFIX = os.environ.get('SSE_REDIS_CHANNEL_PREFIX', 'physiocare:sse:')
 
 # Optional error alerting (production). Without DSN, errors stay in structured logs only.
 _SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()

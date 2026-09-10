@@ -270,16 +270,14 @@ Referencja wizualna ekranów: plik `mockup_systemu_fizjoterapii.tsx` (poza repo 
 **Faza 6 (branch `feat/refactor`)** - Ruff / ESLint / Prettier, monitoring (logi JSON + latency), checklist E2E, przewodnik wdrożenia, konspekt prezentacji.  
 **Live UI (SSE)** - `GET /api/v1/me/events/`: Harmonogram/Pulpit web + Pulpit/Wizyty/Dokumenty/ćwiczenia mobile; demo: uvicorn ASGI (patrz [docs/deployment.md](docs/deployment.md), [docs/e2e-checklist.md](docs/e2e-checklist.md#live-ui-sse)).
 
-## Na później (skalowanie)
+## Skalowanie i Architektura Realtime (SSE)
 
-Model domenowy już łączy wielu terapeutów z wieloma pacjentami (wizyta = para terapeuta-pacjent). Przy większym ruchu i live UI (SSE: harmonogram / wizyty / dokumenty / ćwiczenia) bolą nie relacje N×M, tylko **infrastruktura połączeń**:
+Model domenowy łączy wielu terapeutów z wieloma pacjentami (wizyta = para terapeuta-pacjent). Warstwa czasu rzeczywistego (SSE) została przygotowana na skalowanie horyzontalne:
 
-| Ból | Dlaczego | Kierunek rozwiązania |
-|-----|----------|----------------------|
-| Kilka workerów / instancji | Event wyemitowany w jednym procesie nie dociera do streamu w innym | **Redis pub/sub** (lub równoważny bus) zamiast kolejki tylko w pamięci procesu |
-| Demo vs produkcja | Mało równoległych sesji = in-memory wystarczy | Na demo: ASGI + 1 instancja; przy wzroście użytkowników: Redis + monitoring liczby streamów |
+- **1 instancja / Demo / Dev**: Domyślna szyna `InMemorySseBus` w pamięci procesu (brak wymaganych dodatkowych usług).
+- **Klastry / Wiele workerów (Produkcja)**: Szyna **Redis Pub/Sub** (`SSE_BUS_ENGINE="redis"` lub automatycznie po ustawieniu `REDIS_URL`). Zdarzenia emitowane przez dowolny worker trafiają do wszystkich otwartych strumieni SSE na innych instancjach.
 
-Kontrakt eventów (sygnał per `user_id` → klient robi refetch REST) zostaje - nie trzeba przebudowywać feature’u pod klinikę z wieloma fizjo i pacjentami, tylko podnieść warstwę realtime.
+Kontrakt eventów (sygnał per `user_id` → klient robi refetch REST) pozostaje bez zmian.
 
 ## Licencja
 
