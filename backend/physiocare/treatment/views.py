@@ -305,8 +305,8 @@ class MedicalDeviceCatalogView(APIView):
 class MeClinicalDocumentsListView(PatientSelfMixin, APIView):
     """
     Skrzynka dokumentacji pacjenta: kierowanie, wyroby, odmowy,
-    Recepta na Ruch, PDF-y oraz podsumowania wizyt - widoczne automatycznie
-    po wystawieniu.
+    Recepta na Ruch i PDF-y - widoczne automatycznie po wystawieniu.
+    Podsumowania wizyt są tylko na karcie wizyty.
     """
 
     permission_classes = [IsAuthenticated, IsPatient]

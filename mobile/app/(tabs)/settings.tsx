@@ -390,13 +390,17 @@ export default function SettingsScreen() {
         {feedback?.kind === 'password' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
 
-      <Button
-        title="Wyloguj"
-        variant="ghost"
-        onPress={() => {
-          void logout()
-        }}
-      />
+      <SectionCard accessibilityLabel="Sesja">
+        <Text style={styles.sectionTitle}>Sesja</Text>
+        <Text style={styles.sectionHint}>Kończy dostęp na tym urządzeniu.</Text>
+        <Button
+          title="Wyloguj"
+          variant="secondary"
+          onPress={() => {
+            void logout()
+          }}
+        />
+      </SectionCard>
     </KeyboardAwareForm>
   )
 }

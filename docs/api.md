@@ -254,7 +254,7 @@ Wystawienie przez terapeutę udostępnia wpis pacjentowi automatycznie (bez osob
 |-------|-----------|
 | `kind` | Opcjonalnie: `recommendation` \| `device_order` \| `refusal` \| `recepta_na_ruch` \| `pdf` |
 
-Odpowiedź: `{ count, results[] }` gdzie każdy element ma `id`, `kind`, `kind_label`, `title`, `summary`, `created_at`, `therapist_name`, `episode_id`, `status`, `file_url` (PDF), `details`. Wyroby i Recepta na Ruch tylko ze statusem `ISSUED`.
+Odpowiedź: `{ count, results[] }` gdzie każdy element ma `id`, `kind`, `kind_label`, `title`, `summary`, `created_at`, `therapist_name`, `episode_id`, `status`, `file_url` (PDF), `details`. Wyroby i Recepta na Ruch tylko ze statusem `ISSUED`. Podsumowania wizyt (`patient_summary`) są wyłącznie na karcie wizyty, nie w tej skrzynce.
 
 **Body pain:**
 

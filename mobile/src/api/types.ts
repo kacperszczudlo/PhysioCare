@@ -167,7 +167,6 @@ export type ClinicalDocumentKind =
   | 'refusal'
   | 'recepta_na_ruch'
   | 'pdf'
-  | 'visit_summary'
 
 export interface ClinicalDocumentItem {
   id: string

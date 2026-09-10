@@ -38,7 +38,6 @@ const MAIN_TABS: { key: MainTab; label: string }[] = [
 
 const DOC_FILTERS: { key: DocFilterKey; label: string }[] = [
   { key: 'all', label: 'Wszystkie' },
-  { key: 'visit_summary', label: 'Po wizycie' },
   { key: 'recommendation', label: 'Kierowanie' },
   { key: 'device_order', label: 'Wyroby' },
   { key: 'recepta_na_ruch', label: 'Recepta' },
@@ -192,7 +191,7 @@ export default function DocumentsScreen() {
       ? 'Twój plan leczenia - diagnoza funkcjonalna i cele terapii.'
       : mainTab === 'exercises'
         ? 'Pełny plan ćwiczeń i historia wykonania.'
-        : 'Dokumenty i podsumowania wystawione przez fizjoterapeutę.'
+        : 'Dokumenty wystawione przez fizjoterapeutę.'
 
   return (
     <View style={styles.flex}>
@@ -284,7 +283,7 @@ export default function DocumentsScreen() {
             docs.length === 0 ? (
               <EmptyState
                 title="Brak dokumentów"
-                description="Podsumowania wizyt, kierowania, wyroby, Recepta na Ruch i PDF pojawią się tutaj."
+                description="Kierowania, wyroby, Recepta na Ruch, odmowy i PDF pojawią się tutaj po wystawieniu."
               />
             ) : (
               docs.map((doc) => {
@@ -295,11 +294,6 @@ export default function DocumentsScreen() {
                     doc={doc}
                     expanded={open}
                     onToggle={() => setExpandedId(open ? null : `${doc.kind}:${doc.id}`)}
-                    onOpenVisit={
-                      doc.kind === 'visit_summary'
-                        ? () => router.push(`/visit/${doc.id}`)
-                        : undefined
-                    }
                   />
                 )
               })
@@ -396,12 +390,10 @@ function DocumentCard({
   doc,
   expanded,
   onToggle,
-  onOpenVisit,
 }: {
   doc: ClinicalDocumentItem
   expanded: boolean
   onToggle: () => void
-  onOpenVisit?: () => void
 }) {
   async function openPdf() {
     if (!doc.file_url) {
@@ -440,16 +432,6 @@ function DocumentCard({
               accessibilityLabel="Otwórz plik PDF"
             >
               <Text style={styles.pdfBtnLabel}>Otwórz PDF</Text>
-            </Pressable>
-          ) : null}
-          {doc.kind === 'visit_summary' && onOpenVisit ? (
-            <Pressable
-              onPress={onOpenVisit}
-              style={styles.pdfBtn}
-              accessibilityRole="link"
-              accessibilityLabel="Otwórz wizytę"
-            >
-              <Text style={styles.pdfBtnLabel}>Zobacz wizytę</Text>
             </Pressable>
           ) : null}
         </View>
@@ -521,9 +503,6 @@ function DetailRows({ doc }: { doc: ClinicalDocumentItem }) {
     pushRow(rows, 'Następny krok', d.next_step)
   } else if (doc.kind === 'pdf') {
     pushRow(rows, 'Typ pliku', d.mime_type)
-  } else if (doc.kind === 'visit_summary') {
-    pushRow(rows, 'Podsumowanie', d.patient_summary)
-    pushRow(rows, 'Typ wizyty', d.therapy_type_name)
   }
 
   return (

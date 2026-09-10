@@ -62,7 +62,7 @@ def test_therapist_cannot_list_me_episodes(api_client, therapist):
 
 
 @pytest.mark.django_db
-def test_patient_sees_visit_summary_in_inbox_and_visit_detail(
+def test_patient_sees_visit_summary_on_visit_detail_not_in_documents_inbox(
     api_client, patient, therapist, therapy_type,
 ):
     visit = Visit.objects.create(
@@ -88,11 +88,11 @@ def test_patient_sees_visit_summary_in_inbox_and_visit_detail(
     assert 'mostka' in patch.data['patient_summary']
 
     api_client.force_authenticate(user=patient.user)
-    inbox = api_client.get('/api/v1/me/clinical-documents/?kind=visit_summary')
+    inbox = api_client.get('/api/v1/me/clinical-documents/')
     assert inbox.status_code == status.HTTP_200_OK
-    assert inbox.data['count'] == 1
-    assert inbox.data['results'][0]['kind'] == 'visit_summary'
-    assert 'mostka' in inbox.data['results'][0]['details']['patient_summary']
+    assert all(item['kind'] != 'visit_summary' for item in inbox.data['results'])
+    unknown = api_client.get('/api/v1/me/clinical-documents/?kind=visit_summary')
+    assert unknown.status_code == status.HTTP_400_BAD_REQUEST
 
     detail = api_client.get(f'/api/v1/visits/{visit.id}/')
     assert detail.status_code == status.HTTP_200_OK
