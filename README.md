@@ -276,7 +276,6 @@ Model domenowy już łączy wielu terapeutów z wieloma pacjentami (wizyta = par
 
 | Ból | Dlaczego | Kierunek rozwiązania |
 |-----|----------|----------------------|
-| Wiele otwartych SSE naraz | Sync Gunicorn (WSGI) trzyma workera na czas streamu → reszta API zwalnia | Rozwiązane: Asynchroniczny generator `aiter_sse_frames` + uruchamianie API pod **ASGI (`uvicorn` / `gunicorn.conf.py` z `UvicornWorker`)** |
 | Kilka workerów / instancji | Event wyemitowany w jednym procesie nie dociera do streamu w innym | **Redis pub/sub** (lub równoważny bus) zamiast kolejki tylko w pamięci procesu |
 | Demo vs produkcja | Mało równoległych sesji = in-memory wystarczy | Na demo: ASGI + 1 instancja; przy wzroście użytkowników: Redis + monitoring liczby streamów |
 
