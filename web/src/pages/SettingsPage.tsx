@@ -5,7 +5,9 @@ import { authApi } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
 import { ErrorBanner, SuccessBanner } from '@/components/AsyncState'
+import { MFASection } from '@/components/MFASection'
 import { PageHeader } from '@/components/PageHeader'
+
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { PasswordRequirements } from '@/components/ui/PasswordRequirements'
@@ -112,11 +114,14 @@ export function SettingsPage() {
             </div>
           </section>
 
+          <MFASection />
+
           <form
             className="settings-card"
             aria-labelledby="security-heading"
             onSubmit={(e) => void onChangePassword(e)}
           >
+
             <header className="settings-card__head">
               <h2 id="security-heading">Bezpieczeństwo</h2>
               <p className="settings-muted">

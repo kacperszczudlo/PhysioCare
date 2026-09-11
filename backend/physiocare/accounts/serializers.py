@@ -626,3 +626,61 @@ class ChangePasswordSerializer(serializers.Serializer):
         if user is not None and not getattr(user, 'is_authenticated', False):
             user = None
         return _validate_password_value(value, user=user)
+
+
+class MFALoginSerializer(serializers.Serializer):
+    mfa_token = serializers.CharField(
+        error_messages={
+            'blank': 'Brak tokenu 2FA.',
+            'required': 'Brak tokenu 2FA.',
+        }
+    )
+    code = serializers.CharField(
+        error_messages={
+            'blank': 'Podaj kod 2FA.',
+            'required': 'Podaj kod 2FA.',
+        }
+    )
+    token_delivery = serializers.ChoiceField(
+        choices=('cookie', 'body'),
+        required=False,
+    )
+
+    def validate_code(self, value):
+        return (value or '').strip()
+
+    def validate_mfa_token(self, value):
+        return (value or '').strip()
+
+
+class MFAEnableSerializer(serializers.Serializer):
+    code = serializers.CharField(
+        error_messages={
+            'blank': 'Podaj kod z aplikacji weryfikującej.',
+            'required': 'Podaj kod z aplikacji weryfikującej.',
+        }
+    )
+
+    def validate_code(self, value):
+        cleaned = (value or '').strip()
+        if not cleaned.isdigit() or len(cleaned) != 6:
+            raise serializers.ValidationError('Kod musi składać się z 6 cyfr.')
+        return cleaned
+
+
+class MFADisableSerializer(serializers.Serializer):
+    password = serializers.CharField(
+        style={'input_type': 'password'},
+        error_messages={
+            'blank': 'Podaj obecne hasło.',
+            'required': 'Podaj obecne hasło.',
+        },
+    )
+    code = serializers.CharField(
+        required=False,
+        allow_blank=True,
+    )
+
+    def validate_password(self, value):
+        return (value or '').strip()
+

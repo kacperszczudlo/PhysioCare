@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from django.utils import timezone
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
@@ -26,11 +27,24 @@ from .email_codes import (
     send_verify_email_code,
 )
 from .google_auth import GoogleAuthError, verify_google_id_token
-from .models import EmailCodePurpose
+from .mfa import (
+    generate_backup_codes,
+    generate_qr_code_svg,
+    generate_totp_secret,
+    get_totp_uri,
+    issue_mfa_preauth_token,
+    verify_and_consume_backup_code,
+    verify_mfa_preauth_token,
+    verify_totp_code,
+)
+from .models import EmailCodePurpose, RoleChoices, UserMFA
 from .serializers import (
     ChangePasswordSerializer,
     EmailResendSerializer,
     EmailVerifySerializer,
+    MFADisableSerializer,
+    MFAEnableSerializer,
+    MFALoginSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
     PasswordResetVerifySerializer,
@@ -42,6 +56,7 @@ from .token_ops import (
     blacklist_user_refresh_tokens,
     wants_tokens_in_body,
 )
+
 
 User = get_user_model()
 logger = logging.getLogger('physiocare.auth')
@@ -168,6 +183,18 @@ class LoginView(APIView):
                     },
                     status=status.HTTP_403_FORBIDDEN,
                 )
+
+            if hasattr(user, 'mfa') and user.mfa.is_enabled:
+                mfa_token = issue_mfa_preauth_token(user)
+                return Response(
+                    {
+                        'mfa_required': True,
+                        'mfa_token': mfa_token,
+                        'email': user.email,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
             refresh = RefreshToken.for_user(user)
             return _auth_response(request, user, refresh)
 
@@ -206,6 +233,280 @@ class LoginView(APIView):
             },
             status=status.HTTP_401_UNAUTHORIZED,
         )
+
+
+class MFALoginView(APIView):
+    permission_classes = []
+    throttle_classes = [LoginRateThrottle]
+
+    def post(self, request, *args, **kwargs):
+        serializer = MFALoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_001',
+                        'message': 'Błędne dane weryfikacyjne 2FA.',
+                        'details': serializer.errors,
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        mfa_token = serializer.validated_data['mfa_token']
+        code = serializer.validated_data['code']
+
+        user = verify_mfa_preauth_token(mfa_token)
+        if user is None:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_MFA_TOKEN_INVALID',
+                        'message': 'Nieprawidłowy lub wygasły token 2FA. Zaloguj się ponownie.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if not hasattr(user, 'mfa') or not user.mfa.is_enabled:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_MFA_NOT_ENABLED',
+                        'message': 'Dwuskładnikowa autentykacja nie jest włączona na tym koncie.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        is_totp_valid = verify_totp_code(user.mfa.secret_key, code)
+        is_backup_valid = False
+        if not is_totp_valid:
+            is_backup_valid = verify_and_consume_backup_code(user.mfa, code)
+
+        if not is_totp_valid and not is_backup_valid:
+            logger.info('Failed 2FA attempt for user=%s', user.email)
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_MFA_INVALID_CODE',
+                        'message': 'Nieprawidłowy kod 2FA lub kod zapasowy.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        refresh = RefreshToken.for_user(user)
+        return _auth_response(request, user, refresh)
+
+
+class MFASetupView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        user_mfa, created = UserMFA.objects.get_or_create(
+            user=user,
+            defaults={'secret_key': generate_totp_secret(), 'is_enabled': False},
+        )
+
+        if user_mfa.is_enabled:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_MFA_ALREADY_ENABLED',
+                        'message': 'Dwuskładnikowa autentykacja jest już aktywne na Twoim koncie.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not user_mfa.secret_key:
+            user_mfa.secret_key = generate_totp_secret()
+            user_mfa.save(update_fields=['secret_key', 'updated_at'])
+
+        otpauth_url = get_totp_uri(user, user_mfa.secret_key)
+        qr_code_svg = generate_qr_code_svg(otpauth_url)
+
+        return Response(
+            {
+                'secret_key': user_mfa.secret_key,
+                'otpauth_url': otpauth_url,
+                'qr_code_svg': qr_code_svg,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class MFAEnableView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        if not hasattr(user, 'mfa') or not user.mfa.secret_key:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_MFA_SETUP_REQUIRED',
+                        'message': 'Rozpocznij najpierw konfigurację 2FA wywołując setup.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user_mfa = user.mfa
+        if user_mfa.is_enabled:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_MFA_ALREADY_ENABLED',
+                        'message': 'Dwuskładnikowa autentykacja jest już włączona.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = MFAEnableSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_001',
+                        'message': 'Błędny kod weryfikacyjny.',
+                        'details': serializer.errors,
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        code = serializer.validated_data['code']
+        if not verify_totp_code(user_mfa.secret_key, code):
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_MFA_INVALID_CODE',
+                        'message': 'Nieprawidłowy kod z aplikacji weryfikującej. Sprawdź czas urządzenia.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        raw_codes, hashed_codes = generate_backup_codes(8)
+        user_mfa.is_enabled = True
+        user_mfa.backup_codes = hashed_codes
+        user_mfa.save(update_fields=['is_enabled', 'backup_codes', 'updated_at'])
+
+        logger.info('2FA enabled for user=%s', user.email)
+
+        return Response(
+            {
+                'message': 'Dwuskładnikowa autentykacja została pomyślnie aktywowana.',
+                'backup_codes': raw_codes,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class MFADisableView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        if not hasattr(user, 'mfa') or not user.mfa.is_enabled:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_MFA_NOT_ENABLED',
+                        'message': 'Dwuskładnikowa autentykacja nie jest włączona na Twoim koncie.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = MFADisableSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_001',
+                        'message': 'Błędne dane.',
+                        'details': serializer.errors,
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        password = serializer.validated_data['password']
+        if not user.check_password(password):
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_001',
+                        'message': 'Nieprawidłowe hasło.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        code = serializer.validated_data.get('code')
+        if code:
+            is_totp_valid = verify_totp_code(user.mfa.secret_key, code)
+            is_backup_valid = False
+            if not is_totp_valid:
+                is_backup_valid = verify_and_consume_backup_code(user.mfa, code)
+
+            if not is_totp_valid and not is_backup_valid:
+                return Response(
+                    {
+                        'error': {
+                            'code': 'AUTH_MFA_INVALID_CODE',
+                            'message': 'Nieprawidłowy kod 2FA lub kod zapasowy.',
+                            'details': {},
+                        }
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        user_mfa = user.mfa
+        user_mfa.is_enabled = False
+        user_mfa.backup_codes = []
+        user_mfa.save(update_fields=['is_enabled', 'backup_codes', 'updated_at'])
+
+        logger.info('2FA disabled for user=%s', user.email)
+
+        return Response(
+            {
+                'message': 'Dwuskładnikowa autentykacja została wyłączona.',
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class MFAStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        is_enabled = hasattr(user, 'mfa') and user.mfa.is_enabled
+        mfa_required_for_role = user.role == RoleChoices.THERAPIST or user.is_staff
+
+        return Response(
+            {
+                'is_enabled': is_enabled,
+                'mfa_required_for_role': mfa_required_for_role,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 
 
 class GoogleLoginView(APIView):

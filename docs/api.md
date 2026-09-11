@@ -103,6 +103,84 @@ Rejestracja z Google: w `POST /auth/register/therapist/` lub `/auth/register/pat
 
 Czyści cookies `access_token` / `refresh_token` i wpisuje przedstawiony refresh na czarną listę (body `refresh` albo cookie). **200** - `{ "detail": "Wylogowano." }`.
 
+### 2FA / MFA (Dwuskładnikowa autentykacja TOTP)
+
+Służy do dodania drugiego składnika autentykacji dla ról o podwyższonym poziomie dostępu (np. fizjoterapeuci, admini).
+
+#### 1. Dwuetapowe logowanie gdy 2FA jest włączone
+
+Wywołanie `POST /auth/login/` przy aktywnym 2FA zwraca:
+**200** - `{ "mfa_required": true, "mfa_token": "<podpisany_token_preauth>", "email": "..." }`
+
+Następnie klient przekazuje `mfa_token` oraz `code` w **Kroku 2**:
+
+#### POST `/auth/2fa/login`
+```json
+{
+  "mfa_token": "<podpisany_token_preauth>",
+  "code": "123456"
+}
+```
+* `code` może być 6-cyfrowym kodem z aplikacji Google Authenticator **lub** 8-znakowym jednorazowym kodem ratunkowym (backup code).
+
+**200** - zwraca tokeny sesyjne sesji JWT (`user`, `access`, `refresh`).  
+**401** `AUTH_MFA_TOKEN_INVALID` - token preauth wygasł (TTL 5 minut) lub jest nieprawidłowy.  
+**401** `AUTH_MFA_INVALID_CODE` - nieprawidłowy kod 2FA lub użyty/błędny kod zapasowy.
+
+#### POST `/auth/2fa/setup` (wymaga auth)
+Inicjalizuje konfigurację 2FA dla zalogowanego użytkownika. Zwraca tajny klucz Base32, URI `otpauth://...` oraz wektorowy kod QR (XML SVG).
+
+**200**:
+```json
+{
+  "secret_key": "JBSWY3DPEHPK3PXP",
+  "otpauth_url": "otpauth://totp/PhysioCare:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=PhysioCare",
+  "qr_code_svg": "<svg ...></svg>"
+}
+```
+
+#### POST `/auth/2fa/enable` (wymaga auth)
+Aktywuje 2FA po podaniu pierwszego poprawnego kodu TOTP. Zwraca 8 jednorazowych kodów zapasowych.
+
+```json
+{
+  "code": "123456"
+}
+```
+
+**200**:
+```json
+{
+  "message": "Dwuskładnikowa autentykacja została pomyślnie aktywowana.",
+  "backup_codes": ["A1B2-C3D4", "E5F6-G7H8", "..."]
+}
+```
+
+#### POST `/auth/2fa/disable` (wymaga auth)
+Wyłącza dwuskładnikową autentykację na koncie. Wymaga podania aktualnego hasła.
+
+```json
+{
+  "password": "SecurePass123!",
+  "code": "123456"
+}
+```
+
+**200** - `{ "message": "Dwuskładnikowa autentykacja została wyłączona." }`
+
+#### GET `/auth/2fa/status` (wymaga auth)
+Zwraca obecny status 2FA użytkownika oraz flagę wymogu dla jego roli.
+
+**200**:
+```json
+{
+  "is_enabled": true,
+  "mfa_required_for_role": true
+}
+```
+
+
+
 ### POST `/auth/refresh`
 
 ```json
