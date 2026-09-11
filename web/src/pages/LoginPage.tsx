@@ -12,7 +12,7 @@ import { Field } from '@/components/ui/Field'
 import './auth-forms.css'
 
 export function LoginPage() {
-  const { login, loginWithGoogle } = useAuth()
+  const { login, loginMFA, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const locationState = location.state as {
@@ -30,6 +30,8 @@ export function LoginPage() {
     typeof locationState?.email === 'string' ? locationState.email : '',
   )
   const [password, setPassword] = useState('')
+  const [mfaStep, setMfaStep] = useState<{ mfa_token: string; email: string } | null>(null)
+  const [mfaCode, setMfaCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -38,7 +40,11 @@ export function LoginPage() {
     setError(null)
     setLoading(true)
     try {
-      await login(email.trim(), password)
+      const result = await login(email.trim(), password)
+      if (result.kind === 'mfa_required') {
+        setMfaStep({ mfa_token: result.mfa_token, email: result.email })
+        return
+      }
       navigate(from, { replace: true })
     } catch (err) {
       if (err instanceof ApiError && err.code === 'AUTH_027') {
@@ -48,6 +54,21 @@ export function LoginPage() {
         return
       }
       setError(err instanceof ApiError ? err.message : 'Nie udało się zalogować.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function onMFASubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!mfaStep) return
+    setError(null)
+    setLoading(true)
+    try {
+      await loginMFA(mfaStep.mfa_token, mfaCode.trim())
+      navigate(from, { replace: true })
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Nieprawidłowy kod 2FA.')
     } finally {
       setLoading(false)
     }
@@ -88,6 +109,53 @@ export function LoginPage() {
     }
   }
 
+  if (mfaStep) {
+    return (
+      <div className="auth-form">
+        <header className="auth-form__header">
+          <h1>Weryfikacja dwuskładnikowa (2FA)</h1>
+          <p>Konto {mfaStep.email} wymaga potwierdzenia kodem z aplikacji Google Authenticator.</p>
+        </header>
+
+        <form className="auth-form__body" onSubmit={(e) => void onMFASubmit(e)} noValidate>
+          <Field
+            label="Kod z aplikacji weryfikującej lub kod zapasowy"
+            name="mfaCode"
+            type="text"
+            placeholder="np. 123456 lub A8K2-M9X3"
+            autoComplete="one-time-code"
+            autoFocus
+            required
+            value={mfaCode}
+            onChange={(e) => setMfaCode(e.target.value)}
+          />
+
+          {error ? (
+            <p className="auth-form__error" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <Button type="submit" loading={loading} className="auth-form__submit">
+            Zaloguj się kodem 2FA
+          </Button>
+
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setMfaStep(null)
+              setMfaCode('')
+              setError(null)
+            }}
+          >
+            Wróć do logowania
+          </Button>
+        </form>
+      </div>
+    )
+  }
+
   return (
     <div className="auth-form">
       <header className="auth-form__header">
@@ -95,7 +163,7 @@ export function LoginPage() {
         <p>Wejdź do panelu fizjoterapeuty.</p>
       </header>
 
-      <form className="auth-form__body" onSubmit={onSubmit} noValidate>
+      <form className="auth-form__body" onSubmit={(e) => void onSubmit(e)} noValidate>
         <Field
           label="E-mail"
           name="email"

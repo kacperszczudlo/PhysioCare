@@ -15,6 +15,7 @@ export interface TherapistRegisterPayload {
   email?: string
   password?: string
   google_credential?: string
+  recaptcha_token?: string
   first_name?: string
   last_name?: string
   pwzf_number: string
@@ -32,13 +33,65 @@ export interface PasswordResetConfirmPayload {
   new_password_confirm: string
 }
 
+export type LoginResult =
+  { kind: 'authenticated'; user: User } | { kind: 'mfa_required'; mfa_token: string; email: string }
+
+export interface MFASetupResponse {
+  secret_key: string
+  otpauth_url: string
+  qr_code_svg: string
+}
+
+export interface MFAEnableResponse {
+  message: string
+  backup_codes: string[]
+}
+
+export interface MFAStatusResponse {
+  is_enabled: boolean
+  mfa_required_for_role: boolean
+}
+
 export const authApi = {
-  login(email: string, password: string) {
+  async login(email: string, password: string): Promise<LoginResult> {
+    const data = await api.post<
+      AuthResponse | { mfa_required?: boolean; mfa_token?: string; email?: string }
+    >('/auth/login/', { email, password, token_delivery: 'cookie' }, { skipAuthRefresh: true })
+    if (data && 'mfa_required' in data && data.mfa_required) {
+      return {
+        kind: 'mfa_required',
+        mfa_token: typeof data.mfa_token === 'string' ? data.mfa_token : '',
+        email: typeof data.email === 'string' ? data.email : email,
+      }
+    }
+    if (data && 'user' in data && data.user) {
+      return { kind: 'authenticated', user: data.user }
+    }
+    throw new Error('Nieoczekiwana odpowiedź logowania.')
+  },
+
+  loginMFA(mfa_token: string, code: string) {
     return api.post<AuthResponse>(
-      '/auth/login/',
-      { email, password, token_delivery: 'cookie' },
+      '/auth/2fa/login/',
+      { mfa_token, code, token_delivery: 'cookie' },
       { skipAuthRefresh: true },
     )
+  },
+
+  setupMFA() {
+    return api.post<MFASetupResponse>('/auth/2fa/setup/')
+  },
+
+  enableMFA(code: string) {
+    return api.post<MFAEnableResponse>('/auth/2fa/enable/', { code })
+  },
+
+  disableMFA(password: string, code?: string) {
+    return api.post<{ message: string }>('/auth/2fa/disable/', { password, code })
+  },
+
+  getMFAStatus() {
+    return api.get<MFAStatusResponse>('/auth/2fa/status/')
   },
 
   loginWithGoogle(credential: string) {
@@ -87,10 +140,10 @@ export const authApi = {
     return api.post<{ detail: string }>('/auth/email/resend/', { email }, { skipAuthRefresh: true })
   },
 
-  requestPasswordReset(email: string) {
+  requestPasswordReset(email: string, recaptcha_token?: string) {
     return api.post<{ detail: string }>(
       '/auth/password-reset/request/',
-      { email, client: 'web' },
+      { email, client: 'web', recaptcha_token },
       { skipAuthRefresh: true },
     )
   },

@@ -8,6 +8,11 @@ from .views import (
     GoogleLoginView,
     LoginView,
     LogoutView,
+    MFADisableView,
+    MFAEnableView,
+    MFALoginView,
+    MFASetupView,
+    MFAStatusView,
     PasswordResetConfirmView,
     PasswordResetRequestView,
     PasswordResetVerifyView,
@@ -28,4 +33,10 @@ urlpatterns = [
     path('password-reset/verify/', PasswordResetVerifyView.as_view(), name='password-reset-verify'),
     path('password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     path('password-change/', ChangePasswordView.as_view(), name='password-change'),
+    path('2fa/login/', MFALoginView.as_view(), name='2fa-login'),
+    path('2fa/setup/', MFASetupView.as_view(), name='2fa-setup'),
+    path('2fa/enable/', MFAEnableView.as_view(), name='2fa-enable'),
+    path('2fa/disable/', MFADisableView.as_view(), name='2fa-disable'),
+    path('2fa/status/', MFAStatusView.as_view(), name='2fa-status'),
 ]
+

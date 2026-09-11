@@ -24,3 +24,5 @@ REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {  # noqa: F405
     'register': '3/hour',
     'password_reset': '3/hour',
 }
+
+SSE_BUS_ENGINE = 'inmemory'

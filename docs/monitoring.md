@@ -120,6 +120,23 @@ REDIS_URL=redis://127.0.0.1:6379/1
 
 Bez Redis używany jest LocMem (OK na 1 worker / lokalnie).
 
+## Monitoring Strumieni SSE
+
+Endpoint `GET /api/v1/me/events/stats/` udostępnia metryki obserwowalności szyny zdarzeń w czasie rzeczywistym:
+
+```json
+{
+  "engine": "inmemory",
+  "active_streams": 3,
+  "active_users": 2,
+  "total_published": 14,
+  "total_dropped": 0,
+  "redis_listener_alive": null
+}
+```
+
+W środowisku produkcyjnym z użyciem Redisa (`engine: "redis"`), pole `redis_listener_alive` określa status żywotności wątku deamona nasłuchującego wiadomości z Pub/Sub.
+
 ## Powiązane pliki
 
 | Plik | Rola |

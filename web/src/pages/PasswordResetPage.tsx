@@ -7,6 +7,7 @@ import { ErrorBanner, SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { PasswordRequirements } from '@/components/ui/PasswordRequirements'
+import { useRecaptcha } from '@/hooks/useRecaptcha'
 import { getEmailError } from '@/lib/emailPolicy'
 import {
   getPasswordError,
@@ -26,6 +27,7 @@ export function PasswordResetPage() {
     logout,
     isAuthenticated,
   } = useAuth()
+  const { executeRecaptcha } = useRecaptcha()
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const emailFromQuery = (params.get('email') ?? '').trim()
@@ -89,7 +91,8 @@ export function PasswordResetPage() {
     setFieldErrors({})
     setLoading(true)
     try {
-      const detail = await requestPasswordReset(email.trim())
+      const recaptchaToken = await executeRecaptcha('password_reset')
+      const detail = await requestPasswordReset(email.trim(), recaptchaToken)
       goToCodeStep(detail)
     } catch (err) {
       const apiEmailError = getFieldError(err, 'email')
@@ -109,7 +112,8 @@ export function PasswordResetPage() {
     setMessage(null)
     setLoading(true)
     try {
-      const detail = await requestPasswordReset(email.trim())
+      const recaptchaToken = await executeRecaptcha('password_reset_resend')
+      const detail = await requestPasswordReset(email.trim(), recaptchaToken)
       setCode('')
       setResetToken('')
       setStep('code')

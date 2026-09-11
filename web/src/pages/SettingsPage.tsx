@@ -5,7 +5,9 @@ import { authApi } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
 import { ErrorBanner, SuccessBanner } from '@/components/AsyncState'
+import { MFASection } from '@/components/MFASection'
 import { PageHeader } from '@/components/PageHeader'
+
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { PasswordRequirements } from '@/components/ui/PasswordRequirements'
@@ -111,6 +113,8 @@ export function SettingsPage() {
               </div>
             </div>
           </section>
+
+          <MFASection />
 
           <form
             className="settings-card"

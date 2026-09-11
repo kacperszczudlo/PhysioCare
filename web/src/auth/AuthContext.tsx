@@ -11,6 +11,7 @@ import {
 import {
   authApi,
   therapistApi,
+  type LoginResult,
   type PasswordResetConfirmPayload,
   type RegisterResult,
   type TherapistRegisterPayload,
@@ -22,14 +23,15 @@ interface AuthContextValue {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string) => Promise<LoginResult>
+  loginMFA: (mfa_token: string, code: string) => Promise<void>
   loginWithGoogle: (credential: string) => Promise<void>
   register: (payload: TherapistRegisterPayload) => Promise<RegisterResult>
   verifyEmail: (email: string, code: string) => Promise<void>
   resendEmailCode: (email: string) => Promise<string>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
-  requestPasswordReset: (email: string) => Promise<string>
+  requestPasswordReset: (email: string, recaptcha_token?: string) => Promise<string>
   verifyPasswordResetCode: (email: string, code: string) => Promise<string>
   confirmPasswordReset: (payload: PasswordResetConfirmPayload) => Promise<string>
 }
@@ -100,8 +102,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const login = useCallback(async (email: string, password: string) => {
-    const { user: nextUser } = await authApi.login(email, password)
+  const login = useCallback(async (email: string, password: string): Promise<LoginResult> => {
+    const result = await authApi.login(email, password)
+    if (result.kind === 'authenticated') {
+      await establishTherapistSession(setUser, result.user)
+    }
+    return result
+  }, [])
+
+  const loginMFA = useCallback(async (mfa_token: string, code: string) => {
+    const { user: nextUser } = await authApi.loginMFA(mfa_token, code)
     await establishTherapistSession(setUser, nextUser)
   }, [])
 
@@ -141,8 +151,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(nextUser)
   }, [])
 
-  const requestPasswordReset = useCallback(async (email: string) => {
-    const { detail } = await authApi.requestPasswordReset(email)
+  const requestPasswordReset = useCallback(async (email: string, recaptcha_token?: string) => {
+    const { detail } = await authApi.requestPasswordReset(email, recaptcha_token)
     return detail
   }, [])
 
@@ -162,6 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       isAuthenticated: user !== null,
       login,
+      loginMFA,
       loginWithGoogle,
       register,
       verifyEmail,
@@ -176,6 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       isLoading,
       login,
+      loginMFA,
       loginWithGoogle,
       register,
       verifyEmail,

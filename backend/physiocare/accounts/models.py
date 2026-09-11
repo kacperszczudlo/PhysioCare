@@ -106,3 +106,29 @@ class PasswordResetToken(models.Model):
 
     def __str__(self):
         return f'Reset token for {self.user.email}'
+
+
+class UserMFA(models.Model):
+    """TOTP 2FA configuration and backup recovery codes for a user."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='mfa',
+    )
+    secret_key = models.CharField(max_length=64)
+    is_enabled = models.BooleanField(default=False)
+    backup_codes = models.JSONField(default=list, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'user_mfa'
+        verbose_name = 'Udwierzytelnianie 2FA'
+        verbose_name_plural = 'Udwierzytelniania 2FA'
+
+    def __str__(self):
+        status_str = 'enabled' if self.is_enabled else 'disabled'
+        return f'MFA ({status_str}) for {self.user.email}'
+

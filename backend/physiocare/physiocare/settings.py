@@ -34,9 +34,11 @@ SECRET_KEY = require_env('DJANGO_SECRET_KEY')
 DEBUG = env_bool('DJANGO_DEBUG', 'false')
 
 ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
-if DEBUG and '*' not in ALLOWED_HOSTS:
-    # Telefon w LAN (FunBox / hotspot) woła Django po IP laptopa.
-    ALLOWED_HOSTS = [*ALLOWED_HOSTS, '*']
+if not DEBUG and '*' in ALLOWED_HOSTS:
+    raise ImproperlyConfigured(
+        'Wildcard "*" w DJANGO_ALLOWED_HOSTS jest zabroniony przy DJANGO_DEBUG=false.'
+    )
+
 
 # Django admin: disable on public demo hosts, or restrict by REMOTE_ADDR.
 ADMIN_ENABLED = env_bool('DJANGO_ADMIN_ENABLED', 'true')
@@ -68,6 +70,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'core.middleware.SecurityHeadersMiddleware',
     'core.middleware.AdminAccessMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -78,6 +81,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.RequestTimingMiddleware',
 ]
+
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
 
 ROOT_URLCONF = 'physiocare.urls'
 
@@ -158,7 +164,7 @@ CSRF_TRUSTED_ORIGINS = env_list(
     ','.join(CORS_ALLOWED_ORIGINS),
 )
 
-SECURE_COOKIES = env_bool('DJANGO_SECURE_COOKIES', 'false')
+SECURE_COOKIES = env_bool('DJANGO_SECURE_COOKIES', 'true' if not DEBUG else 'false')
 
 # Comma-separated OAuth 2.0 Client IDs (Web + Android/iOS) accepted as ID token audience.
 # Also accepts singular GOOGLE_CLIENT_ID (GastroHub-compatible).
@@ -253,6 +259,8 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    SECURE_COOKIES = True
+
 
 _REDIS_URL = os.environ.get('REDIS_URL', '').strip()
 if _REDIS_URL:
@@ -299,6 +307,12 @@ NOTIFICATION_SCHEDULER_INTERVAL_SECONDS = int(
 # SSE (/api/v1/me/events/): heartbeat + optional frame cap (tests). 0 = unlimited.
 SSE_HEARTBEAT_SECONDS = int(os.environ.get('SSE_HEARTBEAT_SECONDS', '20'))
 SSE_MAX_FRAMES = int(os.environ.get('SSE_MAX_FRAMES', '0'))
+SSE_BUS_ENGINE = os.environ.get('SSE_BUS_ENGINE', 'auto').lower()
+SSE_REDIS_CHANNEL_PREFIX = os.environ.get('SSE_REDIS_CHANNEL_PREFIX', 'physiocare:sse:')
+
+RECAPTCHA_ENABLED = env_bool('RECAPTCHA_ENABLED', 'false')
+RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
+RECAPTCHA_SCORE_THRESHOLD = float(os.environ.get('RECAPTCHA_SCORE_THRESHOLD', '0.5'))
 
 # Optional error alerting (production). Without DSN, errors stay in structured logs only.
 _SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()
