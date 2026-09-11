@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import os
 import threading
@@ -61,10 +62,8 @@ class AsyncSseSubscriber:
 
     def put_nowait(self, event: SseEvent) -> bool:
         def _put():
-            try:
+            with contextlib.suppress(asyncio.QueueFull):
                 self.queue.put_nowait(event)
-            except asyncio.QueueFull:
-                pass
 
         if self.loop.is_running():
             self.loop.call_soon_threadsafe(_put)
@@ -117,10 +116,8 @@ class InMemorySseBus:
                 return
             to_remove = [s for s in subs if s.queue is queue]
             for s in to_remove:
-                try:
+                with contextlib.suppress(ValueError):
                     subs.remove(s)
-                except ValueError:
-                    pass
             if not subs:
                 del self._async_subscribers[user_id]
 
@@ -388,7 +385,7 @@ async def aiter_sse_frames(user_id: str) -> AsyncIterator[str]:
                 break
             try:
                 event = await asyncio.wait_for(queue.get(), timeout=heartbeat)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 event = SseEvent(type='ping', resource_id=None, at=timezone.now())
             yield format_sse_frame(event)
             frames += 1

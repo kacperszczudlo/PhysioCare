@@ -10,7 +10,6 @@ from accounts.mfa import (
 from accounts.models import UserMFA
 
 
-
 @pytest.mark.django_db
 def test_mfa_setup_returns_secret_and_qr_svg(api_client, therapist):
     # Arrange

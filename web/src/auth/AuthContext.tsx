@@ -115,7 +115,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await establishTherapistSession(setUser, nextUser)
   }, [])
 
-
   const loginWithGoogle = useCallback(async (credential: string) => {
     const { user: nextUser } = await authApi.loginWithGoogle(credential)
     await establishTherapistSession(setUser, nextUser)
@@ -200,7 +199,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       confirmPasswordReset,
     ],
   )
-
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

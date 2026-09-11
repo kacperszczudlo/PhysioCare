@@ -34,8 +34,7 @@ export interface PasswordResetConfirmPayload {
 }
 
 export type LoginResult =
-  | { kind: 'authenticated'; user: User }
-  | { kind: 'mfa_required'; mfa_token: string; email: string }
+  { kind: 'authenticated'; user: User } | { kind: 'mfa_required'; mfa_token: string; email: string }
 
 export interface MFASetupResponse {
   secret_key: string
@@ -57,11 +56,7 @@ export const authApi = {
   async login(email: string, password: string): Promise<LoginResult> {
     const data = await api.post<
       AuthResponse | { mfa_required?: boolean; mfa_token?: string; email?: string }
-    >(
-      '/auth/login/',
-      { email, password, token_delivery: 'cookie' },
-      { skipAuthRefresh: true },
-    )
+    >('/auth/login/', { email, password, token_delivery: 'cookie' }, { skipAuthRefresh: true })
     if (data && 'mfa_required' in data && data.mfa_required) {
       return {
         kind: 'mfa_required',
@@ -178,7 +173,6 @@ export const authApi = {
     })
   },
 }
-
 
 export interface TherapistProfileUpdatePayload {
   phone?: string

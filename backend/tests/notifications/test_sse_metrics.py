@@ -1,17 +1,14 @@
 import asyncio
-import time
+
 import pytest
 from django.test import override_settings
 from rest_framework import status
 
 from notifications.sse import (
     InMemorySseBus,
-    RedisPubSubSseBus,
     SseEvent,
     aiter_sse_frames,
-    get_sse_bus,
     get_sse_metrics,
-    publish_user_event,
     reset_sse_bus,
 )
 

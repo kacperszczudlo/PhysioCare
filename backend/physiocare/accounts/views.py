@@ -57,7 +57,6 @@ from .token_ops import (
     wants_tokens_in_body,
 )
 
-
 User = get_user_model()
 logger = logging.getLogger('physiocare.auth')
 

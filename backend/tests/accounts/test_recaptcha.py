@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock, patch
 
+import pytest
 from django.test import override_settings
 from rest_framework import serializers
-import pytest
 
 from accounts.recaptcha import verify_recaptcha_token
 

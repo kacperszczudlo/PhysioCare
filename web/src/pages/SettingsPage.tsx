@@ -121,7 +121,6 @@ export function SettingsPage() {
             aria-labelledby="security-heading"
             onSubmit={(e) => void onChangePassword(e)}
           >
-
             <header className="settings-card__head">
               <h2 id="security-heading">Bezpieczeństwo</h2>
               <p className="settings-muted">

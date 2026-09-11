@@ -3,6 +3,7 @@ import io
 import logging
 import secrets
 import string
+
 import pyotp
 import qrcode
 import qrcode.image.svg

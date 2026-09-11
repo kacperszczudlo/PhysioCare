@@ -1,5 +1,5 @@
-from django.core.exceptions import ImproperlyConfigured
 import pytest
+from django.core.exceptions import ImproperlyConfigured
 
 
 @pytest.mark.django_db

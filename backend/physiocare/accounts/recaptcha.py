@@ -1,7 +1,7 @@
 import logging
 
-from django.conf import settings
 import requests
+from django.conf import settings
 from rest_framework import serializers
 
 logger = logging.getLogger('physiocare.auth')

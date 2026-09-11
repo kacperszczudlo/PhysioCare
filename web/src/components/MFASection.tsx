@@ -101,12 +101,15 @@ export function MFASection() {
       <header className="settings-card__head">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 id="mfa-heading">Dwuskładnikowa autentykacja (2FA)</h2>
-          <span className={`mfa-badge ${status?.is_enabled ? 'mfa-badge--active' : 'mfa-badge--inactive'}`}>
+          <span
+            className={`mfa-badge ${status?.is_enabled ? 'mfa-badge--active' : 'mfa-badge--inactive'}`}
+          >
             {status?.is_enabled ? '✓ Aktywna' : 'Wyłączona'}
           </span>
         </div>
         <p className="settings-muted">
-          Dodatkowa ochrona konta kodem z aplikacji weryfikującej (Google Authenticator, Microsoft Authenticator, 1Password).
+          Dodatkowa ochrona konta kodem z aplikacji weryfikującej (Google Authenticator, Microsoft
+          Authenticator, 1Password).
           {status?.mfa_required_for_role && !status?.is_enabled
             ? ' (Zalecane dla kont z dostępem do dokumentacji medycznej pacjentów).'
             : ''}
@@ -121,11 +124,14 @@ export function MFASection() {
         <div className="mfa-backup-codes">
           <h3>Zapisz kody zapasowe!</h3>
           <p className="settings-muted">
-            Kody zapasowe pozwolą Ci zalogować się do systemu w przypadku utraty dostępu do telefonu lub aplikacji. Każdy z kodów jest jednorazowy.
+            Kody zapasowe pozwolą Ci zalogować się do systemu w przypadku utraty dostępu do telefonu
+            lub aplikacji. Każdy z kodów jest jednorazowy.
           </p>
           <div className="mfa-codes-grid">
             {backupCodes.map((code, i) => (
-              <code key={i} className="mfa-code-item">{code}</code>
+              <code key={i} className="mfa-code-item">
+                {code}
+              </code>
             ))}
           </div>
           <Button type="button" onClick={() => setBackupCodes(null)}>
@@ -148,7 +154,10 @@ export function MFASection() {
         <form className="mfa-setup-box" onSubmit={(e) => void handleEnable(e)}>
           <h3>Konfiguracja Google Authenticator</h3>
           <ol className="mfa-setup-steps">
-            <li>Pobierz aplikację <strong>Google Authenticator</strong> lub <strong>Microsoft Authenticator</strong> na telefon.</li>
+            <li>
+              Pobierz aplikację <strong>Google Authenticator</strong> lub{' '}
+              <strong>Microsoft Authenticator</strong> na telefon.
+            </li>
             <li>Zeskanuj poniższy kod QR w aplikacji lub wpisz klucz konfiguracji ręcznie:</li>
           </ol>
 
