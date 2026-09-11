@@ -276,6 +276,7 @@ Model domenowy łączy wielu terapeutów z wieloma pacjentami (wizyta = para ter
 
 - **1 instancja / Demo / Dev**: Domyślna szyna `InMemorySseBus` w pamięci procesu (brak wymaganych dodatkowych usług).
 - **Klastry / Wiele workerów (Produkcja)**: Szyna **Redis Pub/Sub** (`SSE_BUS_ENGINE="redis"` lub automatycznie po ustawieniu `REDIS_URL`). Zdarzenia emitowane przez dowolny worker trafiają do wszystkich otwartych strumieni SSE na innych instancjach.
+- **Obserwowalność i Monitoring**: Metryki aktywnych strumieni SSE, unikalnych użytkowników i zdrowia Redisa dostępne pod `GET /api/v1/me/events/stats/`.
 
 Kontrakt eventów (sygnał per `user_id` → klient robi refetch REST) pozostaje bez zmian.
 

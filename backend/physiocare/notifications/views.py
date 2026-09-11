@@ -18,7 +18,17 @@ from notifications.serializers import (
     NotificationPreferencePatchSerializer,
     NotificationPreferenceSerializer,
 )
-from notifications.sse import aiter_sse_frames, iter_sse_frames
+from notifications.sse import aiter_sse_frames, get_sse_metrics, iter_sse_frames
+
+
+class SseStatsView(APIView):
+    """Returns real-time SSE stream metrics and Redis bus health status."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        metrics = get_sse_metrics()
+        return Response(metrics, status=status.HTTP_200_OK)
 
 
 class MeEventsView(APIView):
