@@ -68,6 +68,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'core.middleware.SecurityHeadersMiddleware',
     'core.middleware.AdminAccessMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -78,6 +79,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.RequestTimingMiddleware',
 ]
+
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+
 
 ROOT_URLCONF = 'physiocare.urls'
 

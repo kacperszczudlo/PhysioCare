@@ -79,3 +79,43 @@ class RequestTimingMiddleware:
             },
         )
         return response
+
+
+class SecurityHeadersMiddleware:
+    """Attach CSP, Permissions-Policy, and COOP security headers to HTTP responses."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+
+        if 'Content-Security-Policy' not in response:
+            response['Content-Security-Policy'] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
+                "https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ "
+                "https://accounts.google.com/gsi/ https://apis.google.com; "
+                "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style https://fonts.googleapis.com; "
+                "font-src 'self' https://fonts.gstatic.com data:; "
+                "img-src 'self' data: blob: https://*.googleusercontent.com https://www.gstatic.com; "
+                "connect-src 'self' http://localhost:* ws://localhost:* https://www.google.com "
+                "https://accounts.google.com https://exp.host https://*.sentry.io; "
+                "frame-src 'self' https://www.google.com/recaptcha/ https://recaptcha.google.com/ "
+                "https://accounts.google.com/; "
+                "frame-ancestors 'none'; "
+                "object-src 'none'; "
+                "base-uri 'self'; "
+                "form-action 'self';"
+            )
+
+        if 'Permissions-Policy' not in response:
+            response['Permissions-Policy'] = (
+                "camera=(), microphone=(), geolocation=(), payment=(), usb=(), display-capture=()"
+            )
+
+        if 'Cross-Origin-Opener-Policy' not in response:
+            response['Cross-Origin-Opener-Policy'] = "same-origin-allow-popups"
+
+        return response
+
