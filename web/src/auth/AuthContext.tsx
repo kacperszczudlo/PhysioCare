@@ -29,7 +29,7 @@ interface AuthContextValue {
   resendEmailCode: (email: string) => Promise<string>
   logout: () => Promise<void>
   refreshSession: () => Promise<void>
-  requestPasswordReset: (email: string) => Promise<string>
+  requestPasswordReset: (email: string, recaptcha_token?: string) => Promise<string>
   verifyPasswordResetCode: (email: string, code: string) => Promise<string>
   confirmPasswordReset: (payload: PasswordResetConfirmPayload) => Promise<string>
 }
@@ -141,8 +141,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(nextUser)
   }, [])
 
-  const requestPasswordReset = useCallback(async (email: string) => {
-    const { detail } = await authApi.requestPasswordReset(email)
+  const requestPasswordReset = useCallback(async (email: string, recaptcha_token?: string) => {
+    const { detail } = await authApi.requestPasswordReset(email, recaptcha_token)
     return detail
   }, [])
 

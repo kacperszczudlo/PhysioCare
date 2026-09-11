@@ -302,6 +302,10 @@ SSE_MAX_FRAMES = int(os.environ.get('SSE_MAX_FRAMES', '0'))
 SSE_BUS_ENGINE = os.environ.get('SSE_BUS_ENGINE', 'auto').lower()
 SSE_REDIS_CHANNEL_PREFIX = os.environ.get('SSE_REDIS_CHANNEL_PREFIX', 'physiocare:sse:')
 
+RECAPTCHA_ENABLED = env_bool('RECAPTCHA_ENABLED', 'false')
+RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
+RECAPTCHA_SCORE_THRESHOLD = float(os.environ.get('RECAPTCHA_SCORE_THRESHOLD', '0.5'))
+
 # Optional error alerting (production). Without DSN, errors stay in structured logs only.
 _SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()
 if _SENTRY_DSN:

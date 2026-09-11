@@ -25,10 +25,12 @@ import {
 } from '@/lib/passwordPolicy'
 import { formatPhoneForApi, getPhoneError } from '@/lib/phonePolicy'
 import { getPwzfError, normalizePwzf } from '@/lib/pwzfPolicy'
+import { useRecaptcha } from '@/hooks/useRecaptcha'
 import './auth-forms.css'
 
 export function RegisterPage() {
   const { register } = useAuth()
+  const { executeRecaptcha } = useRecaptcha()
   const navigate = useNavigate()
 
   const [googleDraft, setGoogleDraft] = useState<GoogleRegistrationDraft | null>(() =>
@@ -202,8 +204,10 @@ export function RegisterPage() {
     setFieldErrors({})
     setLoading(true)
     try {
+      const recaptcha_token = await executeRecaptcha('register_google')
       const result = await register({
         google_credential: credential,
+        recaptcha_token,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         pwzf_number: normalizePwzf(pwzf),
@@ -257,9 +261,11 @@ export function RegisterPage() {
     setFieldErrors({})
     setLoading(true)
     try {
+      const recaptcha_token = await executeRecaptcha('register')
       const result = await register({
         email: email.trim(),
         password,
+        recaptcha_token,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         pwzf_number: normalizePwzf(pwzf),

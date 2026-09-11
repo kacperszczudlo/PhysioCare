@@ -15,6 +15,7 @@ export interface TherapistRegisterPayload {
   email?: string
   password?: string
   google_credential?: string
+  recaptcha_token?: string
   first_name?: string
   last_name?: string
   pwzf_number: string
@@ -87,10 +88,10 @@ export const authApi = {
     return api.post<{ detail: string }>('/auth/email/resend/', { email }, { skipAuthRefresh: true })
   },
 
-  requestPasswordReset(email: string) {
+  requestPasswordReset(email: string, recaptcha_token?: string) {
     return api.post<{ detail: string }>(
       '/auth/password-reset/request/',
-      { email, client: 'web' },
+      { email, client: 'web', recaptcha_token },
       { skipAuthRefresh: true },
     )
   },

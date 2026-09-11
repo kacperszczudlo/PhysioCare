@@ -12,6 +12,7 @@ from accounts.email_policy import (
 )
 from accounts.google_auth import GoogleAuthError, verify_google_id_token
 from accounts.password_policy import enforce_password_policy
+from accounts.recaptcha import verify_recaptcha_token
 from core.field_policies import (
     LAST_NAME_INVALID,
     LAST_NAME_REQUIRED,
@@ -175,6 +176,11 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         allow_blank=True,
         write_only=True,
     )
+    recaptcha_token = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        write_only=True,
+    )
     therapist_id = serializers.UUIDField(
         write_only=True,
         error_messages=_THERAPIST_ID_FIELD_ERRORS,
@@ -191,7 +197,7 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'email', 'password', 'google_credential', 'first_name', 'last_name',
+            'id', 'email', 'password', 'google_credential', 'recaptcha_token', 'first_name', 'last_name',
             'therapist_id', 'consents', 'phone',
         )
         read_only_fields = ('id',)
@@ -262,6 +268,9 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(list(exc.messages)) from exc
 
     def validate(self, attrs):
+        recaptcha_token = attrs.pop('recaptcha_token', None)
+        verify_recaptcha_token(recaptcha_token)
+
         credential = (attrs.pop('google_credential', None) or '').strip()
         if credential:
             return _apply_google_identity(attrs, credential=credential)
@@ -350,6 +359,11 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
         allow_blank=True,
         write_only=True,
     )
+    recaptcha_token = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        write_only=True,
+    )
     pwzf_number = serializers.CharField(
         max_length=20,
         write_only=True,
@@ -367,7 +381,7 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'email', 'password', 'google_credential', 'first_name', 'last_name',
+            'id', 'email', 'password', 'google_credential', 'recaptcha_token', 'first_name', 'last_name',
             'pwzf_number', 'pwzf_declaration', 'phone',
         )
         read_only_fields = ('id',)
@@ -438,6 +452,9 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(list(exc.messages)) from exc
 
     def validate(self, attrs):
+        recaptcha_token = attrs.pop('recaptcha_token', None)
+        verify_recaptcha_token(recaptcha_token)
+
         credential = (attrs.pop('google_credential', None) or '').strip()
         if credential:
             return _apply_google_identity(attrs, credential=credential)
@@ -493,6 +510,16 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         required=False,
         default='web',
     )
+    recaptcha_token = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        write_only=True,
+    )
+
+    def validate(self, attrs):
+        recaptcha_token = attrs.pop('recaptcha_token', None)
+        verify_recaptcha_token(recaptcha_token)
+        return attrs
 
     def validate_email(self, value):
         try:
