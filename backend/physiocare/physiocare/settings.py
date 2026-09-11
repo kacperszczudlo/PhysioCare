@@ -34,9 +34,11 @@ SECRET_KEY = require_env('DJANGO_SECRET_KEY')
 DEBUG = env_bool('DJANGO_DEBUG', 'false')
 
 ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
-if DEBUG and '*' not in ALLOWED_HOSTS:
-    # Telefon w LAN (FunBox / hotspot) woła Django po IP laptopa.
-    ALLOWED_HOSTS = [*ALLOWED_HOSTS, '*']
+if not DEBUG and '*' in ALLOWED_HOSTS:
+    raise ImproperlyConfigured(
+        'Wildcard "*" w DJANGO_ALLOWED_HOSTS jest zabroniony przy DJANGO_DEBUG=false.'
+    )
+
 
 # Django admin: disable on public demo hosts, or restrict by REMOTE_ADDR.
 ADMIN_ENABLED = env_bool('DJANGO_ADMIN_ENABLED', 'true')
