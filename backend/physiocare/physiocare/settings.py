@@ -164,7 +164,7 @@ CSRF_TRUSTED_ORIGINS = env_list(
     ','.join(CORS_ALLOWED_ORIGINS),
 )
 
-SECURE_COOKIES = env_bool('DJANGO_SECURE_COOKIES', 'false')
+SECURE_COOKIES = env_bool('DJANGO_SECURE_COOKIES', 'true' if not DEBUG else 'false')
 
 # Comma-separated OAuth 2.0 Client IDs (Web + Android/iOS) accepted as ID token audience.
 # Also accepts singular GOOGLE_CLIENT_ID (GastroHub-compatible).
@@ -259,6 +259,8 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    SECURE_COOKIES = True
+
 
 _REDIS_URL = os.environ.get('REDIS_URL', '').strip()
 if _REDIS_URL:

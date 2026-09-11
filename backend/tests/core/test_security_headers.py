@@ -23,3 +23,14 @@ class TestSecurityHeaders:
 
         assert 'Cross-Origin-Opener-Policy' in response
         assert response['Cross-Origin-Opener-Policy'] == 'same-origin-allow-popups'
+
+    def test_secure_cookies_flags(self):
+        from django.conf import settings
+        from django.test import override_settings
+
+        with override_settings(SECURE_COOKIES=True, SESSION_COOKIE_SECURE=True, CSRF_COOKIE_SECURE=True):
+            assert settings.SECURE_COOKIES is True
+            assert settings.SESSION_COOKIE_SECURE is True
+            assert settings.CSRF_COOKIE_SECURE is True
+
+
