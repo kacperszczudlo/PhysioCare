@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Alert, Modal, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
@@ -11,8 +11,8 @@ import { DateTimePickerField } from '@/components/DateTimePickerField'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { SectionCard } from '@/components/ScreenHeader'
+import { LocationMapCard } from '@/components/LocationMapCard'
 import { addMinutesISO, formatDateTime, formatTimeRange, visitStatusLabel } from '@/lib/format'
-import { openAddressInMaps } from '@/lib/maps'
 import { colors, space, typography } from '@/theme/tokens'
 
 function defaultRescheduleStart(from?: string): Date {
@@ -175,19 +175,7 @@ export default function VisitDetailScreen() {
         </SectionCard>
 
         <SectionCard>
-          <Text style={styles.section}>Lokalizacja</Text>
-          {visit.location_address ? (
-            <Pressable
-              onPress={() => openAddressInMaps(visit.location_address)}
-              accessibilityRole="link"
-              accessibilityHint="Otwiera adres w Google Maps"
-            >
-              <Text style={styles.link}>{visit.location_address}</Text>
-              <Text style={styles.muted}>Otwórz w Google Maps</Text>
-            </Pressable>
-          ) : (
-            <Text style={styles.body}>-</Text>
-          )}
+          <LocationMapCard address={visit.location_address || ''} title="Lokalizacja wizyty" />
           {visit.patient_note ? (
             <>
               <Text style={styles.section}>Twoja notatka</Text>
