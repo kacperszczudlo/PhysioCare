@@ -24,6 +24,7 @@ Weryfikacja e-mail / reset hasła: kody 6 cyfr przez SMTP (lokalnie `EMAIL_BACKE
 | Komenda                | Opis              |
 | ---------------------- | ----------------- |
 | `npm run dev`          | Dev server        |
+| `npm test`             | Testy Vitest      |
 | `npm run build`        | Build produkcyjny |
 | `npm run preview`      | Podgląd builda    |
 | `npm run lint`         | ESLint + Oxlint   |

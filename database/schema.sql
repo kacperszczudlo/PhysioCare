@@ -1,12 +1,12 @@
 -- PhysioCare - auto-generated from Django migrations
--- Generated: 2026-08-07T21:23:26Z
+-- Generated: 2026-09-13T23:14:26Z
 -- Do not edit manually. Run: python scripts/sync_schema_sql.py
 
 --
 -- PostgreSQL database dump
 --
 
-\restrict DiDK0XE4xUxdElef6vfAgy9DnbXrEut6hYsf1AwXagLlxrJ6ZXpr9ICrnGORb5r
+\restrict x7TLutXfgzZopcP22UocVE2VK50cBke5KDtJl5UOfI7PQKaxd41kN5M4MJs7ANh
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -40,6 +40,20 @@ COMMENT ON EXTENSION btree_gist IS 'support for indexing common datatypes in GiS
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: account_deletion_requests; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.account_deletion_requests (
+    id uuid NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    processed_at timestamp with time zone,
+    notes text NOT NULL,
+    user_id uuid NOT NULL,
+    reason text NOT NULL
+);
+
 
 --
 -- Name: auth_group; Type: TABLE; Schema: public; Owner: -
@@ -148,6 +162,39 @@ CREATE TABLE public.consents (
 
 
 --
+-- Name: device_tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.device_tokens (
+    id uuid NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    expo_push_token character varying(200) NOT NULL,
+    platform character varying(20) NOT NULL,
+    is_active boolean NOT NULL,
+    user_id uuid NOT NULL
+);
+
+
+--
+-- Name: diagnostic_recommendations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.diagnostic_recommendations (
+    id uuid NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    recommendation_type character varying(40) NOT NULL,
+    target_specialty character varying(120) NOT NULL,
+    body_area character varying(120) NOT NULL,
+    justification text NOT NULL,
+    red_flags_noted boolean NOT NULL,
+    funding_hint character varying(30) NOT NULL,
+    episode_id uuid NOT NULL,
+    therapist_id uuid NOT NULL
+);
+
+
+--
 -- Name: django_admin_log; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -241,6 +288,23 @@ CREATE TABLE public.django_session (
 
 
 --
+-- Name: email_codes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.email_codes (
+    id uuid NOT NULL,
+    purpose character varying(32) NOT NULL,
+    code_hash character varying(128) NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    used_at timestamp with time zone,
+    attempts smallint NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    user_id uuid NOT NULL,
+    CONSTRAINT email_codes_attempts_check CHECK ((attempts >= 0))
+);
+
+
+--
 -- Name: exercise_assignments; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -323,6 +387,29 @@ CREATE TABLE public.exercises (
 
 
 --
+-- Name: medical_device_orders; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.medical_device_orders (
+    id uuid NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    device_code character varying(40) NOT NULL,
+    device_group character varying(5) NOT NULL,
+    device_name character varying(255) NOT NULL,
+    side character varying(10) NOT NULL,
+    quantity smallint NOT NULL,
+    icd10_code character varying(10) NOT NULL,
+    status character varying(20) NOT NULL,
+    notes text NOT NULL,
+    episode_id uuid NOT NULL,
+    patient_id uuid NOT NULL,
+    therapist_id uuid NOT NULL,
+    access_code character varying(4) NOT NULL,
+    CONSTRAINT medical_device_orders_quantity_check CHECK ((quantity >= 0))
+);
+
+
+--
 -- Name: medical_documents; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -336,6 +423,25 @@ CREATE TABLE public.medical_documents (
     patient_id uuid NOT NULL,
     uploaded_by_id uuid NOT NULL,
     visit_id uuid
+);
+
+
+--
+-- Name: notification_deliveries; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notification_deliveries (
+    id uuid NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    pref_key character varying(50) NOT NULL,
+    channel character varying(10) NOT NULL,
+    status character varying(10) NOT NULL,
+    title character varying(120) NOT NULL,
+    body character varying(500) NOT NULL,
+    data jsonb NOT NULL,
+    dedupe_key character varying(200) NOT NULL,
+    error_message character varying(300) NOT NULL,
+    user_id uuid NOT NULL
 );
 
 
@@ -381,6 +487,37 @@ CREATE TABLE public.patient_profiles (
 
 
 --
+-- Name: physician_order_refusals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.physician_order_refusals (
+    id uuid NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    physician_order_description text NOT NULL,
+    refusal_reason text NOT NULL,
+    physician_notified boolean NOT NULL,
+    episode_id uuid NOT NULL,
+    therapist_id uuid NOT NULL
+);
+
+
+--
+-- Name: recepta_na_ruch_referrals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.recepta_na_ruch_referrals (
+    id uuid NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    readiness_confirmed boolean NOT NULL,
+    activity_notes text NOT NULL,
+    status character varying(20) NOT NULL,
+    episode_id uuid,
+    patient_id uuid NOT NULL,
+    therapist_id uuid NOT NULL
+);
+
+
+--
 -- Name: therapist_profiles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -393,7 +530,10 @@ CREATE TABLE public.therapist_profiles (
     courses jsonb NOT NULL,
     avatar_url character varying(500) NOT NULL,
     user_id uuid NOT NULL,
-    location_address character varying(300) NOT NULL
+    location_address character varying(300) NOT NULL,
+    experience_years smallint NOT NULL,
+    qualification_level character varying(20) NOT NULL,
+    CONSTRAINT therapist_profiles_experience_years_check CHECK ((experience_years >= 0))
 );
 
 
@@ -413,6 +553,59 @@ CREATE TABLE public.therapy_types (
 
 
 --
+-- Name: token_blacklist_blacklistedtoken; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.token_blacklist_blacklistedtoken (
+    id bigint NOT NULL,
+    blacklisted_at timestamp with time zone NOT NULL,
+    token_id bigint NOT NULL
+);
+
+
+--
+-- Name: token_blacklist_blacklistedtoken_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.token_blacklist_blacklistedtoken ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.token_blacklist_blacklistedtoken_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: token_blacklist_outstandingtoken; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.token_blacklist_outstandingtoken (
+    id bigint NOT NULL,
+    token text NOT NULL,
+    created_at timestamp with time zone,
+    expires_at timestamp with time zone NOT NULL,
+    user_id uuid,
+    jti character varying(255) CONSTRAINT token_blacklist_outstandingtoken_jti_hex_not_null NOT NULL
+);
+
+
+--
+-- Name: token_blacklist_outstandingtoken_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.token_blacklist_outstandingtoken ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.token_blacklist_outstandingtoken_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: treatment_episodes; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -424,7 +617,23 @@ CREATE TABLE public.treatment_episodes (
     summary_note text NOT NULL,
     started_at date NOT NULL,
     ended_at date,
-    patient_id uuid NOT NULL
+    patient_id uuid NOT NULL,
+    functional_diagnosis text NOT NULL
+);
+
+
+--
+-- Name: user_mfa; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.user_mfa (
+    id uuid NOT NULL,
+    secret_key character varying(64) NOT NULL,
+    is_enabled boolean NOT NULL,
+    backup_codes jsonb NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    user_id uuid NOT NULL
 );
 
 
@@ -444,7 +653,9 @@ CREATE TABLE public.users (
     is_staff boolean NOT NULL,
     is_active boolean NOT NULL,
     created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL
+    updated_at timestamp with time zone NOT NULL,
+    google_sub character varying(255),
+    email_verified_at timestamp with time zone
 );
 
 
@@ -528,8 +739,26 @@ CREATE TABLE public.visits (
     patient_id uuid NOT NULL,
     therapist_id uuid NOT NULL,
     therapy_type_id uuid NOT NULL,
+    patient_note text NOT NULL,
+    patient_summary text NOT NULL,
     CONSTRAINT chk_visits_end_after_start CHECK ((end_at > start_at))
 );
+
+
+--
+-- Name: account_deletion_requests account_deletion_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.account_deletion_requests
+    ADD CONSTRAINT account_deletion_requests_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: account_deletion_requests account_deletion_requests_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.account_deletion_requests
+    ADD CONSTRAINT account_deletion_requests_user_id_key UNIQUE (user_id);
 
 
 --
@@ -597,6 +826,30 @@ ALTER TABLE ONLY public.consents
 
 
 --
+-- Name: device_tokens device_tokens_expo_push_token_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.device_tokens
+    ADD CONSTRAINT device_tokens_expo_push_token_key UNIQUE (expo_push_token);
+
+
+--
+-- Name: device_tokens device_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.device_tokens
+    ADD CONSTRAINT device_tokens_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: diagnostic_recommendations diagnostic_recommendations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.diagnostic_recommendations
+    ADD CONSTRAINT diagnostic_recommendations_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: django_admin_log django_admin_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -634,6 +887,14 @@ ALTER TABLE ONLY public.django_migrations
 
 ALTER TABLE ONLY public.django_session
     ADD CONSTRAINT django_session_pkey PRIMARY KEY (session_key);
+
+
+--
+-- Name: email_codes email_codes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.email_codes
+    ADD CONSTRAINT email_codes_pkey PRIMARY KEY (id);
 
 
 --
@@ -709,11 +970,27 @@ ALTER TABLE ONLY public.exercises
 
 
 --
+-- Name: medical_device_orders medical_device_orders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.medical_device_orders
+    ADD CONSTRAINT medical_device_orders_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: medical_documents medical_documents_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.medical_documents
     ADD CONSTRAINT medical_documents_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: notification_deliveries notification_deliveries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_deliveries
+    ADD CONSTRAINT notification_deliveries_pkey PRIMARY KEY (id);
 
 
 --
@@ -757,6 +1034,22 @@ ALTER TABLE ONLY public.patient_profiles
 
 
 --
+-- Name: physician_order_refusals physician_order_refusals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.physician_order_refusals
+    ADD CONSTRAINT physician_order_refusals_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: recepta_na_ruch_referrals recepta_na_ruch_referrals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recepta_na_ruch_referrals
+    ADD CONSTRAINT recepta_na_ruch_referrals_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: therapist_profiles therapist_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -786,6 +1079,38 @@ ALTER TABLE ONLY public.therapist_profiles
 
 ALTER TABLE ONLY public.therapy_types
     ADD CONSTRAINT therapy_types_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: token_blacklist_blacklistedtoken token_blacklist_blacklistedtoken_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.token_blacklist_blacklistedtoken
+    ADD CONSTRAINT token_blacklist_blacklistedtoken_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: token_blacklist_blacklistedtoken token_blacklist_blacklistedtoken_token_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.token_blacklist_blacklistedtoken
+    ADD CONSTRAINT token_blacklist_blacklistedtoken_token_id_key UNIQUE (token_id);
+
+
+--
+-- Name: token_blacklist_outstandingtoken token_blacklist_outstandingtoken_jti_hex_d9bdf6f7_uniq; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.token_blacklist_outstandingtoken
+    ADD CONSTRAINT token_blacklist_outstandingtoken_jti_hex_d9bdf6f7_uniq UNIQUE (jti);
+
+
+--
+-- Name: token_blacklist_outstandingtoken token_blacklist_outstandingtoken_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.token_blacklist_outstandingtoken
+    ADD CONSTRAINT token_blacklist_outstandingtoken_pkey PRIMARY KEY (id);
 
 
 --
@@ -845,11 +1170,35 @@ ALTER TABLE ONLY public.therapy_types
 
 
 --
+-- Name: user_mfa user_mfa_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_mfa
+    ADD CONSTRAINT user_mfa_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user_mfa user_mfa_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_mfa
+    ADD CONSTRAINT user_mfa_user_id_key UNIQUE (user_id);
+
+
+--
 -- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_email_key UNIQUE (email);
+
+
+--
+-- Name: users users_google_sub_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_google_sub_key UNIQUE (google_sub);
 
 
 --
@@ -951,6 +1300,34 @@ CREATE INDEX consents_user_id_95a55d28 ON public.consents USING btree (user_id);
 
 
 --
+-- Name: device_tokens_expo_push_token_6b992171_like; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX device_tokens_expo_push_token_6b992171_like ON public.device_tokens USING btree (expo_push_token varchar_pattern_ops);
+
+
+--
+-- Name: device_tokens_user_id_e45e697f; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX device_tokens_user_id_e45e697f ON public.device_tokens USING btree (user_id);
+
+
+--
+-- Name: diagnostic_recommendations_episode_id_ad07a070; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX diagnostic_recommendations_episode_id_ad07a070 ON public.diagnostic_recommendations USING btree (episode_id);
+
+
+--
+-- Name: diagnostic_recommendations_therapist_id_3a292eb2; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX diagnostic_recommendations_therapist_id_3a292eb2 ON public.diagnostic_recommendations USING btree (therapist_id);
+
+
+--
 -- Name: django_admin_log_content_type_id_c4bce8eb; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -976,6 +1353,13 @@ CREATE INDEX django_session_expire_date_a5c62663 ON public.django_session USING 
 --
 
 CREATE INDEX django_session_session_key_c0390e0f_like ON public.django_session USING btree (session_key varchar_pattern_ops);
+
+
+--
+-- Name: email_codes_user_id_4dc2581f; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX email_codes_user_id_4dc2581f ON public.email_codes USING btree (user_id);
 
 
 --
@@ -1056,6 +1440,20 @@ CREATE INDEX exercises_therapist_id_311655b0 ON public.exercises USING btree (th
 
 
 --
+-- Name: idx_device_token_user_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_device_token_user_active ON public.device_tokens USING btree (user_id, is_active);
+
+
+--
+-- Name: idx_email_code_user_purpose; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_email_code_user_purpose ON public.email_codes USING btree (user_id, purpose, used_at);
+
+
+--
 -- Name: idx_episodes_patient_status; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1081,6 +1479,13 @@ CREATE INDEX idx_ex_cat_kind_name ON public.exercise_categories USING btree (kin
 --
 
 CREATE INDEX idx_med_docs_patient_created ON public.medical_documents USING btree (patient_id, created_at DESC);
+
+
+--
+-- Name: idx_notif_delivery_user_dedupe; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_notif_delivery_user_dedupe ON public.notification_deliveries USING btree (user_id, dedupe_key);
 
 
 --
@@ -1112,6 +1517,27 @@ CREATE INDEX idx_visits_therapist_start ON public.visits USING btree (therapist_
 
 
 --
+-- Name: medical_device_orders_episode_id_0d80bd6f; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX medical_device_orders_episode_id_0d80bd6f ON public.medical_device_orders USING btree (episode_id);
+
+
+--
+-- Name: medical_device_orders_patient_id_c6b8f36f; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX medical_device_orders_patient_id_c6b8f36f ON public.medical_device_orders USING btree (patient_id);
+
+
+--
+-- Name: medical_device_orders_therapist_id_b42a762a; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX medical_device_orders_therapist_id_b42a762a ON public.medical_device_orders USING btree (therapist_id);
+
+
+--
 -- Name: medical_documents_episode_id_db4ec1a6; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1137,6 +1563,13 @@ CREATE INDEX medical_documents_uploaded_by_id_68cf55d7 ON public.medical_documen
 --
 
 CREATE INDEX medical_documents_visit_id_a0199485 ON public.medical_documents USING btree (visit_id);
+
+
+--
+-- Name: notification_deliveries_user_id_efd13233; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX notification_deliveries_user_id_efd13233 ON public.notification_deliveries USING btree (user_id);
 
 
 --
@@ -1168,6 +1601,41 @@ CREATE INDEX patient_profiles_therapist_id_0fe64199 ON public.patient_profiles U
 
 
 --
+-- Name: physician_order_refusals_episode_id_99610af3; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX physician_order_refusals_episode_id_99610af3 ON public.physician_order_refusals USING btree (episode_id);
+
+
+--
+-- Name: physician_order_refusals_therapist_id_de90cb9a; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX physician_order_refusals_therapist_id_de90cb9a ON public.physician_order_refusals USING btree (therapist_id);
+
+
+--
+-- Name: recepta_na_ruch_referrals_episode_id_901ddded; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX recepta_na_ruch_referrals_episode_id_901ddded ON public.recepta_na_ruch_referrals USING btree (episode_id);
+
+
+--
+-- Name: recepta_na_ruch_referrals_patient_id_a58c2ac4; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX recepta_na_ruch_referrals_patient_id_a58c2ac4 ON public.recepta_na_ruch_referrals USING btree (patient_id);
+
+
+--
+-- Name: recepta_na_ruch_referrals_therapist_id_e0535a7b; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX recepta_na_ruch_referrals_therapist_id_e0535a7b ON public.recepta_na_ruch_referrals USING btree (therapist_id);
+
+
+--
 -- Name: therapist_profiles_pwzf_number_2fe72337_like; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1182,6 +1650,20 @@ CREATE INDEX therapy_types_therapist_id_bf889207 ON public.therapy_types USING b
 
 
 --
+-- Name: token_blacklist_outstandingtoken_jti_hex_d9bdf6f7_like; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX token_blacklist_outstandingtoken_jti_hex_d9bdf6f7_like ON public.token_blacklist_outstandingtoken USING btree (jti varchar_pattern_ops);
+
+
+--
+-- Name: token_blacklist_outstandingtoken_user_id_83bc629a; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX token_blacklist_outstandingtoken_user_id_83bc629a ON public.token_blacklist_outstandingtoken USING btree (user_id);
+
+
+--
 -- Name: treatment_episodes_patient_id_2b6d8b9d; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1193,6 +1675,13 @@ CREATE INDEX treatment_episodes_patient_id_2b6d8b9d ON public.treatment_episodes
 --
 
 CREATE INDEX users_email_0ea73cca_like ON public.users USING btree (email varchar_pattern_ops);
+
+
+--
+-- Name: users_google_sub_5daad4e8_like; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX users_google_sub_5daad4e8_like ON public.users USING btree (google_sub varchar_pattern_ops);
 
 
 --
@@ -1266,6 +1755,14 @@ CREATE INDEX visits_therapy_type_id_c88843d3 ON public.visits USING btree (thera
 
 
 --
+-- Name: account_deletion_requests account_deletion_requests_user_id_3a34e79e_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.account_deletion_requests
+    ADD CONSTRAINT account_deletion_requests_user_id_3a34e79e_fk_users_id FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: auth_group_permissions auth_group_permissio_permission_id_84c5c92e_fk_auth_perm; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1306,6 +1803,30 @@ ALTER TABLE ONLY public.consents
 
 
 --
+-- Name: device_tokens device_tokens_user_id_e45e697f_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.device_tokens
+    ADD CONSTRAINT device_tokens_user_id_e45e697f_fk_users_id FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: diagnostic_recommendations diagnostic_recommend_episode_id_ad07a070_fk_treatment; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.diagnostic_recommendations
+    ADD CONSTRAINT diagnostic_recommend_episode_id_ad07a070_fk_treatment FOREIGN KEY (episode_id) REFERENCES public.treatment_episodes(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: diagnostic_recommendations diagnostic_recommend_therapist_id_3a292eb2_fk_therapist; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.diagnostic_recommendations
+    ADD CONSTRAINT diagnostic_recommend_therapist_id_3a292eb2_fk_therapist FOREIGN KEY (therapist_id) REFERENCES public.therapist_profiles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: django_admin_log django_admin_log_content_type_id_c4bce8eb_fk_django_co; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1319,6 +1840,14 @@ ALTER TABLE ONLY public.django_admin_log
 
 ALTER TABLE ONLY public.django_admin_log
     ADD CONSTRAINT django_admin_log_user_id_c564eba6_fk_users_id FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: email_codes email_codes_user_id_4dc2581f_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.email_codes
+    ADD CONSTRAINT email_codes_user_id_4dc2581f_fk_users_id FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1378,6 +1907,30 @@ ALTER TABLE ONLY public.exercises
 
 
 --
+-- Name: medical_device_orders medical_device_order_episode_id_0d80bd6f_fk_treatment; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.medical_device_orders
+    ADD CONSTRAINT medical_device_order_episode_id_0d80bd6f_fk_treatment FOREIGN KEY (episode_id) REFERENCES public.treatment_episodes(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: medical_device_orders medical_device_order_patient_id_c6b8f36f_fk_patient_p; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.medical_device_orders
+    ADD CONSTRAINT medical_device_order_patient_id_c6b8f36f_fk_patient_p FOREIGN KEY (patient_id) REFERENCES public.patient_profiles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: medical_device_orders medical_device_order_therapist_id_b42a762a_fk_therapist; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.medical_device_orders
+    ADD CONSTRAINT medical_device_order_therapist_id_b42a762a_fk_therapist FOREIGN KEY (therapist_id) REFERENCES public.therapist_profiles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: medical_documents medical_documents_episode_id_db4ec1a6_fk_treatment_episodes_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1407,6 +1960,14 @@ ALTER TABLE ONLY public.medical_documents
 
 ALTER TABLE ONLY public.medical_documents
     ADD CONSTRAINT medical_documents_visit_id_a0199485_fk_visits_id FOREIGN KEY (visit_id) REFERENCES public.visits(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: notification_deliveries notification_deliveries_user_id_efd13233_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notification_deliveries
+    ADD CONSTRAINT notification_deliveries_user_id_efd13233_fk_users_id FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1442,6 +2003,46 @@ ALTER TABLE ONLY public.patient_profiles
 
 
 --
+-- Name: physician_order_refusals physician_order_refu_episode_id_99610af3_fk_treatment; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.physician_order_refusals
+    ADD CONSTRAINT physician_order_refu_episode_id_99610af3_fk_treatment FOREIGN KEY (episode_id) REFERENCES public.treatment_episodes(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: physician_order_refusals physician_order_refu_therapist_id_de90cb9a_fk_therapist; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.physician_order_refusals
+    ADD CONSTRAINT physician_order_refu_therapist_id_de90cb9a_fk_therapist FOREIGN KEY (therapist_id) REFERENCES public.therapist_profiles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: recepta_na_ruch_referrals recepta_na_ruch_refe_episode_id_901ddded_fk_treatment; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recepta_na_ruch_referrals
+    ADD CONSTRAINT recepta_na_ruch_refe_episode_id_901ddded_fk_treatment FOREIGN KEY (episode_id) REFERENCES public.treatment_episodes(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: recepta_na_ruch_referrals recepta_na_ruch_refe_patient_id_a58c2ac4_fk_patient_p; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recepta_na_ruch_referrals
+    ADD CONSTRAINT recepta_na_ruch_refe_patient_id_a58c2ac4_fk_patient_p FOREIGN KEY (patient_id) REFERENCES public.patient_profiles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: recepta_na_ruch_referrals recepta_na_ruch_refe_therapist_id_e0535a7b_fk_therapist; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.recepta_na_ruch_referrals
+    ADD CONSTRAINT recepta_na_ruch_refe_therapist_id_e0535a7b_fk_therapist FOREIGN KEY (therapist_id) REFERENCES public.therapist_profiles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: therapist_profiles therapist_profiles_user_id_e67f6201_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1458,11 +2059,35 @@ ALTER TABLE ONLY public.therapy_types
 
 
 --
+-- Name: token_blacklist_blacklistedtoken token_blacklist_blacklistedtoken_token_id_3cc7fe56_fk; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.token_blacklist_blacklistedtoken
+    ADD CONSTRAINT token_blacklist_blacklistedtoken_token_id_3cc7fe56_fk FOREIGN KEY (token_id) REFERENCES public.token_blacklist_outstandingtoken(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: token_blacklist_outstandingtoken token_blacklist_outstandingtoken_user_id_83bc629a_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.token_blacklist_outstandingtoken
+    ADD CONSTRAINT token_blacklist_outstandingtoken_user_id_83bc629a_fk_users_id FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: treatment_episodes treatment_episodes_patient_id_2b6d8b9d_fk_patient_profiles_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.treatment_episodes
     ADD CONSTRAINT treatment_episodes_patient_id_2b6d8b9d_fk_patient_profiles_id FOREIGN KEY (patient_id) REFERENCES public.patient_profiles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: user_mfa user_mfa_user_id_84beef2c_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_mfa
+    ADD CONSTRAINT user_mfa_user_id_84beef2c_fk_users_id FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -1549,5 +2174,5 @@ ALTER TABLE ONLY public.visits
 -- PostgreSQL database dump complete
 --
 
-\unrestrict DiDK0XE4xUxdElef6vfAgy9DnbXrEut6hYsf1AwXagLlxrJ6ZXpr9ICrnGORb5r
+\unrestrict x7TLutXfgzZopcP22UocVE2VK50cBke5KDtJl5UOfI7PQKaxd41kN5M4MJs7ANh
 
