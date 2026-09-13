@@ -8,6 +8,7 @@ import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncStat
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
+import { LocationField } from '@/components/location/LocationField'
 import { PhoneField } from '@/components/ui/PhoneField'
 import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
 import { getAddressError, getBioError, getCourseError } from '@/lib/fieldPolicy'
@@ -313,19 +314,19 @@ export function ProfilePage() {
                 error={fieldErrors.phone}
                 hint="Wybierz kraj, żeby ustawić prefix numeru."
               />
-              <Field
+              <LocationField
                 label="Adres / lokalizacja gabinetu"
                 name="location_address"
                 value={locationAddress}
-                onChange={(e) => {
-                  setLocationAddress(e.target.value)
+                onChange={(val) => {
+                  setLocationAddress(val)
                   if (fieldErrors.locationAddress) {
                     setFieldErrors((prev) => ({ ...prev, locationAddress: undefined }))
                   }
                 }}
                 error={fieldErrors.locationAddress}
                 placeholder="np. ul. Kwiatowa 12, 00-001 Warszawa"
-                hint="Widoczny dla pacjentów przy wizycie - kliknięcie otwiera mapę."
+                hint="Widoczny dla pacjentów przy wizycie. Możesz wyszukać adres lub ustawić go na interaktywnej mapie."
               />
             </div>
           </section>

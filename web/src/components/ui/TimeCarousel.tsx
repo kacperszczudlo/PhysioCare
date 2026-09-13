@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { DAY_END_HOUR, DAY_START_HOUR, SNAP_MINUTES } from '@/lib/scheduleTime'
 
@@ -78,7 +78,7 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
     })
   }
 
-  function scrollToIndex(index: number) {
+  const scrollToIndex = useCallback((index: number) => {
     const node = ref.current
     if (!node) {
       return
@@ -86,22 +86,22 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
     withIgnoredScroll(() => {
       node.scrollTop = index * ITEM_HEIGHT
     })
-  }
+  }, [])
 
-  function emitIndex(index: number) {
+  const emitIndex = useCallback((index: number) => {
     setActiveIndex(index)
     scrollToIndex(index)
     if (index !== selectedIndexRef.current) {
       onChangeIndexRef.current(index)
     }
-  }
+  }, [scrollToIndex])
 
-  function commit(scrollTop: number) {
+  const commit = useCallback((scrollTop: number) => {
     clearSettle()
     dragging.current = false
     const next = indexFromScroll(scrollTop, itemsLengthRef.current)
     emitIndex(next)
-  }
+  }, [emitIndex])
 
   function scheduleCommit(scrollTop: number) {
     clearSettle()
@@ -114,7 +114,7 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
       return
     }
     scrollToIndex(selectedIndex)
-  }, [selectedIndex, items.length])
+  }, [selectedIndex, items.length, scrollToIndex])
 
   useEffect(() => {
     const node = ref.current
@@ -134,7 +134,7 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
       node.removeEventListener('scrollend', onScrollEnd)
       clearSettle()
     }
-  }, [])
+  }, [commit])
 
   return (
     <div className="time-carousel__col" aria-label={`${ariaLabel}: ${items[activeIndex] ?? ''}`}>

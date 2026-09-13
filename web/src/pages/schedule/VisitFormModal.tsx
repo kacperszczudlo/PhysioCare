@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button'
 import { DayCarousel } from '@/components/ui/DayCarousel'
 import { Modal } from '@/components/ui/Modal'
 import { TimeCarousel } from '@/components/ui/TimeCarousel'
+import { LocationField } from '@/components/location/LocationField'
 import { addDays, dateFromDayMinutes, formatTime, startOfDay, toIsoLocal } from '@/lib/scheduleTime'
 
 import './VisitFormModal.css'
@@ -445,16 +446,14 @@ export function VisitFormModal({
           ) : null}
 
           {isEdit ? (
-            <label className="ui-field">
-              <span className="ui-field__label">Adres wizyty</span>
-              <textarea
-                className="ui-modal__textarea"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                rows={2}
-                placeholder="Adres gabinetu lub wizyty domowej"
-              />
-            </label>
+            <LocationField
+              label="Adres wizyty"
+              name="location_address"
+              value={location}
+              onChange={setLocation}
+              placeholder="Adres gabinetu lub wizyty domowej"
+              hint="Możesz podać adres ręcznie lub wybrać go precyzyjnie na mapie."
+            />
           ) : null}
 
           {error ? (

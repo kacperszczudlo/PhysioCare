@@ -37,9 +37,10 @@ export function DayCarousel({
   label = 'Dzień',
   id,
 }: DayCarouselProps) {
+  const minDateTime = minimumDate ? minimumDate.getTime() : null
   const minTime = useMemo(
-    () => startOfDay(minimumDate ?? new Date()).getTime(),
-    [minimumDate?.getTime()],
+    () => startOfDay(minDateTime ? new Date(minDateTime) : new Date()).getTime(),
+    [minDateTime],
   )
   const minDay = useMemo(() => new Date(minTime), [minTime])
   const selected = startOfDay(value)

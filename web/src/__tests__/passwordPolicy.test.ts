@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPasswordError, getPasswordRequirements, passwordsMatch, PASSWORD_MESSAGES } from '../lib/passwordPolicy';
+import { getPasswordError, passwordsMatch, PASSWORD_MESSAGES } from '../lib/passwordPolicy';
 
 describe('passwordPolicy (Web)', () => {
   it('validates a strong password successfully', () => {

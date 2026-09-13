@@ -49,13 +49,17 @@ export function DateCarousel({
   required,
   hint,
 }: DateCarouselProps) {
-  const minDay = startOfDay(minimumDate ? parseIsoDate(minimumDate) : addDays(new Date(), -30))
+  const minDateTime = minimumDate ? parseIsoDate(minimumDate).getTime() : null
+  const minDay = useMemo(
+    () => startOfDay(minDateTime ? new Date(minDateTime) : addDays(new Date(), -30)),
+    [minDateTime],
+  )
   const selected = startOfDay(parseIsoDate(value || toDateInputValue(new Date())))
   const listRef = useRef<HTMLDivElement>(null)
 
   const days = useMemo(() => {
     return Array.from({ length: dayCount }, (_, index) => addDays(minDay, index))
-  }, [minDay.getTime(), dayCount])
+  }, [minDay, dayCount])
 
   const selectedIndex = Math.max(
     0,
