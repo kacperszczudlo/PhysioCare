@@ -15,6 +15,7 @@ def test_notify_today_exercises_command(
     mock_notify, patient, therapist
 ):
     # Arrange
+    ExerciseAssignment.objects.all().delete()
     exercise = Exercise.objects.create(
         therapist=therapist,
         title='Rozciąganie',

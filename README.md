@@ -234,7 +234,11 @@ npm.cmd run format:check
 **Testy** (z roota repo, PostgreSQL działa, venv w `backend/venv`):
 
 ```powershell
+# Pełna zjednoczona paczka (Backend Pytest + Web Vitest + Mobile Vitest):
 python scripts/run_tests.py
+
+# Weryfikacja kolekcji Postman:
+python scripts/run_postman.py
 ```
 
 Raporty: `backend/reports/pytest-report.html`, `backend/reports/coverage/index.html`.
@@ -248,7 +252,8 @@ Raporty: `backend/reports/pytest-report.html`, `backend/reports/coverage/index.h
 | `setup_postgres_auth.py` | User, baza, `btree_gist` |
 | `reset_db.py` | Drop/create DB + migrate |
 | `sync_schema_sql.py` | Dump schematu → `database/schema.sql` |
-| `run_tests.py` | pytest + coverage HTML |
+| `run_tests.py` | Pełna paczka testów (Backend + Web + Mobile) |
+| `run_postman.py` | Weryfikacja i runner kolekcji Postman |
 
 Uruchamianie zawsze z roota repo:
 

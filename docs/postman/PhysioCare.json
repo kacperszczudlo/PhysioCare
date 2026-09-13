@@ -2934,6 +2934,47 @@
               }
             }
           ]
+        },
+        {
+          "name": "Patient clinical documents inbox (e-ZWM / Recepta na Ruch / Refusals)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/patient/clinical-documents/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "patient",
+                "clinical-documents"
+              ]
+            },
+            "description": "Pobiera listę dokumentów klinicznych (zlecenia na wyroby medyczne, skierowania, odmowy) przypisanych do pacjenta.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -3657,6 +3698,53 @@
                   "  pm.expect(j).to.have.property('error');",
                   "  pm.expect(j.error).to.have.property('code');",
                   "  pm.expect(j.error).to.have.property('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "UC-19 Medical devices catalog",
+      "description": "Katalog wyrobów medycznych z podziałem na poziomy kompetencji PWZFz (Licencjat / Magister / Specjalista).",
+      "item": [
+        {
+          "name": "GET medical devices catalog (therapist)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/medical-devices/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "medical-devices"
+              ]
+            },
+            "description": "Pobiera listę wyrobów medycznych z uwzględnieniem uprawnień wynikających z poziomu kwalifikacji terapeuty.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
                   "});"
                 ]
               }
