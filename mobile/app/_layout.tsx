@@ -6,11 +6,12 @@ import { KeyboardProvider } from 'react-native-keyboard-controller'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { AuthProvider, useAuth } from '@/auth/AuthContext'
+import { BrandMark } from '@/components/BrandMark'
 import { OfflineBanner } from '@/components/OfflineBanner'
 import { configureNotificationHandler } from '@/notifications/push'
 import { NotificationObserver } from '@/notifications/NotificationObserver'
 import { RealtimeObserver } from '@/realtime/RealtimeObserver'
-import { colors } from '@/theme/tokens'
+import { colors, space } from '@/theme/tokens'
 import { NetworkProvider } from '@/network/NetworkContext'
 import { ToastContainer } from '@/components/ToastContainer'
 import { ToastProvider } from '@/components/ToastContext'
@@ -25,7 +26,8 @@ function RootNavigator() {
       <View style={styles.shell}>
         <OfflineBanner />
         <View style={styles.boot}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <BrandMark variant="logo" size="lg" style={styles.bootBrand} />
+          <ActivityIndicator size="large" color={colors.primary} style={styles.bootSpinner} />
         </View>
       </View>
     )
@@ -101,5 +103,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.bg,
+    gap: space.lg,
+  },
+  bootBrand: {
+    alignItems: 'center',
+  },
+  bootSpinner: {
+    marginTop: space.xs,
   },
 })
