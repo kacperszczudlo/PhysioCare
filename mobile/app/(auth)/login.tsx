@@ -35,14 +35,23 @@ export default function LoginScreen() {
 
   async function onSubmit() {
     setError(null)
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      setError('Podaj adres e-mail.')
+      return
+    }
+    if (!password) {
+      setError('Podaj hasło.')
+      return
+    }
     setLoading(true)
     try {
-      await login(email.trim(), password)
+      await login(trimmedEmail, password)
       router.replace('/(tabs)')
     } catch (err) {
       if (err instanceof ApiError && err.code === 'AUTH_027') {
         const details = err.details as { email?: string }
-        const verifyEmailAddr = (typeof details.email === 'string' && details.email) || email.trim()
+        const verifyEmailAddr = (typeof details.email === 'string' && details.email) || trimmedEmail
         router.replace(`/(auth)/verify-email?email=${encodeURIComponent(verifyEmailAddr)}` as Href)
         return
       }
@@ -118,7 +127,7 @@ export default function LoginScreen() {
             {error}
           </Text>
         ) : null}
-        <Button title="Zaloguj się" loading={loading} onPress={onSubmit} />
+        <Button title="Zaloguj się" loading={loading} disabled={!email.trim() || !password} onPress={onSubmit} />
 
         {isGoogleSignInConfigured ? (
           <GoogleSignInButton

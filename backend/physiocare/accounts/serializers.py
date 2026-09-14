@@ -684,3 +684,10 @@ class MFADisableSerializer(serializers.Serializer):
     def validate_password(self, value):
         return (value or '').strip()
 
+    def validate_code(self, value):
+        cleaned = (value or '').strip()
+        if cleaned and (not cleaned.isdigit() or len(cleaned) != 6):
+            raise serializers.ValidationError('Kod musi składać się z 6 cyfr.')
+        return cleaned
+
+

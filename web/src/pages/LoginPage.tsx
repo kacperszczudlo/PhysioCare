@@ -38,9 +38,18 @@ export function LoginPage() {
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      setError('Podaj adres e-mail.')
+      return
+    }
+    if (!password) {
+      setError('Podaj hasło.')
+      return
+    }
     setLoading(true)
     try {
-      const result = await login(email.trim(), password)
+      const result = await login(trimmedEmail, password)
       if (result.kind === 'mfa_required') {
         setMfaStep({ mfa_token: result.mfa_token, email: result.email })
         return
@@ -49,7 +58,7 @@ export function LoginPage() {
     } catch (err) {
       if (err instanceof ApiError && err.code === 'AUTH_027') {
         const details = err.details as { email?: string }
-        const verifyEmail = (typeof details.email === 'string' && details.email) || email.trim()
+        const verifyEmail = (typeof details.email === 'string' && details.email) || trimmedEmail
         navigate(`/verify-email?email=${encodeURIComponent(verifyEmail)}`, { replace: true })
         return
       }
@@ -190,7 +199,7 @@ export function LoginPage() {
           </p>
         ) : null}
 
-        <Button type="submit" loading={loading} className="auth-form__submit">
+        <Button type="submit" loading={loading} disabled={!email.trim() || !password} className="auth-form__submit">
           Zaloguj się
         </Button>
       </form>
