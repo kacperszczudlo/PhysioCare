@@ -4,7 +4,13 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { colors, radius, space, typography } from '@/theme/tokens'
 import { Button } from './Button'
 
-export function LoadingBlock({ label = 'Ładowanie…', skeleton }: { label?: string; skeleton?: ReactNode }) {
+export function LoadingBlock({
+  label = 'Ładowanie…',
+  skeleton,
+}: {
+  label?: string
+  skeleton?: ReactNode
+}) {
   if (skeleton) {
     return (
       <View accessibilityLabel={label} accessibilityState={{ busy: true }}>

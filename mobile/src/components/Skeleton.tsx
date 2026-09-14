@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import { AccessibilityInfo, DimensionValue, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
+import {
+  AccessibilityInfo,
+  DimensionValue,
+  StyleProp,
+  StyleSheet,
+  View,
+  ViewStyle,
+} from 'react-native'
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -36,12 +43,9 @@ export function Skeleton({
 
     if (!reduceMotion) {
       opacity.value = withRepeat(
-        withSequence(
-          withTiming(0.85, { duration: 800 }),
-          withTiming(0.4, { duration: 800 })
-        ),
+        withSequence(withTiming(0.85, { duration: 800 }), withTiming(0.4, { duration: 800 })),
         -1,
-        true
+        true,
       )
     }
     return () => {
@@ -53,11 +57,7 @@ export function Skeleton({
     opacity: reduceMotion ? 0.5 : opacity.value,
   }))
 
-  const computedRadius = circle
-    ? typeof height === 'number'
-      ? height / 2
-      : 9999
-    : borderRadius
+  const computedRadius = circle ? (typeof height === 'number' ? height / 2 : 9999) : borderRadius
 
   return (
     <Animated.View

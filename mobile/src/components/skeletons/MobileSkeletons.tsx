@@ -44,7 +44,12 @@ export function MobileDashboardSkeleton() {
             <Skeleton width="45%" height={12} />
           </View>
         </View>
-        <Skeleton width="100%" height={40} borderRadius={radius.md} style={{ marginTop: space.md }} />
+        <Skeleton
+          width="100%"
+          height={40}
+          borderRadius={radius.md}
+          style={{ marginTop: space.md }}
+        />
       </View>
 
       {/* Recent Activity / Exercises */}
