@@ -84,8 +84,8 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Pole | Wartość |
 |------|---------|
 | Aktor | Pacjent |
-| Przebieg | 1. Zakładka nadchodzące / zakończone. 2. Szczegóły wizyty (adres, przygotowanie). 3. Opcjonalnie: zmiana terminu (modal), odwołanie z potwierdzeniem. |
-| Wyjątki | E1: Termin niedostępny -> 409. |
+| Przebieg | 1. Zakładka nadchodzące / zakończone. 2. Wybór wolnego terminu z udostępnionego grafiku fizjoterapeuty. 3. Rezerwacja wizyty (status `PENDING_APPROVAL`). 4. Opcjonalnie: zmiana terminu (modal), odwołanie z potwierdzeniem. |
+| Wyjątki | E1: Kolizja terminów -> 409. E2: Wybrany termin nie mieści się w aktywnych slotach dostępności fizjoterapeuty -> 400 Bad Request. |
 
 ---
 
@@ -118,13 +118,13 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-11 - Zarządzanie harmonogramem
+## UC-11 - Zarządzanie harmonogramem i dostępnością
 
 | Pole | Wartość |
 |------|---------|
 | Aktor | Fizjoterapeuta |
-| Przebieg | 1. Widok dzienny z nawigacją dat. 2. Dodanie wizyty (+ lub klik slotu). 3. Drag & drop zmiany godziny. 4. Automatyczny kolor wg typu terapii. |
-| Wyjątki | E1: Kolizja terminów -> 409. |
+| Przebieg | 1. Widok dzienny z nawigacją dat. 2. Zarządzanie grafikiem pracy (`/therapist/availabilities/`): dodawanie slotów cyklicznych tygodniowych (np. Pon 08:00-16:00) lub jednorazowych. 3. Dodanie wizyty (+ lub klik slotu). 4. Drag & drop zmiany godziny. 5. Automatyczny kolor wg typu terapii. |
+| Wyjątki | E1: Kolizja terminów wizyt -> 409. E2: Nieprawidłowy przedział czasowy slotu -> 400. |
 
 ---
 
@@ -210,6 +210,16 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Aktor | Pacjent / Fizjoterapeuta |
 | Cel | Realizacja prawa do bycia zapomnianym (Art. 17 RODO) |
 | Przebieg | 1. Użytkownik składa wniosek w ustawieniach prywatności. 2. System anonimizuje adres e-mail (`@deleted.invalid`), imię i nazwisko. 3. Usunięcie tokenów sesyjnych oraz deaktywacja profilu. |
+
+---
+
+## Ochrona Danych Osobowych i Medycznych (RODO Art. 9)
+
+| Mechanizm | Opis Wdrożenia |
+|-----------|----------------|
+| **Szyfrowanie pól at-rest** | Dane wrażliwe (PESEL, notatki medyczne, diagnoza funkcjonalna, uzasadnienia skierowań) są przed zapisaniem do tabel w PostgreSQL automatycznie szyfrowane symetrycznym algorytmem Fernet (AES-128-CBC + HMAC SHA-256). |
+| **Brak jawnego PESELu w BD** | Zapytania surowe SQL zwracają zaszyfrowany ciąg (`gAAAAA...`). Dekrypcja zachodzi wyłącznie w warstwie ORM po autoryzacji sesji. |
+| **Maskowanie w API** | Endpointy API udostępniają numer PESEL oraz wpisy medyczne wyłącznie autoryzowanemu fizjoterapeucie (przypisanemu do pacjenta) oraz samemu pacjentowi. |
 
 ---
 

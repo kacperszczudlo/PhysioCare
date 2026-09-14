@@ -77,6 +77,13 @@ def test_patient_visit_request_publishes_sse_without_email_side_effect(
     api_client.force_authenticate(user=patient.user)
     start_at = timezone.now() + timedelta(days=2)
     end_at = start_at + timedelta(minutes=45)
+    from scheduling.models import TherapistAvailabilitySlot
+    TherapistAvailabilitySlot.objects.create(
+        therapist=therapist,
+        is_recurring=False,
+        start_at=start_at - timedelta(hours=1),
+        end_at=end_at + timedelta(hours=1),
+    )
 
     response = api_client.post(
         '/api/v1/me/visits/',

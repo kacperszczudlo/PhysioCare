@@ -1,12 +1,12 @@
 -- PhysioCare - auto-generated from Django migrations
--- Generated: 2026-09-13T23:14:26Z
+-- Generated: 2026-09-14T14:37:14Z
 -- Do not edit manually. Run: python scripts/sync_schema_sql.py
 
 --
 -- PostgreSQL database dump
 --
 
-\restrict x7TLutXfgzZopcP22UocVE2VK50cBke5KDtJl5UOfI7PQKaxd41kN5M4MJs7ANh
+\restrict 7K8gIMotVmFMb00L5uMxYW4BPv17CaIld7YHBBSNRbMNtTPd1vJew9bmC4g6xcl
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -2174,5 +2174,5 @@ ALTER TABLE ONLY public.visits
 -- PostgreSQL database dump complete
 --
 
-\unrestrict x7TLutXfgzZopcP22UocVE2VK50cBke5KDtJl5UOfI7PQKaxd41kN5M4MJs7ANh
+\unrestrict 7K8gIMotVmFMb00L5uMxYW4BPv17CaIld7YHBBSNRbMNtTPd1vJew9bmC4g6xcl
 

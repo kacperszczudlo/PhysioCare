@@ -16,6 +16,12 @@ logger = logging.getLogger('physiocare.auth')
 MFA_PREAUTH_SALT = 'physiocare.2fa.preauth'
 MFA_PREAUTH_MAX_AGE = 300  # 5 minutes
 
+TOTP_CODE_LENGTH = 6
+TOTP_VALID_WINDOW = 1
+DEFAULT_BACKUP_CODES_COUNT = 8
+BACKUP_CODE_CHAR_LENGTH = 8
+BACKUP_CODE_FORMAT_SPLIT = 4
+
 
 def generate_totp_secret() -> str:
     """Generate a new 32-character Base32 secret for TOTP."""
@@ -38,17 +44,17 @@ def generate_qr_code_svg(otpauth_url: str) -> str:
 
 
 def verify_totp_code(secret: str, code: str) -> bool:
-    """Verify a 6-digit TOTP code against the secret key (tolerance window = 1)."""
+    """Verify a TOTP code against the secret key (tolerance window = 1)."""
     if not secret or not code:
         return False
     clean_code = str(code).strip().replace(' ', '').replace('-', '')
-    if not clean_code.isdigit() or len(clean_code) != 6:
+    if not clean_code.isdigit() or len(clean_code) != TOTP_CODE_LENGTH:
         return False
     totp = pyotp.TOTP(secret)
-    return bool(totp.verify(clean_code, valid_window=1))
+    return bool(totp.verify(clean_code, valid_window=TOTP_VALID_WINDOW))
 
 
-def generate_backup_codes(count: int = 8) -> tuple[list[str], list[str]]:
+def generate_backup_codes(count: int = DEFAULT_BACKUP_CODES_COUNT) -> tuple[list[str], list[str]]:
     """Generate raw single-use backup codes and their SHA-256 hashes."""
     alphabet = string.ascii_uppercase + string.digits
     # Exclude ambiguous characters like O, 0, I, 1 for usability
@@ -57,8 +63,8 @@ def generate_backup_codes(count: int = 8) -> tuple[list[str], list[str]]:
     hashed_codes = []
 
     for _ in range(count):
-        code = ''.join(secrets.choice(clean_alphabet) for _ in range(8))
-        code_formatted = f'{code[:4]}-{code[4:]}'
+        code = ''.join(secrets.choice(clean_alphabet) for _ in range(BACKUP_CODE_CHAR_LENGTH))
+        code_formatted = f'{code[:BACKUP_CODE_FORMAT_SPLIT]}-{code[BACKUP_CODE_FORMAT_SPLIT:]}'
         raw_codes.append(code_formatted)
         code_hash = hashlib.sha256(code.encode('utf-8')).hexdigest()
         hashed_codes.append(code_hash)

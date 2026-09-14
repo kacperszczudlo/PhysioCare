@@ -424,6 +424,7 @@ export function VisitFormModal({
               className="ui-modal__textarea"
               value={prep}
               onChange={(e) => setPrep(e.target.value)}
+              maxLength={2000}
               rows={3}
               placeholder="Np. wygodny strój, wyniki badań…"
             />
@@ -436,6 +437,7 @@ export function VisitFormModal({
                 className="ui-modal__textarea"
                 value={patientSummary}
                 onChange={(e) => setPatientSummary(e.target.value)}
+                maxLength={5000}
                 rows={4}
                 placeholder="Prosty język: co było na wizycie, co robić w domu, na co uważać…"
               />

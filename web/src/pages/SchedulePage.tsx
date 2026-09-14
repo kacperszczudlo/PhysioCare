@@ -17,6 +17,8 @@ import {
 import { DayCarousel } from '@/components/ui/DayCarousel'
 import { DayCalendar } from '@/pages/schedule/DayCalendar'
 import { VisitFormModal } from '@/pages/schedule/VisitFormModal'
+import { AvailabilityManagerModal } from '@/pages/schedule/AvailabilityManagerModal'
+import { AvailabilityTabView } from '@/pages/schedule/AvailabilityTabView'
 import { isVisitRealtimeEvent } from '@/realtime/types'
 import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
 import './SchedulePage.css'
@@ -33,12 +35,14 @@ function formatPendingWhen(iso: string): string {
 }
 
 export function SchedulePage() {
+  const [activeTab, setActiveTab] = useState<'VISITS' | 'AVAILABILITY'>('VISITS')
   const [day, setDay] = useState(() => startOfDay(new Date()))
   const [visits, setVisits] = useState<Visit[]>([])
   const [pendingAll, setPendingAll] = useState<Visit[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
+  const [availModalOpen, setAvailModalOpen] = useState(false)
   const [slotMinutes, setSlotMinutes] = useState(0)
   const [editTarget, setEditTarget] = useState<Visit | null>(null)
   const [cancelTarget, setCancelTarget] = useState<Visit | null>(null)
@@ -238,166 +242,196 @@ export function SchedulePage() {
     <section className="schedule-page">
       <PageHeader
         title="Harmonogram"
-        description="Widok dzienny - kliknij wolny slot, aby dodać wizytę, przeciągnij blok, aby zmienić godzinę, lub Edytuj, aby zmienić treść wizyty. Zgłoszenia pacjentów widać jako bloki „Do zatwierdzenia”."
+        description="Zarządzaj wizytami pacjentów oraz definiuj stały grafik pracy gabinetu."
         actions={
-          <Button type="button" onClick={() => openCreate(60)}>
-            + Nowa wizyta
-          </Button>
+          activeTab === 'VISITS' ? (
+            <Button type="button" onClick={() => openCreate(60)}>
+              + Nowa wizyta
+            </Button>
+          ) : undefined
         }
       />
 
-      {pendingSorted.length > 0 ? (
-        <div className="schedule-pending-banner" role="status">
-          <div className="schedule-pending-banner__copy">
-            <p className="schedule-pending-banner__title">
-              {pendingSorted.length === 1
-                ? '1 zgłoszenie oczekuje na zatwierdzenie'
-                : pendingSorted.length >= 2 && pendingSorted.length <= 4
-                  ? `${pendingSorted.length} zgłoszenia oczekują na zatwierdzenie`
-                  : `${pendingSorted.length} zgłoszeń oczekuje na zatwierdzenie`}
-            </p>
-            <p className="schedule-pending-banner__meta">
-              {pendingOnDay.length > 0
-                ? 'Widać je na kalendarzu poniżej ze statusem „Do zatwierdzenia”.'
-                : 'Najbliższe zgłoszenie otworzyło odpowiedni dzień - zatwierdź na kalendarzu lub z listy.'}
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => setShowPendingList((value) => !value)}
-            aria-expanded={showPendingList}
-          >
-            {showPendingList ? 'Ukryj listę' : 'Pokaż listę'}
-          </Button>
-        </div>
-      ) : null}
-
-      {showPendingList && pendingSorted.length > 0 ? (
-        <div className="schedule-pending-list">
-          {pendingSorted.map((visit) => {
-            const onThisDay = toDateInputValue(new Date(visit.start_at)) === dateIso
-            return (
-              <div key={visit.id} className="schedule-pending-item">
-                <div className="schedule-pending-item__main">
-                  <p className="schedule-pending-item__title">
-                    {visit.patient_first_name} {visit.patient_last_name} · {visit.therapy_type_name}
-                  </p>
-                  <p className="schedule-pending-item__meta">
-                    {formatPendingWhen(visit.start_at)} · {formatTime(new Date(visit.start_at))}-
-                    {formatTime(new Date(visit.end_at))}
-                    {onThisDay ? ' · na tym dniu' : ''}
-                  </p>
-                </div>
-                <div className="schedule-pending-item__actions">
-                  {!onThisDay ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => jumpToVisitDay(visit)}
-                    >
-                      Przejdź do dnia
-                    </Button>
-                  ) : null}
-                  <Button
-                    type="button"
-                    size="sm"
-                    loading={actionBusyId === visit.id}
-                    onClick={() => void approveVisit(visit)}
-                  >
-                    Zatwierdź
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    disabled={actionBusyId === visit.id}
-                    onClick={() => void rejectVisit(visit)}
-                  >
-                    Odrzuć
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => openEdit(visit)}
-                  >
-                    Szczegóły
-                  </Button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      ) : null}
-
-      <div className="schedule-toolbar">
-        <div className="schedule-toolbar__nav">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => setDay((d) => addDays(d, -1))}
-          >
-            Poprzedni
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => setDay(startOfDay(new Date()))}
-          >
-            Dziś
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => setDay((d) => addDays(d, 1))}
-          >
-            Następny
-          </Button>
-        </div>
-
-        <p className="schedule-toolbar__label">{formatDayLabel(day)}</p>
-
-        <div className="schedule-toolbar__carousel">
-          <DayCarousel
-            label="Wybierz dzień"
-            value={day}
-            onChange={setDay}
-            minimumDate={addDays(startOfDay(new Date()), -60)}
-            dayCount={120}
-          />
-        </div>
+      <div className="schedule-segmented-tabs" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'VISITS'}
+          className={`schedule-segmented-tab ${activeTab === 'VISITS' ? 'active' : ''}`}
+          onClick={() => setActiveTab('VISITS')}
+        >
+          Kalendarz wizyt
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'AVAILABILITY'}
+          className={`schedule-segmented-tab ${activeTab === 'AVAILABILITY' ? 'active' : ''}`}
+          onClick={() => setActiveTab('AVAILABILITY')}
+        >
+          Grafik i dostępność
+        </button>
       </div>
 
-      {error ? <ErrorBanner message={error} onRetry={reload} /> : null}
+      {activeTab === 'AVAILABILITY' ? (
+        <AvailabilityTabView />
+      ) : (
+        <>
+          {pendingSorted.length > 0 ? (
+            <div className="schedule-pending-banner" role="status">
+              <div className="schedule-pending-banner__copy">
+                <p className="schedule-pending-banner__title">
+                  {pendingSorted.length === 1
+                    ? '1 zgłoszenie oczekuje na zatwierdzenie'
+                    : pendingSorted.length >= 2 && pendingSorted.length <= 4
+                      ? `${pendingSorted.length} zgłoszenia oczekują na zatwierdzenie`
+                      : `${pendingSorted.length} zgłoszeń oczekuje na zatwierdzenie`}
+                </p>
+                <p className="schedule-pending-banner__meta">
+                  {pendingOnDay.length > 0
+                    ? 'Widać je na kalendarzu poniżej ze statusem „Do zatwierdzenia”.'
+                    : 'Najbliższe zgłoszenie otworzyło odpowiedni dzień - zatwierdź na kalendarzu lub z listy.'}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowPendingList((value) => !value)}
+                aria-expanded={showPendingList}
+              >
+                {showPendingList ? 'Ukryj listę' : 'Pokaż listę'}
+              </Button>
+            </div>
+          ) : null}
 
-      {loading ? <LoadingBlock label="Ładowanie harmonogramu…" variant="panel" /> : null}
+          {showPendingList && pendingSorted.length > 0 ? (
+            <div className="schedule-pending-list">
+              {pendingSorted.map((visit) => {
+                const onThisDay = toDateInputValue(new Date(visit.start_at)) === dateIso
+                return (
+                  <div key={visit.id} className="schedule-pending-item">
+                    <div className="schedule-pending-item__main">
+                      <p className="schedule-pending-item__title">
+                        {visit.patient_first_name} {visit.patient_last_name} ·{' '}
+                        {visit.therapy_type_name}
+                      </p>
+                      <p className="schedule-pending-item__meta">
+                        {formatPendingWhen(visit.start_at)} · {formatTime(new Date(visit.start_at))}
+                        -{formatTime(new Date(visit.end_at))}
+                        {onThisDay ? ' · na tym dniu' : ''}
+                      </p>
+                    </div>
+                    <div className="schedule-pending-item__actions">
+                      {!onThisDay ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => jumpToVisitDay(visit)}
+                        >
+                          Przejdź do dnia
+                        </Button>
+                      ) : null}
+                      <Button
+                        type="button"
+                        size="sm"
+                        loading={actionBusyId === visit.id}
+                        onClick={() => void approveVisit(visit)}
+                      >
+                        Zatwierdź
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        disabled={actionBusyId === visit.id}
+                        onClick={() => void rejectVisit(visit)}
+                      >
+                        Odrzuć
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => openEdit(visit)}
+                      >
+                        Szczegóły
+                      </Button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : null}
 
-      {!loading && !error && visits.filter((v) => v.status !== 'CANCELLED').length === 0 ? (
-        <EmptyState
-          title="Brak wizyt tego dnia"
-          description="Kliknij w siatkę godzin albo użyj „+ Nowa wizyta” u góry strony."
-        />
-      ) : null}
+          <div className="schedule-toolbar">
+            <div className="schedule-toolbar__nav">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setDay((d) => addDays(d, -1))}
+              >
+                Poprzedni
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setDay(startOfDay(new Date()))}
+              >
+                Dziś
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setDay((d) => addDays(d, 1))}
+              >
+                Następny
+              </Button>
+            </div>
 
-      {!loading && !error ? (
-        <DayCalendar
-          day={day}
-          visits={visits}
-          onVisitsChange={setVisits}
-          onSlotClick={openCreate}
-          onEditVisit={openEdit}
-          onCancelVisit={setCancelTarget}
-          onApproveVisit={(visit) => void approveVisit(visit)}
-          onRejectVisit={(visit) => void rejectVisit(visit)}
-          onError={setError}
-        />
-      ) : null}
+            <p className="schedule-toolbar__label">{formatDayLabel(day)}</p>
+
+            <div className="schedule-toolbar__carousel">
+              <DayCarousel
+                label="Wybierz dzień"
+                value={day}
+                onChange={setDay}
+                minimumDate={addDays(startOfDay(new Date()), -60)}
+                dayCount={120}
+              />
+            </div>
+          </div>
+
+          {error ? <ErrorBanner message={error} onRetry={reload} /> : null}
+
+          {loading ? <LoadingBlock label="Ładowanie harmonogramu…" variant="panel" /> : null}
+
+          {!loading && !error && visits.filter((v) => v.status !== 'CANCELLED').length === 0 ? (
+            <EmptyState
+              title="Brak wizyt tego dnia"
+              description="Kliknij w siatkę godzin albo użyj „+ Nowa wizyta” u góry strony."
+            />
+          ) : null}
+
+          {!loading && !error ? (
+            <DayCalendar
+              day={day}
+              visits={visits}
+              onVisitsChange={setVisits}
+              onSlotClick={openCreate}
+              onEditVisit={openEdit}
+              onCancelVisit={setCancelTarget}
+              onApproveVisit={(visit) => void approveVisit(visit)}
+              onRejectVisit={(visit) => void rejectVisit(visit)}
+              onError={setError}
+            />
+          ) : null}
+        </>
+      )}
 
       <VisitFormModal
         open={formOpen}
@@ -419,6 +453,12 @@ export function SchedulePage() {
         onClose={() => setCancelTarget(null)}
         onConfirm={confirmCancel}
         busy={cancelBusy}
+      />
+
+      <AvailabilityManagerModal
+        isOpen={availModalOpen}
+        onClose={() => setAvailModalOpen(false)}
+        onSlotsChanged={reload}
       />
     </section>
   )

@@ -16,6 +16,7 @@ import { EmptyState, ErrorBanner } from '@/components/AsyncState'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
+import { getIcd10Error } from '@/lib/fieldPolicy'
 import './ClinicalActionsPanel.css'
 
 const RECOMMENDATION_LABELS: Record<RecommendationType, string> = {
@@ -173,6 +174,10 @@ export function ClinicalActionsPanel({
 
   async function submitRecommendation(event: FormEvent) {
     event.preventDefault()
+    if (!recJustification.trim()) {
+      setError('Podaj uzasadnienie kliniczne.')
+      return
+    }
     setBusy(true)
     setError(null)
     try {
@@ -199,6 +204,11 @@ export function ClinicalActionsPanel({
 
   async function submitDeviceOrder(event: FormEvent) {
     event.preventDefault()
+    const icd10Error = getIcd10Error(deviceIcd10)
+    if (icd10Error) {
+      setError(icd10Error)
+      return
+    }
     setBusy(true)
     setError(null)
     try {
@@ -221,6 +231,14 @@ export function ClinicalActionsPanel({
 
   async function submitRefusal(event: FormEvent) {
     event.preventDefault()
+    if (!orderDesc.trim()) {
+      setError('Opisz zlecenie lekarskie, którego dotyczy odmowa.')
+      return
+    }
+    if (!refusalReason.trim()) {
+      setError('Podaj uzasadnienie odmowy w dokumentacji.')
+      return
+    }
     setBusy(true)
     setError(null)
     try {

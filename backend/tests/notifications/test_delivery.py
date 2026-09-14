@@ -126,6 +126,13 @@ def test_patient_request_does_not_notify_patient(
     api_client.force_authenticate(user=patient.user)
     start_at = timezone.now() + timedelta(days=2)
     end_at = start_at + timedelta(minutes=45)
+    from scheduling.models import TherapistAvailabilitySlot
+    TherapistAvailabilitySlot.objects.create(
+        therapist=patient.therapist,
+        is_recurring=False,
+        start_at=start_at - timedelta(hours=1),
+        end_at=end_at + timedelta(hours=1),
+    )
     response = api_client.post(
         '/api/v1/me/visits/',
         {

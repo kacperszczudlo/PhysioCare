@@ -1,14 +1,14 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { ApiError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
 import { setGoogleRegistrationDraft } from '@/auth/googleRegistrationDraft'
 import { parseGoogleIdTokenClaims } from '@/auth/parseGoogleIdToken'
-import { SuccessBanner } from '@/components/AsyncState'
 import { GoogleSignInButton, isWebGoogleSignInConfigured } from '@/components/GoogleSignInButton'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
+import { useToast } from '@/components/ui/ToastContext'
 import './auth-forms.css'
 
 export function LoginPage() {
@@ -26,6 +26,7 @@ export function LoginPage() {
       ? locationState.notice.trim()
       : null
 
+  const { toast } = useToast()
   const [email, setEmail] = useState(
     typeof locationState?.email === 'string' ? locationState.email : '',
   )
@@ -35,12 +36,27 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  useEffect(() => {
+    if (notice) {
+      toast.info(notice)
+    }
+  }, [notice, toast])
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
+    const trimmedEmail = email.trim()
+    if (!trimmedEmail) {
+      setError('Podaj adres e-mail.')
+      return
+    }
+    if (!password) {
+      setError('Podaj hasło.')
+      return
+    }
     setLoading(true)
     try {
-      const result = await login(email.trim(), password)
+      const result = await login(trimmedEmail, password)
       if (result.kind === 'mfa_required') {
         setMfaStep({ mfa_token: result.mfa_token, email: result.email })
         return
@@ -49,7 +65,7 @@ export function LoginPage() {
     } catch (err) {
       if (err instanceof ApiError && err.code === 'AUTH_027') {
         const details = err.details as { email?: string }
-        const verifyEmail = (typeof details.email === 'string' && details.email) || email.trim()
+        const verifyEmail = (typeof details.email === 'string' && details.email) || trimmedEmail
         navigate(`/verify-email?email=${encodeURIComponent(verifyEmail)}`, { replace: true })
         return
       }
@@ -183,14 +199,18 @@ export function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        {notice ? <SuccessBanner message={notice} /> : null}
         {error ? (
           <p className="auth-form__error" role="alert">
             {error}
           </p>
         ) : null}
 
-        <Button type="submit" loading={loading} className="auth-form__submit">
+        <Button
+          type="submit"
+          loading={loading}
+          disabled={!email.trim() || !password}
+          className="auth-form__submit"
+        >
           Zaloguj się
         </Button>
       </form>

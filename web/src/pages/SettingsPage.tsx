@@ -4,13 +4,14 @@ import { Link } from 'react-router-dom'
 import { authApi } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
-import { ErrorBanner, SuccessBanner } from '@/components/AsyncState'
+import { ErrorBanner } from '@/components/AsyncState'
 import { MFASection } from '@/components/MFASection'
 import { PageHeader } from '@/components/PageHeader'
 
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { PasswordRequirements } from '@/components/ui/PasswordRequirements'
+import { useToast } from '@/components/ui/ToastContext'
 import { AuthMediaImg } from '@/components/AuthMedia'
 import {
   getPasswordError,
@@ -27,13 +28,13 @@ function initials(first?: string, last?: string): string {
 
 export function SettingsPage() {
   const { user, logout } = useAuth()
+  const { toast } = useToast()
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordBusy, setPasswordBusy] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
-  const [passwordMessage, setPasswordMessage] = useState<string | null>(null)
   const [passwordTouched, setPasswordTouched] = useState(false)
 
   const passwordRequirements = getPasswordRequirements(newPassword)
@@ -43,33 +44,38 @@ export function SettingsPage() {
   async function onChangePassword(event: FormEvent) {
     event.preventDefault()
     setPasswordError(null)
-    setPasswordMessage(null)
 
     if (!currentPassword.trim()) {
-      setPasswordError('Podaj obecne hasło.')
+      const err = 'Podaj obecne hasło.'
+      setPasswordError(err)
+      toast.error(err)
       return
     }
     const newPasswordError = getPasswordError(newPassword)
     if (newPasswordError) {
       setPasswordError(newPasswordError)
+      toast.error(newPasswordError)
       return
     }
     if (!passwordsMatch(newPassword, confirmPassword)) {
       setPasswordError(PASSWORD_MESSAGES.mismatch)
+      toast.error(PASSWORD_MESSAGES.mismatch)
       return
     }
 
     setPasswordBusy(true)
     try {
       const { detail } = await authApi.changePassword(currentPassword, newPassword)
-      setPasswordMessage(detail)
+      toast.success(detail, { title: 'Hasło zmienione' })
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
       setPasswordTouched(false)
       await logout()
     } catch (err) {
-      setPasswordError(getErrorMessage(err, 'Nie udało się zmienić hasła.'))
+      const errMsg = getErrorMessage(err, 'Nie udało się zmienić hasła.')
+      setPasswordError(errMsg)
+      toast.error(errMsg)
     } finally {
       setPasswordBusy(false)
     }
@@ -183,7 +189,6 @@ export function SettingsPage() {
                 Nie pamiętam hasła
               </Link>
               {passwordError ? <ErrorBanner message={passwordError} /> : null}
-              {passwordMessage ? <SuccessBanner message={passwordMessage} /> : null}
             </div>
           </form>
         </div>

@@ -86,3 +86,20 @@
   font-variant-numeric: tabular-nums;
   line-height: 1.15;
 }
+
+.day-carousel__chip--holiday {
+  border-color: oklch(0.85 0.08 20);
+  background-color: oklch(0.98 0.015 20);
+}
+
+.day-carousel__holiday-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--color-danger, #dc2626);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.day-carousel__chip--on .day-carousel__holiday-tag {
+  color: #ffffff;
+}

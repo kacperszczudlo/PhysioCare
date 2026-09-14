@@ -354,7 +354,7 @@ export default function RegisterScreen() {
       <Text style={styles.title}>Rejestracja pacjenta</Text>
       <Text style={styles.subtitle}>
         {googleMode
-          ? 'E-mail, imię i nazwisko z Google. Uzupełnij kod terapeuty i zgody (telefon opcjonalnie).'
+          ? 'E-mail wczytany z Google. Sprawdź lub popraw imię i nazwisko oraz uzupełnij kod terapeuty i zgody.'
           : 'Załóż konto i zaakceptuj wymagane zgody, aby korzystać z zaleceń terapeuty.'}
       </Text>
 
@@ -369,7 +369,7 @@ export default function RegisterScreen() {
             }
           }}
           autoComplete="given-name"
-          editable={!(googleMode && Boolean(firstName.trim()))}
+          editable={!loading}
           error={fieldErrors.firstName}
         />
         <Field
@@ -382,7 +382,7 @@ export default function RegisterScreen() {
             }
           }}
           autoComplete="family-name"
-          editable={!(googleMode && Boolean(lastName.trim()))}
+          editable={!loading}
           error={fieldErrors.lastName}
         />
         <Field

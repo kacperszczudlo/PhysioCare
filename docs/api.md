@@ -283,6 +283,10 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** - hasło z
 | GET | `/therapist/visits?upcoming=1` | THERAPIST | Najbliższe zaplanowane (od teraz) |
 | POST | `/therapist/visits` | THERAPIST | Nowa wizyta |
 | PATCH | `/therapist/visits/{id}` | THERAPIST | Edycja / drag slot |
+| GET | `/therapist/availabilities/` | THERAPIST | Lista slotów dostępności terapeuty |
+| POST | `/therapist/availabilities/` | THERAPIST | Utworzenie nowego slotu pracy (cykliczny/jednorazowy) |
+| DELETE | `/therapist/availabilities/{id}` | THERAPIST | Usunięcie slotu dostępności |
+| GET | `/therapists/{id}/available-slots/` | obie | Publiczne wolne sloty terapeuty na dany dzień (`?date=YYYY-MM-DD`) |
 
 **Przykład tworzenia wizyty (terapeuta):**
 

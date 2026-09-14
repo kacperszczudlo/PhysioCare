@@ -6,12 +6,26 @@ import re
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 
+MIN_NAME_LENGTH = 2
+MAX_NAME_LENGTH = 100
+MIN_ADDRESS_LENGTH = 5
+MAX_ADDRESS_LENGTH = 300
+MAX_BIO_LENGTH = 2000
+MAX_COURSES_COUNT = 50
+MAX_COURSE_NAME_LENGTH = 200
+MAX_ICD10_LENGTH = 10
+MAX_DOSAGE_LENGTH = 100
+MIN_THERAPY_DURATION_MINUTES = 5
+MAX_THERAPY_DURATION_MINUTES = 480
+MAX_THERAPY_NAME_LENGTH = 100
+MAX_EXERCISE_TITLE_LENGTH = 200
+
 NAME_REQUIRED = 'Podaj imię.'
 LAST_NAME_REQUIRED = 'Podaj nazwisko.'
-NAME_TOO_SHORT = 'Imię musi mieć co najmniej 2 znaki.'
-LAST_NAME_TOO_SHORT = 'Nazwisko musi mieć co najmniej 2 znaki.'
-NAME_TOO_LONG = 'Imię może mieć co najwyżej 100 znaków.'
-LAST_NAME_TOO_LONG = 'Nazwisko może mieć co najwyżej 100 znaków.'
+NAME_TOO_SHORT = f'Imię musi mieć co najmniej {MIN_NAME_LENGTH} znaki.'
+LAST_NAME_TOO_SHORT = f'Nazwisko musi mieć co najmniej {MIN_NAME_LENGTH} znaki.'
+NAME_TOO_LONG = f'Imię może mieć co najwyżej {MAX_NAME_LENGTH} znaków.'
+LAST_NAME_TOO_LONG = f'Nazwisko może mieć co najwyżej {MAX_NAME_LENGTH} znaków.'
 NAME_INVALID = (
     'Imię może zawierać litery, spacje, myślnik i apostrof '
     '(np. Anna, Jean-Pierre, O\'Brien).'
@@ -21,21 +35,21 @@ LAST_NAME_INVALID = (
     '(np. Kowalska, Nowak-Wiśniewska).'
 )
 
-ADDRESS_TOO_LONG = 'Adres może mieć co najwyżej 300 znaków.'
+ADDRESS_TOO_LONG = f'Adres może mieć co najwyżej {MAX_ADDRESS_LENGTH} znaków.'
 ADDRESS_TOO_SHORT = 'Adres jest zbyt krótki - podaj ulicę i miejscowość.'
-BIO_TOO_LONG = 'Opis profilu może mieć co najwyżej 2000 znaków.'
+BIO_TOO_LONG = f'Opis profilu może mieć co najwyżej {MAX_BIO_LENGTH} znaków.'
 COURSE_REQUIRED = 'Nazwa kursu nie może być pusta.'
-COURSE_TOO_LONG = 'Nazwa kursu może mieć co najwyżej 200 znaków.'
+COURSE_TOO_LONG = f'Nazwa kursu może mieć co najwyżej {MAX_COURSE_NAME_LENGTH} znaków.'
 COURSES_INVALID = 'Lista kursów musi być tablicą tekstów.'
-COURSES_TOO_MANY = 'Możesz dodać co najwyżej 50 kursów.'
+COURSES_TOO_MANY = f'Możesz dodać co najwyżej {MAX_COURSES_COUNT} kursów.'
 
 ICD10_INVALID = (
     'Podaj prawidłowy kod ICD-10 (np. M54.5, S83.4) albo pozostaw puste.'
 )
-ICD10_TOO_LONG = 'Kod ICD-10 może mieć co najwyżej 10 znaków.'
+ICD10_TOO_LONG = f'Kod ICD-10 może mieć co najwyżej {MAX_ICD10_LENGTH} znaków.'
 
 DOSAGE_REQUIRED = 'Podaj dawkowanie ćwiczenia.'
-DOSAGE_TOO_LONG = 'Dawkowanie może mieć co najwyżej 100 znaków.'
+DOSAGE_TOO_LONG = f'Dawkowanie może mieć co najwyżej {MAX_DOSAGE_LENGTH} znaków.'
 
 PREP_TOO_LONG = 'Instrukcje przygotowania mogą mieć co najwyżej 2000 znaków.'
 NOTE_TOO_LONG = 'Notatka może mieć co najwyżej 5000 znaków.'
@@ -44,13 +58,13 @@ CANCEL_REASON_TOO_LONG = 'Powód anulowania może mieć co najwyżej 500 znaków
 SUMMARY_TOO_LONG = 'Podsumowanie może mieć co najwyżej 5000 znaków.'
 
 TITLE_REQUIRED = 'Podaj tytuł ćwiczenia.'
-TITLE_TOO_LONG = 'Tytuł może mieć co najwyżej 200 znaków.'
+TITLE_TOO_LONG = f'Tytuł może mieć co najwyżej {MAX_EXERCISE_TITLE_LENGTH} znaków.'
 INSTRUCTION_TOO_LONG = 'Instrukcja może mieć co najwyżej 5000 znaków.'
 
 COLOR_HEX_INVALID = 'Kolor musi być w formacie #RRGGBB (np. #2A9D8F).'
 THERAPY_NAME_REQUIRED = 'Podaj nazwę typu terapii.'
-THERAPY_NAME_TOO_LONG = 'Nazwa typu terapii może mieć co najwyżej 100 znaków.'
-DURATION_INVALID = 'Czas trwania musi być liczbą od 5 do 480 minut.'
+THERAPY_NAME_TOO_LONG = f'Nazwa typu terapii może mieć co najwyżej {MAX_THERAPY_NAME_LENGTH} znaków.'
+DURATION_INVALID = f'Czas trwania musi być liczbą od {MIN_THERAPY_DURATION_MINUTES} do {MAX_THERAPY_DURATION_MINUTES} minut.'
 
 DOCUMENT_TITLE_REQUIRED = 'Podaj tytuł dokumentu.'
 DOCUMENT_TITLE_TOO_LONG = 'Tytuł dokumentu może mieć co najwyżej 200 znaków.'
@@ -75,9 +89,9 @@ def normalize_and_validate_name(
         raise DjangoValidationError(required_message, code='required')
 
     name = ' '.join(str(value).split())
-    if len(name) < 2:
+    if len(name) < MIN_NAME_LENGTH:
         raise DjangoValidationError(too_short_message, code='min_length')
-    if len(name) > 100:
+    if len(name) > MAX_NAME_LENGTH:
         raise DjangoValidationError(too_long_message, code='max_length')
     if not _NAME_PATTERN.fullmatch(name):
         raise DjangoValidationError(invalid_message, code='invalid')
@@ -115,9 +129,9 @@ def normalize_and_validate_address(
         raise DjangoValidationError('Podaj adres.', code='required')
 
     address = ' '.join(str(value).split())
-    if len(address) > 300:
+    if len(address) > MAX_ADDRESS_LENGTH:
         raise DjangoValidationError(ADDRESS_TOO_LONG, code='max_length')
-    if len(address) < 5:
+    if len(address) < MIN_ADDRESS_LENGTH:
         raise DjangoValidationError(ADDRESS_TOO_SHORT, code='min_length')
     return address
 
@@ -128,7 +142,7 @@ def normalize_and_validate_bio(value: str | None, *, allow_blank: bool = True) -
     bio = str(value).strip()
     if bio == '':
         return '' if allow_blank else (_raise_required('Podaj opis profilu.'))
-    if len(bio) > 2000:
+    if len(bio) > MAX_BIO_LENGTH:
         raise DjangoValidationError(BIO_TOO_LONG, code='max_length')
     return bio
 
@@ -138,7 +152,7 @@ def normalize_and_validate_courses(value) -> list[str]:
         return []
     if not isinstance(value, list):
         raise DjangoValidationError(COURSES_INVALID, code='invalid')
-    if len(value) > 50:
+    if len(value) > MAX_COURSES_COUNT:
         raise DjangoValidationError(COURSES_TOO_MANY, code='max_length')
 
     normalized: list[str] = []
@@ -148,7 +162,7 @@ def normalize_and_validate_courses(value) -> list[str]:
         course = ' '.join(item.split())
         if not course:
             raise DjangoValidationError(COURSE_REQUIRED, code='blank')
-        if len(course) > 200:
+        if len(course) > MAX_COURSE_NAME_LENGTH:
             raise DjangoValidationError(COURSE_TOO_LONG, code='max_length')
         normalized.append(course)
     return normalized
@@ -161,7 +175,7 @@ def normalize_and_validate_icd10(value: str | None, *, allow_blank: bool = True)
         raise DjangoValidationError('Podaj kod ICD-10.', code='required')
 
     code = str(value).strip().upper()
-    if len(code) > 10:
+    if len(code) > MAX_ICD10_LENGTH:
         raise DjangoValidationError(ICD10_TOO_LONG, code='max_length')
     if not _ICD10_PATTERN.fullmatch(code):
         raise DjangoValidationError(ICD10_INVALID, code='invalid')
@@ -174,7 +188,7 @@ def normalize_and_validate_dosage(value: str | None, *, allow_blank: bool = Fals
             return ''
         raise DjangoValidationError(DOSAGE_REQUIRED, code='required')
     dosage = ' '.join(str(value).split())
-    if len(dosage) > 100:
+    if len(dosage) > MAX_DOSAGE_LENGTH:
         raise DjangoValidationError(DOSAGE_TOO_LONG, code='max_length')
     return dosage
 
@@ -213,7 +227,7 @@ def normalize_and_validate_therapy_name(value: str | None) -> str:
     if value is None or str(value).strip() == '':
         raise DjangoValidationError(THERAPY_NAME_REQUIRED, code='required')
     name = ' '.join(str(value).split())
-    if len(name) > 100:
+    if len(name) > MAX_THERAPY_NAME_LENGTH:
         raise DjangoValidationError(THERAPY_NAME_TOO_LONG, code='max_length')
     return name
 
@@ -223,7 +237,7 @@ def normalize_and_validate_duration_min(value) -> int:
         duration = int(value)
     except (TypeError, ValueError) as exc:
         raise DjangoValidationError(DURATION_INVALID, code='invalid') from exc
-    if duration < 5 or duration > 480:
+    if duration < MIN_THERAPY_DURATION_MINUTES or duration > MAX_THERAPY_DURATION_MINUTES:
         raise DjangoValidationError(DURATION_INVALID, code='invalid')
     return duration
 
@@ -232,7 +246,7 @@ def normalize_and_validate_exercise_title(value: str | None) -> str:
     if value is None or str(value).strip() == '':
         raise DjangoValidationError(TITLE_REQUIRED, code='required')
     title = ' '.join(str(value).split())
-    if len(title) > 200:
+    if len(title) > MAX_EXERCISE_TITLE_LENGTH:
         raise DjangoValidationError(TITLE_TOO_LONG, code='max_length')
     return title
 

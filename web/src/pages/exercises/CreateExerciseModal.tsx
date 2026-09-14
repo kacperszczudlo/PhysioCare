@@ -275,6 +275,7 @@ export function CreateExerciseModal({
             name="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            maxLength={200}
             placeholder="np. Mostek biodrowy - wersja podstawowa"
             required
             autoFocus
@@ -287,6 +288,7 @@ export function CreateExerciseModal({
               className="ex-create__textarea"
               value={instruction}
               onChange={(e) => setInstruction(e.target.value)}
+              maxLength={5000}
               rows={5}
               placeholder={'Krok po kroku: pozycja wyjściowa, ruch, tempo, oddech, na co uważać…'}
             />

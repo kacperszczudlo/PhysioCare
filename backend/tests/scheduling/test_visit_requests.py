@@ -4,7 +4,7 @@ import pytest
 from django.utils import timezone
 from rest_framework import status
 
-from scheduling.models import Visit, VisitStatus
+from scheduling.models import TherapistAvailabilitySlot, Visit, VisitStatus
 
 
 @pytest.mark.django_db
@@ -12,6 +12,12 @@ def test_patient_can_request_visit(api_client, therapist, patient, therapy_type)
     api_client.force_authenticate(user=patient.user)
     start_at = timezone.now() + timedelta(days=2)
     end_at = start_at + timedelta(minutes=45)
+    TherapistAvailabilitySlot.objects.create(
+        therapist=therapist,
+        is_recurring=False,
+        start_at=start_at - timedelta(hours=1),
+        end_at=end_at + timedelta(hours=1),
+    )
 
     response = api_client.post(
         '/api/v1/me/visits/',

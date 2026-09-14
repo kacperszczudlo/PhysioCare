@@ -16,7 +16,88 @@ from core.field_policies import (
 from patients.models import PatientProfile
 from treatment.models import TreatmentEpisode
 
-from .models import TherapyType, Visit, VisitStatus
+from .holidays import is_polish_holiday
+from .models import TherapistAvailabilitySlot, TherapyType, Visit, VisitStatus
+
+
+def is_visit_within_therapist_availability(therapist, start_at, end_at):
+    """
+    Sprawdza, czy odcinek czasu [start_at, end_at] w całości mieści się w przynajmniej jednym
+    aktywnym slocie dostępności fizjoterapeuty (zarówno jednorazowym, jak i cyklicznym).
+    Uwzględnia polskie święta państwowe: domyślnie blokują dostępność cykliczną,
+    chyba że fizjoterapeuta utworzy dedykowany jednorazowy slot pracy w dane święto.
+    """
+    slots = TherapistAvailabilitySlot.objects.filter(therapist=therapist, is_active=True)
+    if not slots.exists():
+        return False
+
+    is_holiday, _ = is_polish_holiday(start_at.date())
+
+    date_match = slots.filter(
+        is_recurring=False,
+        start_at__lte=start_at,
+        end_at__gte=end_at,
+    ).exists()
+    if date_match:
+        return True
+
+    if is_holiday:
+        # W święto państwowe cykliczne sloty nie obowiązują (wymagany jawny slot jednorazowy)
+        return False
+
+    dow = start_at.weekday()
+    v_start_time = start_at.time()
+    v_end_time = end_at.time()
+
+    recurring_match = slots.filter(
+        is_recurring=True,
+        day_of_week=dow,
+        start_time__lte=v_start_time,
+        end_time__gte=v_end_time,
+    ).exists()
+    return recurring_match
+
+
+class TherapistAvailabilitySlotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TherapistAvailabilitySlot
+        fields = [
+            'id', 'therapist', 'start_at', 'end_at',
+            'day_of_week', 'start_time', 'end_time',
+            'is_recurring', 'is_active', 'created_at',
+        ]
+        read_only_fields = ['id', 'therapist', 'created_at']
+
+    def validate(self, attrs):
+        is_recurring = attrs.get('is_recurring', False)
+        if not is_recurring:
+            start_at = attrs.get('start_at')
+            end_at = attrs.get('end_at')
+            if not start_at or not end_at:
+                raise serializers.ValidationError(
+                    {'detail': 'Jednorazowy slot dostępności wymaga podania start_at oraz end_at.'}
+                )
+            if end_at <= start_at:
+                raise serializers.ValidationError(
+                    {'end_at': 'Koniec slotu dostępności musi być po rozpoczęciu.'}
+                )
+        else:
+            dow = attrs.get('day_of_week')
+            start_time = attrs.get('start_time')
+            end_time = attrs.get('end_time')
+            if dow is None or start_time is None or end_time is None:
+                raise serializers.ValidationError(
+                    {'detail': 'Cykliczny slot wymaga podania day_of_week, start_time oraz end_time.'}
+                )
+            if dow < 0 or dow > 6:
+                raise serializers.ValidationError(
+                    {'day_of_week': 'Dzień tygodnia musi mieścić się w zakresie 0 (Pon) do 6 (Nie).'}
+                )
+            if end_time <= start_time:
+                raise serializers.ValidationError(
+                    {'end_time': 'Godzina zakończenia musi być po godzinie rozpoczęcia.'}
+                )
+        return attrs
 
 
 class TherapyTypeSerializer(serializers.ModelSerializer):
@@ -275,6 +356,33 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
         if start_at < timezone.now():
             raise serializers.ValidationError(
                 {'start_at': 'Termin zgłoszenia musi być w przyszłości.'}
+            )
+
+        if not is_visit_within_therapist_availability(therapist, start_at, end_at):
+            is_holiday, holiday_name = is_polish_holiday(start_at.date())
+            has_any_slots = TherapistAvailabilitySlot.objects.filter(
+                therapist=therapist, is_active=True
+            ).exists()
+            if is_holiday:
+                raise serializers.ValidationError(
+                    {
+                        'start_at': (
+                            f'Wybrany dzień ({holiday_name}) jest dniem wolnym od pracy. '
+                            'Fizjoterapeuta nie ustalił dyżuru w to święto.'
+                        )
+                    }
+                )
+            if not has_any_slots:
+                raise serializers.ValidationError(
+                    {
+                        'start_at': (
+                            'Fizjoterapeuta nie skonfigurował jeszcze grafiku pracy. '
+                            'Rezerwacja terminu jest obecnie niedostępna.'
+                        )
+                    }
+                )
+            raise serializers.ValidationError(
+                {'start_at': 'Wybrany termin nie mieści się w zdefiniowanych slotach dostępności fizjoterapeuty.'}
             )
 
         attrs['therapist'] = therapist

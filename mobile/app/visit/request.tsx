@@ -157,6 +157,7 @@ export default function VisitRequestScreen() {
             label="Notatka dla terapeuty (opcjonalnie)"
             value={note}
             onChangeText={setNote}
+            maxLength={5000}
             multiline
             style={styles.note}
             hint="Np. preferowana pora, dolegliwości, pytania."

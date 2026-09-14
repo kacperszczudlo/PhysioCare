@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 
+from core.fields import EncryptedCharField
 from core.models import TimestampedModel
 
 
@@ -21,7 +22,7 @@ class PatientProfile(TimestampedModel):
         on_delete=models.PROTECT,
         related_name='patients',
     )
-    pesel = models.CharField(max_length=11, blank=True, null=True)
+    pesel = EncryptedCharField(max_length=255, blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, default='')
     avatar_url = models.CharField(max_length=500, blank=True, default='')
 

@@ -3,6 +3,10 @@ from django.urls import path
 from .views import (
     MeTherapyTypeListView,
     MeVisitListCreateView,
+    PolishHolidaysView,
+    PublicTherapistAvailableSlotsView,
+    TherapistAvailabilityDetailView,
+    TherapistAvailabilityListCreateView,
     TherapistVisitDetailView,
     TherapistVisitListCreateView,
     TherapyTypeListCreateView,
@@ -16,6 +20,22 @@ from .views import (
 )
 
 urlpatterns = [
+    path('scheduling/holidays/', PolishHolidaysView.as_view(), name='polish-holidays'),
+    path(
+        'therapist/availabilities/',
+        TherapistAvailabilityListCreateView.as_view(),
+        name='therapist-availabilities',
+    ),
+    path(
+        'therapist/availabilities/<uuid:pk>/',
+        TherapistAvailabilityDetailView.as_view(),
+        name='therapist-availability-detail',
+    ),
+    path(
+        'therapists/<uuid:therapist_id>/available-slots/',
+        PublicTherapistAvailableSlotsView.as_view(),
+        name='public-therapist-available-slots',
+    ),
     path(
         'therapist/visits/',
         TherapistVisitListCreateView.as_view(),

@@ -1,5 +1,6 @@
 from django.db import models
 
+from core.fields import EncryptedTextField
 from core.models import TimestampedModel, UUIDModel
 
 
@@ -65,7 +66,7 @@ class TreatmentEpisode(TimestampedModel):
     # Kod roboczy / z dokumentacji lekarskiej - nie jest samodzielną diagnozą nozologiczną.
     icd10_code = models.CharField(max_length=10, blank=True, default='')
     # Diagnoza funkcjonalna - domena fizjoterapeuty (art. 4 u.o.z.f.).
-    functional_diagnosis = models.TextField(blank=True, default='')
+    functional_diagnosis = EncryptedTextField(blank=True, default='')
     status = models.CharField(
         max_length=30,
         choices=EpisodeStatus.choices,
@@ -131,7 +132,7 @@ class VisitNote(TimestampedModel):
         blank=True,
         related_name='notes',
     )
-    content = models.TextField()
+    content = EncryptedTextField()
 
     class Meta:
         db_table = 'visit_notes'
@@ -162,7 +163,7 @@ class DiagnosticRecommendation(TimestampedModel):
     )
     target_specialty = models.CharField(max_length=120, blank=True, default='')
     body_area = models.CharField(max_length=120, blank=True, default='')
-    justification = models.TextField()
+    justification = EncryptedTextField()
     red_flags_noted = models.BooleanField(default=False)
     funding_hint = models.CharField(
         max_length=30,
@@ -217,7 +218,7 @@ class MedicalDeviceOrder(TimestampedModel):
         choices=DeviceOrderStatus.choices,
         default=DeviceOrderStatus.ISSUED,
     )
-    notes = models.TextField(blank=True, default='')
+    notes = EncryptedTextField(blank=True, default='')
 
     class Meta:
         db_table = 'medical_device_orders'
@@ -240,8 +241,8 @@ class PhysicianOrderRefusal(TimestampedModel):
         on_delete=models.PROTECT,
         related_name='order_refusals',
     )
-    physician_order_description = models.TextField()
-    refusal_reason = models.TextField()
+    physician_order_description = EncryptedTextField()
+    refusal_reason = EncryptedTextField()
     physician_notified = models.BooleanField(default=False)
 
     class Meta:

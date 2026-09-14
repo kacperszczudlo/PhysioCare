@@ -24,10 +24,17 @@ export default function ProfileScreen() {
   const router = useRouter()
 
   const [profile, setProfile] = useState<PatientProfile | null>(null)
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [phoneCountryCode, setPhoneCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [phoneNational, setPhoneNational] = useState('')
   const [pesel, setPesel] = useState('')
-  const [fieldErrors, setFieldErrors] = useState<{ phone?: string; pesel?: string }>({})
+  const [fieldErrors, setFieldErrors] = useState<{
+    firstName?: string
+    lastName?: string
+    phone?: string
+    pesel?: string
+  }>({})
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -48,13 +55,17 @@ export default function ProfileScreen() {
   const initialPhone = profile ? parseStoredPhone(profile.phone) : null
   const isDirty = Boolean(
     profile &&
-    (phoneCountryCode !== initialPhone?.countryCode ||
+    (firstName.trim() !== (profile.first_name ?? '') ||
+      lastName.trim() !== (profile.last_name ?? '') ||
+      phoneCountryCode !== initialPhone?.countryCode ||
       phoneNational !== initialPhone?.nationalNumber ||
       pesel !== (profile.pesel ?? '')),
   )
 
   const resetForm = useCallback(() => {
     if (!profile) return
+    setFirstName(profile.first_name ?? '')
+    setLastName(profile.last_name ?? '')
     const parsedPhone = parseStoredPhone(profile.phone)
     setPhoneCountryCode(parsedPhone.countryCode)
     setPhoneNational(parsedPhone.nationalNumber)
@@ -76,6 +87,8 @@ export default function ProfileScreen() {
     try {
       const p = await patientApi.getProfile()
       setProfile(p)
+      setFirstName(p.first_name ?? '')
+      setLastName(p.last_name ?? '')
       const parsedPhone = parseStoredPhone(p.phone)
       setPhoneCountryCode(parsedPhone.countryCode)
       setPhoneNational(parsedPhone.nationalNumber)
@@ -103,10 +116,11 @@ export default function ProfileScreen() {
     const phoneError = getPhoneError(phoneNational, phoneCountryCode)
     const peselError = getPeselError(pesel)
     if (phoneError || peselError) {
-      setFieldErrors({
+      setFieldErrors((prev) => ({
+        ...prev,
         phone: phoneError ?? undefined,
         pesel: peselError ?? undefined,
-      })
+      }))
       setSaving(false)
       return
     }
@@ -114,20 +128,28 @@ export default function ProfileScreen() {
     setFieldErrors({})
     try {
       const updated = await patientApi.updateProfile({
+        first_name: firstName.trim() || undefined,
+        last_name: lastName.trim() || undefined,
         phone: formatPhoneForApi(phoneNational, phoneCountryCode),
         pesel: pesel.trim() || null,
       })
       setProfile(updated)
+      setFirstName(updated.first_name ?? '')
+      setLastName(updated.last_name ?? '')
       const parsedPhone = parseStoredPhone(updated.phone)
       setPhoneCountryCode(parsedPhone.countryCode)
       setPhoneNational(parsedPhone.nationalNumber)
       setPesel(updated.pesel ?? '')
       showSuccess('profile', 'Dane profilu zostały zapisane.')
     } catch (err) {
+      const apiFirstName = getFieldError(err, 'first_name')
+      const apiLastName = getFieldError(err, 'last_name')
       const apiPhone = getFieldError(err, 'phone')
       const apiPesel = getFieldError(err, 'pesel')
-      if (apiPhone || apiPesel) {
+      if (apiFirstName || apiLastName || apiPhone || apiPesel) {
         setFieldErrors({
+          firstName: apiFirstName ?? undefined,
+          lastName: apiLastName ?? undefined,
           phone: apiPhone ?? undefined,
           pesel: apiPesel ?? undefined,
         })
@@ -242,6 +264,28 @@ export default function ProfileScreen() {
           ) : null}
         </View>
         <Text style={styles.muted}>{profile?.email}</Text>
+        <Field
+          label="Imię"
+          value={firstName}
+          onChangeText={(value) => {
+            setFirstName(value)
+            if (fieldErrors.firstName) {
+              setFieldErrors((prev) => ({ ...prev, firstName: undefined }))
+            }
+          }}
+          error={fieldErrors.firstName}
+        />
+        <Field
+          label="Nazwisko"
+          value={lastName}
+          onChangeText={(value) => {
+            setLastName(value)
+            if (fieldErrors.lastName) {
+              setFieldErrors((prev) => ({ ...prev, lastName: undefined }))
+            }
+          }}
+          error={fieldErrors.lastName}
+        />
         <PhoneField
           countryCode={phoneCountryCode}
           nationalNumber={phoneNational}

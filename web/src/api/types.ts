@@ -161,6 +161,19 @@ export interface PatientSummary {
   avatar_url: string | null
 }
 
+export interface AvailabilitySlot {
+  id: string
+  therapist: string
+  start_at: string | null
+  end_at: string | null
+  day_of_week: number | null
+  start_time: string | null
+  end_time: string | null
+  is_recurring: boolean
+  is_active: boolean
+  created_at: string
+}
+
 export interface TherapyType {
   id: string
   name: string
@@ -313,4 +326,15 @@ export interface ExerciseAssignmentUpdatePayload {
   start_date?: string
   end_date?: string
   episode_id?: string | null
+}
+
+export interface Holiday {
+  date: string
+  name: string
+}
+
+export interface AvailableSlotsResponse {
+  results: AvailabilitySlot[]
+  is_holiday?: boolean
+  holiday_name?: string | null
 }

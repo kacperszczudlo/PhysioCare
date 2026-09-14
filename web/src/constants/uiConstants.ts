@@ -1,0 +1,3 @@
+export const DEBOUNCE_SEARCH_MS = 250
+export const ALERT_AUTO_DISMISS_MS = 5000
+export const MAP_RESIZE_TRIGGER_MS = 150

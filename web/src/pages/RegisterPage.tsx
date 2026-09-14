@@ -79,9 +79,7 @@ export function RegisterPage() {
     if (draft.last_name) {
       setLastName(draft.last_name)
     }
-    setError(
-      'Dane z Google (e-mail, imię, nazwisko) są uzupełnione. Podaj PWZFz i oświadczenie - telefon tylko jeśli chcesz.',
-    )
+    setError('Dane z Google wczytane. Możesz poprawić imię i nazwisko oraz uzupełnić numer PWZFz.')
   }, [])
 
   function validateTherapistFields(requirePassword: boolean) {
@@ -302,9 +300,7 @@ export function RegisterPage() {
     setSubmitted(false)
     setFieldErrors({})
     setError(
-      nextFirst && nextLast && nextEmail
-        ? 'Dane z Google zapisane. Został numer PWZFz i oświadczenie (telefon opcjonalnie).'
-        : 'Konto Google połączone. Uzupełnij brakujące imię/nazwisko oraz PWZFz i oświadczenie.',
+      'Konto Google połączone. Sprawdź lub popraw imię i nazwisko oraz uzupełnij numer PWZFz i oświadczenie.',
     )
   }
 
@@ -314,7 +310,7 @@ export function RegisterPage() {
         <h1>Rejestracja fizjoterapeuty</h1>
         <p>
           {googleMode
-            ? 'E-mail, imię i nazwisko z Google. Uzupełnij PWZFz i oświadczenie (telefon opcjonalnie).'
+            ? 'E-mail wczytany z Google. Sprawdź lub popraw imię i nazwisko oraz uzupełnij numer PWZFz.'
             : 'Konto z numerem PWZFz - dostęp do panelu gabinetu.'}
         </p>
       </header>
@@ -327,7 +323,6 @@ export function RegisterPage() {
             autoComplete="given-name"
             required
             value={firstName}
-            disabled={googleMode && Boolean(firstName.trim())}
             onChange={(e) => {
               setFirstName(e.target.value)
               if (fieldErrors.firstName) {
@@ -342,7 +337,6 @@ export function RegisterPage() {
             autoComplete="family-name"
             required
             value={lastName}
-            disabled={googleMode && Boolean(lastName.trim())}
             onChange={(e) => {
               setLastName(e.target.value)
               if (fieldErrors.lastName) {

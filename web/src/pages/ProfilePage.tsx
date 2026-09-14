@@ -4,12 +4,13 @@ import { therapistApi } from '@/api/auth'
 import { getErrorMessage, getFieldError } from '@/api/client'
 import type { QualificationLevel, TherapistProfile } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
-import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
+import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { LocationField } from '@/components/location/LocationField'
 import { PhoneField } from '@/components/ui/PhoneField'
+import { useToast } from '@/components/ui/ToastContext'
 import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
 import { getAddressError, getBioError, getCourseError } from '@/lib/fieldPolicy'
 import { useAuthenticatedMediaUrl } from '@/lib/authMedia'
@@ -25,10 +26,13 @@ const QUALIFICATION_OPTIONS: { value: QualificationLevel; label: string }[] = [
 
 export function ProfilePage() {
   const { refreshSession } = useAuth()
+  const { toast } = useToast()
   const [profile, setProfile] = useState<TherapistProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [phoneCountryCode, setPhoneCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [phoneNational, setPhoneNational] = useState('')
   const [locationAddress, setLocationAddress] = useState('')
@@ -38,8 +42,9 @@ export function ProfilePage() {
   const [qualificationLevel, setQualificationLevel] = useState<QualificationLevel>('MAGISTER')
   const [experienceYears, setExperienceYears] = useState(0)
   const [profileBusy, setProfileBusy] = useState(false)
-  const [profileMessage, setProfileMessage] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<{
+    firstName?: string
+    lastName?: string
     phone?: string
     locationAddress?: string
     bio?: string
@@ -47,12 +52,10 @@ export function ProfilePage() {
   }>({})
 
   const [avatarBusy, setAvatarBusy] = useState(false)
-  const [avatarMessage, setAvatarMessage] = useState<string | null>(null)
   const [avatarError, setAvatarError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [copyMessage, setCopyMessage] = useState<string | null>(null)
   const [copyError, setCopyError] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
   const { url: remoteAvatarUrl } = useAuthenticatedMediaUrl(profile?.avatar_url)
@@ -69,6 +72,8 @@ export function ProfilePage() {
           return
         }
         setProfile(data)
+        setFirstName(data.first_name ?? '')
+        setLastName(data.last_name ?? '')
         const parsedPhone = parseStoredPhone(data.phone)
         setPhoneCountryCode(parsedPhone.countryCode)
         setPhoneNational(parsedPhone.nationalNumber)
@@ -97,6 +102,8 @@ export function ProfilePage() {
 
   function resetForm() {
     if (!profile) return
+    setFirstName(profile.first_name ?? '')
+    setLastName(profile.last_name ?? '')
     const parsedPhone = parseStoredPhone(profile.phone)
     setPhoneCountryCode(parsedPhone.countryCode)
     setPhoneNational(parsedPhone.nationalNumber)
@@ -112,7 +119,9 @@ export function ProfilePage() {
   const initialPhone = profile ? parseStoredPhone(profile.phone) : null
   const isDirty = Boolean(
     profile &&
-    (phoneCountryCode !== initialPhone?.countryCode ||
+    (firstName.trim() !== (profile.first_name ?? '') ||
+      lastName.trim() !== (profile.last_name ?? '') ||
+      phoneCountryCode !== initialPhone?.countryCode ||
       phoneNational !== initialPhone?.nationalNumber ||
       locationAddress !== (profile.location_address ?? '') ||
       bio !== (profile.bio ?? '') ||
@@ -162,16 +171,16 @@ export function ProfilePage() {
     try {
       await navigator.clipboard.writeText(profile.id)
       setCopyError(null)
-      setCopyMessage('Skopiowano - przekaż ten kod pacjentowi przy rejestracji w aplikacji.')
+      toast.success('Skopiowano kod fizjoterapeuty do schowka.', { title: 'Kod skopiowany' })
     } catch {
-      setCopyMessage(null)
-      setCopyError('Nie udało się skopiować. Zaznacz kod ręcznie i skopiuj.')
+      const err = 'Nie udało się skopiować. Zaznacz kod ręcznie i skopiuj.'
+      setCopyError(err)
+      toast.error(err)
     }
   }
 
   async function onSaveProfile(event: FormEvent) {
     event.preventDefault()
-    setProfileMessage(null)
     setError(null)
 
     const nextErrors = {
@@ -188,6 +197,8 @@ export function ProfilePage() {
     setProfileBusy(true)
     try {
       const updated = await therapistApi.updateProfile({
+        first_name: firstName.trim() || undefined,
+        last_name: lastName.trim() || undefined,
         phone: formatPhoneForApi(phoneNational, phoneCountryCode),
         location_address: locationAddress.trim(),
         bio: bio.trim(),
@@ -196,24 +207,33 @@ export function ProfilePage() {
         experience_years: experienceYears,
       })
       setProfile(updated)
+      setFirstName(updated.first_name ?? '')
+      setLastName(updated.last_name ?? '')
+      await refreshSession().catch(() => undefined)
       const parsedPhone = parseStoredPhone(updated.phone)
       setPhoneCountryCode(parsedPhone.countryCode)
       setPhoneNational(parsedPhone.nationalNumber)
       setQualificationLevel(updated.qualification_level ?? 'MAGISTER')
       setExperienceYears(updated.experience_years ?? 0)
-      setProfileMessage('Dane profilu zostały zapisane.')
+      toast.success('Dane profilu zostały zapisane.', { title: 'Sukces' })
     } catch (err) {
+      const apiFirstName = getFieldError(err, 'first_name')
+      const apiLastName = getFieldError(err, 'last_name')
       const apiPhone = getFieldError(err, 'phone')
       const apiAddress = getFieldError(err, 'location_address')
       const apiBio = getFieldError(err, 'bio')
-      if (apiPhone || apiAddress || apiBio) {
+      if (apiFirstName || apiLastName || apiPhone || apiAddress || apiBio) {
         setFieldErrors({
+          firstName: apiFirstName ?? undefined,
+          lastName: apiLastName ?? undefined,
           phone: apiPhone ?? undefined,
           locationAddress: apiAddress ?? undefined,
           bio: apiBio ?? undefined,
         })
       }
-      setError(getErrorMessage(err, 'Nie udało się zapisać profilu.'))
+      const errMsg = getErrorMessage(err, 'Nie udało się zapisać profilu.')
+      setError(errMsg)
+      toast.error(errMsg)
     } finally {
       setProfileBusy(false)
     }
@@ -227,11 +247,15 @@ export function ProfilePage() {
     }
 
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      setAvatarError('Dozwolone formaty: JPEG, PNG, WebP.')
+      const err = 'Dozwolone formaty: JPEG, PNG, WebP.'
+      setAvatarError(err)
+      toast.error(err)
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      setAvatarError('Zdjęcie nie może być większe niż 5 MB.')
+      const err = 'Zdjęcie nie może być większe niż 5 MB.'
+      setAvatarError(err)
+      toast.error(err)
       return
     }
 
@@ -243,17 +267,18 @@ export function ProfilePage() {
       return localPreview
     })
     setAvatarError(null)
-    setAvatarMessage(null)
     setAvatarBusy(true)
     try {
       const updated = await therapistApi.uploadAvatar(file)
       setProfile(updated)
       await refreshSession().catch(() => undefined)
-      setAvatarMessage('Zdjęcie profilowe zostało zapisane - widoczne w aplikacji pacjenta.')
+      toast.success('Zdjęcie profilowe zostało zapisane.', { title: 'Sukces' })
       URL.revokeObjectURL(localPreview)
       setPreviewUrl(null)
     } catch (err) {
-      setAvatarError(getErrorMessage(err, 'Nie udało się przesłać avatara.'))
+      const errMsg = getErrorMessage(err, 'Nie udało się przesłać avatara.')
+      setAvatarError(errMsg)
+      toast.error(errMsg)
     } finally {
       setAvatarBusy(false)
     }
@@ -328,11 +353,39 @@ export function ProfilePage() {
                   Wybierz zdjęcie
                 </Button>
                 {avatarError ? <ErrorBanner message={avatarError} /> : null}
-                {avatarMessage ? <SuccessBanner message={avatarMessage} /> : null}
               </div>
             </div>
 
             <div className="profile-fields">
+              <div
+                className="profile-fields profile-fields--split"
+                style={{ margin: 0, padding: 0 }}
+              >
+                <Field
+                  label="Imię"
+                  name="first_name"
+                  value={firstName}
+                  onChange={(e) => {
+                    setFirstName(e.target.value)
+                    if (fieldErrors.firstName) {
+                      setFieldErrors((prev) => ({ ...prev, firstName: undefined }))
+                    }
+                  }}
+                  error={fieldErrors.firstName}
+                />
+                <Field
+                  label="Nazwisko"
+                  name="last_name"
+                  value={lastName}
+                  onChange={(e) => {
+                    setLastName(e.target.value)
+                    if (fieldErrors.lastName) {
+                      setFieldErrors((prev) => ({ ...prev, lastName: undefined }))
+                    }
+                  }}
+                  error={fieldErrors.lastName}
+                />
+              </div>
               <PhoneField
                 countryCode={phoneCountryCode}
                 nationalNumber={phoneNational}
@@ -485,12 +538,6 @@ export function ProfilePage() {
             </div>
           </section>
 
-          {profileMessage ? (
-            <div className="profile-actions">
-              <SuccessBanner message={profileMessage} />
-            </div>
-          ) : null}
-
           <div
             className={
               isDirty
@@ -545,7 +592,6 @@ export function ProfilePage() {
               Kopiuj kod
             </Button>
             {copyError ? <ErrorBanner message={copyError} /> : null}
-            {copyMessage ? <SuccessBanner message={copyMessage} /> : null}
           </section>
 
           {profile.competences ? (

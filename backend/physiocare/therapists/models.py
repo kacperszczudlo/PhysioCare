@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.validators import MaxValueValidator
 from django.db import models
 
 from core.models import TimestampedModel
@@ -22,7 +23,10 @@ class TherapistProfile(TimestampedModel):
         choices=QualificationLevel.CHOICES,
         default=QualificationLevel.MAGISTER,
     )
-    experience_years = models.PositiveSmallIntegerField(default=0)
+    experience_years = models.PositiveSmallIntegerField(
+        default=0,
+        validators=[MaxValueValidator(60)],
+    )
 
     class Meta:
         db_table = 'therapist_profiles'
