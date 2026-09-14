@@ -409,7 +409,9 @@ export function SchedulePage() {
 
           {error ? <ErrorBanner message={error} onRetry={reload} /> : null}
 
-          {loading ? <LoadingBlock label="Ładowanie harmonogramu…" skeleton={<ScheduleSkeleton />} /> : null}
+          {loading ? (
+            <LoadingBlock label="Ładowanie harmonogramu…" skeleton={<ScheduleSkeleton />} />
+          ) : null}
 
           {!loading && !error && visits.filter((v) => v.status !== 'CANCELLED').length === 0 ? (
             <EmptyState

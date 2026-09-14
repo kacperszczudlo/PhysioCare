@@ -108,13 +108,7 @@ export function SkeletonWrapper({
   className = '',
 }: SkeletonWrapperProps) {
   return (
-    <div
-      className={className}
-      role="status"
-      aria-busy="true"
-      aria-live="polite"
-      aria-label={label}
-    >
+    <div className={className} role="status" aria-busy="true" aria-live="polite" aria-label={label}>
       {children}
     </div>
   )

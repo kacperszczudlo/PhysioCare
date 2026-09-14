@@ -303,7 +303,9 @@ export function DashboardPage() {
         <DateBadge now={now} />
       </header>
 
-      {loading ? <LoadingBlock label="Ładowanie pulpitu…" skeleton={<DashboardSkeleton />} /> : null}
+      {loading ? (
+        <LoadingBlock label="Ładowanie pulpitu…" skeleton={<DashboardSkeleton />} />
+      ) : null}
 
       {error ? <ErrorBanner message={error} onRetry={reload} /> : null}
 

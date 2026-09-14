@@ -10,7 +10,9 @@ describe('AsyncState Components', () => {
   })
 
   it('renders LoadingBlock with custom skeleton node', () => {
-    render(<LoadingBlock label="Ładowanie zaleceń..." skeleton={<div data-testid="custom-skel" />} />)
+    render(
+      <LoadingBlock label="Ładowanie zaleceń..." skeleton={<div data-testid="custom-skel" />} />,
+    )
     expect(screen.getByRole('status')).toBeInTheDocument()
     expect(screen.getByTestId('custom-skel')).toBeInTheDocument()
   })

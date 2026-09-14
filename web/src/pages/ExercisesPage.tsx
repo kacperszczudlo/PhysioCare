@@ -277,7 +277,9 @@ export function ExercisesPage() {
         <ErrorBanner message={error} onRetry={() => setReloadToken((value) => value + 1)} />
       ) : null}
 
-      {loading ? <LoadingBlock label="Ładowanie katalogu…" skeleton={<ExercisesSkeleton />} /> : null}
+      {loading ? (
+        <LoadingBlock label="Ładowanie katalogu…" skeleton={<ExercisesSkeleton />} />
+      ) : null}
 
       {!loading && !error && exercises.length === 0 ? (
         <EmptyState

@@ -28,12 +28,16 @@ export function DashboardSkeleton() {
       <div className="skeleton-dash-grid">
         <div className="skeleton-panel">
           <Skeleton width="30%" height="1.5rem" radius="sm" />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+          <div
+            style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}
+          >
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="skeleton-list-row">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
                   <SkeletonAvatar size="md" />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flex: 1 }}>
+                  <div
+                    style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flex: 1 }}
+                  >
                     <Skeleton width="45%" height="1rem" radius="sm" />
                     <Skeleton width="30%" height="0.8rem" radius="sm" />
                   </div>
@@ -57,7 +61,14 @@ export function DashboardSkeleton() {
 export function PatientsSkeleton() {
   return (
     <SkeletonWrapper label="Ładowanie listy pacjentów…" className="skeleton-dashboard">
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          gap: '1rem',
+          marginBottom: '1rem',
+        }}
+      >
         <Skeleton width="60%" height="2.5rem" radius="md" />
         <Skeleton width="20%" height="2.5rem" radius="md" />
       </div>
@@ -98,7 +109,14 @@ export function PatientDetailSkeleton() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.5rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '0.5rem',
+          borderBottom: '1px solid var(--color-border)',
+          paddingBottom: '0.5rem',
+        }}
+      >
         <Skeleton width="6rem" height="2rem" radius="sm" />
         <Skeleton width="6rem" height="2rem" radius="sm" />
         <Skeleton width="6rem" height="2rem" radius="sm" />
@@ -133,7 +151,15 @@ export function ScheduleSkeleton() {
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="skeleton-list-row">
             <Skeleton width="4rem" height="1.25rem" radius="sm" />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', flex: 1, paddingLeft: '1rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.35rem',
+                flex: 1,
+                paddingLeft: '1rem',
+              }}
+            >
               <Skeleton width="40%" height="1rem" radius="sm" />
               <Skeleton width="25%" height="0.8rem" radius="sm" />
             </div>
@@ -185,7 +211,14 @@ export function ProfileSkeleton() {
 
       <div className="skeleton-panel">
         <Skeleton width="30%" height="1.25rem" radius="sm" />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.5rem' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '1rem',
+            marginTop: '0.5rem',
+          }}
+        >
           <Skeleton width="100%" height="2.5rem" radius="md" />
           <Skeleton width="100%" height="2.5rem" radius="md" />
           <Skeleton width="100%" height="2.5rem" radius="md" />

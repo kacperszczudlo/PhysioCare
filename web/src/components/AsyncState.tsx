@@ -9,7 +9,11 @@ interface LoadingBlockProps {
   skeleton?: ReactNode
 }
 
-export function LoadingBlock({ label = 'Ładowanie…', variant = 'text', skeleton }: LoadingBlockProps) {
+export function LoadingBlock({
+  label = 'Ładowanie…',
+  variant = 'text',
+  skeleton,
+}: LoadingBlockProps) {
   if (skeleton) {
     return (
       <div role="status" aria-busy="true" aria-live="polite" aria-label={label}>
