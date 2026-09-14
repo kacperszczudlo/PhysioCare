@@ -13,7 +13,10 @@ export function ToastContainer() {
   if (toasts.length === 0) return null
 
   return (
-    <View style={[styles.container, { top: Math.max(insets.top + space.sm, space.base) }]} pointerEvents="box-none">
+    <View
+      style={[styles.container, { top: Math.max(insets.top + space.sm, space.base) }]}
+      pointerEvents="box-none"
+    >
       {toasts.map((t) => (
         <ToastItem key={t.id} toast={t} onClose={removeToast} />
       ))}

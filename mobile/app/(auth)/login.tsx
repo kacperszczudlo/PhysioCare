@@ -127,7 +127,12 @@ export default function LoginScreen() {
             {error}
           </Text>
         ) : null}
-        <Button title="Zaloguj się" loading={loading} disabled={!email.trim() || !password} onPress={onSubmit} />
+        <Button
+          title="Zaloguj się"
+          loading={loading}
+          disabled={!email.trim() || !password}
+          onPress={onSubmit}
+        />
 
         {isGoogleSignInConfigured ? (
           <GoogleSignInButton

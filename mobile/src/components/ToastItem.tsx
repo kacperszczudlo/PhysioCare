@@ -90,9 +90,7 @@ export function ToastItem({ toast, onClose }: ToastItemProps) {
             }}
             activeOpacity={0.7}
           >
-            <Text style={[styles.actionText, { color: accentColor }]}>
-              {toast.action.label}
-            </Text>
+            <Text style={[styles.actionText, { color: accentColor }]}>{toast.action.label}</Text>
           </TouchableOpacity>
         ) : null}
       </View>

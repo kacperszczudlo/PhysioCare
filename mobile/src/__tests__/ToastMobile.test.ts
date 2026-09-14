@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
-import { DEFAULT_TOAST_DURATION, type ToastItemData, type ToastOptions } from '../components/ToastContext'
+import {
+  DEFAULT_TOAST_DURATION,
+  type ToastItemData,
+  type ToastOptions,
+} from '../components/ToastContext'
 
 vi.mock('react-native', () => ({
   Vibration: {

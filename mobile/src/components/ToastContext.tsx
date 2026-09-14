@@ -1,4 +1,11 @@
-import React, { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 import { Vibration } from 'react-native'
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
@@ -60,32 +67,35 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const showToast = useCallback((options: ToastOptions | string, typeOverride?: ToastType): string => {
-    const id = `mobile-toast-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+  const showToast = useCallback(
+    (options: ToastOptions | string, typeOverride?: ToastType): string => {
+      const id = `mobile-toast-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
 
-    let normalized: ToastOptions
-    if (typeof options === 'string') {
-      normalized = { message: options, type: typeOverride || 'info' }
-    } else {
-      normalized = { ...options, type: options.type || typeOverride || 'info' }
-    }
+      let normalized: ToastOptions
+      if (typeof options === 'string') {
+        normalized = { message: options, type: typeOverride || 'info' }
+      } else {
+        normalized = { ...options, type: options.type || typeOverride || 'info' }
+      }
 
-    const toastType = normalized.type || 'info'
-    triggerHapticFeedback(toastType)
+      const toastType = normalized.type || 'info'
+      triggerHapticFeedback(toastType)
 
-    const newToast: ToastItemData = {
-      id,
-      title: normalized.title,
-      message: normalized.message,
-      type: toastType,
-      duration: normalized.duration ?? DEFAULT_TOAST_DURATION,
-      action: normalized.action,
-      createdAt: Date.now(),
-    }
+      const newToast: ToastItemData = {
+        id,
+        title: normalized.title,
+        message: normalized.message,
+        type: toastType,
+        duration: normalized.duration ?? DEFAULT_TOAST_DURATION,
+        action: normalized.action,
+        createdAt: Date.now(),
+      }
 
-    setToasts((prev) => [...prev.slice(-2), newToast])
-    return id
-  }, [])
+      setToasts((prev) => [...prev.slice(-2), newToast])
+      return id
+    },
+    [],
+  )
 
   const toastHelpers = useMemo(
     () => ({
@@ -98,7 +108,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       info: (message: string, options?: Omit<ToastOptions, 'message' | 'type'>) =>
         showToast({ ...options, message, type: 'info' }),
     }),
-    [showToast]
+    [showToast],
   )
 
   const value = useMemo(
@@ -108,7 +118,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       removeToast,
       toast: toastHelpers,
     }),
-    [toasts, showToast, removeToast, toastHelpers]
+    [toasts, showToast, removeToast, toastHelpers],
   )
 
   return <ToastContext.Provider value={value}>{children}</ToastContext.Provider>
