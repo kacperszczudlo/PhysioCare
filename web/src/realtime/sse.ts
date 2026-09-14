@@ -5,6 +5,8 @@ import { REALTIME_EVENT_TYPES, type RealtimeEvent } from './types'
 
 const MIN_RETRY_MS = 1000
 const MAX_RETRY_MS = 30_000
+const EXPONENTIAL_BACKOFF_FACTOR = 2
+const DEV_DJANGO_PORT = 8000
 
 /**
  * W DEV EventSource idzie prosto na Django (:8000), omijając proxy Vite -
@@ -13,7 +15,7 @@ const MAX_RETRY_MS = 30_000
  */
 function eventsUrl(): string {
   if (import.meta.env.DEV && API_BASE_URL.startsWith('/')) {
-    return 'http://localhost:8000/api/v1/me/events/'
+    return `http://localhost:${DEV_DJANGO_PORT}/api/v1/me/events/`
   }
   const base = API_BASE_URL.replace(/\/$/, '')
   return `${base}/me/events/`
@@ -54,7 +56,7 @@ export function connectTherapistRealtime(): () => void {
       return
     }
     const delay = retryDelay
-    retryDelay = Math.min(retryDelay * 2, MAX_RETRY_MS)
+    retryDelay = Math.min(retryDelay * EXPONENTIAL_BACKOFF_FACTOR, MAX_RETRY_MS)
     retryTimer = setTimeout(() => {
       retryTimer = null
       void open()

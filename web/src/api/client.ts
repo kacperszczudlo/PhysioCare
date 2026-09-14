@@ -1,3 +1,4 @@
+import { HTTP_STATUS } from './httpStatus'
 import type { ApiErrorBody } from './types'
 
 const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '')
@@ -135,19 +136,19 @@ function parseErrorMessage(status: number, body: ApiErrorBody | null): string {
   if (fromBody) {
     return fromBody
   }
-  if (status === 401) {
+  if (status === HTTP_STATUS.UNAUTHORIZED) {
     return 'Sesja wygasła. Zaloguj się ponownie.'
   }
-  if (status === 403) {
+  if (status === HTTP_STATUS.FORBIDDEN) {
     return 'Brak uprawnień do tego zasobu.'
   }
-  if (status === 404) {
+  if (status === HTTP_STATUS.NOT_FOUND) {
     return 'Nie znaleziono zasobu.'
   }
-  if (status === 409) {
+  if (status === HTTP_STATUS.CONFLICT) {
     return 'Konflikt danych (np. kolizja terminu).'
   }
-  if (status >= 500) {
+  if (status >= HTTP_STATUS.INTERNAL_SERVER_ERROR) {
     return 'Błąd serwera. Spróbuj ponownie później.'
   }
   return 'Wystąpił nieoczekiwany błąd.'
@@ -191,14 +192,14 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     credentials: 'include',
   })
 
-  if (response.status === 401 && !skipAuthRefresh) {
+  if (response.status === HTTP_STATUS.UNAUTHORIZED && !skipAuthRefresh) {
     const refreshed = await tryRefreshSession()
     if (refreshed) {
       return apiRequest<T>(path, { ...options, skipAuthRefresh: true })
     }
   }
 
-  if (response.status === 204) {
+  if (response.status === HTTP_STATUS.NO_CONTENT) {
     return undefined as T
   }
 

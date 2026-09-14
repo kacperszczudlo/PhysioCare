@@ -21,7 +21,15 @@ def hash_password_reset_token(raw_token: str) -> str:
     return hashlib.sha256(raw_token.encode()).hexdigest()
 
 
-def generate_numeric_code(*, digits: int = 6) -> str:
+DEFAULT_EMAIL_CODE_DIGITS = 6
+DEFAULT_RESET_TTL_SECONDS = 900
+MIN_RESET_TTL_SECONDS = 60
+DEFAULT_EMAIL_CODE_MAX_ATTEMPTS = 5
+RESET_TOKEN_ENTROPY_BYTES = 32
+SECONDS_PER_MINUTE = 60
+
+
+def generate_numeric_code(*, digits: int = DEFAULT_EMAIL_CODE_DIGITS) -> str:
     upper = 10**digits
     return f'{secrets.randbelow(upper):0{digits}d}'
 
@@ -35,7 +43,10 @@ def issue_email_code(*, user, purpose: str) -> str:
     ).update(used_at=timezone.now())
 
     raw = generate_numeric_code()
-    ttl = max(60, int(getattr(settings, 'PASSWORD_RESET_TIMEOUT', 900)))
+    ttl = max(
+        MIN_RESET_TTL_SECONDS,
+        int(getattr(settings, 'PASSWORD_RESET_TIMEOUT', DEFAULT_RESET_TTL_SECONDS)),
+    )
     EmailCode.objects.create(
         user=user,
         purpose=purpose,
@@ -47,7 +58,10 @@ def issue_email_code(*, user, purpose: str) -> str:
 
 def send_verify_email_code(*, user) -> bool:
     raw = issue_email_code(user=user, purpose=EmailCodePurpose.VERIFY_EMAIL)
-    validity_minutes = max(1, int(getattr(settings, 'PASSWORD_RESET_TIMEOUT', 900)) // 60)
+    validity_minutes = max(
+        1,
+        int(getattr(settings, 'PASSWORD_RESET_TIMEOUT', DEFAULT_RESET_TTL_SECONDS)) // SECONDS_PER_MINUTE,
+    )
     return send_templated_mail(
         subject='PhysioCare - potwierdź adres e-mail',
         to=[user.email],
@@ -62,7 +76,10 @@ def send_verify_email_code(*, user) -> bool:
 
 def send_password_reset_code(*, user) -> bool:
     raw = issue_email_code(user=user, purpose=EmailCodePurpose.PASSWORD_RESET)
-    validity_minutes = max(1, int(getattr(settings, 'PASSWORD_RESET_TIMEOUT', 900)) // 60)
+    validity_minutes = max(
+        1,
+        int(getattr(settings, 'PASSWORD_RESET_TIMEOUT', DEFAULT_RESET_TTL_SECONDS)) // SECONDS_PER_MINUTE,
+    )
     return send_templated_mail(
         subject='PhysioCare - kod resetu hasła',
         to=[user.email],
@@ -85,10 +102,10 @@ class EmailCodeError(Exception):
 def consume_email_code(*, user, purpose: str, raw_code: str) -> EmailCode:
     """Validate and mark code used. Raises EmailCodeError on failure."""
     cleaned = (raw_code or '').strip()
-    if not cleaned.isdigit() or len(cleaned) != 6:
-        raise EmailCodeError('AUTH_028', 'Kod musi składać się z 6 cyfr.')
+    if not cleaned.isdigit() or len(cleaned) != DEFAULT_EMAIL_CODE_DIGITS:
+        raise EmailCodeError('AUTH_028', f'Kod musi składać się z {DEFAULT_EMAIL_CODE_DIGITS} cyfr.')
 
-    max_attempts = max(1, int(getattr(settings, 'EMAIL_CODE_MAX_ATTEMPTS', 5)))
+    max_attempts = max(1, int(getattr(settings, 'EMAIL_CODE_MAX_ATTEMPTS', DEFAULT_EMAIL_CODE_MAX_ATTEMPTS)))
     record = (
         EmailCode.objects.filter(
             user=user,
@@ -139,8 +156,11 @@ def issue_password_reset_token(*, user) -> str:
         used_at__isnull=True,
     ).update(used_at=timezone.now())
 
-    raw = secrets.token_urlsafe(32)
-    ttl = max(60, int(getattr(settings, 'PASSWORD_RESET_TIMEOUT', 900)))
+    raw = secrets.token_urlsafe(RESET_TOKEN_ENTROPY_BYTES)
+    ttl = max(
+        MIN_RESET_TTL_SECONDS,
+        int(getattr(settings, 'PASSWORD_RESET_TIMEOUT', DEFAULT_RESET_TTL_SECONDS)),
+    )
     PasswordResetToken.objects.create(
         user=user,
         token_hash=hash_password_reset_token(raw),
