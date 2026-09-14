@@ -7,11 +7,13 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { AuthProvider, useAuth } from '@/auth/AuthContext'
 import { OfflineBanner } from '@/components/OfflineBanner'
-import { NetworkProvider } from '@/network/NetworkContext'
 import { configureNotificationHandler } from '@/notifications/push'
 import { NotificationObserver } from '@/notifications/NotificationObserver'
 import { RealtimeObserver } from '@/realtime/RealtimeObserver'
 import { colors } from '@/theme/tokens'
+import { NetworkProvider } from '@/network/NetworkContext'
+import { ToastContainer } from '@/components/ToastContainer'
+import { ToastProvider } from '@/components/ToastContext'
 
 configureNotificationHandler()
 
@@ -71,13 +73,16 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <KeyboardProvider preload={false}>
-        <NetworkProvider>
-          <AuthProvider>
-            <NotificationObserver />
-            <RealtimeObserver />
-            <RootNavigator />
-          </AuthProvider>
-        </NetworkProvider>
+        <ToastProvider>
+          <NetworkProvider>
+            <AuthProvider>
+              <NotificationObserver />
+              <RealtimeObserver />
+              <RootNavigator />
+              <ToastContainer />
+            </AuthProvider>
+          </NetworkProvider>
+        </ToastProvider>
       </KeyboardProvider>
     </SafeAreaProvider>
   )

@@ -3,13 +3,15 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { ApiError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
-import { ErrorBanner, SuccessBanner } from '@/components/AsyncState'
+import { ErrorBanner } from '@/components/AsyncState'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
+import { useToast } from '@/components/ui/ToastContext'
 import './auth-forms.css'
 
 export function EmailVerifyPage() {
   const { verifyEmail, resendEmailCode } = useAuth()
+  const { toast } = useToast()
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const emailFromQuery = (params.get('email') ?? '').trim()
@@ -17,13 +19,11 @@ export function EmailVerifyPage() {
   const [email] = useState(emailFromQuery)
   const [code, setCode] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
-    setMessage(null)
     if (!email) {
       setError('Brak adresu e-mail. Wróć do rejestracji lub logowania.')
       return
@@ -53,7 +53,7 @@ export function EmailVerifyPage() {
     setLoading(true)
     try {
       const detail = await resendEmailCode(email)
-      setMessage(detail)
+      toast.success(detail, { title: 'Kod wysłany' })
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Nie udało się wysłać kodu.')
     } finally {
@@ -88,7 +88,6 @@ export function EmailVerifyPage() {
           onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
         />
         {error ? <ErrorBanner message={error} /> : null}
-        {message ? <SuccessBanner message={message} /> : null}
         <Button type="submit" loading={loading} className="auth-form__submit">
           Potwierdź
         </Button>

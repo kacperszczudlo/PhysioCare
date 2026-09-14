@@ -12,6 +12,7 @@ import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { SectionCard } from '@/components/ScreenHeader'
 import { LocationMapCard } from '@/components/LocationMapCard'
+import { useToast } from '@/components/ToastContext'
 import { addMinutesISO, formatDateTime, formatTimeRange, visitStatusLabel } from '@/lib/format'
 import { colors, space, typography } from '@/theme/tokens'
 
@@ -31,6 +32,7 @@ function defaultRescheduleStart(from?: string): Date {
 export default function VisitDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
+  const { toast } = useToast()
   const [visit, setVisit] = useState<Visit | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -84,8 +86,11 @@ export default function VisitDetailScreen() {
       })
       setVisit(updated)
       setRescheduleOpen(false)
+      toast.success('Termin wizyty został zmieniony.')
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się zmienić terminu.'))
+      const msg = getErrorMessage(err, 'Nie udało się zmienić terminu.')
+      setError(msg)
+      toast.error(msg)
     } finally {
       setBusy(false)
     }
@@ -111,13 +116,14 @@ export default function VisitDetailScreen() {
               try {
                 const updated = await patientApi.cancelVisit(visit.id, cancelReason.trim())
                 setVisit(updated)
+                toast.warning(pending ? 'Zgłoszenie zostało wycofane.' : 'Wizyta została odwołana.')
               } catch (err) {
-                setError(
-                  getErrorMessage(
-                    err,
-                    pending ? 'Nie udało się wycofać zgłoszenia.' : 'Nie udało się odwołać wizyty.',
-                  ),
+                const msg = getErrorMessage(
+                  err,
+                  pending ? 'Nie udało się wycofać zgłoszenia.' : 'Nie udało się odwołać wizyty.',
                 )
+                setError(msg)
+                toast.error(msg)
               } finally {
                 setBusy(false)
               }

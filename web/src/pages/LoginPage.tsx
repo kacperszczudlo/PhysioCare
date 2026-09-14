@@ -1,14 +1,14 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { ApiError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
 import { setGoogleRegistrationDraft } from '@/auth/googleRegistrationDraft'
 import { parseGoogleIdTokenClaims } from '@/auth/parseGoogleIdToken'
-import { SuccessBanner } from '@/components/AsyncState'
 import { GoogleSignInButton, isWebGoogleSignInConfigured } from '@/components/GoogleSignInButton'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
+import { useToast } from '@/components/ui/ToastContext'
 import './auth-forms.css'
 
 export function LoginPage() {
@@ -26,6 +26,7 @@ export function LoginPage() {
       ? locationState.notice.trim()
       : null
 
+  const { toast } = useToast()
   const [email, setEmail] = useState(
     typeof locationState?.email === 'string' ? locationState.email : '',
   )
@@ -34,6 +35,12 @@ export function LoginPage() {
   const [mfaCode, setMfaCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (notice) {
+      toast.info(notice)
+    }
+  }, [notice, toast])
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -192,7 +199,6 @@ export function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        {notice ? <SuccessBanner message={notice} /> : null}
         {error ? (
           <p className="auth-form__error" role="alert">
             {error}

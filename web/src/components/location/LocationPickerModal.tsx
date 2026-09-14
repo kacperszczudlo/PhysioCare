@@ -6,6 +6,7 @@ import {
   searchAddress,
   type LocationAddressResult,
 } from './locationServices'
+import { useToast } from '@/components/ui/ToastContext'
 import './LocationPickerModal.css'
 
 interface LocationPickerModalProps {
@@ -168,9 +169,11 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
     setSearchQuery('')
   }
 
+  const { toast } = useToast()
+
   const handleUseGps = () => {
     if (!navigator.geolocation) {
-      alert('Geolokalizacja nie jest wspierana przez Twoją przeglądarkę.')
+      toast.error('Geolokalizacja nie jest wspierana przez Twoją przeglądarkę.')
       return
     }
 
@@ -189,7 +192,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
       (err) => {
         setIsGpsLoading(false)
         console.warn('GPS location error:', err)
-        alert('Nie udało się pobrać Twojej aktualnej pozycji GPS.')
+        toast.error('Nie udało się pobrać Twojej aktualnej pozycji GPS.')
       },
       { timeout: 10000, enableHighAccuracy: true },
     )

@@ -2,9 +2,10 @@ import { useEffect, useState, type FormEvent } from 'react'
 
 import { authApi, type MFAStatusResponse, type MFASetupResponse } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
-import { ErrorBanner, SuccessBanner } from '@/components/AsyncState'
+import { ErrorBanner } from '@/components/AsyncState'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
+import { useToast } from '@/components/ui/ToastContext'
 
 export function MFASection() {
   const [status, setStatus] = useState<MFAStatusResponse | null>(null)
@@ -16,7 +17,6 @@ export function MFASection() {
   const [showDisableForm, setShowDisableForm] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadStatus() {
@@ -32,15 +32,18 @@ export function MFASection() {
     void loadStatus()
   }, [])
 
+  const { toast } = useToast()
+
   async function handleStartSetup() {
     setError(null)
-    setMessage(null)
     setBusy(true)
     try {
       const data = await authApi.setupMFA()
       setSetupData(data)
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się rozpocząć konfiguracji 2FA.'))
+      const errMsg = getErrorMessage(err, 'Nie udało się rozpocząć konfiguracji 2FA.')
+      setError(errMsg)
+      toast.error(errMsg)
     } finally {
       setBusy(false)
     }
@@ -50,17 +53,18 @@ export function MFASection() {
     e.preventDefault()
     if (!enableCode.trim()) return
     setError(null)
-    setMessage(null)
     setBusy(true)
     try {
       const res = await authApi.enableMFA(enableCode.trim())
       setBackupCodes(res.backup_codes)
-      setMessage(res.message)
+      toast.success(res.message, { title: 'Dwuetapowa weryfikacja (2FA)' })
       setSetupData(null)
       setEnableCode('')
       setStatus((prev) => (prev ? { ...prev, is_enabled: true } : null))
     } catch (err) {
-      setError(getErrorMessage(err, 'Nieprawidłowy kod 2FA.'))
+      const errMsg = getErrorMessage(err, 'Nieprawidłowy kod 2FA.')
+      setError(errMsg)
+      toast.error(errMsg)
     } finally {
       setBusy(false)
     }
@@ -70,16 +74,17 @@ export function MFASection() {
     e.preventDefault()
     if (!disablePassword.trim()) return
     setError(null)
-    setMessage(null)
     setBusy(true)
     try {
       const res = await authApi.disableMFA(disablePassword.trim())
-      setMessage(res.message)
+      toast.info(res.message, { title: 'Dwuetapowa weryfikacja (2FA)' })
       setShowDisableForm(false)
       setDisablePassword('')
       setStatus((prev) => (prev ? { ...prev, is_enabled: false } : null))
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się wyłączyć 2FA. Sprawdź hasło.'))
+      const errMsg = getErrorMessage(err, 'Nie udało się wyłączyć 2FA. Sprawdź hasło.')
+      setError(errMsg)
+      toast.error(errMsg)
     } finally {
       setBusy(false)
     }
@@ -117,7 +122,6 @@ export function MFASection() {
       </header>
 
       {error ? <ErrorBanner message={error} /> : null}
-      {message ? <SuccessBanner message={message} /> : null}
 
       {/* Backup codes modal/view after enabling 2FA */}
       {backupCodes ? (
