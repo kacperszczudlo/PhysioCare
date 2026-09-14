@@ -4,6 +4,7 @@ import { schedulingApi } from '@/api/scheduling'
 import { getErrorMessage } from '@/api/client'
 import type { Visit } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { ScheduleSkeleton } from '@/components/skeletons/WebSkeletons'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { CancelVisitModal } from '@/components/ui/Modal'
@@ -408,7 +409,7 @@ export function SchedulePage() {
 
           {error ? <ErrorBanner message={error} onRetry={reload} /> : null}
 
-          {loading ? <LoadingBlock label="Ładowanie harmonogramu…" variant="panel" /> : null}
+          {loading ? <LoadingBlock label="Ładowanie harmonogramu…" skeleton={<ScheduleSkeleton />} /> : null}
 
           {!loading && !error && visits.filter((v) => v.status !== 'CANCELLED').length === 0 ? (
             <EmptyState

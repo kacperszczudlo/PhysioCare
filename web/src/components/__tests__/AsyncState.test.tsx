@@ -9,6 +9,12 @@ describe('AsyncState Components', () => {
     expect(screen.getByText('Ładowanie pacjentów...')).toBeInTheDocument()
   })
 
+  it('renders LoadingBlock with custom skeleton node', () => {
+    render(<LoadingBlock label="Ładowanie zaleceń..." skeleton={<div data-testid="custom-skel" />} />)
+    expect(screen.getByRole('status')).toBeInTheDocument()
+    expect(screen.getByTestId('custom-skel')).toBeInTheDocument()
+  })
+
   it('renders ErrorBanner and triggers retry callback', () => {
     const handleRetry = vi.fn()
     render(<ErrorBanner message="Nie udało się pobrać danych" onRetry={handleRetry} />)

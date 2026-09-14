@@ -5,6 +5,7 @@ import { patientsApi, treatmentApi } from '@/api/treatment'
 import { getErrorMessage } from '@/api/client'
 import type { EpisodeStatus, PatientDetail, TreatmentEpisode, VisitNote } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { PatientDetailSkeleton } from '@/components/skeletons/WebSkeletons'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
@@ -229,7 +230,7 @@ export function PatientDetailPage() {
   if (loading) {
     return (
       <section>
-        <LoadingBlock label="Ładowanie karty…" variant="panel" />
+        <LoadingBlock label="Ładowanie karty…" skeleton={<PatientDetailSkeleton />} />
       </section>
     )
   }

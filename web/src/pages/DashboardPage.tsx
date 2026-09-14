@@ -8,6 +8,7 @@ import { schedulingApi } from '@/api/scheduling'
 import type { DashboardStats, ExerciseCategory, Visit } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { DashboardSkeleton } from '@/components/skeletons/WebSkeletons'
 import { CreateExerciseModal } from '@/pages/exercises/CreateExerciseModal'
 import { VisitFormModal } from '@/pages/schedule/VisitFormModal'
 import { AuthMediaImg } from '@/components/AuthMedia'
@@ -302,7 +303,7 @@ export function DashboardPage() {
         <DateBadge now={now} />
       </header>
 
-      {loading ? <LoadingBlock label="Ładowanie pulpitu…" variant="panel" /> : null}
+      {loading ? <LoadingBlock label="Ładowanie pulpitu…" skeleton={<DashboardSkeleton />} /> : null}
 
       {error ? <ErrorBanner message={error} onRetry={reload} /> : null}
 

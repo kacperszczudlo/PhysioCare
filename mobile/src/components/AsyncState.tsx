@@ -1,9 +1,17 @@
+import type { ReactNode } from 'react'
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { colors, radius, space, typography } from '@/theme/tokens'
 import { Button } from './Button'
 
-export function LoadingBlock({ label = 'Ładowanie…' }: { label?: string }) {
+export function LoadingBlock({ label = 'Ładowanie…', skeleton }: { label?: string; skeleton?: ReactNode }) {
+  if (skeleton) {
+    return (
+      <View accessibilityLabel={label} accessibilityState={{ busy: true }}>
+        {skeleton}
+      </View>
+    )
+  }
   return (
     <View style={styles.center} accessibilityLabel={label}>
       <ActivityIndicator size="large" color={colors.primary} />

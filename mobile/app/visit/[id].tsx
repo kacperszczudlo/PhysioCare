@@ -6,6 +6,7 @@ import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { Visit } from '@/api/types'
 import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { MobileVisitDetailSkeleton } from '@/components/skeletons/MobileSkeletons'
 import { Button } from '@/components/Button'
 import { DateTimePickerField } from '@/components/DateTimePickerField'
 import { Field } from '@/components/Field'
@@ -135,7 +136,7 @@ export default function VisitDetailScreen() {
   }
 
   if (loading) {
-    return <LoadingBlock />
+    return <LoadingBlock skeleton={<MobileVisitDetailSkeleton />} />
   }
 
   if (!visit) {
