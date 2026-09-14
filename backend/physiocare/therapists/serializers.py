@@ -4,14 +4,42 @@ from rest_framework import serializers
 from core.field_policies import (
     ADDRESS_TOO_LONG,
     BIO_TOO_LONG,
+    LAST_NAME_INVALID,
+    LAST_NAME_REQUIRED,
+    LAST_NAME_TOO_LONG,
+    LAST_NAME_TOO_SHORT,
+    NAME_INVALID,
+    NAME_REQUIRED,
+    NAME_TOO_LONG,
+    NAME_TOO_SHORT,
     normalize_and_validate_address,
     normalize_and_validate_bio,
     normalize_and_validate_courses,
+    normalize_and_validate_first_name,
+    normalize_and_validate_last_name,
 )
 from core.phone_policy import PHONE_FIELD_ERRORS, normalize_and_validate_phone
 from therapists.competence import QualificationLevel
 
 from .models import TherapistProfile
+
+_FIRST_NAME_FIELD_ERRORS = {
+    'blank': NAME_REQUIRED,
+    'required': NAME_REQUIRED,
+    'null': NAME_REQUIRED,
+    'max_length': NAME_TOO_LONG,
+    'min_length': NAME_TOO_SHORT,
+    'invalid': NAME_INVALID,
+}
+
+_LAST_NAME_FIELD_ERRORS = {
+    'blank': LAST_NAME_REQUIRED,
+    'required': LAST_NAME_REQUIRED,
+    'null': LAST_NAME_REQUIRED,
+    'max_length': LAST_NAME_TOO_LONG,
+    'min_length': LAST_NAME_TOO_SHORT,
+    'invalid': LAST_NAME_INVALID,
+}
 
 
 class TherapistProfileSerializer(serializers.ModelSerializer):
@@ -35,6 +63,16 @@ class TherapistProfileSerializer(serializers.ModelSerializer):
 
 
 class TherapistProfileUpdateSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(
+        max_length=100,
+        required=False,
+        error_messages=_FIRST_NAME_FIELD_ERRORS,
+    )
+    last_name = serializers.CharField(
+        max_length=100,
+        required=False,
+        error_messages=_LAST_NAME_FIELD_ERRORS,
+    )
     phone = serializers.CharField(
         max_length=20,
         required=False,
@@ -71,9 +109,21 @@ class TherapistProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TherapistProfile
         fields = [
-            'phone', 'location_address', 'bio', 'courses',
+            'first_name', 'last_name', 'phone', 'location_address', 'bio', 'courses',
             'qualification_level', 'experience_years',
         ]
+
+    def validate_first_name(self, value):
+        try:
+            return normalize_and_validate_first_name(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def validate_last_name(self, value):
+        try:
+            return normalize_and_validate_last_name(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(list(exc.messages)) from exc
 
     def validate_phone(self, value):
         try:
@@ -98,6 +148,19 @@ class TherapistProfileUpdateSerializer(serializers.ModelSerializer):
             return normalize_and_validate_courses(value)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
+
+    def update(self, instance, validated_data):
+        user = instance.user
+        user_updated = False
+        if 'first_name' in validated_data:
+            user.first_name = validated_data.pop('first_name')
+            user_updated = True
+        if 'last_name' in validated_data:
+            user.last_name = validated_data.pop('last_name')
+            user_updated = True
+        if user_updated:
+            user.save(update_fields=['first_name', 'last_name', 'updated_at'])
+        return super().update(instance, validated_data)
 
 
 class TherapistPublicSerializer(serializers.ModelSerializer):

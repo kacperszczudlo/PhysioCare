@@ -28,7 +28,7 @@ export const patientApi = {
     return api.get<PatientProfile>('/me/profile/')
   },
 
-  updateProfile(payload: Partial<Pick<PatientProfile, 'pesel' | 'phone'>>) {
+  updateProfile(payload: Partial<Pick<PatientProfile, 'first_name' | 'last_name' | 'pesel' | 'phone'>>) {
     return api.patch<PatientProfile>('/me/profile/', payload)
   },
 

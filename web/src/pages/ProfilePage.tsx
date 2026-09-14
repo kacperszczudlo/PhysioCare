@@ -31,6 +31,8 @@ export function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [phoneCountryCode, setPhoneCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [phoneNational, setPhoneNational] = useState('')
   const [locationAddress, setLocationAddress] = useState('')
@@ -41,6 +43,8 @@ export function ProfilePage() {
   const [experienceYears, setExperienceYears] = useState(0)
   const [profileBusy, setProfileBusy] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<{
+    firstName?: string
+    lastName?: string
     phone?: string
     locationAddress?: string
     bio?: string
@@ -68,6 +72,8 @@ export function ProfilePage() {
           return
         }
         setProfile(data)
+        setFirstName(data.first_name ?? '')
+        setLastName(data.last_name ?? '')
         const parsedPhone = parseStoredPhone(data.phone)
         setPhoneCountryCode(parsedPhone.countryCode)
         setPhoneNational(parsedPhone.nationalNumber)
@@ -96,6 +102,8 @@ export function ProfilePage() {
 
   function resetForm() {
     if (!profile) return
+    setFirstName(profile.first_name ?? '')
+    setLastName(profile.last_name ?? '')
     const parsedPhone = parseStoredPhone(profile.phone)
     setPhoneCountryCode(parsedPhone.countryCode)
     setPhoneNational(parsedPhone.nationalNumber)
@@ -111,7 +119,9 @@ export function ProfilePage() {
   const initialPhone = profile ? parseStoredPhone(profile.phone) : null
   const isDirty = Boolean(
     profile &&
-    (phoneCountryCode !== initialPhone?.countryCode ||
+    (firstName.trim() !== (profile.first_name ?? '') ||
+      lastName.trim() !== (profile.last_name ?? '') ||
+      phoneCountryCode !== initialPhone?.countryCode ||
       phoneNational !== initialPhone?.nationalNumber ||
       locationAddress !== (profile.location_address ?? '') ||
       bio !== (profile.bio ?? '') ||
@@ -187,6 +197,8 @@ export function ProfilePage() {
     setProfileBusy(true)
     try {
       const updated = await therapistApi.updateProfile({
+        first_name: firstName.trim() || undefined,
+        last_name: lastName.trim() || undefined,
         phone: formatPhoneForApi(phoneNational, phoneCountryCode),
         location_address: locationAddress.trim(),
         bio: bio.trim(),
@@ -195,6 +207,9 @@ export function ProfilePage() {
         experience_years: experienceYears,
       })
       setProfile(updated)
+      setFirstName(updated.first_name ?? '')
+      setLastName(updated.last_name ?? '')
+      await refreshSession().catch(() => undefined)
       const parsedPhone = parseStoredPhone(updated.phone)
       setPhoneCountryCode(parsedPhone.countryCode)
       setPhoneNational(parsedPhone.nationalNumber)
@@ -202,11 +217,15 @@ export function ProfilePage() {
       setExperienceYears(updated.experience_years ?? 0)
       toast.success('Dane profilu zostały zapisane.', { title: 'Sukces' })
     } catch (err) {
+      const apiFirstName = getFieldError(err, 'first_name')
+      const apiLastName = getFieldError(err, 'last_name')
       const apiPhone = getFieldError(err, 'phone')
       const apiAddress = getFieldError(err, 'location_address')
       const apiBio = getFieldError(err, 'bio')
-      if (apiPhone || apiAddress || apiBio) {
+      if (apiFirstName || apiLastName || apiPhone || apiAddress || apiBio) {
         setFieldErrors({
+          firstName: apiFirstName ?? undefined,
+          lastName: apiLastName ?? undefined,
           phone: apiPhone ?? undefined,
           locationAddress: apiAddress ?? undefined,
           bio: apiBio ?? undefined,
@@ -338,6 +357,32 @@ export function ProfilePage() {
             </div>
 
             <div className="profile-fields">
+              <div className="profile-fields profile-fields--split" style={{ margin: 0, padding: 0 }}>
+                <Field
+                  label="Imię"
+                  name="first_name"
+                  value={firstName}
+                  onChange={(e) => {
+                    setFirstName(e.target.value)
+                    if (fieldErrors.firstName) {
+                      setFieldErrors((prev) => ({ ...prev, firstName: undefined }))
+                    }
+                  }}
+                  error={fieldErrors.firstName}
+                />
+                <Field
+                  label="Nazwisko"
+                  name="last_name"
+                  value={lastName}
+                  onChange={(e) => {
+                    setLastName(e.target.value)
+                    if (fieldErrors.lastName) {
+                      setFieldErrors((prev) => ({ ...prev, lastName: undefined }))
+                    }
+                  }}
+                  error={fieldErrors.lastName}
+                />
+              </div>
               <PhoneField
                 countryCode={phoneCountryCode}
                 nationalNumber={phoneNational}
