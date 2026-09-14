@@ -213,6 +213,16 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
+## Ochrona Danych Osobowych i Medycznych (RODO Art. 9)
+
+| Mechanizm | Opis Wdrożenia |
+|-----------|----------------|
+| **Szyfrowanie pól at-rest** | Dane wrażliwe (PESEL, notatki medyczne, diagnoza funkcjonalna, uzasadnienia skierowań) są przed zapisaniem do tabel w PostgreSQL automatycznie szyfrowane symetrycznym algorytmem Fernet (AES-128-CBC + HMAC SHA-256). |
+| **Brak jawnego PESELu w BD** | Zapytania surowe SQL zwracają zaszyfrowany ciąg (`gAAAAA...`). Dekrypcja zachodzi wyłącznie w warstwie ORM po autoryzacji sesji. |
+| **Maskowanie w API** | Endpointy API udostępniają numer PESEL oraz wpisy medyczne wyłącznie autoryzowanemu fizjoterapeucie (przypisanemu do pacjenta) oraz samemu pacjentowi. |
+
+---
+
 ## Macierz UC × Moduł
 
 | UC | Mobile | Web | API | BD |

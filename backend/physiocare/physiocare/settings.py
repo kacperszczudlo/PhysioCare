@@ -107,6 +107,7 @@ ASGI_APPLICATION = 'physiocare.asgi.application'
 
 
 def postgres_database(*, db_name=None, test_db_name=None):
+    sslmode = os.environ.get('DB_SSLMODE', '').strip()
     config = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': db_name or require_env('POSTGRES_DB'),
@@ -117,6 +118,8 @@ def postgres_database(*, db_name=None, test_db_name=None):
         'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '0')),
         'CONN_HEALTH_CHECKS': True,
     }
+    if sslmode:
+        config['OPTIONS'] = {'sslmode': sslmode}
     if test_db_name:
         config['TEST'] = {'NAME': test_db_name}
     return config

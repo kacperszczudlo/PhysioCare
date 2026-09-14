@@ -107,14 +107,16 @@ Pacjent: Szczegóły wizyty -> Modal zmiany terminu / odwołania
 Terapeuta: widok w harmonogramie i karcie pacjenta (ten sam zasób Visit)
 ```
 
-## Bezpieczeństwo (skrót)
+## Bezpieczeństwo i Ochrona Danych RODO
 
-- Hasła: hashery Django na `AbstractBaseUser` (domyślnie PBKDF2/argon w zależności od wersji; walidatory siły hasła)
-- JWT: krótki access; refresh w httpOnly cookie (web) albo SecureStore (mobile); wylogowanie i zmiana hasła wpisują refresh na czarną listę
-- CORS: lista dozwolonych originów web + Expo
-- Limit ciała żądania: Django `DATA_UPLOAD_MAX_MEMORY_SIZE`
-- Pliki medyczne: JWT + własność rekordu; typ pliku z sygnatury bajtów, nie z nagłówka klienta
-- Throttle na `/api/v1/auth/login/`
+- **Field-Level Encryption (Data at Rest):** Numer PESEL (`PatientProfile.pesel`) oraz dane medyczne i wpisy kliniczne (`VisitNote.content`, `TreatmentEpisode.functional_diagnosis`, `DiagnosticRecommendation.justification`, `MedicalDeviceOrder.notes`, `PhysicianOrderRefusal`) są automatycznie szyfrowane symetrycznym algorytmem Fernet (AES-128-CBC + HMAC SHA-256) z użyciem klucza `FIELD_ENCRYPTION_KEY`. W surowej bazie PostgreSQL dane przechowywane są wyłącznie jako nieczytelny szyfrogram (`gAAAAA...`).
+- **Hasła:** hashery Django na `AbstractBaseUser` (`PBKDF2PasswordHasher` z walidacją znaku specjalnego i długości)
+- **JWT:** krótki access; refresh w httpOnly cookie (web) albo SecureStore (mobile); wylogowanie i zmiana hasła wpisują refresh na czarną listę
+- **CORS:** lista dozwolonych originów web + Expo
+- **Transport Security:** Przesył danych przez HTTPS (SSL/TLS) oraz opcjonalny `sslmode` połączenia PostgreSQL z aplikacją Django
+- **Limit ciała żądania:** Django `DATA_UPLOAD_MAX_MEMORY_SIZE`
+- **Pliki medyczne:** JWT + własność rekordu; typ pliku z sygnatury bajtów, nie z nagłówka klienta
+- **Throttle:** dedykowany rate limiting na logowanie, rejestrację i reset hasła
 
 ## Stack technologiczny
 
