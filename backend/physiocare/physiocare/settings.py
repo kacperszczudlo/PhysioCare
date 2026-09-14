@@ -157,11 +157,22 @@ MAX_UPLOAD_MB = int(os.environ.get('MAX_UPLOAD_MB', '50'))
 MAX_AVATAR_MB = int(os.environ.get('MAX_AVATAR_MB', '5'))
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_MB * 1024 * 1024
 
+from corsheaders.defaults import default_headers
+
 CORS_ALLOWED_ORIGINS = env_list(
     'CORS_ALLOWED_ORIGINS',
-    'http://localhost:5173,http://localhost:8081',
+    'http://localhost:5173,http://localhost:8081,http://127.0.0.1:5173,http://127.0.0.1:8081',
 )
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-physiocare-token-delivery',
+    'x-request-id',
+]
+CORS_EXPOSE_HEADERS = [
+    'x-request-id',
+    'x-response-time-ms',
+    'content-disposition',
+]
 CSRF_TRUSTED_ORIGINS = env_list(
     'CSRF_TRUSTED_ORIGINS',
     ','.join(CORS_ALLOWED_ORIGINS),
