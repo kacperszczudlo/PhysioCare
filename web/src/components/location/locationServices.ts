@@ -36,7 +36,10 @@ export const DEFAULT_CENTER = {
   lon: 21.0122,
 }
 
-export function formatAddressFromNominatim(details: { address?: NominatimAddressDetails; display_name?: string }): string {
+export function formatAddressFromNominatim(details: {
+  address?: NominatimAddressDetails
+  display_name?: string
+}): string {
   if (!details) return ''
   const addr = details.address || {}
 

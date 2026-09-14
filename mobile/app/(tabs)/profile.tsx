@@ -48,9 +48,9 @@ export default function ProfileScreen() {
   const initialPhone = profile ? parseStoredPhone(profile.phone) : null
   const isDirty = Boolean(
     profile &&
-      (phoneCountryCode !== initialPhone?.countryCode ||
-        phoneNational !== initialPhone?.nationalNumber ||
-        pesel !== (profile.pesel ?? '')),
+    (phoneCountryCode !== initialPhone?.countryCode ||
+      phoneNational !== initialPhone?.nationalNumber ||
+      pesel !== (profile.pesel ?? '')),
   )
 
   const resetForm = useCallback(() => {
@@ -281,12 +281,7 @@ export default function ProfileScreen() {
           onPress={() => void saveProfile()}
         />
         {isDirty ? (
-          <Button
-            title="Odrzuć zmiany"
-            variant="secondary"
-            disabled={saving}
-            onPress={resetForm}
-          />
+          <Button title="Odrzuć zmiany" variant="secondary" disabled={saving} onPress={resetForm} />
         ) : null}
         {feedback?.kind === 'profile' ? <SuccessBanner message={feedback.message} /> : null}
         {profile?.therapist ? (

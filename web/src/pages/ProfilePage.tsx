@@ -112,13 +112,13 @@ export function ProfilePage() {
   const initialPhone = profile ? parseStoredPhone(profile.phone) : null
   const isDirty = Boolean(
     profile &&
-      (phoneCountryCode !== initialPhone?.countryCode ||
-        phoneNational !== initialPhone?.nationalNumber ||
-        locationAddress !== (profile.location_address ?? '') ||
-        bio !== (profile.bio ?? '') ||
-        qualificationLevel !== (profile.qualification_level ?? 'MAGISTER') ||
-        experienceYears !== (profile.experience_years ?? 0) ||
-        JSON.stringify(courses) !== JSON.stringify(profile.courses ?? [])),
+    (phoneCountryCode !== initialPhone?.countryCode ||
+      phoneNational !== initialPhone?.nationalNumber ||
+      locationAddress !== (profile.location_address ?? '') ||
+      bio !== (profile.bio ?? '') ||
+      qualificationLevel !== (profile.qualification_level ?? 'MAGISTER') ||
+      experienceYears !== (profile.experience_years ?? 0) ||
+      JSON.stringify(courses) !== JSON.stringify(profile.courses ?? [])),
   )
 
   useEffect(() => {

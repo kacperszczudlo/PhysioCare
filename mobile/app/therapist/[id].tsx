@@ -182,7 +182,10 @@ export default function TherapistPublicScreen() {
         </SectionCard>
 
         <SectionCard>
-          <LocationMapCard address={therapist.location_address || ''} title="Lokalizacja gabinetu" />
+          <LocationMapCard
+            address={therapist.location_address || ''}
+            title="Lokalizacja gabinetu"
+          />
         </SectionCard>
 
         <SectionCard>

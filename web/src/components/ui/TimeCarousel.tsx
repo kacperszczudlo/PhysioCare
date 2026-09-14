@@ -88,20 +88,26 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
     })
   }, [])
 
-  const emitIndex = useCallback((index: number) => {
-    setActiveIndex(index)
-    scrollToIndex(index)
-    if (index !== selectedIndexRef.current) {
-      onChangeIndexRef.current(index)
-    }
-  }, [scrollToIndex])
+  const emitIndex = useCallback(
+    (index: number) => {
+      setActiveIndex(index)
+      scrollToIndex(index)
+      if (index !== selectedIndexRef.current) {
+        onChangeIndexRef.current(index)
+      }
+    },
+    [scrollToIndex],
+  )
 
-  const commit = useCallback((scrollTop: number) => {
-    clearSettle()
-    dragging.current = false
-    const next = indexFromScroll(scrollTop, itemsLengthRef.current)
-    emitIndex(next)
-  }, [emitIndex])
+  const commit = useCallback(
+    (scrollTop: number) => {
+      clearSettle()
+      dragging.current = false
+      const next = indexFromScroll(scrollTop, itemsLengthRef.current)
+      emitIndex(next)
+    },
+    [emitIndex],
+  )
 
   function scheduleCommit(scrollTop: number) {
     clearSettle()
