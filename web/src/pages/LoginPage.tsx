@@ -205,7 +205,12 @@ export function LoginPage() {
           </p>
         ) : null}
 
-        <Button type="submit" loading={loading} disabled={!email.trim() || !password} className="auth-form__submit">
+        <Button
+          type="submit"
+          loading={loading}
+          disabled={!email.trim() || !password}
+          className="auth-form__submit"
+        >
           Zaloguj się
         </Button>
       </form>

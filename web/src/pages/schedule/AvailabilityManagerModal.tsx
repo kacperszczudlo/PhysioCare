@@ -11,15 +11,7 @@ interface AvailabilityManagerModalProps {
   onSlotsChanged?: () => void
 }
 
-const DAY_NAMES = [
-  'Poniedziałek',
-  'Wtorek',
-  'Środa',
-  'Czwartek',
-  'Piątek',
-  'Sobota',
-  'Niedziela',
-]
+const DAY_NAMES = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela']
 
 export function AvailabilityManagerModal({
   isOpen,
@@ -136,7 +128,11 @@ export function AvailabilityManagerModal({
           </button>
         </div>
 
-        {error && <div className="availability-modal-error" role="alert">{error}</div>}
+        {error && (
+          <div className="availability-modal-error" role="alert">
+            {error}
+          </div>
+        )}
 
         <div className="availability-tabs" role="tablist">
           <button
@@ -264,7 +260,8 @@ export function AvailabilityManagerModal({
             <p className="availability-empty">Ładowanie slotów...</p>
           ) : slots.length === 0 ? (
             <p className="availability-empty">
-              Brak zdefiniowanych slotów dostępności. Wszyscy pacjenci mogą rezerwować wizyty bez ograniczeń grafikowych.
+              Brak zdefiniowanych slotów dostępności. Wszyscy pacjenci mogą rezerwować wizyty bez
+              ograniczeń grafikowych.
             </p>
           ) : (
             <ul className="availability-slots-list">
@@ -283,9 +280,7 @@ export function AvailabilityManagerModal({
                       <>
                         <span className="availability-badge specific">Jednorazowy</span>
                         <strong>
-                          {slot.start_at
-                            ? new Date(slot.start_at).toLocaleDateString('pl-PL')
-                            : ''}
+                          {slot.start_at ? new Date(slot.start_at).toLocaleDateString('pl-PL') : ''}
                         </strong>{' '}
                         <span>
                           {slot.start_at

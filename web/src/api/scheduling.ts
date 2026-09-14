@@ -104,4 +104,3 @@ export const schedulingApi = {
     return listResults<Holiday>(`/scheduling/holidays/${query}`)
   },
 }
-

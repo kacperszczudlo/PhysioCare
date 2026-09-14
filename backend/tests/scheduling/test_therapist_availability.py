@@ -1,9 +1,10 @@
 from datetime import timedelta
+
 import pytest
 from django.utils import timezone
 from rest_framework import status
 
-from scheduling.models import TherapistAvailabilitySlot, Visit, VisitStatus
+from scheduling.models import TherapistAvailabilitySlot, VisitStatus
 
 
 @pytest.mark.django_db

@@ -313,11 +313,12 @@ export function SchedulePage() {
                   <div key={visit.id} className="schedule-pending-item">
                     <div className="schedule-pending-item__main">
                       <p className="schedule-pending-item__title">
-                        {visit.patient_first_name} {visit.patient_last_name} · {visit.therapy_type_name}
+                        {visit.patient_first_name} {visit.patient_last_name} ·{' '}
+                        {visit.therapy_type_name}
                       </p>
                       <p className="schedule-pending-item__meta">
-                        {formatPendingWhen(visit.start_at)} · {formatTime(new Date(visit.start_at))}-
-                        {formatTime(new Date(visit.end_at))}
+                        {formatPendingWhen(visit.start_at)} · {formatTime(new Date(visit.start_at))}
+                        -{formatTime(new Date(visit.end_at))}
                         {onThisDay ? ' · na tym dniu' : ''}
                       </p>
                     </div>

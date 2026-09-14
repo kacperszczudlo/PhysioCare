@@ -1,4 +1,5 @@
-from datetime import date, datetime, timezone, timedelta
+from datetime import UTC, date, datetime, timedelta
+
 import pytest
 
 from scheduling.holidays import get_easter_date, get_polish_holidays, is_polish_holiday
@@ -64,14 +65,14 @@ def test_recurring_slot_suppressed_on_statutory_holiday(therapist):
     )
 
     # April 6, 2026 10:00 - Monday
-    easter_monday_start = datetime(2026, 4, 6, 10, 0, tzinfo=timezone.utc)
+    easter_monday_start = datetime(2026, 4, 6, 10, 0, tzinfo=UTC)
     easter_monday_end = easter_monday_start + timedelta(minutes=45)
 
     # Recurring slot alone DOES NOT allow booking on Easter Monday
     assert is_visit_within_therapist_availability(therapist, easter_monday_start, easter_monday_end) is False
 
     # Normal Monday (Apr 13, 2026) DOES allow booking
-    normal_monday_start = datetime(2026, 4, 13, 10, 0, tzinfo=timezone.utc)
+    normal_monday_start = datetime(2026, 4, 13, 10, 0, tzinfo=UTC)
     normal_monday_end = normal_monday_start + timedelta(minutes=45)
     assert is_visit_within_therapist_availability(therapist, normal_monday_start, normal_monday_end) is True
 
@@ -79,7 +80,7 @@ def test_recurring_slot_suppressed_on_statutory_holiday(therapist):
 @pytest.mark.django_db
 def test_therapist_holiday_override_slot_allows_booking(therapist):
     # Explicit single-date slot on Easter Monday
-    easter_monday_start = datetime(2026, 4, 6, 10, 0, tzinfo=timezone.utc)
+    easter_monday_start = datetime(2026, 4, 6, 10, 0, tzinfo=UTC)
     easter_monday_end = easter_monday_start + timedelta(minutes=45)
 
     TherapistAvailabilitySlot.objects.create(

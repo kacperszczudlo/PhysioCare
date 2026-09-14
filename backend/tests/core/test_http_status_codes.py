@@ -1,14 +1,11 @@
 import pytest
 from rest_framework import status
 from rest_framework.exceptions import (
-    AuthenticationFailed,
     NotAuthenticated,
     NotFound,
     PermissionDenied,
     ValidationError,
 )
-from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from core.exceptions import custom_exception_handler
 

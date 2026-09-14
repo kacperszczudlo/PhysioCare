@@ -79,9 +79,7 @@ export function RegisterPage() {
     if (draft.last_name) {
       setLastName(draft.last_name)
     }
-    setError(
-      'Dane z Google wczytane. Możesz poprawić imię i nazwisko oraz uzupełnić numer PWZFz.',
-    )
+    setError('Dane z Google wczytane. Możesz poprawić imię i nazwisko oraz uzupełnić numer PWZFz.')
   }, [])
 
   function validateTherapistFields(requirePassword: boolean) {

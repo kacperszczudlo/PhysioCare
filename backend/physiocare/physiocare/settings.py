@@ -157,7 +157,7 @@ MAX_UPLOAD_MB = int(os.environ.get('MAX_UPLOAD_MB', '50'))
 MAX_AVATAR_MB = int(os.environ.get('MAX_AVATAR_MB', '5'))
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_MB * 1024 * 1024
 
-from corsheaders.defaults import default_headers
+from corsheaders.defaults import default_headers  # noqa: E402
 
 CORS_ALLOWED_ORIGINS = env_list(
     'CORS_ALLOWED_ORIGINS',

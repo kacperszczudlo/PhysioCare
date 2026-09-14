@@ -338,4 +338,3 @@ export interface AvailableSlotsResponse {
   is_holiday?: boolean
   holiday_name?: string | null
 }
-

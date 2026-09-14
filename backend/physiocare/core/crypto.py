@@ -1,12 +1,11 @@
 import base64
 import hashlib
 import os
-from typing import Optional
 
 from cryptography.fernet import Fernet, InvalidToken
 from django.conf import settings
 
-_FERNET_INSTANCE: Optional[Fernet] = None
+_FERNET_INSTANCE: Fernet | None = None
 
 
 def get_fernet_key() -> bytes:
@@ -34,7 +33,7 @@ def reset_fernet_cache() -> None:
     _FERNET_INSTANCE = None
 
 
-def encrypt_value(value: Optional[str]) -> Optional[str]:
+def encrypt_value(value: str | None) -> str | None:
     """Encrypt plaintext string into Fernet ciphertext (gAAAAA...)."""
     if value is None or value == '':
         return value
@@ -47,7 +46,7 @@ def encrypt_value(value: Optional[str]) -> Optional[str]:
     return f.encrypt(val_str.encode('utf-8')).decode('utf-8')
 
 
-def decrypt_value(value: Optional[str]) -> Optional[str]:
+def decrypt_value(value: str | None) -> str | None:
     """Decrypt Fernet ciphertext back to plaintext. Return unchanged if not encrypted."""
     if value is None or value == '':
         return value
@@ -63,7 +62,7 @@ def decrypt_value(value: Optional[str]) -> Optional[str]:
         return val_str
 
 
-def hash_blind_index(value: Optional[str]) -> Optional[str]:
+def hash_blind_index(value: str | None) -> str | None:
     """Return deterministic HMAC-SHA256 hash for exact-match database queries."""
     if value is None or value == '':
         return value

@@ -45,29 +45,32 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }, [])
 
-  const showToast = useCallback((options: ToastOptions | string, typeOverride?: ToastType): string => {
-    const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-    
-    let normalized: ToastOptions
-    if (typeof options === 'string') {
-      normalized = { message: options, type: typeOverride || 'info' }
-    } else {
-      normalized = { ...options, type: options.type || typeOverride || 'info' }
-    }
+  const showToast = useCallback(
+    (options: ToastOptions | string, typeOverride?: ToastType): string => {
+      const id = `toast-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
 
-    const newToast: ToastItemData = {
-      id,
-      title: normalized.title,
-      message: normalized.message,
-      type: normalized.type || 'info',
-      duration: normalized.duration ?? DEFAULT_TOAST_DURATION,
-      action: normalized.action,
-      createdAt: Date.now(),
-    }
+      let normalized: ToastOptions
+      if (typeof options === 'string') {
+        normalized = { message: options, type: typeOverride || 'info' }
+      } else {
+        normalized = { ...options, type: options.type || typeOverride || 'info' }
+      }
 
-    setToasts((prev) => [...prev.slice(-4), newToast]) // keep max 5 toasts active
-    return id
-  }, [])
+      const newToast: ToastItemData = {
+        id,
+        title: normalized.title,
+        message: normalized.message,
+        type: normalized.type || 'info',
+        duration: normalized.duration ?? DEFAULT_TOAST_DURATION,
+        action: normalized.action,
+        createdAt: Date.now(),
+      }
+
+      setToasts((prev) => [...prev.slice(-4), newToast]) // keep max 5 toasts active
+      return id
+    },
+    [],
+  )
 
   const toastHelpers = useMemo(
     () => ({
@@ -80,7 +83,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       info: (message: string, options?: Omit<ToastOptions, 'message' | 'type'>) =>
         showToast({ ...options, message, type: 'info' }),
     }),
-    [showToast]
+    [showToast],
   )
 
   const value = useMemo(
@@ -90,7 +93,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       removeToast,
       toast: toastHelpers,
     }),
-    [toasts, showToast, removeToast, toastHelpers]
+    [toasts, showToast, removeToast, toastHelpers],
   )
 
   return <ToastContext.Provider value={value}>{children}</ToastContext.Provider>

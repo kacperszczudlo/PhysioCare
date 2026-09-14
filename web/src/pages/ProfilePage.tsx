@@ -357,7 +357,10 @@ export function ProfilePage() {
             </div>
 
             <div className="profile-fields">
-              <div className="profile-fields profile-fields--split" style={{ margin: 0, padding: 0 }}>
+              <div
+                className="profile-fields profile-fields--split"
+                style={{ margin: 0, padding: 0 }}
+              >
                 <Field
                   label="Imię"
                   name="first_name"

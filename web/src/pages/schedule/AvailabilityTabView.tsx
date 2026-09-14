@@ -8,15 +8,7 @@ import { DateCarousel } from '@/components/ui/DateCarousel'
 import { toDateInputValue } from '@/lib/scheduleTime'
 import './AvailabilityTabView.css'
 
-const DAY_NAMES = [
-  'Poniedziałek',
-  'Wtorek',
-  'Środa',
-  'Czwartek',
-  'Piątek',
-  'Sobota',
-  'Niedziela',
-]
+const DAY_NAMES = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela']
 
 function getDurationLabel(startTime: string, endTime: string): string | null {
   const [h1, m1] = startTime.split(':').map(Number)
@@ -34,7 +26,14 @@ function getDurationLabel(startTime: string, endTime: string): string | null {
 
 function PlusIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
       <path d="M7 1V13M1 7H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   )
@@ -42,7 +41,14 @@ function PlusIcon() {
 
 function TrashIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 14 14"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
       <path d="M1 1L13 13M1 13L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   )
@@ -50,7 +56,14 @@ function TrashIcon() {
 
 function PauseIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
       <rect x="2" y="2" width="2.5" height="8" rx="1" fill="currentColor" />
       <rect x="7.5" y="2" width="2.5" height="8" rx="1" fill="currentColor" />
     </svg>
@@ -142,7 +155,8 @@ export function AvailabilityTabView() {
   const addTimeBlock = (dayIdx: number) => {
     setWeeklyConfig((prev) => {
       const currentBlocks = prev[dayIdx].blocks
-      const lastEnd = currentBlocks.length > 0 ? currentBlocks[currentBlocks.length - 1].endTime : '12:00'
+      const lastEnd =
+        currentBlocks.length > 0 ? currentBlocks[currentBlocks.length - 1].endTime : '12:00'
       return {
         ...prev,
         [dayIdx]: {
@@ -270,8 +284,16 @@ export function AvailabilityTabView() {
 
   return (
     <div className="avail-tab-container">
-      {error && <div className="avail-alert error" role="alert">{error}</div>}
-      {successMsg && <div className="avail-alert success" role="status">{successMsg}</div>}
+      {error && (
+        <div className="avail-alert error" role="alert">
+          {error}
+        </div>
+      )}
+      {successMsg && (
+        <div className="avail-alert success" role="status">
+          {successMsg}
+        </div>
+      )}
 
       {/* Main Grid Layout */}
       <div className="avail-main-grid">
@@ -327,9 +349,14 @@ export function AvailabilityTabView() {
                           return (
                             <div key={blockIdx} className="avail-block-inline-group">
                               {isBreak && (
-                                <div className="avail-break-chip" title="Przerwa w przyjmowaniu pacjentów">
+                                <div
+                                  className="avail-break-chip"
+                                  title="Przerwa w przyjmowaniu pacjentów"
+                                >
                                   <PauseIcon />
-                                  <span>Przerwa {prevBlock.endTime} – {block.startTime}</span>
+                                  <span>
+                                    Przerwa {prevBlock.endTime} – {block.startTime}
+                                  </span>
                                 </div>
                               )}
                               <div className="avail-block-item">
@@ -349,7 +376,10 @@ export function AvailabilityTabView() {
                                   ariaLabel="Czas zakończenia bloku pracy"
                                 />
                                 {getDurationLabel(block.startTime, block.endTime) && (
-                                  <span className="avail-block-duration" title="Czas trwania bloku pracy">
+                                  <span
+                                    className="avail-block-duration"
+                                    title="Czas trwania bloku pracy"
+                                  >
                                     {getDurationLabel(block.startTime, block.endTime)}
                                   </span>
                                 )}

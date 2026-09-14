@@ -11,9 +11,7 @@ function TestConsumer() {
       <button onClick={() => toast.success('Operacja zakończona sukcesem', { title: 'Sukces' })}>
         Pokaż Sukces
       </button>
-      <button onClick={() => toast.error('Wystąpił błąd podczas zapisywania')}>
-        Pokaż Błąd
-      </button>
+      <button onClick={() => toast.error('Wystąpił błąd podczas zapisywania')}>Pokaż Błąd</button>
       <button
         onClick={() =>
           toast.warning('Ostrzeżenie o braku danych', {
@@ -33,7 +31,7 @@ describe('Toast Component System', () => {
       <ToastProvider>
         <ToastContainer />
         <TestConsumer />
-      </ToastProvider>
+      </ToastProvider>,
     )
 
     fireEvent.click(screen.getByText('Pokaż Sukces'))
@@ -48,7 +46,7 @@ describe('Toast Component System', () => {
       <ToastProvider>
         <ToastContainer />
         <TestConsumer />
-      </ToastProvider>
+      </ToastProvider>,
     )
 
     fireEvent.click(screen.getByText('Pokaż Błąd'))
@@ -64,7 +62,7 @@ describe('Toast Component System', () => {
       <ToastProvider>
         <ToastContainer />
         <TestConsumer />
-      </ToastProvider>
+      </ToastProvider>,
     )
 
     fireEvent.click(screen.getByText('Pokaż Sukces'))
@@ -104,7 +102,7 @@ describe('Toast Component System', () => {
       <ToastProvider>
         <ToastContainer />
         <TestActionConsumer />
-      </ToastProvider>
+      </ToastProvider>,
     )
 
     fireEvent.click(screen.getByText('Usuń'))
