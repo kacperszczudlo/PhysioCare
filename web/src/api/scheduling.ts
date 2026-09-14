@@ -1,5 +1,6 @@
 import { api } from './client'
 import type {
+  AvailabilitySlot,
   Paginated,
   TherapyType,
   TherapyTypePreset,
@@ -72,5 +73,22 @@ export const schedulingApi = {
       {},
     )
     return Array.isArray(page) ? page : page.results
+  },
+
+  listAvailabilities() {
+    return listResults<AvailabilitySlot>('/therapist/availabilities/')
+  },
+
+  createAvailability(payload: Partial<AvailabilitySlot>) {
+    return api.post<AvailabilitySlot>('/therapist/availabilities/', payload)
+  },
+
+  deleteAvailability(id: string) {
+    return api.delete(`/therapist/availabilities/${id}/`)
+  },
+
+  listPublicAvailableSlots(therapistId: string, dateIso?: string) {
+    const query = dateIso ? `?date=${encodeURIComponent(dateIso)}` : ''
+    return listResults<AvailabilitySlot>(`/therapists/${therapistId}/available-slots/${query}`)
   },
 }

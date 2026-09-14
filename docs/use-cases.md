@@ -84,8 +84,8 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Pole | Wartość |
 |------|---------|
 | Aktor | Pacjent |
-| Przebieg | 1. Zakładka nadchodzące / zakończone. 2. Szczegóły wizyty (adres, przygotowanie). 3. Opcjonalnie: zmiana terminu (modal), odwołanie z potwierdzeniem. |
-| Wyjątki | E1: Termin niedostępny -> 409. |
+| Przebieg | 1. Zakładka nadchodzące / zakończone. 2. Wybór wolnego terminu z udostępnionego grafiku fizjoterapeuty. 3. Rezerwacja wizyty (status `PENDING_APPROVAL`). 4. Opcjonalnie: zmiana terminu (modal), odwołanie z potwierdzeniem. |
+| Wyjątki | E1: Kolizja terminów -> 409. E2: Wybrany termin nie mieści się w aktywnych slotach dostępności fizjoterapeuty -> 400 Bad Request. |
 
 ---
 
@@ -118,13 +118,13 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-11 - Zarządzanie harmonogramem
+## UC-11 - Zarządzanie harmonogramem i dostępnością
 
 | Pole | Wartość |
 |------|---------|
 | Aktor | Fizjoterapeuta |
-| Przebieg | 1. Widok dzienny z nawigacją dat. 2. Dodanie wizyty (+ lub klik slotu). 3. Drag & drop zmiany godziny. 4. Automatyczny kolor wg typu terapii. |
-| Wyjątki | E1: Kolizja terminów -> 409. |
+| Przebieg | 1. Widok dzienny z nawigacją dat. 2. Zarządzanie grafikiem pracy (`/therapist/availabilities/`): dodawanie slotów cyklicznych tygodniowych (np. Pon 08:00-16:00) lub jednorazowych. 3. Dodanie wizyty (+ lub klik slotu). 4. Drag & drop zmiany godziny. 5. Automatyczny kolor wg typu terapii. |
+| Wyjątki | E1: Kolizja terminów wizyt -> 409. E2: Nieprawidłowy przedział czasowy slotu -> 400. |
 
 ---
 

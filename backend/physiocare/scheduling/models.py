@@ -3,7 +3,7 @@ from django.contrib.postgres.fields import DateTimeRangeField, RangeBoundary, Ra
 from django.db import models
 from django.db.models import Func, Q
 
-from core.models import TimestampedModel
+from core.models import TimestampedModel, TimestampedUpdatedModel
 
 
 class TsTzRange(Func):
@@ -112,3 +112,58 @@ class Visit(TimestampedModel):
 
     def __str__(self):
         return f'Wizyta {self.start_at} - {self.patient}'
+
+
+class TherapistAvailabilitySlot(TimestampedUpdatedModel):
+    therapist = models.ForeignKey(
+        'therapists.TherapistProfile',
+        on_delete=models.CASCADE,
+        related_name='availability_slots',
+    )
+    start_at = models.DateTimeField(null=True, blank=True)
+    end_at = models.DateTimeField(null=True, blank=True)
+    day_of_week = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        help_text='0=Poniedziałek, 6=Niedziela',
+    )
+    start_time = models.TimeField(null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
+    is_recurring = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'therapist_availability_slots'
+        indexes = [
+            models.Index(
+                fields=['therapist', 'is_active', 'start_at'],
+                name='idx_avail_therapist_start',
+            ),
+            models.Index(
+                fields=['therapist', 'is_active', 'day_of_week'],
+                name='idx_avail_therapist_dow',
+            ),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(
+                    is_recurring=False,
+                    start_at__isnull=False,
+                    end_at__isnull=False,
+                    end_at__gt=models.F('start_at'),
+                ) | models.Q(
+                    is_recurring=True,
+                    day_of_week__isnull=False,
+                    start_time__isnull=False,
+                    end_time__isnull=False,
+                    end_time__gt=models.F('start_time'),
+                ),
+                name='chk_avail_slot_valid_range',
+            ),
+        ]
+
+    def __str__(self):
+        if self.is_recurring:
+            return f'Dostępność cykliczna DOW:{self.day_of_week} ({self.start_time}-{self.end_time}) - {self.therapist}'
+        return f'Dostępność {self.start_at} do {self.end_at} - {self.therapist}'
+

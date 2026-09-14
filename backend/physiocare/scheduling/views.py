@@ -15,9 +15,10 @@ from notifications.events import (
     publish_visit_realtime,
 )
 
-from .models import TherapyType, Visit, VisitStatus
+from .models import TherapistAvailabilitySlot, TherapyType, Visit, VisitStatus
 from .serializers import (
     PatientVisitRequestSerializer,
+    TherapistAvailabilitySlotSerializer,
     TherapyTypeSerializer,
     VisitApproveSerializer,
     VisitCancelSerializer,
@@ -432,3 +433,63 @@ class TherapyTypeSeedPresetsView(APIView):
             {'results': TherapyTypeSerializer(types, many=True).data},
             status=status.HTTP_200_OK,
         )
+
+
+class TherapistAvailabilityListCreateView(generics.ListCreateAPIView):
+    serializer_class = TherapistAvailabilitySlotSerializer
+    permission_classes = [IsAuthenticated, IsTherapist]
+
+    def get_queryset(self):
+        return TherapistAvailabilitySlot.objects.filter(
+            therapist=self.request.user.therapist_profile,
+        ).order_by('is_recurring', 'start_at', 'day_of_week', 'start_time')
+
+    def perform_create(self, serializer):
+        serializer.save(therapist=self.request.user.therapist_profile)
+
+
+class TherapistAvailabilityDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = TherapistAvailabilitySlotSerializer
+    permission_classes = [IsAuthenticated, IsTherapist]
+
+    def get_queryset(self):
+        return TherapistAvailabilitySlot.objects.filter(
+            therapist=self.request.user.therapist_profile,
+        )
+
+
+class PublicTherapistAvailableSlotsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, therapist_id):
+        from therapists.models import TherapistProfile
+        try:
+            therapist = TherapistProfile.objects.get(pk=therapist_id)
+        except TherapistProfile.DoesNotExist:
+            return Response(
+                {'detail': 'Nie znaleziono profilu fizjoterapeuty.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        date_str = request.query_params.get('date')
+        slots = TherapistAvailabilitySlot.objects.filter(
+            therapist=therapist,
+            is_active=True,
+        )
+        if date_str:
+            try:
+                target_date = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
+                dow = target_date.weekday()
+                slots = slots.filter(
+                    Q(is_recurring=False, start_at__date=target_date)
+                    | Q(is_recurring=True, day_of_week=dow)
+                )
+            except ValueError:
+                return Response(
+                    {'date': 'Nieprawidłowy format daty (wymagany YYYY-MM-DD).'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        serializer = TherapistAvailabilitySlotSerializer(slots, many=True)
+        return Response({'results': serializer.data})
+
