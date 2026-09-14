@@ -6,6 +6,7 @@ import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { Visit } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { MobileVisitsSkeleton } from '@/components/skeletons/MobileSkeletons'
 import { Button } from '@/components/Button'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { formatDateTime, formatTimeRange, visitStatusLabel } from '@/lib/format'
@@ -110,7 +111,7 @@ export default function VisitsScreen() {
       </View>
 
       {loading ? (
-        <LoadingBlock />
+        <LoadingBlock skeleton={<MobileVisitsSkeleton />} />
       ) : (
         <ScrollView
           contentContainerStyle={styles.list}

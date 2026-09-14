@@ -6,9 +6,21 @@ import './AsyncState.css'
 interface LoadingBlockProps {
   label?: string
   variant?: 'text' | 'panel'
+  skeleton?: ReactNode
 }
 
-export function LoadingBlock({ label = 'Ładowanie…', variant = 'text' }: LoadingBlockProps) {
+export function LoadingBlock({
+  label = 'Ładowanie…',
+  variant = 'text',
+  skeleton,
+}: LoadingBlockProps) {
+  if (skeleton) {
+    return (
+      <div role="status" aria-busy="true" aria-live="polite" aria-label={label}>
+        {skeleton}
+      </div>
+    )
+  }
   return (
     <div
       className={variant === 'panel' ? 'async-loading async-loading--panel' : 'async-loading'}

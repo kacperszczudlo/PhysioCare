@@ -7,6 +7,7 @@ import { getErrorMessage, getFieldError } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { PatientProfile } from '@/api/types'
 import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
+import { MobileProfileSkeleton } from '@/components/skeletons/MobileSkeletons'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
@@ -198,7 +199,7 @@ export default function ProfileScreen() {
   }
 
   if (loading) {
-    return <LoadingBlock label="Ładowanie profilu…" />
+    return <LoadingBlock label="Ładowanie profilu…" skeleton={<MobileProfileSkeleton />} />
   }
 
   return (

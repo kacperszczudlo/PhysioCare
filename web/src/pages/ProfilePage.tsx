@@ -5,6 +5,7 @@ import { getErrorMessage, getFieldError } from '@/api/client'
 import type { QualificationLevel, TherapistProfile } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
 import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { ProfileSkeleton } from '@/components/skeletons/WebSkeletons'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
@@ -287,7 +288,7 @@ export function ProfilePage() {
   if (loading) {
     return (
       <section>
-        <LoadingBlock label="Ładowanie profilu…" variant="panel" />
+        <LoadingBlock label="Ładowanie profilu…" skeleton={<ProfileSkeleton />} />
       </section>
     )
   }

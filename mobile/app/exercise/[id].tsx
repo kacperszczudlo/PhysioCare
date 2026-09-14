@@ -6,6 +6,7 @@ import { getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { CategoryKind, TodayExercise } from '@/api/types'
 import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { MobileExerciseDetailSkeleton } from '@/components/skeletons/MobileSkeletons'
 import { Button } from '@/components/Button'
 import { ExerciseVideoPlayer } from '@/components/ExerciseVideoPlayer'
 import { SectionCard } from '@/components/ScreenHeader'
@@ -130,7 +131,7 @@ export default function ExerciseDetailScreen() {
   }
 
   if (loading) {
-    return <LoadingBlock label="Ładowanie ćwiczenia…" />
+    return <LoadingBlock label="Ładowanie ćwiczenia…" skeleton={<MobileExerciseDetailSkeleton />} />
   }
 
   return (

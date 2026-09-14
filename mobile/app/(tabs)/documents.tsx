@@ -19,6 +19,7 @@ import type {
   TreatmentEpisode,
 } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { MobileDocumentsSkeleton } from '@/components/skeletons/MobileSkeletons'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { downloadAuthenticatedMediaToCache } from '@/lib/authMedia'
 import { formatDate } from '@/lib/format'
@@ -230,7 +231,7 @@ export default function DocumentsScreen() {
       </View>
 
       {loading ? (
-        <LoadingBlock />
+        <LoadingBlock skeleton={<MobileDocumentsSkeleton />} />
       ) : (
         <ScrollView
           contentContainerStyle={styles.list}

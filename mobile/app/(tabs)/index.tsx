@@ -7,6 +7,7 @@ import { patientApi } from '@/api/patient'
 import type { ExercisePlanItem, TodayExercise, Visit } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { MobileDashboardSkeleton } from '@/components/skeletons/MobileSkeletons'
 import { BrandMark } from '@/components/BrandMark'
 import { ProgressOverview } from '@/components/ProgressOverview'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
@@ -160,7 +161,7 @@ export default function DashboardScreen() {
   const todayRatio = exercises.length > 0 ? doneCount / exercises.length : 0
 
   if (loading) {
-    return <LoadingBlock label="Ładowanie pulpitu…" />
+    return <LoadingBlock label="Ładowanie pulpitu…" skeleton={<MobileDashboardSkeleton />} />
   }
 
   return (

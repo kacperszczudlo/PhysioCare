@@ -4,6 +4,7 @@ import { exercisesApi } from '@/api/exercises'
 import { getErrorMessage } from '@/api/client'
 import type { CategoryKind, Exercise, ExerciseCategory, MediaType } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { ExercisesSkeleton } from '@/components/skeletons/WebSkeletons'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
@@ -276,7 +277,9 @@ export function ExercisesPage() {
         <ErrorBanner message={error} onRetry={() => setReloadToken((value) => value + 1)} />
       ) : null}
 
-      {loading ? <LoadingBlock label="Ładowanie katalogu…" /> : null}
+      {loading ? (
+        <LoadingBlock label="Ładowanie katalogu…" skeleton={<ExercisesSkeleton />} />
+      ) : null}
 
       {!loading && !error && exercises.length === 0 ? (
         <EmptyState

@@ -5,6 +5,7 @@ import { patientsApi } from '@/api/treatment'
 import { getErrorMessage } from '@/api/client'
 import type { PatientSummary } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { PatientsSkeleton } from '@/components/skeletons/WebSkeletons'
 import { PageHeader } from '@/components/PageHeader'
 import { Field } from '@/components/ui/Field'
 import { AuthMediaImg } from '@/components/AuthMedia'
@@ -80,7 +81,7 @@ export function PatientsPage() {
 
       {error ? <ErrorBanner message={error} onRetry={reload} /> : null}
 
-      {loading ? <LoadingBlock label="Ładowanie listy…" /> : null}
+      {loading ? <LoadingBlock label="Ładowanie listy…" skeleton={<PatientsSkeleton />} /> : null}
 
       {!loading && !error && filtered.length === 0 ? (
         <EmptyState
