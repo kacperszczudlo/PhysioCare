@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 
 import { addDays, startOfDay, toDateInputValue } from '@/lib/scheduleTime'
+import { getPolishHolidayName } from '@/lib/holidays'
 
 import './DayCarousel.css'
 
@@ -73,20 +74,30 @@ export function DayCarousel({
         {days.map((day) => {
           const selectedDay = sameDay(day, selected)
           const isToday = sameDay(day, today)
+          const holidayName = getPolishHolidayName(day)
           return (
             <button
               key={toDateInputValue(day)}
               type="button"
               role="option"
               aria-selected={selectedDay}
-              className={
-                selectedDay ? 'day-carousel__chip day-carousel__chip--on' : 'day-carousel__chip'
-              }
+              title={holidayName ? `Święto: ${holidayName}` : undefined}
+              className={[
+                'day-carousel__chip',
+                selectedDay ? 'day-carousel__chip--on' : '',
+                holidayName ? 'day-carousel__chip--holiday' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
               onClick={() => onChange(startOfDay(day))}
             >
               <span className="day-carousel__weekday">{isToday ? 'dziś' : weekdayShort(day)}</span>
               <span className="day-carousel__num">{day.getDate()}</span>
-              <span className="day-carousel__month">{monthShort(day)}</span>
+              {holidayName ? (
+                <span className="day-carousel__holiday-tag">{holidayName}</span>
+              ) : (
+                <span className="day-carousel__month">{monthShort(day)}</span>
+              )}
             </button>
           )
         })}
@@ -94,3 +105,4 @@ export function DayCarousel({
     </div>
   )
 }
+

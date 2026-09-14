@@ -327,3 +327,15 @@ export interface ExerciseAssignmentUpdatePayload {
   end_date?: string
   episode_id?: string | null
 }
+
+export interface Holiday {
+  date: string
+  name: string
+}
+
+export interface AvailableSlotsResponse {
+  results: AvailabilitySlot[]
+  is_holiday?: boolean
+  holiday_name?: string | null
+}
+

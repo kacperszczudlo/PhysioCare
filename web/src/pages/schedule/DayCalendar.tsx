@@ -24,6 +24,7 @@ import {
   snapMinutes,
   toIsoLocal,
 } from '@/lib/scheduleTime'
+import { getPolishHolidayName } from '@/lib/holidays'
 import './DayCalendar.css'
 
 interface DayCalendarProps {
@@ -211,9 +212,18 @@ export function DayCalendar({
   const visibleVisits = visits.filter((visit) => visit.status !== 'CANCELLED')
   const hoverLabel =
     hoverMinutes !== null ? formatTime(dateFromDayMinutes(day, hoverMinutes)) : null
+  const holidayName = getPolishHolidayName(day)
 
   return (
-    <div className="day-cal" style={{ ['--day-cal-height' as string]: `${gridHeight}px` }}>
+    <div className="day-cal-wrapper">
+      {holidayName ? (
+        <div className="day-cal__holiday-banner" role="status">
+          <span>
+            <strong>Dzień wolny od pracy ({holidayName}).</strong> Domyślne godziny z grafiku cyklicznego są w tym dniu wyłączone.
+          </span>
+        </div>
+      ) : null}
+      <div className="day-cal" style={{ ['--day-cal-height' as string]: `${gridHeight}px` }}>
       <div className="day-cal__hours" aria-hidden="true">
         {hourMarks(day).map((mark) => {
           const top = minutesFromDayStart(mark, day) * PX_PER_MINUTE
@@ -369,5 +379,6 @@ export function DayCalendar({
         </div>
       </div>
     </div>
-  )
+  </div>
+)
 }

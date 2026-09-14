@@ -1,6 +1,8 @@
 import { api } from './client'
 import type {
   AvailabilitySlot,
+  AvailableSlotsResponse,
+  Holiday,
   Paginated,
   TherapyType,
   TherapyTypePreset,
@@ -91,4 +93,15 @@ export const schedulingApi = {
     const query = dateIso ? `?date=${encodeURIComponent(dateIso)}` : ''
     return listResults<AvailabilitySlot>(`/therapists/${therapistId}/available-slots/${query}`)
   },
+
+  listPublicAvailableSlotsWithDetails(therapistId: string, dateIso?: string) {
+    const query = dateIso ? `?date=${encodeURIComponent(dateIso)}` : ''
+    return api.get<AvailableSlotsResponse>(`/therapists/${therapistId}/available-slots/${query}`)
+  },
+
+  listPolishHolidays(year?: number) {
+    const query = year ? `?year=${year}` : ''
+    return listResults<Holiday>(`/scheduling/holidays/${query}`)
+  },
 }
+

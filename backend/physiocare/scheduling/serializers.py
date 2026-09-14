@@ -16,6 +16,7 @@ from core.field_policies import (
 from patients.models import PatientProfile
 from treatment.models import TreatmentEpisode
 
+from .holidays import is_polish_holiday
 from .models import TherapistAvailabilitySlot, TherapyType, Visit, VisitStatus
 
 
@@ -23,10 +24,14 @@ def is_visit_within_therapist_availability(therapist, start_at, end_at):
     """
     Sprawdza, czy odcinek czasu [start_at, end_at] w całości mieści się w przynajmniej jednym
     aktywnym slocie dostępności fizjoterapeuty (zarówno jednorazowym, jak i cyklicznym).
+    Uwzględnia polskie święta państwowe: domyślnie blokują dostępność cykliczną,
+    chyba że fizjoterapeuta utworzy dedykowany jednorazowy slot pracy w dane święto.
     """
     slots = TherapistAvailabilitySlot.objects.filter(therapist=therapist, is_active=True)
     if not slots.exists():
-        return True
+        return False
+
+    is_holiday, _ = is_polish_holiday(start_at.date())
 
     date_match = slots.filter(
         is_recurring=False,
@@ -35,6 +40,10 @@ def is_visit_within_therapist_availability(therapist, start_at, end_at):
     ).exists()
     if date_match:
         return True
+
+    if is_holiday:
+        # W święto państwowe cykliczne sloty nie obowiązują (wymagany jawny slot jednorazowy)
+        return False
 
     dow = start_at.weekday()
     v_start_time = start_at.time()
@@ -350,6 +359,28 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
             )
 
         if not is_visit_within_therapist_availability(therapist, start_at, end_at):
+            is_holiday, holiday_name = is_polish_holiday(start_at.date())
+            has_any_slots = TherapistAvailabilitySlot.objects.filter(
+                therapist=therapist, is_active=True
+            ).exists()
+            if is_holiday:
+                raise serializers.ValidationError(
+                    {
+                        'start_at': (
+                            f'Wybrany dzień ({holiday_name}) jest dniem wolnym od pracy. '
+                            'Fizjoterapeuta nie ustalił dyżuru w to święto.'
+                        )
+                    }
+                )
+            if not has_any_slots:
+                raise serializers.ValidationError(
+                    {
+                        'start_at': (
+                            'Fizjoterapeuta nie skonfigurował jeszcze grafiku pracy. '
+                            'Rezerwacja terminu jest obecnie niedostępna.'
+                        )
+                    }
+                )
             raise serializers.ValidationError(
                 {'start_at': 'Wybrany termin nie mieści się w zdefiniowanych slotach dostępności fizjoterapeuty.'}
             )

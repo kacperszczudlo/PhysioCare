@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react'
 import { schedulingApi } from '@/api/scheduling'
-import type { AvailabilitySlot } from '@/api/types'
+import type { AvailabilitySlot, Holiday } from '@/api/types'
 import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
 import { CustomTimePicker } from '@/components/ui/CustomTimePicker'
 import { DateCarousel } from '@/components/ui/DateCarousel'
 import { toDateInputValue } from '@/lib/scheduleTime'
 import './AvailabilityTabView.css'
-
-
 
 const DAY_NAMES = [
   'Poniedziałek',
@@ -66,6 +64,7 @@ interface DayConfig {
 
 export function AvailabilityTabView() {
   const [slots, setSlots] = useState<AvailabilitySlot[]>([])
+  const [holidays, setHolidays] = useState<Holiday[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -96,8 +95,12 @@ export function AvailabilityTabView() {
     setLoading(true)
     setError(null)
     try {
-      const data = await schedulingApi.listAvailabilities()
+      const [data, holidayList] = await Promise.all([
+        schedulingApi.listAvailabilities(),
+        schedulingApi.listPolishHolidays(new Date().getFullYear()),
+      ])
       setSlots(data)
+      setHolidays(holidayList)
 
       // Parse recurring slots into weeklyConfig
       const recurring = data.filter((s) => s.is_recurring && s.is_active)
@@ -180,22 +183,6 @@ export function AvailabilityTabView() {
         },
       }
     })
-  }
-
-  const copyMondayToWorkdays = () => {
-    const mondayConfig = weeklyConfig[0]
-    setWeeklyConfig((prev) => {
-      const updated = { ...prev }
-      for (let i = 1; i < 5; i++) {
-        updated[i] = {
-          enabled: mondayConfig.enabled,
-          blocks: mondayConfig.blocks.map((b) => ({ ...b })),
-        }
-      }
-      return updated
-    })
-    setSuccessMsg('Skopiowano grafik z Poniedziałku na Wtorek-Piątek.')
-    setTimeout(() => setSuccessMsg(null), 3000)
   }
 
   async function handleSaveWeeklySchedule() {
@@ -298,15 +285,6 @@ export function AvailabilityTabView() {
               </p>
             </div>
             <div className="avail-card-actions">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={copyMondayToWorkdays}
-                title="Skopiuj godziny z Poniedziałku na Wtorek–Piątek"
-              >
-                Kopiuj Poniedziałek na Wt-Pt
-              </Button>
               <Button
                 type="button"
                 variant="primary"
@@ -496,6 +474,40 @@ export function AvailabilityTabView() {
                 ))}
               </ul>
             )}
+          </section>
+
+          <section className="avail-card">
+            <h2 className="avail-card-title">Święta Ustawowe ({new Date().getFullYear()})</h2>
+            <p className="avail-card-subtitle">
+              Dni wolne od pracy – automatycznie wyłączają przyjmowanie z grafiku cyklicznego.
+            </p>
+            <div className="avail-holidays-list">
+              {holidays.map((h) => (
+                <div key={h.date} className="avail-holiday-item">
+                  <div className="avail-holiday-info">
+                    <span className="avail-holiday-name">{h.name}</span>
+                    <span className="avail-holiday-date">
+                      {new Date(h.date + 'T00:00:00').toLocaleDateString('pl-PL', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'long',
+                      })}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="avail-holiday-btn"
+                    onClick={() => {
+                      setOverrideDate(h.date)
+                      window.scrollTo({ top: 300, behavior: 'smooth' })
+                    }}
+                    title="Skonfiguruj dyżur w to święto"
+                  >
+                    Ustal dyżur
+                  </button>
+                </div>
+              ))}
+            </div>
           </section>
         </aside>
       </div>

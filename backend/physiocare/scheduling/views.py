@@ -15,6 +15,7 @@ from notifications.events import (
     publish_visit_realtime,
 )
 
+from .holidays import get_polish_holidays, is_polish_holiday
 from .models import TherapistAvailabilitySlot, TherapyType, Visit, VisitStatus
 from .serializers import (
     PatientVisitRequestSerializer,
@@ -476,14 +477,27 @@ class PublicTherapistAvailableSlotsView(APIView):
             therapist=therapist,
             is_active=True,
         )
+        is_holiday = False
+        holiday_name = None
+
         if date_str:
             try:
                 target_date = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
                 dow = target_date.weekday()
-                slots = slots.filter(
-                    Q(is_recurring=False, start_at__date=target_date)
-                    | Q(is_recurring=True, day_of_week=dow)
-                )
+                is_holiday, holiday_name = is_polish_holiday(target_date)
+
+                has_specific_slot = slots.filter(
+                    is_recurring=False, start_at__date=target_date
+                ).exists()
+
+                if is_holiday and not has_specific_slot:
+                    # W święto państwowe bez jawnego slotu jednorazowego sloty cykliczne są pomijane
+                    slots = slots.none()
+                else:
+                    slots = slots.filter(
+                        Q(is_recurring=False, start_at__date=target_date)
+                        | Q(is_recurring=True, day_of_week=dow)
+                    )
             except ValueError:
                 return Response(
                     {'date': 'Nieprawidłowy format daty (wymagany YYYY-MM-DD).'},
@@ -491,5 +505,30 @@ class PublicTherapistAvailableSlotsView(APIView):
                 )
 
         serializer = TherapistAvailabilitySlotSerializer(slots, many=True)
-        return Response({'results': serializer.data})
+        return Response({
+            'results': serializer.data,
+            'is_holiday': is_holiday,
+            'holiday_name': holiday_name,
+        })
+
+
+class PolishHolidaysView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        raw_year = request.query_params.get('year')
+        try:
+            year = int(raw_year) if raw_year else timezone.now().year
+        except (TypeError, ValueError):
+            return Response(
+                {'error': 'Nieprawidłowy rok.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        holidays_dict = get_polish_holidays(year)
+        results = [
+            {'date': h_date.isoformat(), 'name': h_name}
+            for h_date, h_name in sorted(holidays_dict.items())
+        ]
+        return Response({'results': results})
+
 

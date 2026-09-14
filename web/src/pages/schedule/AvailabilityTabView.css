@@ -24,7 +24,7 @@
 }
 
 .avail-alert {
-  padding: var(--space-3.5) var(--space-5);
+  padding: 0.875rem var(--space-5);
   border-radius: 9999px;
   font-size: var(--text-sm);
   font-weight: 500;
@@ -262,8 +262,8 @@ input:checked + .avail-toggle-slider:before {
 .avail-break-chip {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1.5);
-  padding: var(--space-1.5) var(--space-3.5);
+  gap: 0.375rem;
+  padding: 0.375rem 0.875rem;
   background-color: var(--color-primary-subtle);
   border: 1px solid var(--color-primary-subtle);
   border-radius: 9999px;
@@ -373,7 +373,7 @@ input:checked + .avail-toggle-slider:before {
 .avail-field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1.5);
+  gap: 0.375rem;
 }
 
 .avail-field-row {
@@ -390,7 +390,7 @@ input:checked + .avail-toggle-slider:before {
 
 .avail-input {
   min-height: 2.375rem;
-  padding: var(--space-2) var(--space-3.5);
+  padding: var(--space-2) 0.875rem;
   border: 1px solid var(--color-border);
   border-radius: 9999px;
   font-size: var(--text-xs);
@@ -420,7 +420,7 @@ input:checked + .avail-toggle-slider:before {
   margin: var(--space-4) 0 0 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2.5);
+  gap: 0.625rem;
 }
 
 .avail-override-item {
@@ -456,3 +456,62 @@ input:checked + .avail-toggle-slider:before {
   background-color: var(--color-danger-subtle);
   border-color: var(--color-danger);
 }
+
+/* HOLIDAYS CARD & BADGES */
+.avail-holidays-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  max-height: 18rem;
+  overflow-y: auto;
+  padding-right: var(--space-1);
+}
+
+.avail-holiday-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0.875rem;
+  background-color: oklch(0.97 0.015 20);
+  border: 1px solid oklch(0.90 0.04 20);
+  border-radius: var(--radius-md, 0.75rem);
+}
+
+.avail-holiday-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.avail-holiday-name {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-danger, #dc2626);
+}
+
+.avail-holiday-date {
+  font-size: 0.75rem;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.avail-holiday-btn {
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  color: var(--color-ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  white-space: nowrap;
+}
+
+.avail-holiday-btn:hover {
+  background-color: var(--color-primary-subtle);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
