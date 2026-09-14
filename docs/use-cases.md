@@ -193,6 +193,26 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
+## UC-19 - Katalog wyrobów medycznych
+
+| Pole | Wartość |
+|------|---------|
+| Aktor | Fizjoterapeuta |
+| Cel | Przegląd katalogu sprzętu ortopedycznego i pomocniczego wg uprawnień PWZFz |
+| Przebieg | 1. Fizjoterapeuta otwiera katalog wyrobów. 2. System filtruje sprzęt zgodnie z poziomem kwalifikacji (Licencjat / Magister / Specjalista). 3. Możliwość wystawienia wniosku e-ZWM w karcie leczenia. |
+
+---
+
+## UC-20 - Wniosek o usunięcie konta i anonimizacja RODO
+
+| Pole | Wartość |
+|------|---------|
+| Aktor | Pacjent / Fizjoterapeuta |
+| Cel | Realizacja prawa do bycia zapomnianym (Art. 17 RODO) |
+| Przebieg | 1. Użytkownik składa wniosek w ustawieniach prywatności. 2. System anonimizuje adres e-mail (`@deleted.invalid`), imię i nazwisko. 3. Usunięcie tokenów sesyjnych oraz deaktywacja profilu. |
+
+---
+
 ## Macierz UC × Moduł
 
 | UC | Mobile | Web | API | BD |
@@ -201,3 +221,4 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | UC-05-09 | ✓ | - | patients, privacy | profiles, consents |
 | UC-10-16 | - | ✓ | treatment, scheduling, exercises | episodes, visits |
 | UC-17-18 | ✓ | - | therapists, notifications | profiles, prefs |
+| UC-19-20 | ✓ | ✓ | therapists, privacy | medical_devices, deleted_users |

@@ -247,7 +247,7 @@ def test_notify_upcoming_visits_command_dedupes(
 
 
 @pytest.mark.django_db
-def test_notify_today_exercises_command(therapist, patient, locmem_email):
+def test_delivery_notify_today_exercises_command(therapist, patient, locmem_email):
     exercise = Exercise.objects.create(
         therapist=therapist,
         title='Mostek',

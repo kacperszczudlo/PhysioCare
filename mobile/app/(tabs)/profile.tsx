@@ -45,6 +45,23 @@ export default function ProfileScreen() {
     setFeedback({ kind, message })
   }, [])
 
+  const initialPhone = profile ? parseStoredPhone(profile.phone) : null
+  const isDirty = Boolean(
+    profile &&
+    (phoneCountryCode !== initialPhone?.countryCode ||
+      phoneNational !== initialPhone?.nationalNumber ||
+      pesel !== (profile.pesel ?? '')),
+  )
+
+  const resetForm = useCallback(() => {
+    if (!profile) return
+    const parsedPhone = parseStoredPhone(profile.phone)
+    setPhoneCountryCode(parsedPhone.countryCode)
+    setPhoneNational(parsedPhone.nationalNumber)
+    setPesel(profile.pesel ?? '')
+    setFieldErrors({})
+  }, [profile])
+
   useEffect(() => {
     if (!feedback) {
       return
@@ -216,7 +233,14 @@ export default function ProfileScreen() {
       </SectionCard>
 
       <SectionCard>
-        <Text style={styles.sectionTitle}>Dane kontaktowe</Text>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Dane kontaktowe</Text>
+          {isDirty ? (
+            <View style={styles.dirtyBadge}>
+              <Text style={styles.dirtyBadgeText}>Niezapisane zmiany</Text>
+            </View>
+          ) : null}
+        </View>
         <Text style={styles.muted}>{profile?.email}</Text>
         <PhoneField
           countryCode={phoneCountryCode}
@@ -250,7 +274,15 @@ export default function ProfileScreen() {
           error={fieldErrors.pesel}
           hint="11 cyfr z poprawną sumą kontrolną"
         />
-        <Button title="Zapisz dane" loading={saving} onPress={() => void saveProfile()} />
+        <Button
+          title={isDirty ? 'Zapisz dane profilu' : 'Zapisano (brak zmian)'}
+          disabled={!isDirty}
+          loading={saving}
+          onPress={() => void saveProfile()}
+        />
+        {isDirty ? (
+          <Button title="Odrzuć zmiany" variant="secondary" disabled={saving} onPress={resetForm} />
+        ) : null}
         {feedback?.kind === 'profile' ? <SuccessBanner message={feedback.message} /> : null}
         {profile?.therapist ? (
           <Button
@@ -267,7 +299,23 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
   content: { padding: space.lg, gap: space.base, paddingBottom: space['4xl'] },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   sectionTitle: { fontSize: typography.lg, fontWeight: '700', color: colors.ink },
+  dirtyBadge: {
+    backgroundColor: colors.accentSubtle,
+    paddingHorizontal: space.sm,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  dirtyBadgeText: {
+    fontSize: typography.xs,
+    fontWeight: '700',
+    color: colors.warning,
+  },
   muted: { fontSize: typography.sm, color: colors.muted },
   avatarRow: { flexDirection: 'row', gap: space.base, alignItems: 'center' },
   avatar: {

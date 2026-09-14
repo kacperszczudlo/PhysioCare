@@ -8,7 +8,7 @@ import type { TherapistPublic } from '@/api/types'
 import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { SectionCard } from '@/components/ScreenHeader'
-import { openAddressInMaps } from '@/lib/maps'
+import { LocationMapCard } from '@/components/LocationMapCard'
 import { useAuthenticatedCachedUri } from '@/lib/authMedia'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
@@ -182,19 +182,10 @@ export default function TherapistPublicScreen() {
         </SectionCard>
 
         <SectionCard>
-          <Text style={styles.section}>Lokalizacja</Text>
-          {therapist.location_address ? (
-            <Pressable
-              onPress={() => openAddressInMaps(therapist.location_address)}
-              accessibilityRole="link"
-              accessibilityHint="Otwiera adres w Google Maps"
-            >
-              <Text style={styles.link}>{therapist.location_address}</Text>
-              <Text style={styles.muted}>Otwórz w Google Maps</Text>
-            </Pressable>
-          ) : (
-            <Text style={styles.muted}>Terapeuta nie podał lokalizacji.</Text>
-          )}
+          <LocationMapCard
+            address={therapist.location_address || ''}
+            title="Lokalizacja gabinetu"
+          />
         </SectionCard>
 
         <SectionCard>

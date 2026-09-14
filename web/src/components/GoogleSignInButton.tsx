@@ -7,6 +7,7 @@ import './GoogleSignInButton.css'
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ?? ''
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function isWebGoogleSignInConfigured(): boolean {
   return Boolean(googleClientId)
 }

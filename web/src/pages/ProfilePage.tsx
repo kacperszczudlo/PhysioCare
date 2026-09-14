@@ -8,6 +8,7 @@ import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncStat
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
+import { LocationField } from '@/components/location/LocationField'
 import { PhoneField } from '@/components/ui/PhoneField'
 import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
 import { getAddressError, getBioError, getCourseError } from '@/lib/fieldPolicy'
@@ -93,6 +94,43 @@ export function ProfilePage() {
       cancelled = true
     }
   }, [reloadToken])
+
+  function resetForm() {
+    if (!profile) return
+    const parsedPhone = parseStoredPhone(profile.phone)
+    setPhoneCountryCode(parsedPhone.countryCode)
+    setPhoneNational(parsedPhone.nationalNumber)
+    setLocationAddress(profile.location_address ?? '')
+    setBio(profile.bio ?? '')
+    setCourses(Array.isArray(profile.courses) ? profile.courses : [])
+    setQualificationLevel(profile.qualification_level ?? 'MAGISTER')
+    setExperienceYears(profile.experience_years ?? 0)
+    setNewCourse('')
+    setFieldErrors({})
+  }
+
+  const initialPhone = profile ? parseStoredPhone(profile.phone) : null
+  const isDirty = Boolean(
+    profile &&
+    (phoneCountryCode !== initialPhone?.countryCode ||
+      phoneNational !== initialPhone?.nationalNumber ||
+      locationAddress !== (profile.location_address ?? '') ||
+      bio !== (profile.bio ?? '') ||
+      qualificationLevel !== (profile.qualification_level ?? 'MAGISTER') ||
+      experienceYears !== (profile.experience_years ?? 0) ||
+      JSON.stringify(courses) !== JSON.stringify(profile.courses ?? [])),
+  )
+
+  useEffect(() => {
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (isDirty) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [isDirty])
 
   useEffect(() => {
     return () => {
@@ -313,19 +351,19 @@ export function ProfilePage() {
                 error={fieldErrors.phone}
                 hint="Wybierz kraj, żeby ustawić prefix numeru."
               />
-              <Field
+              <LocationField
                 label="Adres / lokalizacja gabinetu"
                 name="location_address"
                 value={locationAddress}
-                onChange={(e) => {
-                  setLocationAddress(e.target.value)
+                onChange={(val) => {
+                  setLocationAddress(val)
                   if (fieldErrors.locationAddress) {
                     setFieldErrors((prev) => ({ ...prev, locationAddress: undefined }))
                   }
                 }}
                 error={fieldErrors.locationAddress}
                 placeholder="np. ul. Kwiatowa 12, 00-001 Warszawa"
-                hint="Widoczny dla pacjentów przy wizycie - kliknięcie otwiera mapę."
+                hint="Widoczny dla pacjentów przy wizycie. Możesz wyszukać adres lub ustawić go na interaktywnej mapie."
               />
             </div>
           </section>
@@ -447,11 +485,48 @@ export function ProfilePage() {
             </div>
           </section>
 
-          <div className="profile-actions">
-            <Button type="submit" loading={profileBusy}>
-              Zapisz profil
-            </Button>
-            {profileMessage ? <SuccessBanner message={profileMessage} /> : null}
+          {profileMessage ? (
+            <div className="profile-actions">
+              <SuccessBanner message={profileMessage} />
+            </div>
+          ) : null}
+
+          <div
+            className={
+              isDirty
+                ? 'profile-floating-bar profile-floating-bar--visible'
+                : 'profile-floating-bar'
+            }
+            role="region"
+            aria-label="Niezapisane zmiany w profilu"
+            aria-live="polite"
+          >
+            <div className="profile-floating-bar__status">
+              <span className="profile-floating-bar__dot" aria-hidden="true" />
+              <div className="profile-floating-bar__labels">
+                <span className="profile-floating-bar__title">Masz niezapisane zmiany</span>
+                <span className="profile-floating-bar__desc">
+                  Zapisz lub anuluj wprowadzone modyfikacje w profilu.
+                </span>
+              </div>
+            </div>
+            <div className="profile-floating-bar__actions">
+              <button
+                type="button"
+                className="profile-floating-bar__btn profile-floating-bar__btn--secondary"
+                disabled={profileBusy}
+                onClick={resetForm}
+              >
+                Odrzuć
+              </button>
+              <button
+                type="submit"
+                className="profile-floating-bar__btn profile-floating-bar__btn--primary"
+                disabled={profileBusy}
+              >
+                {profileBusy ? 'Zapisywanie…' : 'Zapisz profil'}
+              </button>
+            </div>
           </div>
         </form>
 

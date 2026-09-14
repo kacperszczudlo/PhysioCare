@@ -152,6 +152,7 @@ Albo edytuj od razu w `C:\Users\kacpe\p` (git i tak commitujesz z repo).
 | `npm.cmd run android`      | Native debug na urządzeniu / emulatorze |
 | `npm.cmd run ios`          | Native iOS (macOS)                      |
 | `npm.cmd run web`          | Przeglądarka                            |
+| `npm.cmd test`             | Testy Vitest (unit/component)           |
 | `npm.cmd run lint`         | ESLint + `tsc --noEmit`                 |
 | `npm.cmd run lint:fix`     | Autofix ESLint                          |
 | `npm.cmd run format`       | Prettier (write)                        |

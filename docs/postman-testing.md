@@ -253,6 +253,7 @@ Uruchom Collection Runner (kolejność folderów) i odhacz:
 - [ ] Lista / detail pacjenta
 - [ ] Nowy epizod + patch + notatka
 - [ ] Body-pain create / update; VAS 15 -> 400
+- [ ] Katalog wyrobów medycznych (UC-19) – filtrowanie wg uprawnień PWZFz
 - [ ] Typ terapii + wizyta 201
 - [ ] Druga wizyta w tym samym slocie -> 400 overlap
 - [ ] Harmonogram dnia, PATCH slotu
@@ -266,8 +267,10 @@ Uruchom Collection Runner (kolejność folderów) i odhacz:
 - [ ] Reschedule + cancel
 - [ ] `me/exercises/today` + completion 201
 - [ ] Completion obcego assignment -> 400
+- [ ] Skrzynka dokumentów klinicznych (UC-08) – zlecenia wyrobów e-ZWM / Recepta na Ruch / odmowy
 - [ ] `me/documents` + download
-- [ ] Profil, zgody opcjonalne, eksport, deletion 202
+- [ ] Profil, zgody opcjonalne, eksport, usunięcie konta RODO (UC-20) 202
+- [ ] Strumieniowanie zdarzeń SSE (`/api/v1/me/events/`)
 - [ ] Preferencje powiadomień
 - [ ] Publiczny profil terapeuty
 - [ ] Request bez auth -> 401
@@ -276,6 +279,16 @@ Uruchom Collection Runner (kolejność folderów) i odhacz:
 
 - [ ] Pacjent nie listuje `/patients/` (403)
 - [ ] Pacjent nie czyta dashboardu terapeuty (403)
+
+---
+
+## 8.1 Szybka weryfikacja z terminala (`scripts/run_postman.py`)
+
+Do automatycznego sprawdzenia pliku kolekcji Postman lub uruchomienia jej przez runner CLI (Newman):
+
+```powershell
+python scripts/run_postman.py
+```
 
 ---
 
