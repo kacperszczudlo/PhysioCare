@@ -97,18 +97,20 @@ export function LoginPage() {
       await loginWithGoogle(credential)
       navigate(from, { replace: true })
     } catch (err: unknown) {
-      const anyErr = err as Record<string, any> | null | undefined
+      const errObj = err as Record<string, unknown> | null | undefined
+      const detailsObj = (errObj?.details ||
+        (errObj?.body as { error?: { details?: Record<string, unknown> } } | undefined)?.error
+          ?.details) as Record<string, unknown> | undefined
       const isNotFound =
-        anyErr &&
-        (anyErr.code === 'AUTH_025' ||
-          anyErr.status === 404 ||
-          Boolean(anyErr.details?.needs_registration) ||
-          Boolean(anyErr.body?.error?.details?.needs_registration) ||
-          (typeof anyErr.message === 'string' &&
-            /brak konta|nie znaleziono|dokończ rejestrację/i.test(anyErr.message)))
+        errObj != null &&
+        (errObj.code === 'AUTH_025' ||
+          errObj.status === 404 ||
+          Boolean(detailsObj?.needs_registration) ||
+          (typeof errObj.message === 'string' &&
+            /brak konta|nie znaleziono|dokończ rejestrację/i.test(errObj.message)))
 
       if (isNotFound) {
-        const details = (anyErr?.details || anyErr?.body?.error?.details || {}) as {
+        const details = (detailsObj || {}) as {
           email?: string
           first_name?: string
           last_name?: string
