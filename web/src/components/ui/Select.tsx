@@ -109,7 +109,11 @@ export function Select<T extends string = string>({
         aria-label={ariaLabel}
       >
         <span className="ui-select__value">
-          {selectedOption ? selectedOption.label : <span className="ui-select__placeholder">{placeholder}</span>}
+          {selectedOption ? (
+            selectedOption.label
+          ) : (
+            <span className="ui-select__placeholder">{placeholder}</span>
+          )}
         </span>
         <svg
           className={`ui-select__chevron ${isOpen ? 'ui-select__chevron--open' : ''}`}

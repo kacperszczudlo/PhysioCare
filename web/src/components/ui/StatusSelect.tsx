@@ -96,7 +96,9 @@ export function StatusSelect({
         break
       case 'ArrowUp':
         e.preventDefault()
-        setActiveIndex((prev) => (prev - 1 + STATUS_OPTIONS_META.length) % STATUS_OPTIONS_META.length)
+        setActiveIndex(
+          (prev) => (prev - 1 + STATUS_OPTIONS_META.length) % STATUS_OPTIONS_META.length,
+        )
         break
       case 'Enter':
       case ' ':

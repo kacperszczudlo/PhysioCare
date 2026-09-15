@@ -864,7 +864,9 @@ export function ClinicalActionsPanel({
                       </span>
                     </p>
                   ) : null}
-                  <p className="clinical-actions__item-body">{item.activity_notes || 'Bez notatki'}</p>
+                  <p className="clinical-actions__item-body">
+                    {item.activity_notes || 'Bez notatki'}
+                  </p>
                   {!item.is_read_only ? (
                     <div className="clinical-actions__item-toolbar">
                       <Button
@@ -970,7 +972,8 @@ export function ClinicalActionsPanel({
                       value: item.code,
                       label: `[${item.group}] ${item.name}`,
                     })),
-                    ...(!allowedDevices.some((item) => item.code === editDeviceCode) && editDeviceCode
+                    ...(!allowedDevices.some((item) => item.code === editDeviceCode) &&
+                    editDeviceCode
                       ? [{ value: editDeviceCode, label: `${editDeviceCode} (obecny)` }]
                       : []),
                   ]}

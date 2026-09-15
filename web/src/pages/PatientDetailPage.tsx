@@ -466,11 +466,15 @@ export function PatientDetailPage() {
                 {selected.is_read_only ? (
                   <div className="patient-read-only-banner" role="status">
                     <span>
-                      Epizod utworzył: {selected.therapist_name || 'inny fizjoterapeuta'} (tylko do odczytu)
+                      Epizod utworzył: {selected.therapist_name || 'inny fizjoterapeuta'} (tylko do
+                      odczytu)
                     </span>
                   </div>
                 ) : null}
-                <fieldset disabled={selected.is_read_only} style={{ border: 0, padding: 0, margin: 0, display: 'contents' }}>
+                <fieldset
+                  disabled={selected.is_read_only}
+                  style={{ border: 0, padding: 0, margin: 0, display: 'contents' }}
+                >
                   <div className="patient-episode-form__row">
                     <Field
                       label="ICD-10 (z dokumentacji / roboczy)"
@@ -487,7 +491,11 @@ export function PatientDetailPage() {
                     />
                     <div className="ui-field">
                       <span className="ui-field__label">Status</span>
-                      <StatusSelect value={status} onChange={setStatus} disabled={selected.is_read_only} />
+                      <StatusSelect
+                        value={status}
+                        onChange={setStatus}
+                        disabled={selected.is_read_only}
+                      />
                     </div>
                   </div>
                   <label className="ui-field">
