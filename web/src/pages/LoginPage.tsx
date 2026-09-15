@@ -137,6 +137,14 @@ export function LoginPage() {
     }
   }
 
+  function handleGoogleError(message: string) {
+    if (/anulowane/i.test(message)) {
+      toast.info(message)
+    } else {
+      toast.error(message)
+    }
+  }
+
   if (mfaStep) {
     return (
       <div className="auth-form">
@@ -233,7 +241,7 @@ export function LoginPage() {
           title="Kontynuuj z Google"
           hint="Nowe konto? Google przeniesie Cię do rejestracji z uzupełnionym e-mailem i imieniem - zostaje PWZFz."
           onCredential={onGoogleCredential}
-          onError={setError}
+          onError={handleGoogleError}
         />
       ) : null}
 

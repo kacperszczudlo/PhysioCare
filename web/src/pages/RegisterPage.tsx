@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { PasswordRequirements } from '@/components/ui/PasswordRequirements'
 import { PhoneField } from '@/components/ui/PhoneField'
+import { useToast } from '@/components/ui/ToastContext'
 import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
 import { getEmailError } from '@/lib/emailPolicy'
 import { getFirstNameError, getLastNameError } from '@/lib/fieldPolicy'
@@ -60,6 +61,7 @@ export function RegisterPage() {
   const { register } = useAuth()
   const { executeRecaptcha } = useRecaptcha()
   const navigate = useNavigate()
+  const { toast } = useToast()
 
   const [googleDraft, setGoogleDraft] = useState<GoogleRegistrationDraft | null>(() =>
     peekGoogleRegistrationDraft(),
@@ -337,6 +339,14 @@ export function RegisterPage() {
     )
   }
 
+  function handleGoogleError(message: string) {
+    if (/anulowane/i.test(message)) {
+      toast.info(message)
+    } else {
+      toast.error(message)
+    }
+  }
+
   return (
     <div className="auth-form">
       <header className="auth-form__header">
@@ -535,7 +545,7 @@ export function RegisterPage() {
           title="Zarejestruj przez Google"
           hint="Kliknij Google - e-mail, imię i nazwisko uzupełnią się same. Potem podaj tylko PWZFz i oświadczenie."
           onCredential={onGoogleCredential}
-          onError={setError}
+          onError={handleGoogleError}
         />
       ) : null}
 

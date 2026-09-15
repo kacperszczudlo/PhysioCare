@@ -70,11 +70,14 @@ export function requestGoogleIdTokenPopup(clientId: string): Promise<string> {
         finish(() => resolve(data.id_token!))
       } else {
         const err = data.error || 'Logowanie Google nie powiodło się.'
+        if (/redirect_uri/i.test(err)) {
+          console.warn(`PhysioCare Google Auth Debug: ${mismatchHint}`)
+        }
         finish(() =>
           reject(
             new Error(
               /redirect_uri/i.test(err)
-                ? `Błąd Google (redirect_uri_mismatch). ${mismatchHint}`
+                ? 'Niepoprawna konfiguracja adresu przekierowania w serwisie Google.'
                 : err,
             ),
           ),
@@ -85,13 +88,7 @@ export function requestGoogleIdTokenPopup(clientId: string): Promise<string> {
 
     const timer = window.setInterval(() => {
       if (popup.closed) {
-        finish(() =>
-          reject(
-            new Error(
-              `Logowanie Google przerwane. Jeśli widziałeś „redirect_uri_mismatch”: ${mismatchHint}`,
-            ),
-          ),
-        )
+        finish(() => reject(new Error('Logowanie Google zostało anulowane.')))
         return
       }
       try {
@@ -114,11 +111,14 @@ export function requestGoogleIdTokenPopup(clientId: string): Promise<string> {
           finish(() => resolve(idToken))
         } else {
           const detail = errorDesc || error || 'Google nie zwróciło tokenu.'
+          if (/redirect_uri/i.test(detail)) {
+            console.warn(`PhysioCare Google Auth Debug: ${mismatchHint}`)
+          }
           finish(() =>
             reject(
               new Error(
                 /redirect_uri/i.test(detail)
-                  ? `Błąd Google (redirect_uri_mismatch). ${mismatchHint}`
+                  ? 'Niepoprawna konfiguracja adresu przekierowania w serwisie Google.'
                   : detail,
               ),
             ),
