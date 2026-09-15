@@ -10,7 +10,9 @@ export function ProtectedRoute() {
   if (isLoading) {
     return (
       <SkeletonWrapper label="Ładowanie sesji…" className="app-boot">
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+        <div
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}
+        >
           <Skeleton circle width="48px" height="48px" />
           <Skeleton width="140px" height="1.2rem" radius="sm" />
         </div>

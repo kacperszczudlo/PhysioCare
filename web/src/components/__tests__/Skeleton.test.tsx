@@ -67,7 +67,10 @@ describe('Web Skeleton Components', () => {
     u2()
 
     const { unmount: u3 } = render(<DiagnosticMapSkeleton />)
-    expect(screen.getByRole('status')).toHaveAttribute('aria-label', 'Ładowanie mapy diagnostycznej…')
+    expect(screen.getByRole('status')).toHaveAttribute(
+      'aria-label',
+      'Ładowanie mapy diagnostycznej…',
+    )
     u3()
 
     const { unmount: u4 } = render(<ModalFormSkeleton />)
