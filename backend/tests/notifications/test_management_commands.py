@@ -1,19 +1,16 @@
 from io import StringIO
-from unittest.mock import patch
 
 import pytest
 from django.core.management import call_command
 from django.utils import timezone
 
 from exercises.models import Exercise, ExerciseAssignment
+from notifications.models import NotificationDelivery
 from scheduling.models import Visit, VisitStatus
 
 
 @pytest.mark.django_db
-@patch('notifications.management.commands.notify_today_exercises.notify_today_exercises')
-def test_notify_today_exercises_command(
-    mock_notify, patient, therapist
-):
+def test_notify_today_exercises_command_real_execution(patient, therapist):
     # Arrange
     ExerciseAssignment.objects.all().delete()
     exercise = Exercise.objects.create(
@@ -35,13 +32,12 @@ def test_notify_today_exercises_command(
 
     # Assert
     assert 'Przypomnienia o ćwiczeniach: 1' in out.getvalue()
-    mock_notify.assert_called_once()
+    assert NotificationDelivery.objects.filter(user=patient.user, pref_key='exercise_reminder').exists()
 
 
 @pytest.mark.django_db
-@patch('notifications.management.commands.notify_upcoming_visits.notify_visit_reminder')
-def test_notify_upcoming_visits_command(
-    mock_notify, patient, therapist, therapy_type
+def test_notify_upcoming_visits_command_real_execution(
+    patient, therapist, therapy_type
 ):
     # Arrange
     now = timezone.now()
@@ -60,4 +56,5 @@ def test_notify_upcoming_visits_command(
 
     # Assert
     assert 'Przypomnienia zakolejkowane:' in out.getvalue()
-    mock_notify.assert_called_once_with(visit, '24h')
+    assert NotificationDelivery.objects.filter(user=patient.user, pref_key='visit_reminder').exists()
+
