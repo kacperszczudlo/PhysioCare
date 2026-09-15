@@ -233,3 +233,34 @@ def test_password_reset_confirm_mismatch(api_client, patient_user):
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     patient_user.refresh_from_db()
     assert patient_user.check_password('old-pass-123!')
+
+
+@pytest.mark.django_db
+def test_password_reset_template_rendering_and_attachment(api_client, patient_user, settings):
+    settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+
+    response = api_client.post(
+        '/api/v1/auth/password-reset/request/',
+        {'email': patient_user.email, 'client': 'web'},
+        format='json',
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert len(mail.outbox) == 1
+
+    email_msg = mail.outbox[0]
+    assert email_msg.subject == 'PhysioCare - kod resetu hasła'
+    assert 'Test' in email_msg.body
+
+    # HTML alternative check
+    assert len(email_msg.alternatives) == 1
+    html_content, mimetype = email_msg.alternatives[0]
+    assert mimetype == 'text/html'
+    assert 'Cześć Test' in html_content
+    assert 'Kod resetu hasła' in html_content
+    assert 'cid:physiocare_logo' in html_content
+
+    # Inline brand logo attachment check
+    assert len(email_msg.attachments) == 1
+    attached_img = email_msg.attachments[0]
+    assert attached_img.get_filename() in ('sygnet.png', 'logo.png')
+

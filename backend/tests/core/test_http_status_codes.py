@@ -57,6 +57,26 @@ def test_status_204_no_content_deletion(api_client, patient):
 
 
 @pytest.mark.django_db
+def test_status_401_unauthorized_via_api_client(api_client):
+    """Status 401 HTTP jest zwracany przy braku tokena w wywołaniu APIClient."""
+    response = api_client.get('/api/v1/therapist/profile/')
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.data['error']['code'] in ['NOT_AUTHENTICATED', 'AUTHENTICATION_FAILED']
+    assert 'error' in response.data
+
+
+@pytest.mark.django_db
+def test_status_404_not_found_via_api_client(api_client, therapist):
+    """Status 404 HTTP jest zwracany przy braku zasobu na trasie DRF."""
+    api_client.force_authenticate(user=therapist.user)
+    response = api_client.get('/api/v1/patients/00000000-0000-0000-0000-000000000000/episodes/')
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.data['error']['code'] == 'NOT_FOUND'
+
+
+@pytest.mark.django_db
 def test_status_400_bad_request_handler():
     """Status 400 Bad Request handles validation errors with standardized JSON structure."""
     exc = ValidationError({'email': ['Podaj prawidłowy adres e-mail.']})
@@ -119,3 +139,4 @@ def test_status_500_server_error_handler():
     assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
     assert response.data['error']['code'] == 'SERVER_ERROR'
     assert 'nieoczekiwany błąd' in response.data['error']['message'].lower()
+

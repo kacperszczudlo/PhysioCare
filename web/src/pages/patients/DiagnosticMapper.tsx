@@ -5,6 +5,7 @@ import { treatmentApi } from '@/api/treatment'
 import { ApiError } from '@/api/client'
 import type { BodyAreaPain, BodyViewSide } from '@/api/types'
 import { Button } from '@/components/ui/Button'
+import { DiagnosticMapSkeleton } from '@/components/skeletons/WebSkeletons'
 import {
   BODY_MODEL_COLORS,
   PAIN_CHARACTERS,
@@ -259,7 +260,7 @@ export function DiagnosticMapper({ episodeId }: DiagnosticMapperProps) {
         </div>
       </header>
 
-      {loading ? <p className="diag-map__muted">Ładowanie mapy…</p> : null}
+      {loading ? <DiagnosticMapSkeleton /> : null}
       {error ? (
         <p className="diag-map__error" role="alert">
           {error}

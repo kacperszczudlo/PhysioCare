@@ -267,7 +267,9 @@ class VisitCreateSerializer(serializers.ModelSerializer):
         episode_id = attrs.get('episode_id')
 
         if not PatientProfile.objects.active().filter(
-            pk=patient_id, therapist=therapist
+            pk=patient_id,
+            therapist_links__therapist=therapist,
+            therapist_links__status='ACTIVE',
         ).exists():
             raise serializers.ValidationError(
                 {'patient_id': 'Pacjent nie należy do tego terapeuty.'}
@@ -281,7 +283,6 @@ class VisitCreateSerializer(serializers.ModelSerializer):
         if episode_id is not None and not TreatmentEpisode.objects.filter(
             pk=episode_id,
             patient_id=patient_id,
-            patient__therapist=therapist,
         ).exists():
             raise serializers.ValidationError(
                 {'episode_id': 'Epizod nie należy do wskazanego pacjenta.'}
@@ -301,6 +302,14 @@ class VisitCreateSerializer(serializers.ModelSerializer):
         episode_id = validated_data.pop('episode_id', None)
         therapy_type_id = validated_data.pop('therapy_type_id')
         therapist = self.context['therapist']
+
+        from patients.models import LinkStatus, PatientTherapistLink
+        PatientTherapistLink.objects.get_or_create(
+            patient_id=patient_id,
+            therapist=therapist,
+            defaults={'status': LinkStatus.ACTIVE},
+        )
+
         return Visit.objects.create(
             patient_id=patient_id,
             therapist=therapist,
@@ -312,6 +321,7 @@ class VisitCreateSerializer(serializers.ModelSerializer):
 
 
 class PatientVisitRequestSerializer(serializers.ModelSerializer):
+    therapist_id = serializers.UUIDField(required=False, write_only=True)
     therapy_type_id = serializers.UUIDField(write_only=True)
     patient_note = serializers.CharField(
         required=False,
@@ -321,7 +331,7 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Visit
-        fields = ['therapy_type_id', 'start_at', 'end_at', 'patient_note']
+        fields = ['therapist_id', 'therapy_type_id', 'start_at', 'end_at', 'patient_note']
 
     def validate_patient_note(self, value):
         try:
@@ -334,17 +344,27 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(list(exc.messages)) from exc
 
     def validate(self, attrs):
-        patient = self.context['patient']
-        therapist = patient.therapist
-        if therapist is None:
+        therapy_type_id = attrs['therapy_type_id']
+        therapy_type = TherapyType.objects.filter(pk=therapy_type_id).first()
+        if not therapy_type:
             raise serializers.ValidationError(
-                {'detail': 'Pacjent nie ma przypisanego terapeuty.'}
+                {'therapy_type_id': 'Nie znaleziono wskazanego typu terapii.'}
             )
 
-        therapy_type_id = attrs['therapy_type_id']
-        if not TherapyType.objects.filter(pk=therapy_type_id, therapist=therapist).exists():
+        therapist_id = attrs.pop('therapist_id', None)
+        if therapist_id:
+            from therapists.models import TherapistProfile
+            therapist = TherapistProfile.objects.filter(pk=therapist_id).first()
+            if not therapist:
+                raise serializers.ValidationError(
+                    {'therapist_id': 'Nie znaleziono wskazanego terapeuty.'}
+                )
+        else:
+            therapist = therapy_type.therapist
+
+        if therapy_type.therapist_id != therapist.id:
             raise serializers.ValidationError(
-                {'therapy_type_id': 'Typ terapii nie należy do Twojego terapeuty.'}
+                {'therapy_type_id': 'Wybrana usługa nie należy do wskazanego terapeuty.'}
             )
 
         start_at = attrs['start_at']
@@ -368,7 +388,7 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
                     {
                         'start_at': (
                             f'Wybrany dzień ({holiday_name}) jest dniem wolnym od pracy. '
-                            'Fizjoterapeuta nie ustalił dyżuru w to święto.'
+                            'Fizjoterapeuta nie przyjmuje pacjentów w to święto.'
                         )
                     }
                 )
@@ -376,13 +396,25 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {
                         'start_at': (
-                            'Fizjoterapeuta nie skonfigurował jeszcze grafiku pracy. '
-                            'Rezerwacja terminu jest obecnie niedostępna.'
+                            'Ten fizjoterapeuta nie udostępnił jeszcze swojego grafiku przyjęć w aplikacji. '
+                            'Skontaktuj się z nim bezpośrednio lub wybierz innego specjalistę.'
                         )
                     }
                 )
             raise serializers.ValidationError(
-                {'start_at': 'Wybrany termin nie mieści się w zdefiniowanych slotach dostępności fizjoterapeuty.'}
+                {'start_at': 'Wybrany termin nie mieści się w godzinach przyjęć tego fizjoterapeuty. Wybierz inną datę lub godzinę.'}
+            )
+
+        overlapping = Visit.objects.filter(
+            therapist=therapist,
+            start_at__lt=end_at,
+            end_at__gt=start_at,
+        ).exclude(status=VisitStatus.CANCELLED)
+        if self.instance:
+            overlapping = overlapping.exclude(pk=self.instance.pk)
+        if overlapping.exists():
+            raise serializers.ValidationError(
+                {'start_at': 'Wybrana godzina jest już zarezerwowana przez innego pacjenta. Wybierz inny termin.'}
             )
 
         attrs['therapist'] = therapist
@@ -392,6 +424,14 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
         patient = self.context['patient']
         therapist = validated_data.pop('therapist')
         therapy_type_id = validated_data.pop('therapy_type_id')
+
+        from patients.models import LinkStatus, PatientTherapistLink
+        PatientTherapistLink.objects.get_or_create(
+            patient=patient,
+            therapist=therapist,
+            defaults={'status': LinkStatus.ACTIVE},
+        )
+
         return Visit.objects.create(
             patient=patient,
             therapist=therapist,
@@ -470,6 +510,32 @@ class VisitRescheduleSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'end_at': 'Koniec wizyty musi być po rozpoczęciu.'}
             )
+        if start_at < timezone.now():
+            raise serializers.ValidationError(
+                {'start_at': 'Termin wizyty musi być w przyszłości.'}
+            )
+
+        therapist = visit.therapist
+        if not is_visit_within_therapist_availability(therapist, start_at, end_at):
+            is_holiday, holiday_name = is_polish_holiday(start_at.date())
+            if is_holiday:
+                raise serializers.ValidationError(
+                    {'start_at': f'Wybrany dzień ({holiday_name}) jest dniem wolnym od pracy.'}
+                )
+            raise serializers.ValidationError(
+                {'start_at': 'Wybrany termin nie mieści się w godzinach przyjęć tego fizjoterapeuty.'}
+            )
+
+        overlapping = Visit.objects.filter(
+            therapist=therapist,
+            start_at__lt=end_at,
+            end_at__gt=start_at,
+        ).exclude(pk=visit.pk).exclude(status=VisitStatus.CANCELLED)
+        if overlapping.exists():
+            raise serializers.ValidationError(
+                {'start_at': 'Wybrana godzina jest już zarezerwowana przez innego pacjenta. Wybierz inny termin.'}
+            )
+
         return attrs
 
 

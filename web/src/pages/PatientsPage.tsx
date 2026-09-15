@@ -88,7 +88,7 @@ export function PatientsPage() {
           title={patients.length === 0 ? 'Brak pacjentów w gabinecie' : 'Brak wyników'}
           description={
             patients.length === 0
-              ? 'Pojawią się po rejestracji w aplikacji mobilnej z Twoim therapist_id.'
+              ? 'Będą tu widoczni pacjenci, którzy dołączą do Twojego gabinetu lub umówią u Ciebie wizytę.'
               : 'Zmień frazę wyszukiwania albo wyczyść filtr.'
           }
         />

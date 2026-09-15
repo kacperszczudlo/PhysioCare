@@ -4,10 +4,48 @@
   gap: var(--space-4);
 }
 
-.patient-back a {
+.patient-header-nav {
+  display: flex;
+  align-items: center;
+  margin-bottom: calc(var(--space-2) * -1);
+}
+
+.patient-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.375rem 0.75rem;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   font-size: var(--text-sm);
   font-weight: 600;
+  color: var(--color-ink);
   text-decoration: none;
+  transition:
+    background-color var(--duration-fast, 150ms) var(--ease-out, ease-out),
+    border-color var(--duration-fast, 150ms) var(--ease-out, ease-out),
+    color var(--duration-fast, 150ms) var(--ease-out, ease-out),
+    box-shadow var(--duration-fast, 150ms) var(--ease-out, ease-out);
+}
+
+.patient-back-btn:hover {
+  background: var(--color-surface);
+  border-color: var(--color-border-strong);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.patient-back-btn__icon {
+  color: var(--color-muted);
+  transition:
+    transform var(--duration-fast, 150ms) var(--ease-out, ease-out),
+    color var(--duration-fast, 150ms) var(--ease-out, ease-out);
+}
+
+.patient-back-btn:hover .patient-back-btn__icon {
+  color: var(--color-primary);
+  transform: translateX(-2px);
 }
 
 .patient-layout {
@@ -30,17 +68,34 @@
 }
 
 .patient-episodes,
-.patient-notes,
-.patient-pdf-upload {
+.patient-notes {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  background: var(--color-surface);
+  background: var(--color-surface-raised);
   min-width: 0;
   flex-shrink: 0;
+}
+
+.patient-pdf-upload {
+  display: grid;
+  grid-template-columns: minmax(13rem, 18rem) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  min-width: 0;
+}
+
+.patient-pdf-upload__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 .patient-pdf-upload h2 {
@@ -49,14 +104,29 @@
 }
 
 .patient-pdf-upload__form {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) auto;
   gap: var(--space-3);
-  max-width: 32rem;
+  align-items: end;
+  width: 100%;
 }
 
-.patient-notes {
-  background: var(--color-surface-raised);
+.patient-pdf-upload__action-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+@media (max-width: 1024px) {
+  .patient-pdf-upload {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+
+  .patient-pdf-upload__form {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
 }
 
 .patient-episodes h2,
@@ -99,7 +169,8 @@
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  align-items: flex-start;
+  gap: 0.35rem;
 }
 
 .patient-episodes__item--active {
@@ -110,11 +181,25 @@
 .patient-episodes__code {
   font-weight: 700;
   font-size: var(--text-sm);
+  color: var(--color-ink);
 }
 
-.patient-episodes__status {
+.patient-episodes__author {
   font-size: var(--text-xs);
   color: var(--color-muted);
+  font-weight: 500;
+}
+
+.patient-episode-form__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.patient-episode-form__author {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  margin: 0;
 }
 
 .patient-episodes__create {
@@ -268,6 +353,19 @@
 .patient-banner--error {
   background: var(--color-danger-subtle);
   color: var(--color-danger);
+}
+
+.patient-read-only-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
 }
 
 .patient-muted {

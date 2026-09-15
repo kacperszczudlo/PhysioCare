@@ -17,7 +17,10 @@
 
 .ui-btn:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  background: var(--color-disabled-bg) !important;
+  border-color: var(--color-disabled-border) !important;
+  color: var(--color-disabled-text) !important;
+  opacity: 1;
 }
 
 .ui-btn--md {
@@ -58,6 +61,15 @@
 
 .ui-btn--ghost:hover:not(:disabled) {
   background: var(--color-primary-subtle);
+}
+
+.ui-btn--danger {
+  background: var(--color-danger);
+  color: #ffffff;
+}
+
+.ui-btn--danger:hover:not(:disabled) {
+  background: oklch(0.4 0.14 25);
 }
 
 .ui-btn__spinner {

@@ -55,6 +55,7 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
   const moved = useRef(false)
   const ignoreScroll = useRef(false)
   const settleTimer = useRef<number | null>(null)
+  const isCommittedLocally = useRef(false)
   const selectedIndexRef = useRef(selectedIndex)
   const onChangeIndexRef = useRef(onChangeIndex)
   const itemsLengthRef = useRef(items.length)
@@ -91,6 +92,7 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
   const emitIndex = useCallback(
     (index: number) => {
       setActiveIndex(index)
+      isCommittedLocally.current = true
       scrollToIndex(index)
       if (index !== selectedIndexRef.current) {
         onChangeIndexRef.current(index)
@@ -117,6 +119,10 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
   useEffect(() => {
     setActiveIndex(selectedIndex)
     if (dragging.current) {
+      return
+    }
+    if (isCommittedLocally.current) {
+      isCommittedLocally.current = false
       return
     }
     scrollToIndex(selectedIndex)

@@ -71,6 +71,9 @@ def test_account_deletion_anonymizes_and_frees_email(api_client, patient, therap
 @pytest.mark.django_db
 def test_legacy_inactive_email_can_reregister(api_client, patient, therapist):
     """Accounts deactivated before anonymization still block e-mail - reclaim on register."""
+    from django.core.cache import cache
+    cache.clear()
+
     user = patient.user
     original_email = user.email
     user.is_active = False

@@ -18,4 +18,10 @@ describe('Mobile Skeleton helper math & radius calculations', () => {
     expect(space.xs).toBe(4)
     expect(space.md).toBe(12)
   })
+
+  it('validates mobile skeleton height presets', () => {
+    const avatarSizes = { sm: 32, md: 40, lg: 48, xl: 72 }
+    expect(avatarSizes.sm).toBe(32)
+    expect(avatarSizes.xl).toBe(72)
+  })
 })

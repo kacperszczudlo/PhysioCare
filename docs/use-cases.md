@@ -32,9 +32,20 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Aktor | Pacjent |
 | Cel | Założenie konta z wymaganymi zgodami RODO |
 | Warunki wstępne | Brak konta o danym e-mailu |
-| Przebieg | 1. Pacjent wypełnia formularz. 2. Zaznacza zgody wymagane (regulamin, dane medyczne). 3. Przycisk aktywny dopiero po zgodach. 4. System tworzy User + PatientProfile. |
+| Przebieg | 1. Pacjent wypełnia formularz (imię, nazwisko, e-mail, hasło). 2. Zaznacza zgody wymagane (regulamin, dane medyczne). 3. Przycisk aktywny dopiero po zgodach. 4. System tworzy User + PatientProfile. |
 | Warunki końcowe | Konto utworzone, zgody zapisane z datą |
 | Wyjątki | E1: E-mail zajęty -> 409. E2: Brak zgód -> 400. |
+
+---
+
+## UC-20 - Wybór i zarządzanie fizjoterapeutami (N:M)
+
+| Pole | Wartość |
+|------|---------|
+| Aktor | Pacjent |
+| Cel | Przeglądanie listy własnych fizjoterapeutów oraz wyszukiwanie i dodawanie nowych z bazy |
+| Przebieg | 1. Pacjent przechodzi do zakładki **Specjaliści**. 2. Widzi listę aktualnie powiązanych fizjoterapeutów („Moi fizjoterapeuci”). 3. Może wyszukać nowego fizjoterapeutę w bazie (po nazwisku lub lokalizacji). 4. Kliknięcie „Dodaj” tworzy relację `PatientTherapistLink`. 5. Umówienie pierwszej wizyty u nowego fizjoterapeuty również automatycznie dodaje go do listy pacjenta. |
+| Warunki końcowe | Pacjent może umawiać wizyty u wybranych fizjoterapeutów i przeglądać ich profile. |
 
 ---
 

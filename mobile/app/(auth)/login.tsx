@@ -12,6 +12,7 @@ import { BrandMark } from '@/components/BrandMark'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
+import { useToast } from '@/components/ToastContext'
 import { colors, space, typography } from '@/theme/tokens'
 
 function firstParam(value: string | string[] | undefined): string {
@@ -24,6 +25,7 @@ function firstParam(value: string | string[] | undefined): string {
 export default function LoginScreen() {
   const { login, loginWithGoogle } = useAuth()
   const router = useRouter()
+  const { toast } = useToast()
   const params = useLocalSearchParams<{ email?: string | string[]; reset?: string | string[] }>()
   const emailFromParams = firstParam(params.email)
   const resetNotice = firstParam(params.reset) === '1'
@@ -67,9 +69,19 @@ export default function LoginScreen() {
     try {
       await loginWithGoogle(idToken)
       router.replace('/(tabs)')
-    } catch (err) {
-      if (err instanceof ApiError && err.code === 'AUTH_025') {
-        const details = err.details as {
+    } catch (err: unknown) {
+      const anyErr = err as Record<string, any> | null | undefined
+      const isNotFound =
+        anyErr &&
+        (anyErr.code === 'AUTH_025' ||
+          anyErr.status === 404 ||
+          Boolean(anyErr.details?.needs_registration) ||
+          Boolean(anyErr.body?.error?.details?.needs_registration) ||
+          (typeof anyErr.message === 'string' &&
+            /brak konta|nie znaleziono|dokończ rejestrację/i.test(anyErr.message)))
+
+      if (isNotFound) {
+        const details = (anyErr?.details || anyErr?.body?.error?.details || {}) as {
           email?: string
           first_name?: string
           last_name?: string
@@ -93,6 +105,14 @@ export default function LoginScreen() {
       setError(getErrorMessage(err, 'Nie udało się zalogować przez Google.'))
     } finally {
       setLoading(false)
+    }
+  }
+
+  function handleGoogleError(message: string) {
+    if (/anulowane/i.test(message)) {
+      toast.info(message)
+    } else {
+      toast.error(message)
     }
   }
 
@@ -138,9 +158,9 @@ export default function LoginScreen() {
           <GoogleSignInButton
             loading={loading}
             title="Kontynuuj z Google"
-            hint="Nowe konto? Google przeniesie Cię do rejestracji (kod terapeuty + zgody)."
+            hint="Nowe konto? Google przeniesie Cię do dokończenia rejestracji (zgody RODO)."
             onSuccess={onGoogleSuccess}
-            onError={setError}
+            onError={handleGoogleError}
           />
         ) : null}
       </View>

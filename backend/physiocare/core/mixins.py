@@ -12,10 +12,12 @@ class TherapistPatientQuerysetMixin:
 
         return (
             PatientProfile.objects.filter(
-                therapist=self.get_therapist_profile(),
+                therapist_links__therapist=self.get_therapist_profile(),
+                therapist_links__status='ACTIVE',
             )
             .active()
             .select_related('user')
+            .distinct()
         )
 
 
@@ -27,7 +29,13 @@ class PatientSelfMixin:
 
 
 def patient_belongs_to_therapist(patient, therapist_profile) -> bool:
-    return patient.therapist_id == therapist_profile.id
+    from patients.models import PatientTherapistLink
+
+    return PatientTherapistLink.objects.filter(
+        patient=patient,
+        therapist=therapist_profile,
+        status='ACTIVE',
+    ).exists()
 
 
 def user_can_access_patient(user, patient) -> bool:
@@ -36,7 +44,10 @@ def user_can_access_patient(user, patient) -> bool:
     if user.role == 'THERAPIST':
         return (
             hasattr(user, 'therapist_profile')
-            and patient_belongs_to_therapist(patient, user.therapist_profile)
+            and (
+                patient_belongs_to_therapist(patient, user.therapist_profile)
+                or patient.visits.filter(therapist=user.therapist_profile).exists()
+            )
         )
     return user.is_staff
 

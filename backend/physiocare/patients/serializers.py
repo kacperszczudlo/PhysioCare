@@ -52,28 +52,40 @@ class PatientDetailSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email', read_only=True)
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
+    therapists = serializers.SerializerMethodField()
 
     class Meta:
         model = PatientProfile
         fields = [
             'id', 'email', 'first_name', 'last_name',
-            'pesel', 'phone', 'avatar_url', 'therapist', 'created_at',
+            'pesel', 'phone', 'avatar_url', 'therapists', 'created_at',
         ]
-        read_only_fields = ['id', 'therapist', 'created_at']
+        read_only_fields = ['id', 'therapists', 'created_at']
+
+    def get_therapists(self, obj):
+        from therapists.serializers import TherapistPublicSerializer
+        active_therapists = obj.therapists.filter(patient_links__status='ACTIVE')
+        return TherapistPublicSerializer(active_therapists, many=True).data
 
 
 class MeProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email', read_only=True)
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
+    therapists = serializers.SerializerMethodField()
 
     class Meta:
         model = PatientProfile
         fields = [
             'id', 'email', 'first_name', 'last_name',
-            'pesel', 'phone', 'avatar_url', 'therapist',
+            'pesel', 'phone', 'avatar_url', 'therapists',
         ]
-        read_only_fields = ['id', 'therapist']
+        read_only_fields = ['id', 'therapists']
+
+    def get_therapists(self, obj):
+        from therapists.serializers import TherapistPublicSerializer
+        active_therapists = obj.therapists.filter(patient_links__status='ACTIVE')
+        return TherapistPublicSerializer(active_therapists, many=True).data
 
 
 class MeProfileUpdateSerializer(serializers.ModelSerializer):

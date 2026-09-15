@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db import transaction
+from django.db import models, transaction
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -30,6 +30,7 @@ from notifications.defaults import ensure_default_preferences
 from patients.models import PatientProfile
 from privacy.account_deletion import free_inactive_email_holder
 from privacy.models import Consent, ConsentType
+from therapists.competence import QualificationLevel
 from therapists.models import TherapistProfile
 from therapists.pwzf_policy import (
     PWZF_FIELD_ERRORS,
@@ -182,8 +183,15 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         write_only=True,
     )
     therapist_id = serializers.UUIDField(
+        required=False,
+        allow_null=True,
         write_only=True,
         error_messages=_THERAPIST_ID_FIELD_ERRORS,
+    )
+    therapist_code = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        write_only=True,
     )
     consents = serializers.DictField(child=serializers.BooleanField(), write_only=True)
     phone = serializers.CharField(
@@ -198,7 +206,7 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'id', 'email', 'password', 'google_credential', 'recaptcha_token', 'first_name', 'last_name',
-            'therapist_id', 'consents', 'phone',
+            'therapist_id', 'therapist_code', 'consents', 'phone',
         )
         read_only_fields = ('id',)
         extra_kwargs = {
@@ -257,6 +265,8 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         return value
 
     def validate_therapist_id(self, value):
+        if value is None:
+            return None
         if not TherapistProfile.objects.filter(id=value).exists():
             raise serializers.ValidationError('Nie znaleziono wskazanego terapeuty.')
         return value
@@ -292,7 +302,8 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         first_name = validated_data.pop('first_name')
         last_name = validated_data.pop('last_name')
-        therapist_id = validated_data.pop('therapist_id')
+        therapist_id = validated_data.pop('therapist_id', None)
+        therapist_code = validated_data.pop('therapist_code', None)
         consents_data = validated_data.pop('consents')
         password = validated_data.pop('password', None)
         google_sub = validated_data.pop('_google_sub', None)
@@ -310,11 +321,28 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
             email_verified_at=timezone.now() if google_sub else None,
         )
 
-        PatientProfile.objects.create(
+        patient_profile = PatientProfile.objects.create(
             user=user,
-            therapist_id=therapist_id,
             phone=phone,
         )
+
+        # Handle optional therapist pairing via therapist_id or therapist_code (PWZFz or ID)
+        therapist_obj = None
+        if therapist_id:
+            therapist_obj = TherapistProfile.objects.filter(id=therapist_id).first()
+        elif therapist_code and therapist_code.strip():
+            code = therapist_code.strip()
+            therapist_obj = TherapistProfile.objects.filter(
+                models.Q(pwzf_number__iexact=code) | models.Q(id=code if len(code) == 36 else None)
+            ).first()
+
+        if therapist_obj:
+            from patients.models import PatientTherapistLink
+            PatientTherapistLink.objects.create(
+                patient=patient_profile,
+                therapist=therapist_obj,
+                status='ACTIVE',
+            )
 
         ensure_default_preferences(user)
 
@@ -377,12 +405,18 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
         write_only=True,
         error_messages=PHONE_FIELD_ERRORS,
     )
+    qualification_level = serializers.ChoiceField(
+        choices=QualificationLevel.CHOICES,
+        required=False,
+        default=QualificationLevel.MAGISTER,
+        write_only=True,
+    )
 
     class Meta:
         model = User
         fields = (
             'id', 'email', 'password', 'google_credential', 'recaptcha_token', 'first_name', 'last_name',
-            'pwzf_number', 'pwzf_declaration', 'phone',
+            'pwzf_number', 'pwzf_declaration', 'phone', 'qualification_level',
         )
         read_only_fields = ('id',)
         extra_kwargs = {
@@ -481,6 +515,7 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password', None)
         google_sub = validated_data.pop('_google_sub', None)
         phone = validated_data.pop('phone', '')
+        qualification_level = validated_data.pop('qualification_level', QualificationLevel.MAGISTER)
 
         _prepare_email_for_registration(validated_data['email'])
 
@@ -498,6 +533,7 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
             user=user,
             pwzf_number=pwzf_number,
             phone=phone,
+            qualification_level=qualification_level,
         )
 
         return user

@@ -97,7 +97,7 @@ Wymaga `GOOGLE_CLIENT_IDS` (lista audience). Serwer weryfikuje token (`google-au
 
 **200** - jak `/auth/login`. Bez konfiguracji Google: **503** `AUTH_020`.
 
-Rejestracja z Google: w `POST /auth/register/therapist/` lub `/auth/register/patient/` wyślij `google_credential` zamiast `password` (e-mail/imię z tokenu). Web nadal wymaga PWZFz; mobile - `therapist_id` + zgody.
+Rejestracja z Google: w `POST /auth/register/therapist/` lub `/auth/register/patient/` wyślij `google_credential` zamiast `password` (e-mail/imię z tokenu). Web wymaga PWZFz (dla fizjoterapeuty); mobile - zgody RODO.
 
 ### POST `/auth/logout`
 

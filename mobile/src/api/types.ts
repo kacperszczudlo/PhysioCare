@@ -100,6 +100,7 @@ export interface TherapyType {
 }
 
 export interface VisitRequestPayload {
+  therapist_id?: string
   therapy_type_id: string
   start_at: string
   end_at: string
@@ -206,6 +207,7 @@ export interface TherapistPublic {
   avatar_url: string
   phone: string
   location_address: string
+  pwzf_number?: string
   qualification_level?: string
   qualification_label?: string
   experience_years?: number

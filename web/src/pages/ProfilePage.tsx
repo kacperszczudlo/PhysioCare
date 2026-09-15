@@ -18,11 +18,31 @@ import { useAuthenticatedMediaUrl } from '@/lib/authMedia'
 import { formatPhoneForApi, getPhoneError, parseStoredPhone } from '@/lib/phonePolicy'
 import './ProfilePage.css'
 
-const QUALIFICATION_OPTIONS: { value: QualificationLevel; label: string }[] = [
-  { value: 'TECHNIK', label: 'Technik fizjoterapii' },
-  { value: 'LICENCJAT', label: 'Licencjat fizjoterapii' },
-  { value: 'MAGISTER', label: 'Magister fizjoterapii' },
-  { value: 'FIZJO_SPEC', label: 'Specjalista w dziedzinie fizjoterapii (FIZJO SPEC)' },
+const QUALIFICATION_TILES: ReadonlyArray<{
+  value: QualificationLevel
+  title: string
+  sub: string
+}> = [
+  {
+    value: 'MAGISTER',
+    title: 'Magister fizjoterapii',
+    sub: 'Samodzielne planowanie i ordynacja wyrobów medycznych',
+  },
+  {
+    value: 'LICENCJAT',
+    title: 'Licencjat fizjoterapii',
+    sub: 'Podstawowe planowanie i realizacja świadczeń',
+  },
+  {
+    value: 'FIZJO_SPEC',
+    title: 'Specjalista (FIZJO SPEC)',
+    sub: 'Zaawansowany sprzęt i pełny zakres diagnostyki',
+  },
+  {
+    value: 'TECHNIK',
+    title: 'Technik fizjoterapii',
+    sub: 'Realizacja zabiegów fizjoterapeutycznych',
+  },
 ]
 
 export function ProfilePage() {
@@ -57,7 +77,6 @@ export function ProfilePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [copyError, setCopyError] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
   const { url: remoteAvatarUrl } = useAuthenticatedMediaUrl(profile?.avatar_url)
 
@@ -163,21 +182,6 @@ export function ProfilePage() {
 
   function removeCourse(index: number) {
     setCourses((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  async function copyTherapistId() {
-    if (!profile?.id) {
-      return
-    }
-    try {
-      await navigator.clipboard.writeText(profile.id)
-      setCopyError(null)
-      toast.success('Skopiowano kod fizjoterapeuty do schowka.', { title: 'Kod skopiowany' })
-    } catch {
-      const err = 'Nie udało się skopiować. Zaznacz kod ręcznie i skopiuj.'
-      setCopyError(err)
-      toast.error(err)
-    }
   }
 
   async function onSaveProfile(event: FormEvent) {
@@ -431,23 +435,35 @@ export function ProfilePage() {
             </header>
 
             <div className="profile-fields profile-fields--split">
-              <label className="ui-field">
+              <div className="ui-field" style={{ gridColumn: '1 / -1' }}>
                 <span className="ui-field__label">Kwalifikacja zawodowa</span>
-                <select
-                  className="profile-select"
-                  value={qualificationLevel}
-                  onChange={(e) => setQualificationLevel(e.target.value as QualificationLevel)}
+                <div
+                  className="qualification-grid"
+                  role="radiogroup"
+                  aria-label="Kwalifikacja zawodowa"
                 >
-                  {QUALIFICATION_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <span className="ui-field__hint">
-                  Determinuje prawo do diagnozy funkcjonalnej i ordynacji wyrobów.
+                  {QUALIFICATION_TILES.map((tile) => {
+                    const isSelected = qualificationLevel === tile.value
+                    return (
+                      <button
+                        key={tile.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSelected}
+                        className={`qualification-tile ${isSelected ? 'qualification-tile--selected' : ''}`}
+                        onClick={() => setQualificationLevel(tile.value)}
+                      >
+                        <span className="qualification-tile__title">{tile.title}</span>
+                        <span className="qualification-tile__sub">{tile.sub}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+                <span className="ui-field__hint" style={{ marginTop: '0.5rem' }}>
+                  Determinuje prawo do diagnozy funkcjonalnej i ordynacji wyrobów medycznych w
+                  panelu.
                 </span>
-              </label>
+              </div>
 
               <Field
                 label="Staż w zawodzie (lata)"
@@ -550,7 +566,6 @@ export function ProfilePage() {
             aria-live="polite"
           >
             <div className="profile-floating-bar__status">
-              <span className="profile-floating-bar__dot" aria-hidden="true" />
               <div className="profile-floating-bar__labels">
                 <span className="profile-floating-bar__title">Masz niezapisane zmiany</span>
                 <span className="profile-floating-bar__desc">
@@ -579,22 +594,6 @@ export function ProfilePage() {
         </form>
 
         <aside className="profile-aside">
-          <section className="profile-card profile-card--accent" aria-labelledby="invite-heading">
-            <header className="profile-card__head">
-              <h2 id="invite-heading">Kod dla pacjenta</h2>
-              <p className="profile-muted">
-                Pacjent podaje ten kod przy rejestracji w aplikacji mobilnej.
-              </p>
-            </header>
-            <code className="profile-invite__id" title="ID profilu fizjoterapeuty">
-              {profile.id}
-            </code>
-            <Button type="button" variant="secondary" onClick={() => void copyTherapistId()}>
-              Kopiuj kod
-            </Button>
-            {copyError ? <ErrorBanner message={copyError} /> : null}
-          </section>
-
           {profile.competences ? (
             <section className="profile-card" aria-labelledby="comp-heading">
               <header className="profile-card__head">

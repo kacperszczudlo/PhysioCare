@@ -3,8 +3,10 @@ import { schedulingApi } from '@/api/scheduling'
 import type { AvailabilitySlot, Holiday } from '@/api/types'
 import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
+import { AvailabilitySkeleton } from '@/components/skeletons/WebSkeletons'
 import { CustomTimePicker } from '@/components/ui/CustomTimePicker'
 import { DateCarousel } from '@/components/ui/DateCarousel'
+import { useToast } from '@/components/ui/ToastContext'
 import { toDateInputValue } from '@/lib/scheduleTime'
 import './AvailabilityTabView.css'
 
@@ -76,12 +78,12 @@ interface DayConfig {
 }
 
 export function AvailabilityTabView() {
+  const { toast } = useToast()
   const [slots, setSlots] = useState<AvailabilitySlot[]>([])
   const [holidays, setHolidays] = useState<Holiday[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   // Weekly schedule matrix state (0=Mon, 6=Sun)
   const [weeklyConfig, setWeeklyConfig] = useState<Record<number, DayConfig>>(() => {
@@ -202,7 +204,6 @@ export function AvailabilityTabView() {
   async function handleSaveWeeklySchedule() {
     setSaving(true)
     setError(null)
-    setSuccessMsg(null)
     try {
       // 1. Delete existing recurring slots
       const existingRecurring = slots.filter((s) => s.is_recurring)
@@ -227,10 +228,11 @@ export function AvailabilityTabView() {
       }
 
       await loadData()
-      setSuccessMsg('Tygodniowy grafik pracy został pomyślnie zapisany!')
-      setTimeout(() => setSuccessMsg(null), 4000)
+      toast.success('Tygodniowy grafik pracy został pomyślnie zapisany!')
     } catch (err) {
-      setError(getErrorMessage(err, 'Błąd podczas zapisywania tygodniowego grafiku.'))
+      const errMsg = getErrorMessage(err, 'Błąd podczas zapisywania tygodniowego grafiku.')
+      setError(errMsg)
+      toast.error(errMsg)
     } finally {
       setSaving(false)
     }
@@ -254,10 +256,11 @@ export function AvailabilityTabView() {
         is_active: true,
       })
       await loadData()
-      setSuccessMsg('Dodano dodatkowy termin pracy.')
-      setTimeout(() => setSuccessMsg(null), 3000)
+      toast.success('Dodano dodatkowy termin pracy.')
     } catch (err) {
-      setError(getErrorMessage(err, 'Błąd dodawania wyjątku.'))
+      const errMsg = getErrorMessage(err, 'Błąd dodawania wyjątku.')
+      setError(errMsg)
+      toast.error(errMsg)
     } finally {
       setSaving(false)
     }
@@ -269,8 +272,11 @@ export function AvailabilityTabView() {
     try {
       await schedulingApi.deleteAvailability(id)
       await loadData()
+      toast.success('Usunięto termin pracy.')
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się usunąć slotu.'))
+      const errMsg = getErrorMessage(err, 'Nie udało się usunąć slotu.')
+      setError(errMsg)
+      toast.error(errMsg)
     } finally {
       setSaving(false)
     }
@@ -279,7 +285,7 @@ export function AvailabilityTabView() {
   const specificSlots = slots.filter((s) => !s.is_recurring)
 
   if (loading) {
-    return <div className="avail-tab-loading">Ładowanie grafiku pracy...</div>
+    return <AvailabilitySkeleton />
   }
 
   return (
@@ -287,11 +293,6 @@ export function AvailabilityTabView() {
       {error && (
         <div className="avail-alert error" role="alert">
           {error}
-        </div>
-      )}
-      {successMsg && (
-        <div className="avail-alert success" role="status">
-          {successMsg}
         </div>
       )}
 

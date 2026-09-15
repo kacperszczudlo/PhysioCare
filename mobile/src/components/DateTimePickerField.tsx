@@ -33,11 +33,11 @@ interface DateTimePickerFieldProps {
   endHour?: number
 }
 
-function startOfDay(date: Date): Date {
+export function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate())
 }
 
-function sameDay(a: Date, b: Date): boolean {
+export function sameDay(a: Date, b: Date): boolean {
   return (
     a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
@@ -45,14 +45,14 @@ function sameDay(a: Date, b: Date): boolean {
   )
 }
 
-function clampDate(date: Date, min?: Date): Date {
+export function clampDate(date: Date, min?: Date): Date {
   if (!min) {
     return date
   }
   return date.getTime() < min.getTime() ? new Date(min) : date
 }
 
-function buildDays(from: Date, count: number): Date[] {
+export function buildDays(from: Date, count: number): Date[] {
   const base = startOfDay(from)
   return Array.from({ length: count }, (_, index) => {
     const day = new Date(base)
@@ -61,7 +61,7 @@ function buildDays(from: Date, count: number): Date[] {
   })
 }
 
-function buildHours(startHour: number, endHour: number): number[] {
+export function buildHours(startHour: number, endHour: number): number[] {
   const hours: number[] = []
   for (let hour = startHour; hour <= endHour; hour += 1) {
     hours.push(hour)
@@ -69,7 +69,7 @@ function buildHours(startHour: number, endHour: number): number[] {
   return hours
 }
 
-function buildMinutes(step: number): number[] {
+export function buildMinutes(step: number): number[] {
   const minutes: number[] = []
   for (let minute = 0; minute < 60; minute += step) {
     minutes.push(minute)
@@ -77,7 +77,7 @@ function buildMinutes(step: number): number[] {
   return minutes
 }
 
-function snapMinute(minute: number, step: number): number {
+export function snapMinute(minute: number, step: number): number {
   const snapped = Math.round(minute / step) * step
   return snapped === 60 ? 60 - step : snapped
 }
@@ -108,8 +108,12 @@ function pad2(n: number): string {
   return String(n).padStart(2, '0')
 }
 
-function indexFromOffset(offsetY: number, length: number): number {
-  const index = Math.round(offsetY / WHEEL_ITEM_HEIGHT)
+export function indexFromOffset(
+  offsetY: number,
+  length: number,
+  itemHeight: number = WHEEL_ITEM_HEIGHT,
+): number {
+  const index = Math.round(offsetY / itemHeight)
   return Math.max(0, Math.min(length - 1, index))
 }
 
@@ -128,11 +132,16 @@ function WheelColumn({
 }: WheelColumnProps) {
   const scrollRef = useRef<ScrollView>(null)
   const [activeIndex, setActiveIndex] = useState(selectedIndex)
-  const isUserScrolling = useRef(false)
+  const isUserInteracting = useRef(false)
+  const lastEmittedIndex = useRef<number | null>(null)
 
   useEffect(() => {
     setActiveIndex(selectedIndex)
-    if (isUserScrolling.current) {
+    if (isUserInteracting.current) {
+      return
+    }
+    if (lastEmittedIndex.current === selectedIndex) {
+      lastEmittedIndex.current = null
       return
     }
     const id = requestAnimationFrame(() => {
@@ -144,38 +153,37 @@ function WheelColumn({
     return () => cancelAnimationFrame(id)
   }, [selectedIndex, items.length])
 
-  function syncFromOffset(offsetY: number, commit: boolean) {
+  function handleScrollCommit(offsetY: number) {
     const next = indexFromOffset(offsetY, items.length)
     setActiveIndex(next)
-    if (commit) {
-      scrollRef.current?.scrollTo({ y: next * WHEEL_ITEM_HEIGHT, animated: true })
-      if (next !== selectedIndex) {
-        onChangeIndex(next)
-      }
+    if (next !== selectedIndex) {
+      lastEmittedIndex.current = next
+      onChangeIndex(next)
     }
   }
 
   function onScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    if (!isUserScrolling.current) {
-      return
+    const offsetY = event.nativeEvent.contentOffset.y
+    const next = indexFromOffset(offsetY, items.length)
+    if (next !== activeIndex) {
+      setActiveIndex(next)
     }
-    syncFromOffset(event.nativeEvent.contentOffset.y, false)
   }
 
   function onScrollBegin() {
-    isUserScrolling.current = true
+    isUserInteracting.current = true
   }
 
   function onMomentumEnd(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    syncFromOffset(event.nativeEvent.contentOffset.y, true)
-    isUserScrolling.current = false
+    isUserInteracting.current = false
+    handleScrollCommit(event.nativeEvent.contentOffset.y)
   }
 
   function onDragEnd(event: NativeSyntheticEvent<NativeScrollEvent>) {
     const velocity = event.nativeEvent.velocity?.y ?? 0
     if (Math.abs(velocity) < 0.05) {
-      syncFromOffset(event.nativeEvent.contentOffset.y, true)
-      isUserScrolling.current = false
+      isUserInteracting.current = false
+      handleScrollCommit(event.nativeEvent.contentOffset.y)
     }
   }
 
@@ -261,8 +269,13 @@ export function DateTimePickerField({
 
   const dayScrollRef = useRef<ScrollView>(null)
   const [expanded, setExpanded] = useState(true)
+  const lastEmittedDayIndex = useRef<number | null>(null)
 
   useEffect(() => {
+    if (lastEmittedDayIndex.current === dayIndex) {
+      lastEmittedDayIndex.current = null
+      return
+    }
     const timer = requestAnimationFrame(() => {
       dayScrollRef.current?.scrollTo({
         x: Math.max(0, dayIndex * (DAY_CHIP_WIDTH + DAY_CHIP_GAP) - DAY_CHIP_WIDTH),
@@ -274,6 +287,17 @@ export function DateTimePickerField({
 
   function emit(day: Date, hour: number, minute: number) {
     onChange(new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour, minute, 0, 0))
+  }
+
+  function onDayScrollEnd(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    const offsetX = event.nativeEvent.contentOffset.x
+    const step = DAY_CHIP_WIDTH + DAY_CHIP_GAP
+    const index = Math.max(0, Math.min(days.length - 1, Math.round(offsetX / step)))
+    const targetDay = days[index]
+    if (targetDay && index !== dayIndex) {
+      lastEmittedDayIndex.current = index
+      emit(targetDay, hours[hourIndex] ?? startHour, minutes[minuteIndex] ?? 0)
+    }
   }
 
   const selectedTimeLabel = `${pad2(hours[hourIndex] ?? startHour)}:${pad2(minutes[minuteIndex] ?? 0)}`
@@ -306,6 +330,7 @@ export function DateTimePickerField({
             contentContainerStyle={styles.dayRow}
             decelerationRate="fast"
             snapToInterval={DAY_CHIP_WIDTH + DAY_CHIP_GAP}
+            onMomentumScrollEnd={onDayScrollEnd}
           >
             {days.map((day, index) => {
               const selected = index === dayIndex

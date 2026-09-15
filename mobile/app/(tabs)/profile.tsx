@@ -6,23 +6,23 @@ import { Image, RefreshControl, StyleSheet, Text, View } from 'react-native'
 import { getErrorMessage, getFieldError } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { PatientProfile } from '@/api/types'
-import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
+import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { MobileProfileSkeleton } from '@/components/skeletons/MobileSkeletons'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { PhoneField } from '@/components/PhoneField'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
+import { useToast } from '@/components/ToastContext'
 import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
 import { useAuthenticatedCachedUri } from '@/lib/authMedia'
 import { getPeselError } from '@/lib/peselPolicy'
 import { formatPhoneForApi, getPhoneError, parseStoredPhone } from '@/lib/phonePolicy'
 import { colors, space, typography } from '@/theme/tokens'
 
-type FeedbackKind = 'avatar' | 'profile'
-
 export default function ProfileScreen() {
   const router = useRouter()
+  const { toast } = useToast()
 
   const [profile, setProfile] = useState<PatientProfile | null>(null)
   const [firstName, setFirstName] = useState('')
@@ -42,16 +42,10 @@ export default function ProfileScreen() {
   const [avatarLoading, setAvatarLoading] = useState(false)
   const [avatarPreviewUri, setAvatarPreviewUri] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<{ kind: FeedbackKind; message: string } | null>(null)
   const { uri: remoteAvatarUri } = useAuthenticatedCachedUri(
     avatarPreviewUri ? null : profile?.avatar_url,
   )
   const avatarUri = avatarPreviewUri ?? remoteAvatarUri
-
-  const showSuccess = useCallback((kind: FeedbackKind, message: string) => {
-    setError(null)
-    setFeedback({ kind, message })
-  }, [])
 
   const initialPhone = profile ? parseStoredPhone(profile.phone) : null
   const isDirty = Boolean(
@@ -73,14 +67,6 @@ export default function ProfileScreen() {
     setPesel(profile.pesel ?? '')
     setFieldErrors({})
   }, [profile])
-
-  useEffect(() => {
-    if (!feedback) {
-      return
-    }
-    const timer = setTimeout(() => setFeedback(null), 5000)
-    return () => clearTimeout(timer)
-  }, [feedback])
 
   const load = useCallback(async () => {
     setError(null)
@@ -111,8 +97,6 @@ export default function ProfileScreen() {
 
   async function saveProfile() {
     setSaving(true)
-    setError(null)
-    setFeedback(null)
 
     const phoneError = getPhoneError(phoneNational, phoneCountryCode)
     const peselError = getPeselError(pesel)
@@ -141,7 +125,7 @@ export default function ProfileScreen() {
       setPhoneCountryCode(parsedPhone.countryCode)
       setPhoneNational(parsedPhone.nationalNumber)
       setPesel(updated.pesel ?? '')
-      showSuccess('profile', 'Dane profilu zostały zapisane.')
+      toast.success('Dane profilu zostały zapisane.')
     } catch (err) {
       const apiFirstName = getFieldError(err, 'first_name')
       const apiLastName = getFieldError(err, 'last_name')
@@ -155,18 +139,16 @@ export default function ProfileScreen() {
           pesel: apiPesel ?? undefined,
         })
       }
-      setError(getErrorMessage(err, 'Nie udało się zapisać profilu.'))
+      toast.error(getErrorMessage(err, 'Nie udało się zapisać profilu.'))
     } finally {
       setSaving(false)
     }
   }
 
   async function pickAvatar() {
-    setError(null)
-    setFeedback(null)
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (!permission.granted) {
-      setError('Brak uprawnień do galerii zdjęć.')
+      toast.error('Brak uprawnień do galerii zdjęć.')
       return
     }
 
@@ -189,10 +171,10 @@ export default function ProfileScreen() {
     try {
       const updated = await patientApi.uploadAvatar(asset.uri, mime, name)
       setProfile(updated)
-      showSuccess('avatar', 'Zdjęcie profilowe zostało zapisane.')
+      toast.success('Zdjęcie profilowe zostało zapisane.')
     } catch (err) {
       setAvatarPreviewUri(null)
-      setError(getErrorMessage(err, 'Nie udało się przesłać avatara.'))
+      toast.error(getErrorMessage(err, 'Nie udało się przesłać avatara.'))
     } finally {
       setAvatarLoading(false)
     }
@@ -252,7 +234,6 @@ export default function ProfileScreen() {
             />
           </View>
         </View>
-        {feedback?.kind === 'avatar' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
 
       <SectionCard>
@@ -328,7 +309,6 @@ export default function ProfileScreen() {
         {isDirty ? (
           <Button title="Odrzuć zmiany" variant="secondary" disabled={saving} onPress={resetForm} />
         ) : null}
-        {feedback?.kind === 'profile' ? <SuccessBanner message={feedback.message} /> : null}
         {profile?.therapist ? (
           <Button
             title="Profil terapeuty"

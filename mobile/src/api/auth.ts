@@ -8,7 +8,7 @@ export interface PatientRegisterPayload {
   google_credential?: string
   first_name?: string
   last_name?: string
-  therapist_id: string
+  therapist_id?: string
   phone?: string
   consents: {
     terms: boolean

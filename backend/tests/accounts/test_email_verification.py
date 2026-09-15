@@ -145,3 +145,46 @@ def test_email_resend_sends_new_code(api_client, therapist, settings):
 
     assert response.status_code == status.HTTP_200_OK
     assert len(mail.outbox) == 1
+
+
+@pytest.mark.django_db
+def test_email_verify_template_rendering_and_attachment(api_client, therapist, settings):
+    settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+    user = User.objects.create_user(
+        email='template.test@physiocare.test',
+        password='StrongPass1!',
+        role='PATIENT',
+        first_name='Leszek',
+        last_name='Kowalski',
+        email_verified_at=None,
+    )
+    PatientProfile.objects.create(user=user, therapist=therapist)
+
+    response = api_client.post(
+        '/api/v1/auth/email/resend/',
+        {'email': user.email},
+        format='json',
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert len(mail.outbox) == 1
+
+    email_msg = mail.outbox[0]
+    assert email_msg.subject == 'PhysioCare - potwierdź adres e-mail'
+    assert 'Leszek' in email_msg.body
+    assert 'PhysioCare' in email_msg.body
+
+    # HTML alternative check
+    assert len(email_msg.alternatives) == 1
+    html_content, mimetype = email_msg.alternatives[0]
+    assert mimetype == 'text/html'
+    assert 'Cześć Leszek' in html_content
+    assert 'Kod weryfikacyjny PhysioCare' in html_content
+    assert 'cid:physiocare_logo' in html_content
+    assert 'Kod jest ważny przez' in html_content
+
+
+    # Check inline brand logo attachment
+    assert len(email_msg.attachments) == 1
+    attached_img = email_msg.attachments[0]
+    assert attached_img.get_filename() in ('sygnet.png', 'logo.png')
+

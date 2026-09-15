@@ -14,7 +14,8 @@ import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { SectionCard } from '@/components/ScreenHeader'
 import { LocationMapCard } from '@/components/LocationMapCard'
 import { useToast } from '@/components/ToastContext'
-import { addMinutesISO, formatDateTime, formatTimeRange, visitStatusLabel } from '@/lib/format'
+import { addMinutesISO, formatDateTime, formatTimeRange } from '@/lib/format'
+import { VisitStatusBadge } from '@/components/VisitStatusBadge'
 import { colors, space, typography } from '@/theme/tokens'
 
 function defaultRescheduleStart(from?: string): Date {
@@ -73,11 +74,10 @@ export default function VisitDetailScreen() {
       return
     }
     if (newStart.getTime() <= Date.now()) {
-      setError('Termin musi być w przyszłości.')
+      toast.error('Nieprawidłowa data', 'Termin musi być w przyszłości.')
       return
     }
     setBusy(true)
-    setError(null)
     try {
       const startIso = newStart.toISOString()
       const endIso = addMinutesISO(startIso, visit.therapy_type_duration_min || 45)
@@ -90,8 +90,15 @@ export default function VisitDetailScreen() {
       toast.success('Termin wizyty został zmieniony.')
     } catch (err) {
       const msg = getErrorMessage(err, 'Nie udało się zmienić terminu.')
-      setError(msg)
-      toast.error(msg)
+      let title = 'Błąd zmiany terminu'
+      if (msg.includes('zarezerwowana') || msg.includes('zajęt')) {
+        title = 'Godzina zajęta'
+      } else if (msg.includes('godzinach przyjęć')) {
+        title = 'Poza godzinami pracy'
+      } else if (msg.includes('wolnym od pracy') || msg.includes('święto')) {
+        title = 'Dzień wolny'
+      }
+      toast.error(title, msg)
     } finally {
       setBusy(false)
     }
@@ -113,7 +120,6 @@ export default function VisitDetailScreen() {
                 return
               }
               setBusy(true)
-              setError(null)
               try {
                 const updated = await patientApi.cancelVisit(visit.id, cancelReason.trim())
                 setVisit(updated)
@@ -123,7 +129,6 @@ export default function VisitDetailScreen() {
                   err,
                   pending ? 'Nie udało się wycofać zgłoszenia.' : 'Nie udało się odwołać wizyty.',
                 )
-                setError(msg)
                 toast.error(msg)
               } finally {
                 setBusy(false)
@@ -157,8 +162,10 @@ export default function VisitDetailScreen() {
         {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
 
         <SectionCard>
-          <Text style={styles.title}>{visit.therapy_type_name}</Text>
-          <Text style={styles.meta}>{visitStatusLabel(visit.status)}</Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>{visit.therapy_type_name}</Text>
+            <VisitStatusBadge status={visit.status} />
+          </View>
           {isPending ? (
             <Text style={styles.muted}>
               Zgłoszenie czeka na zatwierdzenie przez terapeutę. Możesz zmienić termin albo je
@@ -253,7 +260,13 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
   content: { padding: space.lg, gap: space.base, paddingBottom: space['4xl'] },
   pad: { padding: space.lg },
-  title: { fontSize: typography.xl, fontWeight: '700', color: colors.ink },
+  title: { flex: 1, fontSize: typography.xl, fontWeight: '700', color: colors.ink },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: space.sm,
+  },
   section: {
     fontSize: typography.sm,
     fontWeight: '700',

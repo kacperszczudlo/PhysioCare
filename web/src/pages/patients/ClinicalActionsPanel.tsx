@@ -16,6 +16,7 @@ import { EmptyState, ErrorBanner } from '@/components/AsyncState'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
+import { Select } from '@/components/ui/Select'
 import { getIcd10Error } from '@/lib/fieldPolicy'
 import './ClinicalActionsPanel.css'
 
@@ -28,12 +29,30 @@ const RECOMMENDATION_LABELS: Record<RecommendationType, string> = {
   OTHER: 'Inne',
 }
 
+const RECOMMENDATION_OPTIONS = (Object.keys(RECOMMENDATION_LABELS) as RecommendationType[]).map(
+  (key) => ({
+    value: key,
+    label: RECOMMENDATION_LABELS[key],
+  }),
+)
+
+const FUNDING_OPTIONS = [
+  { value: 'NFZ_VIA_DOCTOR', label: 'NFZ - skierowanie wystawia lekarz' },
+  { value: 'PRIVATE', label: 'Ścieżka prywatna' },
+  { value: 'NOT_APPLICABLE', label: 'Nie dotyczy' },
+]
+
 const SIDE_LABELS: Record<BodySide, string> = {
   LEFT: 'Lewa',
   RIGHT: 'Prawa',
   BOTH: 'Obustronnie',
   NA: 'Nie dotyczy',
 }
+
+const SIDE_OPTIONS = (Object.keys(SIDE_LABELS) as BodySide[]).map((key) => ({
+  value: key,
+  label: SIDE_LABELS[key],
+}))
 
 type ClinicalTab = 'recommend' | 'device' | 'refusal' | 'recepta'
 
@@ -438,20 +457,14 @@ export function ClinicalActionsPanel({
                   Opinia dla lekarza - nie jest formalnym e-skierowaniem NFZ na MRI/RTG/TK.
                 </p>
               </div>
-              <label className="ui-field">
+              <div className="ui-field">
                 <span className="ui-field__label">Typ</span>
-                <select
-                  className="patient-select"
+                <Select
                   value={recType}
-                  onChange={(e) => setRecType(e.target.value as RecommendationType)}
-                >
-                  {(Object.keys(RECOMMENDATION_LABELS) as RecommendationType[]).map((key) => (
-                    <option key={key} value={key}>
-                      {RECOMMENDATION_LABELS[key]}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  onChange={(val) => setRecType(val as RecommendationType)}
+                  options={RECOMMENDATION_OPTIONS}
+                />
+              </div>
               <div className="clinical-actions__row">
                 <Field
                   label="Specjalizacja / cel"
@@ -477,18 +490,14 @@ export function ClinicalActionsPanel({
                   required
                 />
               </label>
-              <label className="ui-field">
+              <div className="ui-field">
                 <span className="ui-field__label">Finansowanie</span>
-                <select
-                  className="patient-select"
+                <Select
                   value={recFunding}
-                  onChange={(e) => setRecFunding(e.target.value as FundingHint)}
-                >
-                  <option value="NFZ_VIA_DOCTOR">NFZ - skierowanie wystawia lekarz</option>
-                  <option value="PRIVATE">Ścieżka prywatna</option>
-                  <option value="NOT_APPLICABLE">Nie dotyczy</option>
-                </select>
-              </label>
+                  onChange={(val) => setRecFunding(val as FundingHint)}
+                  options={FUNDING_OPTIONS}
+                />
+              </div>
               <label className="clinical-actions__check">
                 <input
                   type="checkbox"
@@ -509,48 +518,58 @@ export function ClinicalActionsPanel({
             >
               {recommendations.map((item) => (
                 <li key={item.id} className="clinical-actions__item">
-                  <div className="clinical-actions__item-head">
-                    <strong>{RECOMMENDATION_LABELS[item.recommendation_type]}</strong>
-                    <div className="clinical-actions__item-actions">
-                      {item.red_flags_noted ? (
-                        <span className="clinical-actions__badge clinical-actions__badge--warn">
-                          Czerwone flagi
-                        </span>
-                      ) : null}
-                      <div className="clinical-actions__item-toolbar">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={busy}
-                          onClick={() => openEdit({ kind: 'recommendation', item })}
-                        >
-                          Edytuj
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={busy}
-                          onClick={() =>
-                            setDeleteTarget({
-                              kind: 'recommendation',
-                              id: item.id,
-                              label: RECOMMENDATION_LABELS[item.recommendation_type],
-                            })
-                          }
-                        >
-                          Usuń
-                        </Button>
-                      </div>
-                    </div>
+                  <div className="clinical-actions__item-top">
+                    <strong className="clinical-actions__item-title">
+                      {RECOMMENDATION_LABELS[item.recommendation_type]}
+                    </strong>
+                    {item.red_flags_noted ? (
+                      <span className="clinical-actions__badge clinical-actions__badge--warn">
+                        Czerwone flagi
+                      </span>
+                    ) : null}
                   </div>
-                  {(item.target_specialty || item.body_area) && (
+                  {(item.target_specialty || item.body_area || item.therapist_name) && (
                     <p className="clinical-actions__meta">
                       {[item.target_specialty, item.body_area].filter(Boolean).join(' · ')}
+                      {(item.target_specialty || item.body_area) && item.therapist_name
+                        ? ' · '
+                        : ''}
+                      {item.therapist_name ? (
+                        <span className="clinical-actions__author">
+                          Wystawił: {item.therapist_name}
+                        </span>
+                      ) : null}
                     </p>
                   )}
-                  <p>{item.justification}</p>
+                  <p className="clinical-actions__item-body">{item.justification}</p>
+                  {!item.is_read_only ? (
+                    <div className="clinical-actions__item-toolbar">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={busy}
+                        onClick={() => openEdit({ kind: 'recommendation', item })}
+                      >
+                        Edytuj
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={busy}
+                        onClick={() =>
+                          setDeleteTarget({
+                            kind: 'recommendation',
+                            id: item.id,
+                            label: RECOMMENDATION_LABELS[item.recommendation_type],
+                          })
+                        }
+                      >
+                        Usuń
+                      </Button>
+                    </div>
+                  ) : null}
                 </li>
               ))}
             </HistoryPane>
@@ -567,40 +586,30 @@ export function ClinicalActionsPanel({
                   wpisać 4-cyfrowy kod dostępu - pacjent zobaczy go w aplikacji.
                 </p>
               </div>
-              <label className="ui-field">
+              <div className="ui-field">
                 <span className="ui-field__label">Wyrób</span>
-                <select
-                  className="patient-select"
+                <Select
                   value={deviceCode}
-                  onChange={(e) => setDeviceCode(e.target.value)}
-                  required
-                >
-                  {allowedDevices.length === 0 ? (
-                    <option value="">Brak wyrobów w Twoich kompetencjach</option>
-                  ) : (
-                    allowedDevices.map((item) => (
-                      <option key={item.code} value={item.code}>
-                        [{item.group}] {item.name}
-                      </option>
-                    ))
-                  )}
-                </select>
-              </label>
+                  onChange={setDeviceCode}
+                  options={
+                    allowedDevices.length === 0
+                      ? [{ value: '', label: 'Brak wyrobów w Twoich kompetencjach' }]
+                      : allowedDevices.map((item) => ({
+                          value: item.code,
+                          label: `[${item.group}] ${item.name}`,
+                        }))
+                  }
+                />
+              </div>
               <div className="clinical-actions__row">
-                <label className="ui-field">
+                <div className="ui-field">
                   <span className="ui-field__label">Strona</span>
-                  <select
-                    className="patient-select"
+                  <Select
                     value={deviceSide}
-                    onChange={(e) => setDeviceSide(e.target.value as BodySide)}
-                  >
-                    {(Object.keys(SIDE_LABELS) as BodySide[]).map((key) => (
-                      <option key={key} value={key}>
-                        {SIDE_LABELS[key]}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                    onChange={(val) => setDeviceSide(val as BodySide)}
+                    options={SIDE_OPTIONS}
+                  />
+                </div>
                 <Field
                   label="ICD-10"
                   name="device_icd10"
@@ -642,47 +651,58 @@ export function ClinicalActionsPanel({
             >
               {deviceOrders.map((item) => (
                 <li key={item.id} className="clinical-actions__item">
-                  <div className="clinical-actions__item-head">
-                    <strong>
+                  <div className="clinical-actions__item-top">
+                    <strong className="clinical-actions__item-title">
                       [{item.device_group}] {item.device_name}
                     </strong>
-                    <div className="clinical-actions__item-actions">
-                      <span className="clinical-actions__badge">{item.status}</span>
-                      <div className="clinical-actions__item-toolbar">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={busy}
-                          onClick={() => openEdit({ kind: 'device', item })}
-                        >
-                          Edytuj
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={busy}
-                          onClick={() =>
-                            setDeleteTarget({
-                              kind: 'device',
-                              id: item.id,
-                              label: item.device_name,
-                            })
-                          }
-                        >
-                          Usuń
-                        </Button>
-                      </div>
-                    </div>
+                    <span className="clinical-actions__badge">{item.status}</span>
                   </div>
                   <p className="clinical-actions__meta">
-                    {item.icd10_code} · {SIDE_LABELS[item.side]}
-                    {item.access_code
-                      ? ` · kod odbioru: ${item.access_code}`
-                      : ' · brak kodu odbioru'}
+                    {[
+                      item.icd10_code,
+                      SIDE_LABELS[item.side],
+                      item.access_code ? `kod odbioru: ${item.access_code}` : 'brak kodu odbioru',
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                    {item.therapist_name ? (
+                      <>
+                        {' · '}
+                        <span className="clinical-actions__author">
+                          Wystawił: {item.therapist_name}
+                        </span>
+                      </>
+                    ) : null}
                   </p>
-                  {item.notes ? <p>{item.notes}</p> : null}
+                  {item.notes ? <p className="clinical-actions__item-body">{item.notes}</p> : null}
+                  {!item.is_read_only ? (
+                    <div className="clinical-actions__item-toolbar">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={busy}
+                        onClick={() => openEdit({ kind: 'device', item })}
+                      >
+                        Edytuj
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={busy}
+                        onClick={() =>
+                          setDeleteTarget({
+                            kind: 'device',
+                            id: item.id,
+                            label: item.device_name,
+                          })
+                        }
+                      >
+                        Usuń
+                      </Button>
+                    </div>
+                  ) : null}
                 </li>
               ))}
             </HistoryPane>
@@ -738,47 +758,56 @@ export function ClinicalActionsPanel({
             >
               {refusals.map((item) => (
                 <li key={item.id} className="clinical-actions__item">
-                  <div className="clinical-actions__item-head">
-                    <strong>{item.physician_order_description}</strong>
-                    <div className="clinical-actions__item-actions">
-                      <span
-                        className={
-                          item.physician_notified
-                            ? 'clinical-actions__badge clinical-actions__badge--ok'
-                            : 'clinical-actions__badge clinical-actions__badge--warn'
+                  <div className="clinical-actions__item-top">
+                    <strong className="clinical-actions__item-title">
+                      {item.physician_order_description}
+                    </strong>
+                    <span
+                      className={
+                        item.physician_notified
+                          ? 'clinical-actions__badge clinical-actions__badge--ok'
+                          : 'clinical-actions__badge clinical-actions__badge--warn'
+                      }
+                    >
+                      {item.physician_notified ? 'Lekarz powiadomiony' : 'Do powiadomienia'}
+                    </span>
+                  </div>
+                  {item.therapist_name ? (
+                    <p className="clinical-actions__meta">
+                      <span className="clinical-actions__author">
+                        Wystawił: {item.therapist_name}
+                      </span>
+                    </p>
+                  ) : null}
+                  <p className="clinical-actions__item-body">{item.refusal_reason}</p>
+                  {!item.is_read_only ? (
+                    <div className="clinical-actions__item-toolbar">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={busy}
+                        onClick={() => openEdit({ kind: 'refusal', item })}
+                      >
+                        Edytuj
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={busy}
+                        onClick={() =>
+                          setDeleteTarget({
+                            kind: 'refusal',
+                            id: item.id,
+                            label: item.physician_order_description.slice(0, 80),
+                          })
                         }
                       >
-                        {item.physician_notified ? 'Lekarz powiadomiony' : 'Do powiadomienia'}
-                      </span>
-                      <div className="clinical-actions__item-toolbar">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={busy}
-                          onClick={() => openEdit({ kind: 'refusal', item })}
-                        >
-                          Edytuj
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={busy}
-                          onClick={() =>
-                            setDeleteTarget({
-                              kind: 'refusal',
-                              id: item.id,
-                              label: item.physician_order_description.slice(0, 80),
-                            })
-                          }
-                        >
-                          Usuń
-                        </Button>
-                      </div>
+                        Usuń
+                      </Button>
                     </div>
-                  </div>
-                  <p>{item.refusal_reason}</p>
+                  ) : null}
                 </li>
               ))}
             </HistoryPane>
@@ -824,39 +853,48 @@ export function ClinicalActionsPanel({
             >
               {receptaList.map((item) => (
                 <li key={item.id} className="clinical-actions__item">
-                  <div className="clinical-actions__item-head">
-                    <strong>Recepta na Ruch</strong>
-                    <div className="clinical-actions__item-actions">
-                      <span className="clinical-actions__badge">{item.status}</span>
-                      <div className="clinical-actions__item-toolbar">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={busy}
-                          onClick={() => openEdit({ kind: 'recepta', item })}
-                        >
-                          Edytuj
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={busy}
-                          onClick={() =>
-                            setDeleteTarget({
-                              kind: 'recepta',
-                              id: item.id,
-                              label: 'Recepta na Ruch',
-                            })
-                          }
-                        >
-                          Usuń
-                        </Button>
-                      </div>
-                    </div>
+                  <div className="clinical-actions__item-top">
+                    <strong className="clinical-actions__item-title">Recepta na Ruch</strong>
+                    <span className="clinical-actions__badge">{item.status}</span>
                   </div>
-                  <p>{item.activity_notes || 'Bez notatki'}</p>
+                  {item.therapist_name ? (
+                    <p className="clinical-actions__meta">
+                      <span className="clinical-actions__author">
+                        Wystawił: {item.therapist_name}
+                      </span>
+                    </p>
+                  ) : null}
+                  <p className="clinical-actions__item-body">
+                    {item.activity_notes || 'Bez notatki'}
+                  </p>
+                  {!item.is_read_only ? (
+                    <div className="clinical-actions__item-toolbar">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={busy}
+                        onClick={() => openEdit({ kind: 'recepta', item })}
+                      >
+                        Edytuj
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        disabled={busy}
+                        onClick={() =>
+                          setDeleteTarget({
+                            kind: 'recepta',
+                            id: item.id,
+                            label: 'Recepta na Ruch',
+                          })
+                        }
+                      >
+                        Usuń
+                      </Button>
+                    </div>
+                  ) : null}
                 </li>
               ))}
             </HistoryPane>
@@ -873,20 +911,14 @@ export function ClinicalActionsPanel({
         <form className="ui-modal__form" onSubmit={(e) => void saveEdit(e)}>
           {editTarget?.kind === 'recommendation' ? (
             <>
-              <label className="ui-field">
+              <div className="ui-field">
                 <span className="ui-field__label">Typ</span>
-                <select
-                  className="patient-select"
+                <Select
                   value={editRecType}
-                  onChange={(e) => setEditRecType(e.target.value as RecommendationType)}
-                >
-                  {(Object.keys(RECOMMENDATION_LABELS) as RecommendationType[]).map((key) => (
-                    <option key={key} value={key}>
-                      {RECOMMENDATION_LABELS[key]}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  onChange={(val) => setEditRecType(val as RecommendationType)}
+                  options={RECOMMENDATION_OPTIONS}
+                />
+              </div>
               <Field
                 label="Specjalizacja / cel"
                 name="edit_rec_specialty"
@@ -909,18 +941,14 @@ export function ClinicalActionsPanel({
                   required
                 />
               </label>
-              <label className="ui-field">
+              <div className="ui-field">
                 <span className="ui-field__label">Finansowanie</span>
-                <select
-                  className="patient-select"
+                <Select
                   value={editRecFunding}
-                  onChange={(e) => setEditRecFunding(e.target.value as FundingHint)}
-                >
-                  <option value="NFZ_VIA_DOCTOR">NFZ - skierowanie wystawia lekarz</option>
-                  <option value="PRIVATE">Ścieżka prywatna</option>
-                  <option value="NOT_APPLICABLE">Nie dotyczy</option>
-                </select>
-              </label>
+                  onChange={(val) => setEditRecFunding(val as FundingHint)}
+                  options={FUNDING_OPTIONS}
+                />
+              </div>
               <label className="clinical-actions__check">
                 <input
                   type="checkbox"
@@ -934,39 +962,31 @@ export function ClinicalActionsPanel({
 
           {editTarget?.kind === 'device' ? (
             <>
-              <label className="ui-field">
+              <div className="ui-field">
                 <span className="ui-field__label">Wyrób</span>
-                <select
-                  className="patient-select"
+                <Select
                   value={editDeviceCode}
-                  onChange={(e) => setEditDeviceCode(e.target.value)}
-                  required
-                >
-                  {allowedDevices.map((item) => (
-                    <option key={item.code} value={item.code}>
-                      [{item.group}] {item.name}
-                    </option>
-                  ))}
-                  {!allowedDevices.some((item) => item.code === editDeviceCode) &&
-                  editDeviceCode ? (
-                    <option value={editDeviceCode}>{editDeviceCode} (obecny)</option>
-                  ) : null}
-                </select>
-              </label>
-              <label className="ui-field">
+                  onChange={setEditDeviceCode}
+                  options={[
+                    ...allowedDevices.map((item) => ({
+                      value: item.code,
+                      label: `[${item.group}] ${item.name}`,
+                    })),
+                    ...(!allowedDevices.some((item) => item.code === editDeviceCode) &&
+                    editDeviceCode
+                      ? [{ value: editDeviceCode, label: `${editDeviceCode} (obecny)` }]
+                      : []),
+                  ]}
+                />
+              </div>
+              <div className="ui-field">
                 <span className="ui-field__label">Strona</span>
-                <select
-                  className="patient-select"
+                <Select
                   value={editDeviceSide}
-                  onChange={(e) => setEditDeviceSide(e.target.value as BodySide)}
-                >
-                  {(Object.keys(SIDE_LABELS) as BodySide[]).map((key) => (
-                    <option key={key} value={key}>
-                      {SIDE_LABELS[key]}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  onChange={(val) => setEditDeviceSide(val as BodySide)}
+                  options={SIDE_OPTIONS}
+                />
+              </div>
               <Field
                 label="ICD-10"
                 name="edit_device_icd10"

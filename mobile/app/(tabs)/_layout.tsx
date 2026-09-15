@@ -53,6 +53,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="therapists"
+        options={{
+          title: 'Specjaliści',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="people-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profil',

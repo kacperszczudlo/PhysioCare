@@ -80,6 +80,8 @@ export interface DiagnosticRecommendation {
   id: string
   episode: string
   therapist: string
+  therapist_name?: string
+  is_read_only?: boolean
   recommendation_type: RecommendationType
   target_specialty: string
   body_area: string
@@ -94,6 +96,8 @@ export interface MedicalDeviceOrder {
   episode: string
   patient: string
   therapist: string
+  therapist_name?: string
+  is_read_only?: boolean
   device_code: string
   device_group: string
   device_name: string
@@ -110,6 +114,8 @@ export interface PhysicianOrderRefusal {
   id: string
   episode: string
   therapist: string
+  therapist_name?: string
+  is_read_only?: boolean
   physician_order_description: string
   refusal_reason: string
   physician_notified: boolean
@@ -120,6 +126,8 @@ export interface ReceptaNaRuchReferral {
   id: string
   patient: string
   therapist: string
+  therapist_name?: string
+  is_read_only?: boolean
   episode: string | null
   readiness_confirmed: boolean
   activity_notes: string
@@ -248,6 +256,9 @@ export interface PatientDetail extends PatientSummary {
 export interface TreatmentEpisode {
   id: string
   patient: string
+  therapist?: string | null
+  therapist_name?: string
+  is_read_only?: boolean
   icd10_code: string
   functional_diagnosis: string
   status: EpisodeStatus
@@ -271,6 +282,8 @@ export interface BodyAreaPain {
 export interface VisitNote {
   id: string
   episode: string
+  therapist?: string | null
+  therapist_name?: string
   visit: string | null
   content: string
   created_at: string

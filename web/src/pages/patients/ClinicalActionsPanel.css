@@ -167,8 +167,8 @@
 .clinical-actions__item {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding: var(--space-3);
+  gap: var(--space-2);
+  padding: var(--space-4);
   border-radius: var(--radius-md);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -181,49 +181,49 @@
   line-height: 1.45;
 }
 
-.clinical-actions__item-head {
+.clinical-actions__item-top {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--space-2);
-}
-
-.clinical-actions__item-head > strong {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  line-height: 1.35;
-}
-
-.clinical-actions__item-actions {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-2);
-  min-width: 0;
 }
 
-.clinical-actions__item-actions > .clinical-actions__badge {
-  flex: 0 1 auto;
+.clinical-actions__item-title {
+  font-weight: 700;
+  color: var(--color-ink);
+  line-height: 1.35;
   min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.clinical-actions__item-body {
+  margin: 0;
+  color: var(--color-text);
+  line-height: 1.45;
 }
 
 .clinical-actions__item-toolbar {
-  display: inline-flex;
-  flex: 0 0 auto;
+  display: flex;
   align-items: center;
-  gap: var(--space-1);
-  margin-left: auto;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--color-border);
 }
 
-.clinical-actions__item-toolbar .ui-btn--sm {
-  min-height: var(--control-size);
+.clinical-actions__item-toolbar .ui-btn {
+  min-height: 2rem;
   padding-inline: var(--space-3);
+  font-size: var(--text-xs);
 }
 
 .clinical-actions__meta {
   color: var(--color-muted) !important;
   font-size: var(--text-xs);
+}
+
+.clinical-actions__author {
+  white-space: nowrap;
 }
 
 .clinical-actions__badge {

@@ -77,6 +77,9 @@ function firstFieldMessage(details: unknown): string | null {
   if (!details || typeof details !== 'object') {
     return null
   }
+  if ('needs_registration' in (details as Record<string, unknown>)) {
+    return null
+  }
   if (Array.isArray(details)) {
     return typeof details[0] === 'string' ? details[0] : null
   }
@@ -103,14 +106,15 @@ function firstValidationMessage(body: ApiErrorBody | null): string | null {
     return null
   }
 
+  if (body.error?.message && !GENERIC_API_MESSAGES.has(body.error.message)) {
+    return body.error.message
+  }
+
   const fromDetails = firstFieldMessage(body.error?.details)
   if (fromDetails) {
     return fromDetails
   }
 
-  if (body.error?.message && !GENERIC_API_MESSAGES.has(body.error.message)) {
-    return body.error.message
-  }
   if (typeof body.detail === 'string' && body.detail.trim()) {
     return body.detail
   }

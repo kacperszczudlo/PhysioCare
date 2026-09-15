@@ -3,9 +3,11 @@ import { visitStatusLabel, consentLabel, isRequiredConsent, formatTimeRange } fr
 
 describe('format (Mobile)', () => {
   it('translates visit status codes to human Polish labels', () => {
+    expect(visitStatusLabel('PENDING_APPROVAL')).toBe('Oczekuje na zatwierdzenie')
     expect(visitStatusLabel('SCHEDULED')).toBe('Zaplanowana')
     expect(visitStatusLabel('COMPLETED')).toBe('Zakończona')
     expect(visitStatusLabel('CANCELLED')).toBe('Odwołana')
+    expect(visitStatusLabel('NO_SHOW')).toBe('Nieobecność')
     expect(visitStatusLabel('UNKNOWN')).toBe('UNKNOWN')
   })
 

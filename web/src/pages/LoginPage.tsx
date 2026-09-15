@@ -96,9 +96,21 @@ export function LoginPage() {
     try {
       await loginWithGoogle(credential)
       navigate(from, { replace: true })
-    } catch (err) {
-      if (err instanceof ApiError && err.code === 'AUTH_025') {
-        const details = err.details as {
+    } catch (err: unknown) {
+      const errObj = err as Record<string, unknown> | null | undefined
+      const detailsObj = (errObj?.details ||
+        (errObj?.body as { error?: { details?: Record<string, unknown> } } | undefined)?.error
+          ?.details) as Record<string, unknown> | undefined
+      const isNotFound =
+        errObj != null &&
+        (errObj.code === 'AUTH_025' ||
+          errObj.status === 404 ||
+          Boolean(detailsObj?.needs_registration) ||
+          (typeof errObj.message === 'string' &&
+            /brak konta|nie znaleziono|dokończ rejestrację/i.test(errObj.message)))
+
+      if (isNotFound) {
+        const details = (detailsObj || {}) as {
           email?: string
           first_name?: string
           last_name?: string
@@ -122,6 +134,14 @@ export function LoginPage() {
       setError(err instanceof ApiError ? err.message : 'Nie udało się zalogować przez Google.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  function handleGoogleError(message: string) {
+    if (/anulowane/i.test(message)) {
+      toast.info(message)
+    } else {
+      toast.error(message)
     }
   }
 
@@ -221,7 +241,7 @@ export function LoginPage() {
           title="Kontynuuj z Google"
           hint="Nowe konto? Google przeniesie Cię do rejestracji z uzupełnionym e-mailem i imieniem - zostaje PWZFz."
           onCredential={onGoogleCredential}
-          onError={setError}
+          onError={handleGoogleError}
         />
       ) : null}
 

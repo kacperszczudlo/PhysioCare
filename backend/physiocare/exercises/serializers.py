@@ -198,7 +198,9 @@ class ExerciseAssignmentCreateSerializer(serializers.ModelSerializer):
             )
 
         if not PatientProfile.objects.active().filter(
-            pk=patient_id, therapist=therapist
+            pk=patient_id,
+            therapist_links__therapist=therapist,
+            therapist_links__status='ACTIVE',
         ).exists():
             raise serializers.ValidationError(
                 {'patient_id': 'Pacjent nie należy do tego terapeuty.'}
@@ -207,7 +209,6 @@ class ExerciseAssignmentCreateSerializer(serializers.ModelSerializer):
         if episode_id is not None and not TreatmentEpisode.objects.filter(
             pk=episode_id,
             patient_id=patient_id,
-            patient__therapist=therapist,
         ).exists():
             raise serializers.ValidationError(
                 {'episode_id': 'Epizod nie należy do wskazanego pacjenta.'}
@@ -266,12 +267,10 @@ class ExerciseAssignmentUpdateSerializer(serializers.ModelSerializer):
 
         if 'episode_id' in attrs:
             episode_id = attrs['episode_id']
-            therapist = self.context['therapist']
             patient_id = self.instance.patient_id
             if episode_id is not None and not TreatmentEpisode.objects.filter(
                 pk=episode_id,
                 patient_id=patient_id,
-                patient__therapist=therapist,
             ).exists():
                 raise serializers.ValidationError(
                     {'episode_id': 'Epizod nie należy do wskazanego pacjenta.'}

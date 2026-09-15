@@ -21,6 +21,7 @@ export interface TherapistRegisterPayload {
   pwzf_number: string
   pwzf_declaration: boolean
   phone?: string
+  qualification_level?: QualificationLevel
 }
 
 export type RegisterResult =

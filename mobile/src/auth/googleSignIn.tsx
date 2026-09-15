@@ -75,6 +75,13 @@ export async function getGoogleIdToken(): Promise<string> {
     await mod.GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true })
   }
 
+  // Force Google native Account Picker modal ("Wybierz konto") every time
+  try {
+    await mod.GoogleSignin.signOut()
+  } catch {
+    // Ignore if no active session existed
+  }
+
   const response = await mod.GoogleSignin.signIn()
   if (!mod.isSuccessResponse(response)) {
     throw new Error('Logowanie Google zostało anulowane.')
