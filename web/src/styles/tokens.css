@@ -24,6 +24,19 @@
   --color-warning: oklch(0.55 0.14 75);
   --color-info: oklch(0.48 0.1 230);
 
+  --color-disabled-bg: oklch(0.93 0.005 113);
+  --color-disabled-text: oklch(0.6 0.01 113);
+  --color-disabled-border: oklch(0.86 0.01 113);
+
+  --color-status-in-progress: oklch(0.48 0.1 230);
+  --color-status-in-progress-bg: oklch(0.95 0.03 230);
+  --color-status-completed: oklch(0.45 0.12 145);
+  --color-status-completed-bg: oklch(0.95 0.04 145);
+  --color-status-referred: oklch(0.48 0.13 290);
+  --color-status-referred-bg: oklch(0.95 0.03 290);
+  --color-status-interrupted: oklch(0.46 0.15 25);
+  --color-status-interrupted-bg: oklch(0.95 0.03 25);
+
   --font-sans: 'Source Sans 3', 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 

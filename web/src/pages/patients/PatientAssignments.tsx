@@ -119,9 +119,6 @@ export function PatientAssignments({ patientId, episodeId = null }: PatientAssig
           <p>Aktywne zalecenia widoczne u pacjenta w aplikacji.</p>
         </div>
         <div className="patient-assignments__head-actions">
-          <Button type="button" size="sm" variant="secondary" onClick={() => void load()}>
-            Odśwież
-          </Button>
           <Button type="button" size="sm" onClick={() => setAssignOpen(true)}>
             Dodaj ćwiczenie
           </Button>

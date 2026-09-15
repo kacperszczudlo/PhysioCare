@@ -9,19 +9,14 @@ import { PatientDetailSkeleton } from '@/components/skeletons/WebSkeletons'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
+import { FileInput } from '@/components/ui/FileInput'
+import { StatusSelect } from '@/components/ui/StatusSelect'
 import { EPISODE_STATUS_LABELS } from '@/lib/bodyMap'
 import { FIELD_MESSAGES, getIcd10Error } from '@/lib/fieldPolicy'
 import { DiagnosticMapper } from '@/pages/patients/DiagnosticMapper'
 import { ClinicalActionsPanel } from '@/pages/patients/ClinicalActionsPanel'
 import { PatientAssignments } from '@/pages/patients/PatientAssignments'
 import './PatientDetailPage.css'
-
-const STATUS_OPTIONS: EpisodeStatus[] = [
-  'IN_PROGRESS',
-  'COMPLETED_SUCCESS',
-  'REFERRED',
-  'INTERRUPTED',
-]
 
 export function PatientDetailPage() {
   const { patientId = '' } = useParams()
@@ -247,29 +242,42 @@ export function PatientDetailPage() {
 
   return (
     <section className="patient-detail">
+      <div className="patient-header-nav">
+        <Link to="/patients" className="patient-back-btn">
+          <svg
+            className="patient-back-btn__icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          <span>Lista pacjentów</span>
+        </Link>
+      </div>
+
       <PageHeader
         title={`${patient.first_name} ${patient.last_name}`}
         description={`${patient.email}${patient.phone ? ` · ${patient.phone}` : ''}`}
-        actions={
-          <Button type="button" variant="secondary" onClick={() => void loadPatient()}>
-            Odśwież
-          </Button>
-        }
       />
-
-      <p className="patient-back">
-        <Link to="/patients">← Pacjenci</Link>
-      </p>
 
       {error ? <ErrorBanner message={error} /> : null}
 
       <PatientAssignments patientId={patient.id} episodeId={selected?.id ?? null} />
 
       <section className="patient-pdf-upload" aria-label="Udostępnij PDF pacjentowi">
-        <h2>Dokument PDF dla pacjenta</h2>
-        <p className="patient-notes__lead">
-          Plik trafia od razu do skrzynki dokumentacji w aplikacji pacjenta.
-        </p>
+        <div className="patient-pdf-upload__header">
+          <h2>Dokument PDF dla pacjenta</h2>
+          <p className="patient-notes__lead">
+            Plik trafia od razu do skrzynki dokumentacji w aplikacji pacjenta.
+          </p>
+        </div>
         <form className="patient-pdf-upload__form" onSubmit={(e) => void uploadPdf(e)}>
           <Field
             label="Tytuł"
@@ -278,22 +286,17 @@ export function PatientDetailPage() {
             onChange={(e) => setPdfTitle(e.target.value)}
             placeholder="np. Karta oceny funkcjonalnej"
           />
-          <label className="ui-field">
-            <span className="ui-field__label">Plik PDF</span>
-            <input
-              type="file"
-              accept="application/pdf,.pdf"
-              onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
-            />
-          </label>
-          <Button type="submit" size="sm" loading={pdfBusy} disabled={!pdfFile}>
-            Udostępnij PDF
-          </Button>
-          {pdfMessage ? (
-            <p className="patient-muted" role="status">
-              {pdfMessage}
-            </p>
-          ) : null}
+          <FileInput file={pdfFile} onChange={setPdfFile} label="Plik PDF" />
+          <div className="patient-pdf-upload__action-col">
+            <Button type="submit" size="sm" loading={pdfBusy} disabled={!pdfFile}>
+              Udostępnij PDF
+            </Button>
+            {pdfMessage ? (
+              <p className="patient-muted" role="status">
+                {pdfMessage}
+              </p>
+            ) : null}
+          </div>
         </form>
       </section>
 
@@ -452,20 +455,10 @@ export function PatientDetailPage() {
                     error={icd10Error ?? undefined}
                     hint="Kod z skierowania/dokumentacji lekarskiej - nie zastępuje diagnozy nozologicznej lekarza"
                   />
-                  <label className="ui-field">
+                  <div className="ui-field">
                     <span className="ui-field__label">Status</span>
-                    <select
-                      className="patient-select"
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value as EpisodeStatus)}
-                    >
-                      {STATUS_OPTIONS.map((value) => (
-                        <option key={value} value={value}>
-                          {EPISODE_STATUS_LABELS[value]}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                    <StatusSelect value={status} onChange={setStatus} />
+                  </div>
                 </div>
                 <label className="ui-field">
                   <span className="ui-field__label">Diagnoza funkcjonalna</span>
