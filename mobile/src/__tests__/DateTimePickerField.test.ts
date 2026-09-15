@@ -48,7 +48,7 @@ describe('DateTimePickerField Carousel Logic', () => {
     it('snaps minute to nearest step', () => {
       expect(snapMinute(0, 15)).toBe(0)
       expect(snapMinute(7, 15)).toBe(0)
-      expect(snapMinute(8, 15)).toBe(8 ? 15 : 0)
+      expect(snapMinute(8, 15)).toBe(15)
       expect(snapMinute(22, 15)).toBe(15)
       expect(snapMinute(23, 15)).toBe(30)
     })

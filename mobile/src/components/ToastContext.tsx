@@ -30,15 +30,20 @@ export interface ToastItemData extends Required<Omit<ToastOptions, 'title' | 'ac
   createdAt: number
 }
 
+export type ToastHelperFn = (
+  messageOrTitle: string,
+  optionsOrMessage?: Omit<ToastOptions, 'message' | 'type'> | string,
+) => string
+
 interface ToastContextValue {
   toasts: ToastItemData[]
   showToast: (options: ToastOptions | string, type?: ToastType) => string
   removeToast: (id: string) => void
   toast: {
-    success: (message: string, options?: Omit<ToastOptions, 'message' | 'type'>) => string
-    error: (message: string, options?: Omit<ToastOptions, 'message' | 'type'>) => string
-    warning: (message: string, options?: Omit<ToastOptions, 'message' | 'type'>) => string
-    info: (message: string, options?: Omit<ToastOptions, 'message' | 'type'>) => string
+    success: ToastHelperFn
+    error: ToastHelperFn
+    warning: ToastHelperFn
+    info: ToastHelperFn
   }
 }
 
@@ -97,19 +102,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [],
   )
 
-  const toastHelpers = useMemo(
-    () => ({
-      success: (message: string, options?: Omit<ToastOptions, 'message' | 'type'>) =>
-        showToast({ ...options, message, type: 'success' }),
-      error: (message: string, options?: Omit<ToastOptions, 'message' | 'type'>) =>
-        showToast({ ...options, message, type: 'error' }),
-      warning: (message: string, options?: Omit<ToastOptions, 'message' | 'type'>) =>
-        showToast({ ...options, message, type: 'warning' }),
-      info: (message: string, options?: Omit<ToastOptions, 'message' | 'type'>) =>
-        showToast({ ...options, message, type: 'info' }),
-    }),
-    [showToast],
-  )
+  const toastHelpers = useMemo(() => {
+    const createHelper =
+      (type: ToastType): ToastHelperFn =>
+      (messageOrTitle, optionsOrMessage) => {
+        if (typeof optionsOrMessage === 'string') {
+          return showToast({ title: messageOrTitle, message: optionsOrMessage, type })
+        }
+        return showToast({ ...optionsOrMessage, message: messageOrTitle, type })
+      }
+    return {
+      success: createHelper('success'),
+      error: createHelper('error'),
+      warning: createHelper('warning'),
+      info: createHelper('info'),
+    }
+  }, [showToast])
 
   const value = useMemo(
     () => ({

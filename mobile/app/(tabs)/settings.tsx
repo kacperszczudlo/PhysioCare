@@ -1,6 +1,15 @@
 import { Link, useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Linking, Platform, Pressable, RefreshControl, StyleSheet, Switch, Text, View } from 'react-native'
+import {
+  Linking,
+  Platform,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Switch,
+  Text,
+  View,
+} from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 
 import { authApi } from '@/api/auth'
@@ -172,9 +181,7 @@ export default function SettingsScreen() {
           `Zapisano plik ${result.fileName}. Znajdziesz go w wybranym folderze (np. Pobrane).`,
         )
       } else if (result.delivered) {
-        toast.success(
-          `Plik ${result.fileName} jest gotowy — możesz go zapisać lub wysłać sobie.`,
-        )
+        toast.success(`Plik ${result.fileName} jest gotowy — możesz go zapisać lub wysłać sobie.`)
       } else {
         toast.info(
           `Plik ${result.fileName} został przygotowany. Spróbuj ponownie, jeśli nie zapisałeś go jeszcze.`,

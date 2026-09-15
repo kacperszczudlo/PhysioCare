@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, View, type TextStyle, type ViewStyle } from 'react-native'
 
 import type { VisitStatus } from '@/api/types'
 import { visitStatusLabel } from '@/lib/format'
@@ -11,8 +11,8 @@ interface VisitStatusBadgeProps {
 export function VisitStatusBadge({ status }: VisitStatusBadgeProps) {
   const label = visitStatusLabel(status)
 
-  let badgeStyle = styles.badgeDefault
-  let textStyle = styles.textDefault
+  let badgeStyle: ViewStyle = styles.badgeDefault
+  let textStyle: TextStyle = styles.textDefault
 
   switch (status) {
     case 'PENDING_APPROVAL':

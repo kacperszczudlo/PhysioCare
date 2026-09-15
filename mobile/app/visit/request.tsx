@@ -182,7 +182,8 @@ export default function VisitRequestScreen() {
       ) : (
         <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.content}>
           <Text style={styles.lead}>
-            Wybierz specjalistę, rodzaj usługi i proponowany termin. Fizjoterapeuta potwiedzi lub zaproponuje inny czas.
+            Wybierz specjalistę, rodzaj usługi i proponowany termin. Fizjoterapeuta potwiedzi lub
+            zaproponuje inny czas.
           </Text>
 
           {error ? <ErrorBanner message={error} /> : null}
@@ -252,7 +253,11 @@ export default function VisitRequestScreen() {
             ) : (
               <SectionCard>
                 <Text style={styles.label}>
-                  Usługa ({selectedTherapist ? `${selectedTherapist.first_name} ${selectedTherapist.last_name}` : ''})
+                  Usługa (
+                  {selectedTherapist
+                    ? `${selectedTherapist.first_name} ${selectedTherapist.last_name}`
+                    : ''}
+                  )
                 </Text>
                 <View style={styles.typeList} accessibilityRole="radiogroup">
                   {types.map((type) => {
@@ -335,7 +340,12 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
   content: { padding: space.base, gap: space.base, paddingBottom: space['4xl'] },
   lead: { fontSize: typography.sm, color: colors.muted, lineHeight: 20 },
-  label: { fontSize: typography.base, fontWeight: '700', color: colors.ink, marginBottom: space.xs },
+  label: {
+    fontSize: typography.base,
+    fontWeight: '700',
+    color: colors.ink,
+    marginBottom: space.xs,
+  },
   muted: { fontSize: typography.sm, color: colors.muted },
   mutedCentered: { fontSize: typography.sm, color: colors.muted, textAlign: 'center' },
   warningCard: { alignItems: 'center', gap: space.sm, paddingVertical: space.lg },
@@ -398,4 +408,3 @@ const styles = StyleSheet.create({
   typeMeta: { fontSize: typography.sm, color: colors.muted },
   note: { minHeight: 96, textAlignVertical: 'top' },
 })
-

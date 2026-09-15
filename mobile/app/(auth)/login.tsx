@@ -12,6 +12,7 @@ import { BrandMark } from '@/components/BrandMark'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
+import { useToast } from '@/components/ToastContext'
 import { colors, space, typography } from '@/theme/tokens'
 
 function firstParam(value: string | string[] | undefined): string {
@@ -24,6 +25,7 @@ function firstParam(value: string | string[] | undefined): string {
 export default function LoginScreen() {
   const { login, loginWithGoogle } = useAuth()
   const router = useRouter()
+  const { toast } = useToast()
   const params = useLocalSearchParams<{ email?: string | string[]; reset?: string | string[] }>()
   const emailFromParams = firstParam(params.email)
   const resetNotice = firstParam(params.reset) === '1'
@@ -106,6 +108,14 @@ export default function LoginScreen() {
     }
   }
 
+  function handleGoogleError(message: string) {
+    if (/anulowane/i.test(message)) {
+      toast.info(message)
+    } else {
+      toast.error(message)
+    }
+  }
+
   return (
     <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.container}>
       <BrandMark variant="logo" size="lg" style={styles.brand} />
@@ -150,7 +160,7 @@ export default function LoginScreen() {
             title="Kontynuuj z Google"
             hint="Nowe konto? Google przeniesie Cię do dokończenia rejestracji (zgody RODO)."
             onSuccess={onGoogleSuccess}
-            onError={setError}
+            onError={handleGoogleError}
           />
         ) : null}
       </View>

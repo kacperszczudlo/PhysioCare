@@ -139,7 +139,12 @@ export default function TherapistsTabScreen() {
 
             <View style={styles.searchRow}>
               <View style={styles.inputWrapper}>
-                <Ionicons name="search-outline" size={20} color={colors.muted} style={styles.searchIcon} />
+                <Ionicons
+                  name="search-outline"
+                  size={20}
+                  color={colors.muted}
+                  style={styles.searchIcon}
+                />
                 <TextInput
                   style={styles.searchInput}
                   placeholder="Imię, nazwisko, miasto..."
@@ -166,7 +171,9 @@ export default function TherapistsTabScreen() {
 
             {searchResults.length > 0 ? (
               <View style={styles.resultsContainer}>
-                <Text style={styles.resultsHeader}>Wyniki wyszukiwania ({searchResults.length}):</Text>
+                <Text style={styles.resultsHeader}>
+                  Wyniki wyszukiwania ({searchResults.length}):
+                </Text>
                 {searchResults.map((item) => {
                   const linked = isLinked(item.id)
                   const isLinking = linkingId === item.id
@@ -211,7 +218,9 @@ export default function TherapistsTabScreen() {
             ) : searchQuery.trim() && !searchLoading ? (
               <View style={styles.noResultsBox}>
                 <Ionicons name="search-outline" size={20} color={colors.muted} />
-                <Text style={styles.noResultsText}>Brak fizjoterapeutów spełniających kryteria.</Text>
+                <Text style={styles.noResultsText}>
+                  Brak fizjoterapeutów spełniających kryteria.
+                </Text>
               </View>
             ) : null}
           </SectionCard>

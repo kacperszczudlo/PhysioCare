@@ -18,6 +18,7 @@ import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { PasswordRequirements } from '@/components/PasswordRequirements'
 import { PhoneField } from '@/components/PhoneField'
+import { useToast } from '@/components/ToastContext'
 import { DEFAULT_COUNTRY_CODE } from '@/lib/countries'
 import { getEmailError } from '@/lib/emailPolicy'
 import { getFirstNameError, getLastNameError } from '@/lib/fieldPolicy'
@@ -33,6 +34,7 @@ import { colors, radius, space, typography } from '@/theme/tokens'
 export default function RegisterScreen() {
   const { register } = useAuth()
   const router = useRouter()
+  const { toast } = useToast()
 
   const [googleDraft, setGoogleDraft] = useState<GoogleRegistrationDraft | null>(() =>
     peekGoogleRegistrationDraft(),
@@ -98,16 +100,7 @@ export default function RegisterScreen() {
       return true
     }
     return Boolean(email.trim() && password.length > 0 && confirmPassword.length > 0)
-  }, [
-    terms,
-    medical,
-    googleMode,
-    firstName,
-    lastName,
-    email,
-    password,
-    confirmPassword,
-  ])
+  }, [terms, medical, googleMode, firstName, lastName, email, password, confirmPassword])
 
   async function finishGoogleRegistration(credential: string) {
     if (!validateGoogleRegistrationFields()) {
@@ -160,11 +153,7 @@ export default function RegisterScreen() {
     if (phoneError) {
       nextFieldErrors.phone = phoneError
     }
-    if (
-      nextFieldErrors.firstName ||
-      nextFieldErrors.lastName ||
-      nextFieldErrors.phone
-    ) {
+    if (nextFieldErrors.firstName || nextFieldErrors.lastName || nextFieldErrors.phone) {
       setFieldErrors((prev) => ({ ...prev, ...nextFieldErrors }))
       setError('Uzupełnij wymagane zgody RODO (oraz imię/nazwisko, jeśli Google ich nie podało).')
       return false
@@ -312,6 +301,14 @@ export default function RegisterScreen() {
     setInfoMessage('Połączono z Google. Uzupełnij formularz, aby utworzyć konto.')
   }
 
+  function handleGoogleError(message: string) {
+    if (/anulowane/i.test(message)) {
+      toast.info(message)
+    } else {
+      toast.error(message)
+    }
+  }
+
   return (
     <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.container}>
       <BrandMark variant="logo" size="md" style={styles.brand} />
@@ -416,7 +413,6 @@ export default function RegisterScreen() {
           </>
         ) : null}
 
-
         <ConsentToggle
           label="Akceptuję regulamin serwisu (wymagane)"
           checked={terms}
@@ -459,7 +455,7 @@ export default function RegisterScreen() {
             title="Zarejestruj przez Google"
             hint="Szybka rejestracja konta za pomocą Google."
             onSuccess={onGoogleSuccess}
-            onError={setError}
+            onError={handleGoogleError}
           />
         ) : null}
       </View>
