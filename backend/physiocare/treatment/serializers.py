@@ -32,14 +32,42 @@ REFUSAL_REASON_REQUIRED = 'Podaj uzasadnienie odmowy w dokumentacji.'
 ORDER_DESC_REQUIRED = 'Opisz zlecenie lekarskie, którego dotyczy odmowa.'
 
 
+def _get_therapist_name(obj):
+    if hasattr(obj, 'therapist') and obj.therapist and hasattr(obj.therapist, 'user'):
+        u = obj.therapist.user
+        full_name = f"{getattr(u, 'first_name', '')} {getattr(u, 'last_name', '')}".strip()
+        return full_name if full_name else getattr(u, 'email', '')
+    return ''
+
+
+def _is_read_only(serializer, obj):
+    request = serializer.context.get('request')
+    if not request or not hasattr(request.user, 'therapist_profile'):
+        return False
+    current_therapist = request.user.therapist_profile
+    if getattr(obj, 'therapist_id', None) is not None and obj.therapist_id != current_therapist.id:
+        return True
+    return False
+
+
 class TreatmentEpisodeSerializer(serializers.ModelSerializer):
+    therapist_name = serializers.SerializerMethodField()
+    is_read_only = serializers.SerializerMethodField()
+
     class Meta:
         model = TreatmentEpisode
         fields = [
-            'id', 'patient', 'icd10_code', 'functional_diagnosis', 'status',
+            'id', 'patient', 'therapist', 'therapist_name', 'is_read_only',
+            'icd10_code', 'functional_diagnosis', 'status',
             'summary_note', 'started_at', 'ended_at', 'created_at',
         ]
-        read_only_fields = ['id', 'patient', 'created_at']
+        read_only_fields = ['id', 'patient', 'therapist', 'created_at']
+
+    def get_therapist_name(self, obj):
+        return _get_therapist_name(obj)
+
+    def get_is_read_only(self, obj):
+        return _is_read_only(self, obj)
 
     def validate_icd10_code(self, value):
         try:
@@ -214,6 +242,7 @@ class BodyAreaPainSerializer(serializers.ModelSerializer):
 
 
 class VisitNoteSerializer(serializers.ModelSerializer):
+    therapist_name = serializers.SerializerMethodField()
     content = serializers.CharField(
         error_messages={
             'blank': NOTE_REQUIRED,
@@ -223,8 +252,11 @@ class VisitNoteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = VisitNote
-        fields = ['id', 'episode', 'visit', 'content', 'created_at']
-        read_only_fields = ['id', 'episode', 'created_at']
+        fields = ['id', 'episode', 'therapist', 'therapist_name', 'visit', 'content', 'created_at']
+        read_only_fields = ['id', 'episode', 'therapist', 'created_at']
+
+    def get_therapist_name(self, obj):
+        return _get_therapist_name(obj)
 
     def validate_content(self, value):
         try:
@@ -262,14 +294,23 @@ class DiagnosticRecommendationSerializer(serializers.ModelSerializer):
         required=False,
         default=FundingHint.NFZ_VIA_DOCTOR,
     )
+    therapist_name = serializers.SerializerMethodField()
+    is_read_only = serializers.SerializerMethodField()
 
     class Meta:
         model = DiagnosticRecommendation
         fields = [
-            'id', 'episode', 'therapist', 'recommendation_type', 'target_specialty',
+            'id', 'episode', 'therapist', 'therapist_name', 'is_read_only',
+            'recommendation_type', 'target_specialty',
             'body_area', 'justification', 'red_flags_noted', 'funding_hint', 'created_at',
         ]
         read_only_fields = ['id', 'episode', 'therapist', 'created_at']
+
+    def get_therapist_name(self, obj):
+        return _get_therapist_name(obj)
+
+    def get_is_read_only(self, obj):
+        return _is_read_only(self, obj)
 
     def validate_justification(self, value):
         try:
@@ -328,11 +369,14 @@ class MedicalDeviceOrderSerializer(serializers.ModelSerializer):
         required=False,
         default=DeviceOrderStatus.ISSUED,
     )
+    therapist_name = serializers.SerializerMethodField()
+    is_read_only = serializers.SerializerMethodField()
 
     class Meta:
         model = MedicalDeviceOrder
         fields = [
-            'id', 'episode', 'patient', 'therapist', 'device_code', 'device_group',
+            'id', 'episode', 'patient', 'therapist', 'therapist_name', 'is_read_only',
+            'device_code', 'device_group',
             'device_name', 'side', 'quantity', 'icd10_code', 'access_code',
             'status', 'notes', 'created_at',
         ]
@@ -340,6 +384,12 @@ class MedicalDeviceOrderSerializer(serializers.ModelSerializer):
             'id', 'episode', 'patient', 'therapist', 'device_group',
             'device_name', 'created_at',
         ]
+
+    def get_therapist_name(self, obj):
+        return _get_therapist_name(obj)
+
+    def get_is_read_only(self, obj):
+        return _is_read_only(self, obj)
 
     def validate_access_code(self, value):
         cleaned = (value or '').strip()
@@ -406,13 +456,23 @@ class MedicalDeviceOrderSerializer(serializers.ModelSerializer):
 
 
 class PhysicianOrderRefusalSerializer(serializers.ModelSerializer):
+    therapist_name = serializers.SerializerMethodField()
+    is_read_only = serializers.SerializerMethodField()
+
     class Meta:
         model = PhysicianOrderRefusal
         fields = [
-            'id', 'episode', 'therapist', 'physician_order_description',
+            'id', 'episode', 'therapist', 'therapist_name', 'is_read_only',
+            'physician_order_description',
             'refusal_reason', 'physician_notified', 'created_at',
         ]
         read_only_fields = ['id', 'episode', 'therapist', 'created_at']
+
+    def get_therapist_name(self, obj):
+        return _get_therapist_name(obj)
+
+    def get_is_read_only(self, obj):
+        return _is_read_only(self, obj)
 
     def validate_physician_order_description(self, value):
         try:
@@ -440,13 +500,23 @@ class PhysicianOrderRefusalSerializer(serializers.ModelSerializer):
 
 
 class ReceptaNaRuchReferralSerializer(serializers.ModelSerializer):
+    therapist_name = serializers.SerializerMethodField()
+    is_read_only = serializers.SerializerMethodField()
+
     class Meta:
         model = ReceptaNaRuchReferral
         fields = [
-            'id', 'patient', 'therapist', 'episode', 'readiness_confirmed',
+            'id', 'patient', 'therapist', 'therapist_name', 'is_read_only',
+            'episode', 'readiness_confirmed',
             'activity_notes', 'status', 'created_at',
         ]
         read_only_fields = ['id', 'patient', 'therapist', 'created_at']
+
+    def get_therapist_name(self, obj):
+        return _get_therapist_name(obj)
+
+    def get_is_read_only(self, obj):
+        return _is_read_only(self, obj)
 
     def validate_activity_notes(self, value):
         try:

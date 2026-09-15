@@ -319,9 +319,24 @@ export function PatientDetailPage() {
                     <span className="patient-episodes__code">
                       {episode.icd10_code || 'Bez ICD-10'}
                     </span>
-                    <span className="patient-episodes__status">
-                      {EPISODE_STATUS_LABELS[episode.status] ?? episode.status}
+                    <span
+                      className={`status-pill ${
+                        episode.status === 'IN_PROGRESS'
+                          ? 'status-pill--in-progress'
+                          : episode.status === 'COMPLETED_SUCCESS'
+                            ? 'status-pill--completed'
+                            : episode.status === 'REFERRED'
+                              ? 'status-pill--referred'
+                              : 'status-pill--interrupted'
+                      }`}
+                    >
+                      <span>{EPISODE_STATUS_LABELS[episode.status] ?? episode.status}</span>
                     </span>
+                    {episode.therapist_name ? (
+                      <span className="patient-episodes__author">
+                        Fizj. {episode.therapist_name}
+                      </span>
+                    ) : null}
                   </button>
                 </li>
               ))}
@@ -440,52 +455,72 @@ export function PatientDetailPage() {
           ) : (
             <>
               <form className="patient-episode-form" onSubmit={(e) => void saveEpisode(e)}>
-                <h2>Dokumentacja epizodu</h2>
-                <div className="patient-episode-form__row">
-                  <Field
-                    label="ICD-10 (z dokumentacji / roboczy)"
-                    name="icd10"
-                    value={icd10}
-                    onChange={(e) => {
-                      setIcd10(e.target.value)
-                      if (icd10Error) {
-                        setIcd10Error(null)
-                      }
-                    }}
-                    error={icd10Error ?? undefined}
-                    hint="Kod z skierowania/dokumentacji lekarskiej - nie zastępuje diagnozy nozologicznej lekarza"
-                  />
-                  <div className="ui-field">
-                    <span className="ui-field__label">Status</span>
-                    <StatusSelect value={status} onChange={setStatus} />
-                  </div>
+                <div className="patient-episode-form__header">
+                  <h2>Dokumentacja epizodu</h2>
+                  {selected.therapist_name ? (
+                    <p className="patient-episode-form__author">
+                      Fizjoterapeuta prowadzący: {selected.therapist_name}
+                    </p>
+                  ) : null}
                 </div>
-                <label className="ui-field">
-                  <span className="ui-field__label">Diagnoza funkcjonalna</span>
-                  <textarea
-                    className="patient-textarea"
-                    value={functionalDiagnosis}
-                    onChange={(e) => setFunctionalDiagnosis(e.target.value)}
-                    rows={3}
-                    placeholder="Deficyty ruchowe, biomechanika, zakresy, siła, stabilność…"
-                  />
-                  <span className="ui-field__hint">
-                    Widoczna dla pacjenta w aplikacji mobilnej.
-                  </span>
-                </label>
-                <label className="ui-field">
-                  <span className="ui-field__label">Podsumowanie planu (dla pacjenta)</span>
-                  <textarea
-                    className="patient-textarea"
-                    value={summary}
-                    onChange={(e) => setSummary(e.target.value)}
-                    rows={4}
-                    placeholder="Krótko i zrozumiale: cele terapii, na czym się skupiacie…"
-                  />
-                </label>
-                <Button type="submit" loading={busy}>
-                  Zapisz epizod
-                </Button>
+                {selected.is_read_only ? (
+                  <div className="patient-read-only-banner" role="status">
+                    <span>
+                      Epizod utworzył: {selected.therapist_name || 'inny fizjoterapeuta'} (tylko do odczytu)
+                    </span>
+                  </div>
+                ) : null}
+                <fieldset disabled={selected.is_read_only} style={{ border: 0, padding: 0, margin: 0, display: 'contents' }}>
+                  <div className="patient-episode-form__row">
+                    <Field
+                      label="ICD-10 (z dokumentacji / roboczy)"
+                      name="icd10"
+                      value={icd10}
+                      onChange={(e) => {
+                        setIcd10(e.target.value)
+                        if (icd10Error) {
+                          setIcd10Error(null)
+                        }
+                      }}
+                      error={icd10Error ?? undefined}
+                      hint="Kod z skierowania/dokumentacji lekarskiej - nie zastępuje diagnozy nozologicznej lekarza"
+                    />
+                    <div className="ui-field">
+                      <span className="ui-field__label">Status</span>
+                      <StatusSelect value={status} onChange={setStatus} disabled={selected.is_read_only} />
+                    </div>
+                  </div>
+                  <label className="ui-field">
+                    <span className="ui-field__label">Diagnoza funkcjonalna</span>
+                    <textarea
+                      className="patient-textarea"
+                      value={functionalDiagnosis}
+                      onChange={(e) => setFunctionalDiagnosis(e.target.value)}
+                      rows={3}
+                      disabled={selected.is_read_only}
+                      placeholder="Deficyty ruchowe, biomechanika, zakresy, siła, stabilność…"
+                    />
+                    <span className="ui-field__hint">
+                      Widoczna dla pacjenta w aplikacji mobilnej.
+                    </span>
+                  </label>
+                  <label className="ui-field">
+                    <span className="ui-field__label">Podsumowanie planu (dla pacjenta)</span>
+                    <textarea
+                      className="patient-textarea"
+                      value={summary}
+                      onChange={(e) => setSummary(e.target.value)}
+                      rows={4}
+                      disabled={selected.is_read_only}
+                      placeholder="Krótko i zrozumiale: cele terapii, na czym się skupiacie…"
+                    />
+                  </label>
+                  {!selected.is_read_only ? (
+                    <Button type="submit" loading={busy}>
+                      Zapisz epizod
+                    </Button>
+                  ) : null}
+                </fieldset>
               </form>
 
               <DiagnosticMapper episodeId={selected.id} />

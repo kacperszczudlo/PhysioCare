@@ -1,5 +1,5 @@
 from rest_framework import generics, status
-from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -39,12 +39,18 @@ from .serializers import (
 def _get_owned_episode(request, episode_id) -> TreatmentEpisode:
     from core.mixins import user_can_access_patient
 
-    episode = TreatmentEpisode.objects.select_related('patient').filter(pk=episode_id).first()
+    episode = TreatmentEpisode.objects.select_related('patient', 'therapist').filter(pk=episode_id).first()
     if episode is None:
         raise NotFound()
     if not user_can_access_patient(request.user, episode.patient):
         raise NotFound()
     return episode
+
+
+def _check_therapist_ownership(obj, request):
+    therapist = getattr(request.user, 'therapist_profile', None)
+    if not therapist or (getattr(obj, 'therapist_id', None) is not None and obj.therapist_id != therapist.id):
+        raise PermissionDenied('Możesz edytować i usuwać tylko własne wpisy.')
 
 
 class PatientEpisodeListCreateView(TherapistPatientQuerysetMixin, generics.ListCreateAPIView):
@@ -59,7 +65,7 @@ class PatientEpisodeListCreateView(TherapistPatientQuerysetMixin, generics.ListC
     def get_queryset(self):
         return TreatmentEpisode.objects.filter(
             patient=self.get_patient(),
-        ).select_related('patient').order_by('-created_at')
+        ).select_related('patient', 'therapist').order_by('-created_at')
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -69,9 +75,12 @@ class PatientEpisodeListCreateView(TherapistPatientQuerysetMixin, generics.ListC
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        episode = serializer.save(patient=self.get_patient())
+        episode = serializer.save(
+            patient=self.get_patient(),
+            therapist=request.user.therapist_profile,
+        )
         return Response(
-            TreatmentEpisodeSerializer(episode).data,
+            TreatmentEpisodeSerializer(episode, context={'request': request}).data,
             status=status.HTTP_201_CREATED,
         )
 
@@ -84,7 +93,14 @@ class EpisodeDetailView(generics.RetrieveUpdateAPIView):
         return TreatmentEpisode.objects.filter(
             patient__therapist_links__therapist=self.request.user.therapist_profile,
             patient__therapist_links__status='ACTIVE',
-        ).select_related('patient').distinct()
+        ).select_related('patient', 'therapist').distinct()
+
+    def perform_update(self, serializer):
+        episode = self.get_object()
+        therapist = self.request.user.therapist_profile
+        if episode.therapist_id is not None and episode.therapist_id != therapist.id:
+            raise PermissionDenied('Epizod leczenia utworzony przez innego fizjoterapeutę jest tylko do odczytu.')
+        serializer.save()
 
 
 class EpisodeBodyPainListCreateView(generics.ListCreateAPIView):
@@ -113,6 +129,18 @@ class EpisodeBodyPainDetailView(generics.RetrieveUpdateDestroyAPIView):
             episode__patient__therapist_links__status='ACTIVE',
         ).distinct()
 
+    def perform_update(self, serializer):
+        episode = serializer.instance.episode
+        if episode.therapist_id is not None and episode.therapist_id != self.request.user.therapist_profile.id:
+            raise PermissionDenied('Epizod leczenia utworzony przez innego fizjoterapeutę jest tylko do odczytu.')
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        episode = instance.episode
+        if episode.therapist_id is not None and episode.therapist_id != self.request.user.therapist_profile.id:
+            raise PermissionDenied('Epizod leczenia utworzony przez innego fizjoterapeutę jest tylko do odczytu.')
+        instance.delete()
+
 
 class EpisodeNoteListCreateView(generics.ListCreateAPIView):
     serializer_class = VisitNoteSerializer
@@ -122,10 +150,16 @@ class EpisodeNoteListCreateView(generics.ListCreateAPIView):
         return _get_owned_episode(self.request, self.kwargs['episode_id'])
 
     def get_queryset(self):
-        return VisitNote.objects.filter(episode=self.get_episode()).order_by('-created_at')
+        return VisitNote.objects.filter(
+            episode=self.get_episode(),
+            therapist=self.request.user.therapist_profile,
+        ).select_related('therapist').order_by('-created_at')
 
     def perform_create(self, serializer):
-        serializer.save(episode=self.get_episode())
+        serializer.save(
+            episode=self.get_episode(),
+            therapist=self.request.user.therapist_profile,
+        )
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -211,14 +245,19 @@ class EpisodeDiagnosticRecommendationDetailView(generics.RetrieveUpdateDestroyAP
             episode_id=self.kwargs['episode_id'],
             episode__patient__therapist_links__therapist=self.request.user.therapist_profile,
             episode__patient__therapist_links__status='ACTIVE',
-        ).select_related('episode').distinct()
+        ).select_related('episode', 'therapist').distinct()
 
     def perform_update(self, serializer):
+        _check_therapist_ownership(serializer.instance, self.request)
         recommendation = serializer.save()
         episode = recommendation.episode
         if recommendation.red_flags_noted and episode.status == EpisodeStatus.IN_PROGRESS:
             episode.status = EpisodeStatus.REFERRED
             episode.save(update_fields=['status'])
+
+    def perform_destroy(self, instance):
+        _check_therapist_ownership(instance, self.request)
+        instance.delete()
 
 
 class EpisodeDeviceOrderDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -231,7 +270,15 @@ class EpisodeDeviceOrderDetailView(generics.RetrieveUpdateDestroyAPIView):
             episode_id=self.kwargs['episode_id'],
             episode__patient__therapist_links__therapist=self.request.user.therapist_profile,
             episode__patient__therapist_links__status='ACTIVE',
-        ).distinct()
+        ).select_related('therapist').distinct()
+
+    def perform_update(self, serializer):
+        _check_therapist_ownership(serializer.instance, self.request)
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        _check_therapist_ownership(instance, self.request)
+        instance.delete()
 
 
 class EpisodeOrderRefusalDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -244,7 +291,15 @@ class EpisodeOrderRefusalDetailView(generics.RetrieveUpdateDestroyAPIView):
             episode_id=self.kwargs['episode_id'],
             episode__patient__therapist_links__therapist=self.request.user.therapist_profile,
             episode__patient__therapist_links__status='ACTIVE',
-        ).distinct()
+        ).select_related('therapist').distinct()
+
+    def perform_update(self, serializer):
+        _check_therapist_ownership(serializer.instance, self.request)
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        _check_therapist_ownership(instance, self.request)
+        instance.delete()
 
 
 class PatientReceptaNaRuchListCreateView(TherapistPatientQuerysetMixin, generics.ListCreateAPIView):
@@ -286,9 +341,10 @@ class PatientReceptaNaRuchDetailView(TherapistPatientQuerysetMixin, generics.Ret
             patient__therapist_links__therapist=self.get_therapist_profile(),
             patient__therapist_links__status='ACTIVE',
             patient__user__is_active=True,
-        ).distinct()
+        ).select_related('therapist').distinct()
 
     def perform_update(self, serializer):
+        _check_therapist_ownership(serializer.instance, self.request)
         patient = self.therapist_patients().filter(pk=self.kwargs['patient_id']).first()
         if patient is None:
             raise NotFound()
@@ -296,6 +352,10 @@ class PatientReceptaNaRuchDetailView(TherapistPatientQuerysetMixin, generics.Ret
         if episode is not None and episode.patient_id != patient.id:
             raise ValidationError({'episode': 'Epizod nie należy do tego pacjenta.'})
         serializer.save()
+
+    def perform_destroy(self, instance):
+        _check_therapist_ownership(instance, self.request)
+        instance.delete()
 
 
 class MedicalDeviceCatalogView(APIView):

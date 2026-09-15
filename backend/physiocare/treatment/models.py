@@ -63,6 +63,13 @@ class TreatmentEpisode(TimestampedModel):
         on_delete=models.CASCADE,
         related_name='episodes',
     )
+    therapist = models.ForeignKey(
+        'therapists.TherapistProfile',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='episodes',
+    )
     # Kod roboczy / z dokumentacji lekarskiej - nie jest samodzielną diagnozą nozologiczną.
     icd10_code = models.CharField(max_length=10, blank=True, default='')
     # Diagnoza funkcjonalna - domena fizjoterapeuty (art. 4 u.o.z.f.).
@@ -123,6 +130,13 @@ class VisitNote(TimestampedModel):
     episode = models.ForeignKey(
         TreatmentEpisode,
         on_delete=models.CASCADE,
+        related_name='visit_notes',
+    )
+    therapist = models.ForeignKey(
+        'therapists.TherapistProfile',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='visit_notes',
     )
     visit = models.ForeignKey(

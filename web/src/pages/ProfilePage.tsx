@@ -566,7 +566,6 @@ export function ProfilePage() {
             aria-live="polite"
           >
             <div className="profile-floating-bar__status">
-              <span className="profile-floating-bar__dot" aria-hidden="true" />
               <div className="profile-floating-bar__labels">
                 <span className="profile-floating-bar__title">Masz niezapisane zmiany</span>
                 <span className="profile-floating-bar__desc">

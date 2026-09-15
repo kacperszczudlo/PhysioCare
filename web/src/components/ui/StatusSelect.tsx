@@ -14,29 +14,29 @@ export interface StatusSelectProps {
 interface StatusOptionMeta {
   value: EpisodeStatus
   label: string
-  colorClass: string
+  pillClass: string
 }
 
 export const STATUS_OPTIONS_META: StatusOptionMeta[] = [
   {
     value: 'IN_PROGRESS',
     label: EPISODE_STATUS_LABELS['IN_PROGRESS'],
-    colorClass: 'status-select__badge--in-progress',
+    pillClass: 'status-pill--in-progress',
   },
   {
     value: 'COMPLETED_SUCCESS',
     label: EPISODE_STATUS_LABELS['COMPLETED_SUCCESS'],
-    colorClass: 'status-select__badge--completed',
+    pillClass: 'status-pill--completed',
   },
   {
     value: 'REFERRED',
     label: EPISODE_STATUS_LABELS['REFERRED'],
-    colorClass: 'status-select__badge--referred',
+    pillClass: 'status-pill--referred',
   },
   {
     value: 'INTERRUPTED',
     label: EPISODE_STATUS_LABELS['INTERRUPTED'],
-    colorClass: 'status-select__badge--interrupted',
+    pillClass: 'status-pill--interrupted',
   },
 ]
 
@@ -126,9 +126,8 @@ export function StatusSelect({
         aria-expanded={isOpen}
         aria-label="Wybierz status epizodu"
       >
-        <span className={`status-select__badge ${selectedMeta.colorClass}`}>
-          <span className="status-select__dot" aria-hidden="true" />
-          <span className="status-select__label">{selectedMeta.label}</span>
+        <span className={`status-pill ${selectedMeta.pillClass}`}>
+          <span>{selectedMeta.label}</span>
         </span>
         <svg
           className={`status-select__chevron ${isOpen ? 'status-select__chevron--open' : ''}`}
@@ -169,9 +168,8 @@ export function StatusSelect({
                 onClick={() => handleSelectOption(opt.value)}
                 onMouseEnter={() => setActiveIndex(idx)}
               >
-                <span className={`status-select__badge ${opt.colorClass}`}>
-                  <span className="status-select__dot" aria-hidden="true" />
-                  <span className="status-select__label">{opt.label}</span>
+                <span className={`status-pill ${opt.pillClass}`}>
+                  <span>{opt.label}</span>
                 </span>
                 {isSelected && (
                   <svg
