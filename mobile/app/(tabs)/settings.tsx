@@ -9,13 +9,14 @@ import { patientApi } from '@/api/patient'
 import type { Consent, NotificationPreference } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
 import { AccountDeletionModal } from '@/components/AccountDeletionModal'
-import { ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
+import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { DataExportModal } from '@/components/DataExportModal'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { PasswordRequirements } from '@/components/PasswordRequirements'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
+import { useToast } from '@/components/ToastContext'
 import { sharePatientDataExport } from '@/lib/dataExport'
 import {
   consentLabel,
@@ -33,11 +34,10 @@ import {
 } from '@/notifications/push'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
-type FeedbackKind = 'notifications' | 'consents' | 'privacy' | 'password'
-
 export default function SettingsScreen() {
   const { logout, user } = useAuth()
   const router = useRouter()
+  const { toast } = useToast()
 
   const [consents, setConsents] = useState<Consent[]>([])
   const [prefs, setPrefs] = useState<NotificationPreference[]>([])
@@ -53,20 +53,6 @@ export default function SettingsScreen() {
   const [exportOpen, setExportOpen] = useState(false)
   const [exportBusy, setExportBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<{ kind: FeedbackKind; message: string } | null>(null)
-
-  const showSuccess = useCallback((kind: FeedbackKind, message: string) => {
-    setError(null)
-    setFeedback({ kind, message })
-  }, [])
-
-  useEffect(() => {
-    if (!feedback) {
-      return
-    }
-    const timer = setTimeout(() => setFeedback(null), 5000)
-    return () => clearTimeout(timer)
-  }, [feedback])
 
   const load = useCallback(async () => {
     setError(null)
@@ -106,26 +92,31 @@ export default function SettingsScreen() {
 
   async function changePassword() {
     setError(null)
-    setFeedback(null)
 
     if (!currentPassword.trim()) {
-      setError('Podaj obecne hasło.')
+      const msg = 'Podaj obecne hasło.'
+      setError(msg)
+      toast.error(msg)
       return
     }
     const passwordError = getPasswordError(newPassword)
     if (passwordError) {
       setError(passwordError)
+      toast.error(passwordError)
       return
     }
 
     setPwdLoading(true)
     try {
       await authApi.changePassword(currentPassword, newPassword)
+      toast.success('Hasło zostało zmienione.')
       setCurrentPassword('')
       setNewPassword('')
       await logout()
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się zmienić hasła.'))
+      const errMsg = getErrorMessage(err, 'Nie udało się zmienić hasła.')
+      setError(errMsg)
+      toast.error(errMsg)
     } finally {
       setPwdLoading(false)
     }
@@ -136,9 +127,11 @@ export default function SettingsScreen() {
     try {
       const next = await patientApi.updateOptionalConsents({ [type]: value })
       setConsents(next)
-      showSuccess('consents', 'Zgoda została zaktualizowana.')
+      toast.success('Zgoda została zaktualizowana.')
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się zaktualizować zgody.'))
+      const errMsg = getErrorMessage(err, 'Nie udało się zaktualizować zgody.')
+      setError(errMsg)
+      toast.error(errMsg)
     }
   }
 
@@ -147,9 +140,11 @@ export default function SettingsScreen() {
     try {
       const next = await patientApi.updateNotificationPreferences({ [key]: value })
       setPrefs(next)
-      showSuccess('notifications', 'Preferencje powiadomień zostały zapisane.')
+      toast.success('Preferencje powiadomień zostały zapisane.')
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się zapisać preferencji.'))
+      const errMsg = getErrorMessage(err, 'Nie udało się zapisać preferencji.')
+      setError(errMsg)
+      toast.error(errMsg)
     }
   }
 
@@ -165,16 +160,22 @@ export default function SettingsScreen() {
       const status = await getPushPermissionStatus()
       setPushPermission(status)
       if (token) {
-        showSuccess('notifications', 'Powiadomienia systemowe zostały włączone.')
+        toast.success('Powiadomienia systemowe zostały włączone.')
         return
       }
       if (status !== 'granted') {
-        setError('Aby dostawać powiadomienia na telefon, włącz je w ustawieniach systemu.')
+        const msg = 'Aby dostawać powiadomienia na telefon, włącz je w ustawieniach systemu.'
+        setError(msg)
+        toast.error(msg)
         return
       }
-      setError('Push działa na fizycznym telefonie w Expo Go lub w buildzie EAS.')
+      const msg = 'Push działa na fizycznym telefonie w Expo Go lub w buildzie EAS.'
+      setError(msg)
+      toast.warning(msg)
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się włączyć powiadomień systemowych.'))
+      const errMsg = getErrorMessage(err, 'Nie udało się włączyć powiadomień systemowych.')
+      setError(errMsg)
+      toast.error(errMsg)
     } finally {
       setPushBusy(false)
     }
@@ -182,30 +183,28 @@ export default function SettingsScreen() {
 
   async function runDataExport() {
     setError(null)
-    setFeedback(null)
     setExportBusy(true)
     try {
       const payload = await patientApi.requestDataExport()
       const result = await sharePatientDataExport(payload)
       setExportOpen(false)
       if (result.delivered && result.mode === 'saved') {
-        showSuccess(
-          'privacy',
+        toast.success(
           `Zapisano plik ${result.fileName}. Znajdziesz go w wybranym folderze (np. Pobrane).`,
         )
       } else if (result.delivered) {
-        showSuccess(
-          'privacy',
+        toast.success(
           `Plik ${result.fileName} jest gotowy — możesz go zapisać lub wysłać sobie.`,
         )
       } else {
-        showSuccess(
-          'privacy',
+        toast.info(
           `Plik ${result.fileName} został przygotowany. Spróbuj ponownie, jeśli nie zapisałeś go jeszcze.`,
         )
       }
     } catch (err) {
-      setError(getErrorMessage(err, 'Eksport nie powiódł się.'))
+      const errMsg = getErrorMessage(err, 'Eksport nie powiódł się.')
+      setError(errMsg)
+      toast.error(errMsg)
     } finally {
       setExportBusy(false)
     }
@@ -213,16 +212,18 @@ export default function SettingsScreen() {
 
   async function requestDeletion(reason: string) {
     setError(null)
-    setFeedback(null)
     setDeletionBusy(true)
     try {
       // Unregister push while the session is still valid (deletion deactivates the user).
       await unregisterPushToken()
       await patientApi.requestAccountDeletion(reason)
       setDeletionOpen(false)
+      toast.success('Wniosek o usunięcie konta został złożony.')
       await logout()
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się zgłosić wniosku.'))
+      const errMsg = getErrorMessage(err, 'Nie udało się zgłosić wniosku.')
+      setError(errMsg)
+      toast.error(errMsg)
     } finally {
       setDeletionBusy(false)
     }
@@ -286,11 +287,12 @@ export default function SettingsScreen() {
             <Switch
               value={Boolean(prefMap[key])}
               onValueChange={(v) => void togglePref(key, v)}
-              trackColor={{ true: colors.primary, false: colors.border }}
+              trackColor={{ true: colors.primary, false: colors.borderStrong }}
+              thumbColor={colors.surface}
+              ios_backgroundColor={colors.borderStrong}
             />
           </View>
         ))}
-        {feedback?.kind === 'notifications' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
 
       <SectionCard>
@@ -319,7 +321,9 @@ export default function SettingsScreen() {
                 <Switch
                   value={c.granted}
                   onValueChange={(v) => void toggleOptionalConsent(optionalKey, v)}
-                  trackColor={{ true: colors.primary, false: colors.border }}
+                  trackColor={{ true: colors.primary, false: colors.borderStrong }}
+                  thumbColor={colors.surface}
+                  ios_backgroundColor={colors.borderStrong}
                 />
               ) : (
                 <Text style={styles.locked}>wymagana</Text>
@@ -333,7 +337,9 @@ export default function SettingsScreen() {
             <Switch
               value={false}
               onValueChange={(v) => void toggleOptionalConsent('marketing', v)}
-              trackColor={{ true: colors.primary, false: colors.border }}
+              trackColor={{ true: colors.primary, false: colors.borderStrong }}
+              thumbColor={colors.surface}
+              ios_backgroundColor={colors.borderStrong}
             />
           </View>
         ) : null}
@@ -343,11 +349,12 @@ export default function SettingsScreen() {
             <Switch
               value={false}
               onValueChange={(v) => void toggleOptionalConsent('research', v)}
-              trackColor={{ true: colors.primary, false: colors.border }}
+              trackColor={{ true: colors.primary, false: colors.borderStrong }}
+              thumbColor={colors.surface}
+              ios_backgroundColor={colors.borderStrong}
             />
           </View>
         ) : null}
-        {feedback?.kind === 'consents' ? <SuccessBanner message={feedback.message} /> : null}
         <Button
           title="Eksport danych"
           variant="secondary"
@@ -368,7 +375,6 @@ export default function SettingsScreen() {
         <Link href="/legal/account-deletion" style={styles.legalLink}>
           Usuwanie konta (instrukcja)
         </Link>
-        {feedback?.kind === 'privacy' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
 
       <DataExportModal
@@ -426,7 +432,6 @@ export default function SettingsScreen() {
             )
           }}
         />
-        {feedback?.kind === 'password' ? <SuccessBanner message={feedback.message} /> : null}
       </SectionCard>
 
       <SectionCard accessibilityLabel="Sesja">

@@ -4,11 +4,11 @@ import { exercisesApi } from '@/api/exercises'
 import { patientsApi, treatmentApi } from '@/api/treatment'
 import { ApiError } from '@/api/client'
 import type { Exercise, PatientSummary, TreatmentEpisode } from '@/api/types'
-import { SuccessBanner } from '@/components/AsyncState'
 import { Button } from '@/components/ui/Button'
 import { DateCarousel } from '@/components/ui/DateCarousel'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
+import { useToast } from '@/components/ui/ToastContext'
 import { getDosageError } from '@/lib/fieldPolicy'
 import { toDateInputValue } from '@/lib/scheduleTime'
 
@@ -25,6 +25,7 @@ export function AssignExerciseModal({
   onClose,
   onAssigned,
 }: AssignExerciseModalProps) {
+  const { toast } = useToast()
   const [patients, setPatients] = useState<PatientSummary[]>([])
   const [episodes, setEpisodes] = useState<TreatmentEpisode[]>([])
   const [patientId, setPatientId] = useState('')
@@ -39,14 +40,12 @@ export function AssignExerciseModal({
   const [loadingMeta, setLoadingMeta] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) {
       return
     }
     setError(null)
-    setSuccess(null)
     setBusy(false)
     setDosage('3 serie × 10 powtórzeń')
     setStartDate(toDateInputValue(new Date()))
@@ -120,7 +119,6 @@ export function AssignExerciseModal({
     }
     setBusy(true)
     setError(null)
-    setSuccess(null)
     try {
       await exercisesApi.assign({
         exercise_id: exercise.id,
@@ -130,7 +128,7 @@ export function AssignExerciseModal({
         start_date: startDate,
         end_date: endDate,
       })
-      setSuccess('Wysłano do aplikacji pacjenta.')
+      toast.success('Wysłano do aplikacji pacjenta.')
       onAssigned()
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Nie udało się przypisać ćwiczenia.')
@@ -218,7 +216,6 @@ export function AssignExerciseModal({
               {error}
             </p>
           ) : null}
-          {success ? <SuccessBanner message={success} /> : null}
 
           <div className="ui-modal__actions">
             <Button type="button" variant="secondary" onClick={onClose} disabled={busy}>

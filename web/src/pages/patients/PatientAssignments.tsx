@@ -3,11 +3,12 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { exercisesApi } from '@/api/exercises'
 import { getErrorMessage } from '@/api/client'
 import type { ExerciseAssignment } from '@/api/types'
-import { EmptyState, ErrorBanner, LoadingBlock, SuccessBanner } from '@/components/AsyncState'
+import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/ui/Button'
 import { DateCarousel } from '@/components/ui/DateCarousel'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
+import { useToast } from '@/components/ui/ToastContext'
 import { AuthMediaPdfLink, AuthMediaVideo } from '@/components/AuthMedia'
 import { getDosageError } from '@/lib/fieldPolicy'
 import { addDays, parseDateInput, toDateInputValue } from '@/lib/scheduleTime'
@@ -25,6 +26,7 @@ function formatPeriod(start: string, end: string): string {
 }
 
 export function PatientAssignments({ patientId, episodeId = null }: PatientAssignmentsProps) {
+  const { toast } = useToast()
   const [items, setItems] = useState<ExerciseAssignment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -36,7 +38,6 @@ export function PatientAssignments({ patientId, episodeId = null }: PatientAssig
   const [endDate, setEndDate] = useState('')
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -56,21 +57,12 @@ export function PatientAssignments({ patientId, episodeId = null }: PatientAssig
     void load()
   }, [load])
 
-  useEffect(() => {
-    if (!successMessage) {
-      return
-    }
-    const timer = window.setTimeout(() => setSuccessMessage(null), 5000)
-    return () => window.clearTimeout(timer)
-  }, [successMessage])
-
   function openEdit(assignment: ExerciseAssignment) {
     setEditTarget(assignment)
     setDosage(assignment.dosage)
     setStartDate(assignment.start_date)
     setEndDate(assignment.end_date)
     setFormError(null)
-    setSuccessMessage(null)
   }
 
   async function onSave(event: FormEvent) {
@@ -93,7 +85,7 @@ export function PatientAssignments({ patientId, episodeId = null }: PatientAssig
       })
       setItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
       setEditTarget(null)
-      setSuccessMessage('Zalecenie zostało zapisane.')
+      toast.success('Zalecenie zostało zapisane.')
     } catch (err) {
       setFormError(getErrorMessage(err, 'Nie udało się zapisać zalecenia.'))
     } finally {
@@ -111,7 +103,7 @@ export function PatientAssignments({ patientId, episodeId = null }: PatientAssig
       await exercisesApi.deleteAssignment(deleteTarget.id)
       setItems((prev) => prev.filter((item) => item.id !== deleteTarget.id))
       setDeleteTarget(null)
-      setSuccessMessage('Zalecenie zostało usunięte.')
+      toast.success('Zalecenie zostało usunięte.')
     } catch (err) {
       setFormError(getErrorMessage(err, 'Nie udało się usunąć zalecenia.'))
     } finally {
@@ -139,7 +131,6 @@ export function PatientAssignments({ patientId, episodeId = null }: PatientAssig
       {loading ? <LoadingBlock label="Ładowanie zaleceń…" /> : null}
 
       {!loading && error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
-      {successMessage ? <SuccessBanner message={successMessage} /> : null}
 
       {!loading && !error && items.length === 0 ? (
         <EmptyState
@@ -216,7 +207,7 @@ export function PatientAssignments({ patientId, episodeId = null }: PatientAssig
         episodeId={episodeId}
         onClose={() => setAssignOpen(false)}
         onAssigned={() => {
-          setSuccessMessage('Ćwiczenie zostało przypisane.')
+          toast.success('Ćwiczenie zostało przypisane.')
           void load()
         }}
       />
