@@ -257,7 +257,12 @@ export function MobileVisitRequestSkeleton() {
 
       <View style={styles.card}>
         <Skeleton width={150} height={16} />
-        <Skeleton width="100%" height={44} borderRadius={radius.md} style={{ marginTop: space.md }} />
+        <Skeleton
+          width="100%"
+          height={44}
+          borderRadius={radius.md}
+          style={{ marginTop: space.md }}
+        />
       </View>
     </SkeletonWrapper>
   )
