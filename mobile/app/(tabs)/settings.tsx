@@ -1,6 +1,7 @@
 import { Link, useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Linking, Platform, RefreshControl, StyleSheet, Switch, Text, View } from 'react-native'
+import { Linking, Platform, Pressable, RefreshControl, StyleSheet, Switch, Text, View } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 
 import { authApi } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
@@ -30,7 +31,7 @@ import {
   unregisterPushToken,
   type PushPermissionStatus,
 } from '@/notifications/push'
-import { colors, space, typography } from '@/theme/tokens'
+import { colors, radius, space, typography } from '@/theme/tokens'
 
 type FeedbackKind = 'notifications' | 'consents' | 'privacy' | 'password'
 
@@ -430,10 +431,10 @@ export default function SettingsScreen() {
 
       <SectionCard accessibilityLabel="Sesja">
         <Text style={styles.sectionTitle}>Sesja</Text>
-        <Text style={styles.sectionHint}>Kończy dostęp na tym urządzeniu.</Text>
+        <Text style={styles.sectionHint}>Aktywne połączenie z aplikacją.</Text>
         <Button
-          title="Wyloguj"
-          variant="secondary"
+          title="Wyloguj się"
+          variant="danger"
           onPress={() => {
             void logout()
           }}

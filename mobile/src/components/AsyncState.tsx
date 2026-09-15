@@ -47,6 +47,14 @@ export function SuccessBanner({ message }: { message: string }) {
   )
 }
 
+export function InfoBanner({ message }: { message: string }) {
+  return (
+    <View style={styles.infoBox} accessibilityRole="text" accessibilityLiveRegion="polite">
+      <Text style={styles.infoText}>{message}</Text>
+    </View>
+  )
+}
+
 export function EmptyState({
   title,
   description,
@@ -110,6 +118,18 @@ const styles = StyleSheet.create({
     color: colors.success,
     fontSize: typography.sm,
     fontWeight: '700',
+  },
+  infoBox: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    padding: space.base,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  infoText: {
+    color: colors.ink,
+    fontSize: typography.sm,
+    fontWeight: '500',
   },
   empty: {
     alignItems: 'center',

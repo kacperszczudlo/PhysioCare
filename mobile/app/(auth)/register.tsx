@@ -11,6 +11,7 @@ import {
 } from '@/auth/googleRegistrationDraft'
 import { GoogleSignInButton, isGoogleSignInConfigured } from '@/auth/googleSignIn'
 import { parseGoogleIdTokenClaims } from '@/auth/parseGoogleIdToken'
+import { InfoBanner } from '@/components/AsyncState'
 import { BrandMark } from '@/components/BrandMark'
 import { Button } from '@/components/Button'
 import { Field } from '@/components/Field'
@@ -43,10 +44,14 @@ export default function RegisterScreen() {
   const [phoneNational, setPhoneNational] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [therapistId, setTherapistId] = useState('')
   const [terms, setTerms] = useState(false)
   const [medical, setMedical] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [infoMessage, setInfoMessage] = useState<string | null>(() =>
+    peekGoogleRegistrationDraft()
+      ? 'Połączono z Google. Uzupełnij formularz, aby dokończyć rejestrację.'
+      : null,
+  )
   const [fieldErrors, setFieldErrors] = useState<{
     firstName?: string
     lastName?: string
@@ -54,7 +59,6 @@ export default function RegisterScreen() {
     phone?: string
     password?: string
     confirmPassword?: string
-    therapistId?: string
   }>({})
   const [passwordTouched, setPasswordTouched] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -80,13 +84,11 @@ export default function RegisterScreen() {
     if (draft.last_name) {
       setLastName(draft.last_name)
     }
-    setError(
-      'Dane z Google (e-mail, imię, nazwisko) są uzupełnione. Podaj kod terapeuty i zaznacz zgody - telefon opcjonalnie.',
-    )
+    setInfoMessage('Połączono z Google. Uzupełnij formularz, aby utworzyć konto.')
   }, [])
 
   const canSubmit = useMemo(() => {
-    if (!(terms && medical && therapistId.trim())) {
+    if (!(terms && medical)) {
       return false
     }
     if (!(firstName.trim() && lastName.trim())) {
@@ -99,7 +101,6 @@ export default function RegisterScreen() {
   }, [
     terms,
     medical,
-    therapistId,
     googleMode,
     firstName,
     lastName,
@@ -120,7 +121,6 @@ export default function RegisterScreen() {
         google_credential: credential,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
-        therapist_id: therapistId.trim(),
         phone: formatPhoneForApi(phoneNational, countryCode) || undefined,
         consents: { terms, medical_data: medical },
       })
@@ -147,7 +147,6 @@ export default function RegisterScreen() {
       firstName?: string
       lastName?: string
       phone?: string
-      therapistId?: string
     } = {}
     const firstNameError = getFirstNameError(firstName)
     if (firstNameError) {
@@ -161,23 +160,13 @@ export default function RegisterScreen() {
     if (phoneError) {
       nextFieldErrors.phone = phoneError
     }
-    if (!therapistId.trim()) {
-      nextFieldErrors.therapistId = 'Podaj kod terapeuty.'
-    } else if (
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        therapistId.trim(),
-      )
-    ) {
-      nextFieldErrors.therapistId = 'Podaj prawidłowy kod terapeuty (UUID z panelu terapeuty).'
-    }
     if (
       nextFieldErrors.firstName ||
       nextFieldErrors.lastName ||
-      nextFieldErrors.phone ||
-      nextFieldErrors.therapistId
+      nextFieldErrors.phone
     ) {
       setFieldErrors((prev) => ({ ...prev, ...nextFieldErrors }))
-      setError('Uzupełnij kod terapeuty i zgody (oraz imię/nazwisko, jeśli Google ich nie podało).')
+      setError('Uzupełnij wymagane zgody RODO (oraz imię/nazwisko, jeśli Google ich nie podało).')
       return false
     }
     return true
@@ -204,7 +193,6 @@ export default function RegisterScreen() {
       phone?: string
       password?: string
       confirmPassword?: string
-      therapistId?: string
     } = {}
     const firstNameError = getFirstNameError(firstName)
     if (firstNameError) {
@@ -229,26 +217,10 @@ export default function RegisterScreen() {
     if (!passwordsMatch(password, confirmPassword)) {
       nextFieldErrors.confirmPassword = PASSWORD_MESSAGES.mismatch
     }
-    if (!therapistId.trim()) {
-      nextFieldErrors.therapistId = 'Podaj kod terapeuty.'
-    } else if (
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        therapistId.trim(),
-      )
-    ) {
-      nextFieldErrors.therapistId = 'Podaj prawidłowy kod terapeuty (UUID z panelu terapeuty).'
-    }
 
-    if (
-      nextFieldErrors.firstName ||
-      nextFieldErrors.lastName ||
-      nextFieldErrors.email ||
-      nextFieldErrors.phone ||
-      nextFieldErrors.password ||
-      nextFieldErrors.confirmPassword ||
-      nextFieldErrors.therapistId
-    ) {
+    if (Object.keys(nextFieldErrors).length > 0) {
       setFieldErrors(nextFieldErrors)
+      setError('Popraw zaznaczone pola.')
       return
     }
 
@@ -260,7 +232,6 @@ export default function RegisterScreen() {
         password,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
-        therapist_id: therapistId.trim(),
         phone: formatPhoneForApi(phoneNational, countryCode) || undefined,
         consents: { terms, medical_data: medical },
       })
@@ -282,15 +253,13 @@ export default function RegisterScreen() {
     const apiEmailError = getFieldError(err, 'email')
     const apiPhoneError = getFieldError(err, 'phone')
     const apiPasswordError = getFieldError(err, 'password')
-    const apiTherapistError = getFieldError(err, 'therapist_id')
     const apiGoogleError = getFieldError(err, 'google_credential')
     if (
       apiFirstNameError ||
       apiLastNameError ||
       apiEmailError ||
       apiPhoneError ||
-      apiPasswordError ||
-      apiTherapistError
+      apiPasswordError
     ) {
       setFieldErrors({
         firstName: apiFirstNameError ?? undefined,
@@ -298,7 +267,6 @@ export default function RegisterScreen() {
         email: apiEmailError ?? undefined,
         phone: apiPhoneError ?? undefined,
         password: apiPasswordError ?? undefined,
-        therapistId: apiTherapistError ?? undefined,
       })
     }
 
@@ -341,11 +309,7 @@ export default function RegisterScreen() {
       last_name: nextLast || undefined,
     })
     setFieldErrors({})
-    setError(
-      nextFirst && nextLast && nextEmail
-        ? 'Dane z Google zapisane. Został kod terapeuty i zgody (telefon opcjonalnie).'
-        : 'Konto Google połączone. Uzupełnij brakujące imię/nazwisko, kod terapeuty i zgody.',
-    )
+    setInfoMessage('Połączono z Google. Uzupełnij formularz, aby utworzyć konto.')
   }
 
   return (
@@ -353,9 +317,7 @@ export default function RegisterScreen() {
       <BrandMark variant="logo" size="md" style={styles.brand} />
       <Text style={styles.title}>Rejestracja pacjenta</Text>
       <Text style={styles.subtitle}>
-        {googleMode
-          ? 'E-mail wczytany z Google. Sprawdź lub popraw imię i nazwisko oraz uzupełnij kod terapeuty i zgody.'
-          : 'Załóż konto i zaakceptuj wymagane zgody, aby korzystać z zaleceń terapeuty.'}
+        Załóż konto i zaakceptuj wymagane zgody, aby korzystać z aplikacji.
       </Text>
 
       <View style={styles.form}>
@@ -416,11 +378,7 @@ export default function RegisterScreen() {
             }
           }}
           error={fieldErrors.phone}
-          hint={
-            googleMode
-              ? 'Opcjonalnie - Google zwykle nie przekazuje telefonu, możesz dodać go tutaj.'
-              : 'Opcjonalnie. Wybierz kraj, żeby ustawić prefix numeru.'
-          }
+          hint="Opcjonalnie. Wybierz kraj, aby zmienić prefiks numeru."
         />
         {!googleMode ? (
           <>
@@ -457,20 +415,7 @@ export default function RegisterScreen() {
             />
           </>
         ) : null}
-        <Field
-          label="Kod terapeuty *"
-          value={therapistId}
-          onChangeText={(value) => {
-            setTherapistId(value)
-            if (fieldErrors.therapistId) {
-              setFieldErrors((prev) => ({ ...prev, therapistId: undefined }))
-            }
-          }}
-          autoCapitalize="none"
-          autoCorrect={false}
-          error={fieldErrors.therapistId}
-          hint="Kod z panelu webowego terapeuty: Profil / „Kod dla pacjenta” (Kopiuj kod)."
-        />
+
 
         <ConsentToggle
           label="Akceptuję regulamin serwisu (wymagane)"
@@ -493,6 +438,8 @@ export default function RegisterScreen() {
           </Link>
         </Text>
 
+        {infoMessage ? <InfoBanner message={infoMessage} /> : null}
+
         {error ? (
           <Text style={styles.error} accessibilityRole="alert">
             {error}
@@ -510,7 +457,7 @@ export default function RegisterScreen() {
           <GoogleSignInButton
             loading={loading}
             title="Zarejestruj przez Google"
-            hint="Kliknij Google - e-mail, imię i nazwisko uzupełnią się same. Potem podaj kod terapeuty i zgody."
+            hint="Szybka rejestracja konta za pomocą Google."
             onSuccess={onGoogleSuccess}
             onError={setError}
           />

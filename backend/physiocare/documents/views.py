@@ -48,8 +48,15 @@ class TherapistDocumentUploadView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         patient_id = request.data.get('patient_id')
+        from patients.models import PatientProfile
+
         patient = (
-            request.user.therapist_profile.patients.active().filter(pk=patient_id).first()
+            PatientProfile.objects.filter(
+                therapist_links__therapist=request.user.therapist_profile,
+                therapist_links__status='ACTIVE',
+                user__is_active=True,
+                pk=patient_id,
+            ).first()
         )
         if patient is None:
             return Response(status=status.HTTP_404_NOT_FOUND)

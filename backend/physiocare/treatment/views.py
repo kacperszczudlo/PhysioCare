@@ -37,11 +37,12 @@ from .serializers import (
 
 
 def _get_owned_episode(request, episode_id) -> TreatmentEpisode:
-    episode = TreatmentEpisode.objects.select_related('patient').filter(
-        pk=episode_id,
-        patient__therapist=request.user.therapist_profile,
-    ).first()
+    from core.mixins import user_can_access_patient
+
+    episode = TreatmentEpisode.objects.select_related('patient').filter(pk=episode_id).first()
     if episode is None:
+        raise NotFound()
+    if not user_can_access_patient(request.user, episode.patient):
         raise NotFound()
     return episode
 
@@ -81,8 +82,9 @@ class EpisodeDetailView(generics.RetrieveUpdateAPIView):
 
     def get_queryset(self):
         return TreatmentEpisode.objects.filter(
-            patient__therapist=self.request.user.therapist_profile,
-        ).select_related('patient')
+            patient__therapist_links__therapist=self.request.user.therapist_profile,
+            patient__therapist_links__status='ACTIVE',
+        ).select_related('patient').distinct()
 
 
 class EpisodeBodyPainListCreateView(generics.ListCreateAPIView):
@@ -107,8 +109,9 @@ class EpisodeBodyPainDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return BodyAreaPain.objects.filter(
             episode_id=self.kwargs['episode_id'],
-            episode__patient__therapist=self.request.user.therapist_profile,
-        )
+            episode__patient__therapist_links__therapist=self.request.user.therapist_profile,
+            episode__patient__therapist_links__status='ACTIVE',
+        ).distinct()
 
 
 class EpisodeNoteListCreateView(generics.ListCreateAPIView):
@@ -185,7 +188,9 @@ class EpisodeOrderRefusalListCreateView(generics.ListCreateAPIView):
         return _get_owned_episode(self.request, self.kwargs['episode_id'])
 
     def get_queryset(self):
-        return PhysicianOrderRefusal.objects.filter(episode=self.get_episode())
+        return PhysicianOrderRefusal.objects.filter(
+            episode=self.get_episode(),
+        ).select_related('therapist')
 
     def perform_create(self, serializer):
         episode = self.get_episode()
@@ -204,8 +209,9 @@ class EpisodeDiagnosticRecommendationDetailView(generics.RetrieveUpdateDestroyAP
     def get_queryset(self):
         return DiagnosticRecommendation.objects.filter(
             episode_id=self.kwargs['episode_id'],
-            episode__patient__therapist=self.request.user.therapist_profile,
-        ).select_related('episode')
+            episode__patient__therapist_links__therapist=self.request.user.therapist_profile,
+            episode__patient__therapist_links__status='ACTIVE',
+        ).select_related('episode').distinct()
 
     def perform_update(self, serializer):
         recommendation = serializer.save()
@@ -223,8 +229,9 @@ class EpisodeDeviceOrderDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return MedicalDeviceOrder.objects.filter(
             episode_id=self.kwargs['episode_id'],
-            episode__patient__therapist=self.request.user.therapist_profile,
-        )
+            episode__patient__therapist_links__therapist=self.request.user.therapist_profile,
+            episode__patient__therapist_links__status='ACTIVE',
+        ).distinct()
 
 
 class EpisodeOrderRefusalDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -235,8 +242,9 @@ class EpisodeOrderRefusalDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return PhysicianOrderRefusal.objects.filter(
             episode_id=self.kwargs['episode_id'],
-            episode__patient__therapist=self.request.user.therapist_profile,
-        )
+            episode__patient__therapist_links__therapist=self.request.user.therapist_profile,
+            episode__patient__therapist_links__status='ACTIVE',
+        ).distinct()
 
 
 class PatientReceptaNaRuchListCreateView(TherapistPatientQuerysetMixin, generics.ListCreateAPIView):
@@ -275,9 +283,10 @@ class PatientReceptaNaRuchDetailView(TherapistPatientQuerysetMixin, generics.Ret
     def get_queryset(self):
         return ReceptaNaRuchReferral.objects.filter(
             patient_id=self.kwargs['patient_id'],
-            patient__therapist=self.get_therapist_profile(),
+            patient__therapist_links__therapist=self.get_therapist_profile(),
+            patient__therapist_links__status='ACTIVE',
             patient__user__is_active=True,
-        )
+        ).distinct()
 
     def perform_update(self, serializer):
         patient = self.therapist_patients().filter(pk=self.kwargs['patient_id']).first()

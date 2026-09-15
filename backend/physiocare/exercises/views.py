@@ -158,8 +158,9 @@ class TherapistExerciseAssignmentListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         qs = ExerciseAssignment.objects.filter(
-            patient__therapist=self.request.user.therapist_profile,
-        ).select_related('exercise', 'patient')
+            patient__therapist_links__therapist=self.request.user.therapist_profile,
+            patient__therapist_links__status='ACTIVE',
+        ).select_related('exercise', 'patient').distinct()
         patient_id = self.request.query_params.get('patient')
         if patient_id:
             qs = qs.filter(patient_id=patient_id)
@@ -204,8 +205,9 @@ class TherapistExerciseAssignmentDetailView(generics.RetrieveUpdateDestroyAPIVie
 
     def get_queryset(self):
         return ExerciseAssignment.objects.filter(
-            patient__therapist=self.request.user.therapist_profile,
-        ).select_related('exercise', 'patient')
+            patient__therapist_links__therapist=self.request.user.therapist_profile,
+            patient__therapist_links__status='ACTIVE',
+        ).select_related('exercise', 'patient').distinct()
 
     def get_serializer_class(self):
         if self.request.method in ('PATCH', 'PUT'):

@@ -274,12 +274,14 @@ class MeVisitListCreateView(PatientSelfMixin, generics.ListCreateAPIView):
 
     def create(self, request, *args, **kwargs):
         patient = self.get_patient_profile()
-        ensure_therapy_type_presets(patient.therapist)
         serializer = self.get_serializer(
             data=request.data,
             context={'patient': patient},
         )
         serializer.is_valid(raise_exception=True)
+        therapist = serializer.validated_data.get('therapist')
+        if therapist:
+            ensure_therapy_type_presets(therapist)
         visit = _save_visit(
             serializer.save,
             overlap_message='Termin koliduje z inną wizytą. Wybierz inny slot.',
@@ -302,9 +304,19 @@ class MeTherapyTypeListView(PatientSelfMixin, generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsPatient]
 
     def get_queryset(self):
-        therapist = self.get_patient_profile().therapist
-        ensure_therapy_type_presets(therapist)
-        return TherapyType.objects.filter(therapist=therapist).order_by('name')
+        patient = self.get_patient_profile()
+        therapist_id = self.request.query_params.get('therapist_id')
+        therapist = None
+        if therapist_id:
+            from therapists.models import TherapistProfile
+            therapist = TherapistProfile.objects.filter(pk=therapist_id).first()
+        if not therapist:
+            therapist = patient.therapists.filter(patient_links__status='ACTIVE').first()
+
+        if therapist:
+            ensure_therapy_type_presets(therapist)
+            return TherapyType.objects.filter(therapist=therapist).order_by('name')
+        return TherapyType.objects.none()
 
 
 class VisitDetailView(generics.RetrieveAPIView):

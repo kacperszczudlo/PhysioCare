@@ -105,7 +105,7 @@ def test_patient_can_book_visit_only_within_availability_slot(
     assert res_fail.status_code == status.HTTP_400_BAD_REQUEST
     details = res_fail.data.get('error', {}).get('details', res_fail.data)
     assert 'start_at' in details
-    assert 'nie mieści się w zdefiniowanych slotach' in details['start_at'][0]
+    assert 'nie mieści się w godzinach przyjęć' in details['start_at'][0]
 
 
 @pytest.mark.django_db

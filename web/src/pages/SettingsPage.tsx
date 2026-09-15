@@ -225,21 +225,19 @@ export function SettingsPage() {
             </nav>
           </section>
 
-          <section
-            className="settings-card settings-card--session"
-            aria-labelledby="session-heading"
-          >
+          <section className="settings-card" aria-labelledby="session-heading">
             <header className="settings-card__head">
               <h2 id="session-heading">Sesja</h2>
-              <p className="settings-muted">Kończy dostęp na tym urządzeniu.</p>
+              <p className="settings-muted">Aktywne połączenie z panelem gabinetu.</p>
             </header>
+
             <Button
               type="button"
-              variant="secondary"
-              className="settings-logout"
+              variant="danger"
+              className="settings-logout-btn"
               onClick={() => void logout()}
             >
-              Wyloguj
+              Wyloguj się
             </Button>
           </section>
         </aside>

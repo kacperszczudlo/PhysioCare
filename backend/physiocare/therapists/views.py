@@ -56,9 +56,10 @@ class TherapistDashboardStatsView(APIView):
             start_at__date=today,
             status=VisitStatus.SCHEDULED,
         ).count()
-        patients_count = therapist.patients.active().count()
+        patients_count = therapist.patient_links.filter(status='ACTIVE', patient__user__is_active=True).count()
         assignments_active = ExerciseAssignment.objects.filter(
-            patient__therapist=therapist,
+            patient__therapist_links__therapist=therapist,
+            patient__therapist_links__status='ACTIVE',
             patient__user__is_active=True,
             start_date__lte=today,
             end_date__gte=today,
@@ -74,3 +75,30 @@ class TherapistPublicView(generics.RetrieveAPIView):
     serializer_class = TherapistPublicSerializer
     permission_classes = [IsAuthenticated]
     queryset = TherapistProfile.objects.select_related('user')
+
+
+class TherapistPublicListView(generics.ListAPIView):
+    serializer_class = TherapistPublicSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = TherapistProfile.objects.select_related('user').filter(user__is_active=True)
+        search = self.request.query_params.get('search', '').strip()
+        if search:
+            from django.db.models import Q, Value
+            from django.db.models.functions import Concat
+            qs = qs.annotate(
+                full_name=Concat('user__first_name', Value(' '), 'user__last_name')
+            )
+            query = (
+                Q(full_name__icontains=search)
+                | Q(user__first_name__icontains=search)
+                | Q(user__last_name__icontains=search)
+                | Q(location_address__icontains=search)
+                | Q(pwzf_number__icontains=search)
+            )
+            for term in search.split():
+                query |= Q(user__first_name__icontains=term)
+                query |= Q(user__last_name__icontains=term)
+            qs = qs.filter(query)
+        return qs

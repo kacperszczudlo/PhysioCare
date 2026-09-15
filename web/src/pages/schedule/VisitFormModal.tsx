@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button'
 import { DayCarousel } from '@/components/ui/DayCarousel'
 import { Modal } from '@/components/ui/Modal'
 import { TimeCarousel } from '@/components/ui/TimeCarousel'
+import { useToast } from '@/components/ui/ToastContext'
 import { LocationField } from '@/components/location/LocationField'
 import { addDays, dateFromDayMinutes, formatTime, startOfDay, toIsoLocal } from '@/lib/scheduleTime'
 
@@ -57,6 +58,7 @@ export function VisitFormModal({
   onUpdated,
   onRejected,
 }: VisitFormModalProps) {
+  const { toast } = useToast()
   const isEdit = visit != null
   const isPending = visit?.status === 'PENDING_APPROVAL'
 
@@ -222,6 +224,7 @@ export function VisitFormModal({
           location_address: location.trim(),
         }
         const updated = await schedulingApi.approveVisit(visit.id, payload)
+        toast.success('Wizyta została zatwierdzona.')
         onUpdated?.(updated)
         onClose()
       } else if (visit) {
@@ -234,6 +237,7 @@ export function VisitFormModal({
           location_address: location.trim(),
         }
         const updated = await schedulingApi.updateVisit(visit.id, payload)
+        toast.success('Zaktualizowano wizytę.')
         onUpdated?.(updated)
         onClose()
       } else {
@@ -245,19 +249,21 @@ export function VisitFormModal({
           prep_instructions: prep.trim(),
         }
         await schedulingApi.createVisit(payload)
+        toast.success('Utworzono nową wizytę.')
         onCreated()
         onClose()
       }
     } catch (err) {
-      setError(
+      const errMsg =
         err instanceof ApiError
           ? err.message
           : isPending
             ? 'Nie udało się zatwierdzić zgłoszenia.'
             : isEdit
               ? 'Nie udało się zapisać zmian wizyty.'
-              : 'Nie udało się utworzyć wizyty.',
-      )
+              : 'Nie udało się utworzyć wizyty.'
+      setError(errMsg)
+      toast.error(errMsg)
     } finally {
       setBusy(false)
     }
@@ -271,10 +277,13 @@ export function VisitFormModal({
     setError(null)
     try {
       const updated = await schedulingApi.rejectVisit(visit.id)
+      toast.success('Wizyta została odrzucona.')
       onRejected?.(updated)
       onClose()
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Nie udało się odrzucić zgłoszenia.')
+      const errMsg = err instanceof ApiError ? err.message : 'Nie udało się odrzucić zgłoszenia.'
+      setError(errMsg)
+      toast.error(errMsg)
     } finally {
       setBusy(false)
     }

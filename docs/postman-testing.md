@@ -115,7 +115,7 @@ Poniżej „makiety” ścieżek API - to nie UI, tylko sekwencje requestów odp
 [Typ terapii] POST /therapist/therapy-types
         |
         v
-(pacjent już zarejestrowany z therapist_id)
+(pacjent połączony relacją N:M po umówieniu wizyty lub dodaniu z bazy)
 ```
 
 ### 4.2 Pierwsza wizyta i dokumentacja (web)

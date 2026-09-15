@@ -34,6 +34,8 @@ SECRET_KEY = require_env('DJANGO_SECRET_KEY')
 DEBUG = env_bool('DJANGO_DEBUG', 'false')
 
 ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
+if DEBUG and '*' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('*')
 if not DEBUG and '*' in ALLOWED_HOSTS:
     raise ImproperlyConfigured(
         'Wildcard "*" w DJANGO_ALLOWED_HOSTS jest zabroniony przy DJANGO_DEBUG=false.'

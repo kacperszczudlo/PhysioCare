@@ -1,14 +1,16 @@
-import { Stack, useLocalSearchParams } from 'expo-router'
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 
-import { getErrorMessage } from '@/api/client'
+import { api, getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { TherapistPublic } from '@/api/types'
 import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { Button } from '@/components/Button'
 import { SectionCard } from '@/components/ScreenHeader'
 import { LocationMapCard } from '@/components/LocationMapCard'
+import { useToast } from '@/components/ToastContext'
 import { useAuthenticatedCachedUri } from '@/lib/authMedia'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
@@ -23,12 +25,18 @@ function yearsLabel(years: number): string {
 }
 
 export default function TherapistPublicScreen() {
+  const router = useRouter()
+  const { toast } = useToast()
   const { id } = useLocalSearchParams<{ id: string }>()
+
   const [therapist, setTherapist] = useState<TherapistPublic | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [avatarFailed, setAvatarFailed] = useState(false)
   const [expandedCode, setExpandedCode] = useState<string | null>(null)
+  const [isLinked, setIsLinked] = useState(false)
+  const [linking, setLinking] = useState(false)
+
   const { uri: avatarUri, error: avatarLoadError } = useAuthenticatedCachedUri(
     therapist?.avatar_url,
   )
@@ -40,7 +48,13 @@ export default function TherapistPublicScreen() {
     setError(null)
     setLoading(true)
     try {
-      setTherapist(await patientApi.getTherapistPublic(id))
+      const [tData, myRes] = await Promise.all([
+        patientApi.getTherapistPublic(id),
+        api.get<TherapistPublic[] | { results: TherapistPublic[] }>('/me/therapists/'),
+      ])
+      const myItems = Array.isArray(myRes) ? myRes : myRes.results || []
+      setTherapist(tData)
+      setIsLinked(myItems.some((item) => item.id === id))
       setAvatarFailed(false)
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się pobrać profilu terapeuty.'))
@@ -52,6 +66,23 @@ export default function TherapistPublicScreen() {
   useEffect(() => {
     void load()
   }, [load])
+
+  const handleLink = async () => {
+    if (!therapist) return
+    setLinking(true)
+    try {
+      await api.post('/me/therapists/link/', { therapist_id: therapist.id })
+      setIsLinked(true)
+      toast.success(
+        'Dodano specjalistę',
+        `${therapist.first_name} ${therapist.last_name} został dodany do Twoich specjalistów.`,
+      )
+    } catch (err) {
+      toast.error('Błąd dodawania', getErrorMessage(err, 'Nie udało się dodać fizjoterapeuty.'))
+    } finally {
+      setLinking(false)
+    }
+  }
 
   const allowed = useMemo(
     () => therapist?.competences?.capabilities.filter((cap) => cap.allowed) ?? [],
@@ -108,9 +139,23 @@ export default function TherapistPublicScreen() {
               {experienceYears != null ? (
                 <Text style={styles.muted}>{yearsLabel(experienceYears)}</Text>
               ) : null}
+              {therapist.pwzf_number ? (
+                <Text style={styles.pwzfText}>PWZF: {therapist.pwzf_number}</Text>
+              ) : null}
               <Text style={styles.bio}>{therapist.bio || 'Brak biogramu.'}</Text>
             </View>
           </View>
+
+          {!isLinked ? (
+            <View style={styles.actionRow}>
+              <Button
+                title="Dodaj do moich specjalistów"
+                variant="secondary"
+                loading={linking}
+                onPress={() => void handleLink()}
+              />
+            </View>
+          ) : null}
         </SectionCard>
 
         {therapist.competences ? (
@@ -245,7 +290,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.primary,
   },
+  pwzfText: {
+    fontSize: typography.xs,
+    color: colors.muted,
+  },
   bio: { fontSize: typography.base, color: colors.ink, lineHeight: 22 },
+  actionRow: {
+    marginTop: space.base,
+    paddingTop: space.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
   section: {
     fontSize: typography.sm,
     fontWeight: '700',

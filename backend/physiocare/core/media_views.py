@@ -45,11 +45,7 @@ def user_can_access_avatar(user, media_url: str) -> bool:
     from patients.models import PatientProfile
     from therapists.models import TherapistProfile
 
-    patient = (
-        PatientProfile.objects.select_related('therapist')
-        .filter(avatar_url=media_url)
-        .first()
-    )
+    patient = PatientProfile.objects.filter(avatar_url=media_url).first()
     if patient is not None:
         return user_can_access_patient(user, patient)
 
@@ -63,9 +59,11 @@ def user_can_access_avatar(user, media_url: str) -> bool:
             and user.therapist_profile.id == therapist.id
         )
     if user.role == 'PATIENT':
+        from core.mixins import patient_belongs_to_therapist
+
         return (
             hasattr(user, 'patient_profile')
-            and user.patient_profile.therapist_id == therapist.id
+            and patient_belongs_to_therapist(user.patient_profile, therapist)
         )
     return False
 

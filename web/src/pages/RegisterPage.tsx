@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { ApiError, getFieldError } from '@/api/client'
+import type { QualificationLevel } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
 import {
   peekGoogleRegistrationDraft,
@@ -28,6 +29,33 @@ import { getPwzfError, normalizePwzf } from '@/lib/pwzfPolicy'
 import { useRecaptcha } from '@/hooks/useRecaptcha'
 import './auth-forms.css'
 
+const QUALIFICATION_TILES: ReadonlyArray<{
+  value: QualificationLevel
+  title: string
+  sub: string
+}> = [
+  {
+    value: 'MAGISTER',
+    title: 'Magister fizjoterapii',
+    sub: 'Samodzielne planowanie i ordynacja wyrobów medycznych',
+  },
+  {
+    value: 'LICENCJAT',
+    title: 'Licencjat fizjoterapii',
+    sub: 'Podstawowe planowanie i realizacja świadczeń',
+  },
+  {
+    value: 'FIZJO_SPEC',
+    title: 'Specjalista (FIZJO SPEC)',
+    sub: 'Zaawansowany sprzęt i pełny zakres diagnostyki',
+  },
+  {
+    value: 'TECHNIK',
+    title: 'Technik fizjoterapii',
+    sub: 'Realizacja zabiegów fizjoterapeutycznych',
+  },
+]
+
 export function RegisterPage() {
   const { register } = useAuth()
   const { executeRecaptcha } = useRecaptcha()
@@ -42,9 +70,11 @@ export function RegisterPage() {
   const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [phoneNational, setPhoneNational] = useState('')
   const [pwzf, setPwzf] = useState('')
+  const [qualificationLevel, setQualificationLevel] = useState<QualificationLevel>('MAGISTER')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [declaration, setDeclaration] = useState(false)
+  const [infoMessage, setInfoMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<{
     firstName?: string
@@ -79,7 +109,7 @@ export function RegisterPage() {
     if (draft.last_name) {
       setLastName(draft.last_name)
     }
-    setError('Dane z Google wczytane. Możesz poprawić imię i nazwisko oraz uzupełnić numer PWZFz.')
+    setInfoMessage('Połączono z Google. Uzupełnij formularz, aby utworzyć konto.')
   }, [])
 
   function validateTherapistFields(requirePassword: boolean) {
@@ -211,6 +241,7 @@ export function RegisterPage() {
         pwzf_number: normalizePwzf(pwzf),
         pwzf_declaration: true,
         phone: formatPhoneForApi(phoneNational, countryCode) || undefined,
+        qualification_level: qualificationLevel,
       })
       setGoogleDraft(null)
       if (result.kind === 'needs_email_verification') {
@@ -269,6 +300,7 @@ export function RegisterPage() {
         pwzf_number: normalizePwzf(pwzf),
         pwzf_declaration: true,
         phone: formatPhoneForApi(phoneNational, countryCode) || undefined,
+        qualification_level: qualificationLevel,
       })
       if (result.kind === 'needs_email_verification') {
         navigate(`/verify-email?email=${encodeURIComponent(result.email)}`, { replace: true })
@@ -299,8 +331,9 @@ export function RegisterPage() {
     })
     setSubmitted(false)
     setFieldErrors({})
-    setError(
-      'Konto Google połączone. Sprawdź lub popraw imię i nazwisko oraz uzupełnij numer PWZFz i oświadczenie.',
+    setError(null)
+    setInfoMessage(
+      'Konto Google połączone. Uzupełnij numer PWZFz oraz oświadczenie, aby utworzyć konto.',
     )
   }
 
@@ -399,6 +432,27 @@ export function RegisterPage() {
           }}
           error={fieldErrors.pwzf}
         />
+        <div className="ui-field">
+          <span className="ui-field__label">Tytuł zawodowy / Wykształcenie</span>
+          <div className="qualification-grid" role="radiogroup" aria-label="Tytuł zawodowy">
+            {QUALIFICATION_TILES.map((tile) => {
+              const isSelected = qualificationLevel === tile.value
+              return (
+                <button
+                  key={tile.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  className={`qualification-tile ${isSelected ? 'qualification-tile--selected' : ''}`}
+                  onClick={() => setQualificationLevel(tile.value)}
+                >
+                  <span className="qualification-tile__title">{tile.title}</span>
+                  <span className="qualification-tile__sub">{tile.sub}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
 
         {!googleMode ? (
           <div className="auth-form__password">
@@ -457,6 +511,12 @@ export function RegisterPage() {
           <Link to="/privacy">Polityką prywatności</Link> oraz{' '}
           <Link to="/cookies">Polityką cookies</Link>.
         </p>
+
+        {infoMessage ? (
+          <p className="auth-form__info" role="status">
+            {infoMessage}
+          </p>
+        ) : null}
 
         {error ? (
           <p className="auth-form__error" role="alert">

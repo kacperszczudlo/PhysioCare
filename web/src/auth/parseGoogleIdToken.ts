@@ -6,6 +6,26 @@ export type GoogleIdTokenClaims = {
   last_name?: string
 }
 
+function decodeBase64Utf8(base64Str: string): string {
+  const binary = atob(base64Str)
+  if (typeof TextDecoder !== 'undefined') {
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i)
+    }
+    return new TextDecoder('utf-8').decode(bytes)
+  }
+  try {
+    const percentEncoded = binary
+      .split('')
+      .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+      .join('')
+    return decodeURIComponent(percentEncoded)
+  } catch {
+    return binary
+  }
+}
+
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
     const part = token.split('.')[1]
@@ -14,7 +34,7 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
     }
     const normalized = part.replace(/-/g, '+').replace(/_/g, '/')
     const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=')
-    const json = atob(padded)
+    const json = decodeBase64Utf8(padded)
     return JSON.parse(json) as Record<string, unknown>
   } catch {
     return null

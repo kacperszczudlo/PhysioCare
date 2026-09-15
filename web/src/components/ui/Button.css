@@ -60,6 +60,15 @@
   background: var(--color-primary-subtle);
 }
 
+.ui-btn--danger {
+  background: var(--color-danger);
+  color: #ffffff;
+}
+
+.ui-btn--danger:hover:not(:disabled) {
+  background: oklch(0.42 0.18 25);
+}
+
 .ui-btn__spinner {
   width: 1rem;
   height: 1rem;

@@ -6,6 +6,7 @@ from .views import (
     TherapistCompetencesView,
     TherapistDashboardStatsView,
     TherapistProfileView,
+    TherapistPublicListView,
     TherapistPublicView,
 )
 
@@ -26,5 +27,6 @@ urlpatterns = [
         TherapistDashboardStatsView.as_view(),
         name='therapist-dashboard-stats',
     ),
+    path('therapists/public/', TherapistPublicListView.as_view(), name='therapists-public-list'),
     path('therapists/<uuid:pk>/public/', TherapistPublicView.as_view(), name='therapist-public'),
 ]

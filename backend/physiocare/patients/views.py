@@ -119,3 +119,66 @@ class MeAccountDeletionRequestView(PatientSelfMixin, APIView):
             },
             status=status.HTTP_202_ACCEPTED,
         )
+
+
+class MeTherapistsView(PatientSelfMixin, APIView):
+    permission_classes = [IsAuthenticated, IsPatient]
+
+    def get(self, request, *args, **kwargs):
+        patient = self.get_patient_profile()
+        active_therapists = patient.therapists.filter(patient_links__status='ACTIVE')
+        from therapists.serializers import TherapistPublicSerializer
+        return Response(TherapistPublicSerializer(active_therapists, many=True).data)
+
+
+class MeTherapistLinkView(PatientSelfMixin, APIView):
+    permission_classes = [IsAuthenticated, IsPatient]
+
+    def post(self, request, *args, **kwargs):
+        patient = self.get_patient_profile()
+        therapist_id = request.data.get('therapist_id')
+        therapist_code = request.data.get('therapist_code')
+
+        from django.db.models import Q
+        from patients.models import LinkStatus, PatientTherapistLink
+        from therapists.models import TherapistProfile
+
+        therapist = None
+        if therapist_id:
+            therapist = TherapistProfile.objects.filter(id=therapist_id).first()
+        elif therapist_code:
+            code = str(therapist_code).strip()
+            therapist = TherapistProfile.objects.filter(
+                Q(pwzf_number__iexact=code) | Q(id=code if len(code) == 36 else None)
+            ).first()
+
+        if not therapist:
+            return Response({'detail': 'Nie znaleziono fizjoterapeuty.'}, status=status.HTTP_404_NOT_FOUND)
+
+        link, created = PatientTherapistLink.objects.get_or_create(
+            patient=patient,
+            therapist=therapist,
+            defaults={'status': LinkStatus.ACTIVE},
+        )
+        if not created and link.status != LinkStatus.ACTIVE:
+            link.status = LinkStatus.ACTIVE
+            link.save(update_fields=['status', 'updated_at'])
+
+        from therapists.serializers import TherapistPublicSerializer
+        return Response(
+            TherapistPublicSerializer(therapist).data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+
+class MeTherapistUnlinkView(PatientSelfMixin, APIView):
+    permission_classes = [IsAuthenticated, IsPatient]
+
+    def delete(self, request, therapist_id, *args, **kwargs):
+        patient = self.get_patient_profile()
+        from patients.models import LinkStatus, PatientTherapistLink
+        link = PatientTherapistLink.objects.filter(patient=patient, therapist_id=therapist_id).first()
+        if link:
+            link.status = LinkStatus.ARCHIVED
+            link.save(update_fields=['status', 'updated_at'])
+        return Response({'detail': 'Fizjoterapeuta został usunięty z listy.'}, status=status.HTTP_200_OK)

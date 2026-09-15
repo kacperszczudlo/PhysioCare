@@ -96,9 +96,19 @@ export function LoginPage() {
     try {
       await loginWithGoogle(credential)
       navigate(from, { replace: true })
-    } catch (err) {
-      if (err instanceof ApiError && err.code === 'AUTH_025') {
-        const details = err.details as {
+    } catch (err: unknown) {
+      const anyErr = err as Record<string, any> | null | undefined
+      const isNotFound =
+        anyErr &&
+        (anyErr.code === 'AUTH_025' ||
+          anyErr.status === 404 ||
+          Boolean(anyErr.details?.needs_registration) ||
+          Boolean(anyErr.body?.error?.details?.needs_registration) ||
+          (typeof anyErr.message === 'string' &&
+            /brak konta|nie znaleziono|dokończ rejestrację/i.test(anyErr.message)))
+
+      if (isNotFound) {
+        const details = (anyErr?.details || anyErr?.body?.error?.details || {}) as {
           email?: string
           first_name?: string
           last_name?: string

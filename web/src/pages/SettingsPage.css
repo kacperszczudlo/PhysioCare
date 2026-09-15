@@ -222,8 +222,8 @@
     color var(--duration-fast) var(--ease-out);
 }
 
-.settings-logout {
-  align-self: flex-start;
+.settings-logout-btn {
+  width: 100%;
 }
 
 @media (prefers-reduced-motion: reduce) {

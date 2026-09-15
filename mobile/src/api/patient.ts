@@ -76,8 +76,9 @@ export const patientApi = {
     return api.post<Visit>('/me/visits/', payload)
   },
 
-  async getTherapyTypes() {
-    const data = await api.get<TherapyType[] | Paginated<TherapyType>>('/me/therapy-types/')
+  async getTherapyTypes(therapist_id?: string) {
+    const query = therapist_id ? `?therapist_id=${therapist_id}` : ''
+    const data = await api.get<TherapyType[] | Paginated<TherapyType>>(`/me/therapy-types/${query}`)
     return unwrapList(data)
   },
 
