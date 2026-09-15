@@ -14,7 +14,8 @@ import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { SectionCard } from '@/components/ScreenHeader'
 import { LocationMapCard } from '@/components/LocationMapCard'
 import { useToast } from '@/components/ToastContext'
-import { addMinutesISO, formatDateTime, formatTimeRange, visitStatusLabel } from '@/lib/format'
+import { addMinutesISO, formatDateTime, formatTimeRange } from '@/lib/format'
+import { VisitStatusBadge } from '@/components/VisitStatusBadge'
 import { colors, space, typography } from '@/theme/tokens'
 
 function defaultRescheduleStart(from?: string): Date {
@@ -161,8 +162,10 @@ export default function VisitDetailScreen() {
         {error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
 
         <SectionCard>
-          <Text style={styles.title}>{visit.therapy_type_name}</Text>
-          <Text style={styles.meta}>{visitStatusLabel(visit.status)}</Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>{visit.therapy_type_name}</Text>
+            <VisitStatusBadge status={visit.status} />
+          </View>
           {isPending ? (
             <Text style={styles.muted}>
               Zgłoszenie czeka na zatwierdzenie przez terapeutę. Możesz zmienić termin albo je
@@ -257,7 +260,13 @@ const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
   content: { padding: space.lg, gap: space.base, paddingBottom: space['4xl'] },
   pad: { padding: space.lg },
-  title: { fontSize: typography.xl, fontWeight: '700', color: colors.ink },
+  title: { flex: 1, fontSize: typography.xl, fontWeight: '700', color: colors.ink },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: space.sm,
+  },
   section: {
     fontSize: typography.sm,
     fontWeight: '700',

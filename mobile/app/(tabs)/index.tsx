@@ -12,6 +12,7 @@ import { BrandMark } from '@/components/BrandMark'
 import { ProgressOverview } from '@/components/ProgressOverview'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
 import { formatDateTime, formatTimeRange, todayISODate } from '@/lib/format'
+import { VisitStatusBadge } from '@/components/VisitStatusBadge'
 import {
   buildWeekExerciseProgress,
   countCompletedVisits,
@@ -201,12 +202,7 @@ export default function DashboardScreen() {
           <SectionCard>
             <View style={styles.rowBetween}>
               <Text style={styles.cardTitle}>{nextVisit.therapy_type_name}</Text>
-              <View
-                style={[
-                  styles.dot,
-                  { backgroundColor: nextVisit.therapy_type_color || colors.primary },
-                ]}
-              />
+              <VisitStatusBadge status={nextVisit.status} />
             </View>
             <Text style={styles.meta}>{formatDateTime(nextVisit.start_at)}</Text>
             <Text style={styles.meta}>
@@ -324,9 +320,10 @@ const styles = StyleSheet.create({
   rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    gap: space.sm,
   },
-  cardTitle: { fontSize: typography.lg, fontWeight: '700', color: colors.ink },
+  cardTitle: { flex: 1, fontSize: typography.lg, fontWeight: '700', color: colors.ink },
   meta: { fontSize: typography.sm, color: colors.ink },
   muted: { fontSize: typography.sm, color: colors.muted },
   openHint: {

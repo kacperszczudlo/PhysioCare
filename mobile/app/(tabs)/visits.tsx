@@ -9,7 +9,8 @@ import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { MobileVisitsSkeleton } from '@/components/skeletons/MobileSkeletons'
 import { Button } from '@/components/Button'
 import { ScreenHeader } from '@/components/ScreenHeader'
-import { formatDateTime, formatTimeRange, visitStatusLabel } from '@/lib/format'
+import { formatDateTime, formatTimeRange } from '@/lib/format'
+import { VisitStatusBadge } from '@/components/VisitStatusBadge'
 import { isVisitRealtimeEvent } from '@/realtime/types'
 import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
 import { useSilentPoll } from '@/realtime/useSilentPoll'
@@ -142,21 +143,11 @@ export default function VisitsScreen() {
               <Pressable
                 key={visit.id}
                 onPress={() => router.push(`/visit/${visit.id}`)}
-                style={[
-                  styles.card,
-                  visit.status === 'PENDING_APPROVAL' ? styles.cardPending : null,
-                ]}
+                style={styles.card}
               >
                 <View style={styles.rowBetween}>
                   <Text style={styles.title}>{visit.therapy_type_name}</Text>
-                  <Text
-                    style={[
-                      styles.status,
-                      visit.status === 'PENDING_APPROVAL' ? styles.statusPending : null,
-                    ]}
-                  >
-                    {visitStatusLabel(visit.status)}
-                  </Text>
+                  <VisitStatusBadge status={visit.status} />
                 </View>
                 <Text style={styles.meta}>{formatDateTime(visit.start_at)}</Text>
                 <Text style={styles.muted}>
@@ -223,19 +214,13 @@ const styles = StyleSheet.create({
     padding: space.base,
     gap: space.xs,
   },
-  cardPending: {
-    borderStyle: 'dashed',
-    borderColor: colors.primary,
-  },
   rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: space.sm,
   },
   title: { flex: 1, fontSize: typography.lg, fontWeight: '700', color: colors.ink },
-  status: { fontSize: typography.xs, color: colors.primary, fontWeight: '700', maxWidth: '46%' },
-  statusPending: { color: colors.warning },
   meta: { fontSize: typography.sm, color: colors.ink },
   muted: { fontSize: typography.sm, color: colors.muted },
 })
