@@ -62,7 +62,7 @@ export function DayCarousel({
       return
     }
     const chip = root.children[selectedIndex] as HTMLElement | undefined
-    chip?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+    chip?.scrollIntoView?.({ inline: 'center', block: 'nearest', behavior: 'smooth' })
   }, [selectedIndex])
 
   const today = startOfDay(new Date())
