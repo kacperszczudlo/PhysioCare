@@ -5,6 +5,7 @@ import { patientsApi, treatmentApi } from '@/api/treatment'
 import { ApiError } from '@/api/client'
 import type { Exercise, PatientSummary, TreatmentEpisode } from '@/api/types'
 import { Button } from '@/components/ui/Button'
+import { ModalFormSkeleton } from '@/components/skeletons/WebSkeletons'
 import { DateCarousel } from '@/components/ui/DateCarousel'
 import { Field } from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
@@ -143,7 +144,7 @@ export function AssignExerciseModal({
       title={exercise ? `Przypisz: ${exercise.title}` : 'Przypisz ćwiczenie'}
       onClose={onClose}
     >
-      {loadingMeta ? <p className="exercises-muted">Ładowanie…</p> : null}
+      {loadingMeta ? <ModalFormSkeleton /> : null}
 
       {!loadingMeta && patients.length === 0 ? (
         <p className="exercises-empty" role="status">

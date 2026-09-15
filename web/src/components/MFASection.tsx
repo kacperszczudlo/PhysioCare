@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { authApi, type MFAStatusResponse, type MFASetupResponse } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
 import { ErrorBanner } from '@/components/AsyncState'
+import { MFASectionSkeleton } from '@/components/skeletons/WebSkeletons'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/ToastContext'
@@ -93,10 +94,7 @@ export function MFASection() {
   if (loadingStatus) {
     return (
       <section className="settings-card">
-        <header className="settings-card__head">
-          <h2>Dwuskładnikowa autentykacja (2FA)</h2>
-          <p className="settings-muted">Ładowanie statusu zabezpieczeń...</p>
-        </header>
+        <MFASectionSkeleton />
       </section>
     )
   }

@@ -12,6 +12,7 @@ import type {
   VisitUpdatePayload,
 } from '@/api/types'
 import { Button } from '@/components/ui/Button'
+import { ModalFormSkeleton } from '@/components/skeletons/WebSkeletons'
 import { DayCarousel } from '@/components/ui/DayCarousel'
 import { Modal } from '@/components/ui/Modal'
 import { TimeCarousel } from '@/components/ui/TimeCarousel'
@@ -329,7 +330,7 @@ export function VisitFormModal({
       size="lg"
       onClose={onClose}
     >
-      {loadingMeta ? <p className="schedule-muted">Ładowanie…</p> : null}
+      {loadingMeta ? <ModalFormSkeleton /> : null}
 
       {!loadingMeta && !isEdit && patients.length === 0 ? (
         <p className="schedule-empty" role="status">

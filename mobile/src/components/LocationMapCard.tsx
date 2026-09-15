@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Skeleton } from '@/components/Skeleton'
 import { openAddressInMaps } from '@/lib/maps'
 
 interface LocationMapCardProps {
@@ -89,10 +90,7 @@ export const LocationMapCard: React.FC<LocationMapCardProps> = ({
 
       <View style={styles.mapContainer}>
         {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color="#2563eb" />
-            <Text style={styles.loadingText}>Ładowanie mapy…</Text>
-          </View>
+          <Skeleton width="100%" height={160} borderRadius={8} />
         ) : staticMapUrl && !imageError ? (
           <Image
             source={{ uri: staticMapUrl }}

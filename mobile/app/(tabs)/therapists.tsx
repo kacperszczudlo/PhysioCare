@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons'
 
 import { api, getErrorMessage } from '@/api/client'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { MobileTherapistsSkeleton } from '@/components/skeletons/MobileSkeletons'
 import { Button } from '@/components/Button'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
 import { useToast } from '@/components/ToastContext'
@@ -109,7 +110,12 @@ export default function TherapistsTabScreen() {
   const isLinked = (id: string) => myTherapists.some((t) => t.id === id)
 
   if (loading && myTherapists.length === 0) {
-    return <LoadingBlock label="Ładowanie listy fizjoterapeutów…" />
+    return (
+      <LoadingBlock
+        label="Ładowanie listy fizjoterapeutów…"
+        skeleton={<MobileTherapistsSkeleton />}
+      />
+    )
   }
 
   return (

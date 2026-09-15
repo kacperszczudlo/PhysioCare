@@ -19,6 +19,7 @@ import type { Consent, NotificationPreference } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
 import { AccountDeletionModal } from '@/components/AccountDeletionModal'
 import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { MobileSettingsSkeleton } from '@/components/skeletons/MobileSkeletons'
 import { Button } from '@/components/Button'
 import { DataExportModal } from '@/components/DataExportModal'
 import { Field } from '@/components/Field'
@@ -211,7 +212,7 @@ export default function SettingsScreen() {
   }
 
   if (loading) {
-    return <LoadingBlock label="Ładowanie ustawień…" />
+    return <LoadingBlock label="Ładowanie ustawień…" skeleton={<MobileSettingsSkeleton />} />
   }
 
   return (

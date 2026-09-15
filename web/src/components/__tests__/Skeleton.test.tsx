@@ -1,7 +1,15 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { Skeleton, SkeletonAvatar, SkeletonText, SkeletonWrapper } from '../ui/Skeleton'
-import { DashboardSkeleton, PatientsSkeleton } from '../skeletons/WebSkeletons'
+import {
+  AvailabilitySkeleton,
+  DashboardSkeleton,
+  DiagnosticMapSkeleton,
+  MFASectionSkeleton,
+  ModalFormSkeleton,
+  PatientAssignmentsSkeleton,
+  PatientsSkeleton,
+} from '../skeletons/WebSkeletons'
 
 describe('Web Skeleton Components', () => {
   it('renders base Skeleton primitive with custom dimensions', () => {
@@ -47,5 +55,27 @@ describe('Web Skeleton Components', () => {
     render(<PatientsSkeleton />)
     const status = screen.getByRole('status')
     expect(status).toHaveAttribute('aria-label', 'Ładowanie listy pacjentów…')
+  })
+
+  it('renders new domain skeletons without errors', () => {
+    const { unmount: u1 } = render(<PatientAssignmentsSkeleton />)
+    expect(screen.getByRole('status')).toHaveAttribute('aria-label', 'Ładowanie zaleceń…')
+    u1()
+
+    const { unmount: u2 } = render(<AvailabilitySkeleton />)
+    expect(screen.getByRole('status')).toHaveAttribute('aria-label', 'Ładowanie grafiku pracy…')
+    u2()
+
+    const { unmount: u3 } = render(<DiagnosticMapSkeleton />)
+    expect(screen.getByRole('status')).toHaveAttribute('aria-label', 'Ładowanie mapy diagnostycznej…')
+    u3()
+
+    const { unmount: u4 } = render(<ModalFormSkeleton />)
+    expect(screen.getByRole('status')).toHaveAttribute('aria-label', 'Ładowanie formularza…')
+    u4()
+
+    const { unmount: u5 } = render(<MFASectionSkeleton />)
+    expect(screen.getByRole('status')).toHaveAttribute('aria-label', 'Ładowanie statusu MFA…')
+    u5()
   })
 })

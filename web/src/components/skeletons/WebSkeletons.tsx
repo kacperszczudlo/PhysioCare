@@ -228,3 +228,81 @@ export function ProfileSkeleton() {
     </SkeletonWrapper>
   )
 }
+
+export function PatientAssignmentsSkeleton() {
+  return (
+    <SkeletonWrapper label="Ładowanie zaleceń…" className="skeleton-dashboard">
+      <div className="skeleton-panel">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="skeleton-list-row" style={{ gap: '1rem' }}>
+            <Skeleton width="60px" height="60px" radius="md" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
+              <Skeleton width="55%" height="1.1rem" radius="sm" />
+              <Skeleton width="35%" height="0.85rem" radius="sm" />
+            </div>
+            <Skeleton width="5rem" height="2rem" radius="md" />
+          </div>
+        ))}
+      </div>
+    </SkeletonWrapper>
+  )
+}
+
+export function AvailabilitySkeleton() {
+  return (
+    <SkeletonWrapper label="Ładowanie grafiku pracy…" className="skeleton-dashboard">
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+        <Skeleton width="30%" height="2rem" radius="md" />
+        <Skeleton width="6rem" height="2rem" radius="md" />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.75rem' }}>
+        {Array.from({ length: 7 }).map((_, i) => (
+          <div key={i} className="skeleton-panel" style={{ padding: '0.75rem', gap: '0.5rem' }}>
+            <Skeleton width="70%" height="1.2rem" radius="sm" />
+            <Skeleton width="100%" height="2rem" radius="sm" />
+            <Skeleton width="100%" height="2rem" radius="sm" />
+          </div>
+        ))}
+      </div>
+    </SkeletonWrapper>
+  )
+}
+
+export function DiagnosticMapSkeleton() {
+  return (
+    <SkeletonWrapper label="Ładowanie mapy diagnostycznej…" className="skeleton-dashboard">
+      <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+        <Skeleton width="220px" height="340px" radius="lg" />
+        <div className="skeleton-panel" style={{ flex: 1, gap: '0.75rem' }}>
+          <Skeleton width="40%" height="1.5rem" radius="sm" />
+          <SkeletonText lines={3} gap="0.5rem" />
+        </div>
+      </div>
+    </SkeletonWrapper>
+  )
+}
+
+export function ModalFormSkeleton() {
+  return (
+    <SkeletonWrapper label="Ładowanie formularza…" className="skeleton-dashboard">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.5rem' }}>
+        <Skeleton width="30%" height="1rem" radius="sm" />
+        <Skeleton width="100%" height="2.5rem" radius="md" />
+        <Skeleton width="40%" height="1rem" radius="sm" />
+        <Skeleton width="100%" height="2.5rem" radius="md" />
+      </div>
+    </SkeletonWrapper>
+  )
+}
+
+export function MFASectionSkeleton() {
+  return (
+    <SkeletonWrapper label="Ładowanie statusu MFA…" className="skeleton-dashboard">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <Skeleton width="45%" height="1.25rem" radius="sm" />
+        <Skeleton width="80%" height="0.875rem" radius="sm" />
+        <Skeleton width="7rem" height="2.25rem" radius="md" style={{ marginTop: '0.5rem' }} />
+      </div>
+    </SkeletonWrapper>
+  )
+}

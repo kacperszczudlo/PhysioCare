@@ -7,6 +7,7 @@ import { api, getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { TherapistPublic } from '@/api/types'
 import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { MobileTherapistDetailSkeleton } from '@/components/skeletons/MobileSkeletons'
 import { Button } from '@/components/Button'
 import { SectionCard } from '@/components/ScreenHeader'
 import { LocationMapCard } from '@/components/LocationMapCard'
@@ -90,7 +91,7 @@ export default function TherapistPublicScreen() {
   )
 
   if (loading) {
-    return <LoadingBlock />
+    return <LoadingBlock skeleton={<MobileTherapistDetailSkeleton />} />
   }
 
   if (!therapist) {

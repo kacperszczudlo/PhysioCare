@@ -163,6 +163,106 @@ export function MobileExerciseDetailSkeleton() {
   )
 }
 
+export function MobileTherapistsSkeleton() {
+  return (
+    <SkeletonWrapper label="Ładowanie listy fizjoterapeutów…" style={styles.container}>
+      <Skeleton width="100%" height={44} borderRadius={radius.md} />
+      {Array.from({ length: 4 }).map((_, index) => (
+        <View key={index} style={styles.cardRow}>
+          <SkeletonAvatar size={48} />
+          <View style={{ gap: space.xs, flex: 1 }}>
+            <Skeleton width="65%" height={16} />
+            <Skeleton width="45%" height={12} />
+          </View>
+          <Skeleton width={72} height={32} borderRadius={radius.md} />
+        </View>
+      ))}
+    </SkeletonWrapper>
+  )
+}
+
+export function MobileTherapistDetailSkeleton() {
+  return (
+    <SkeletonWrapper label="Ładowanie profilu fizjoterapeuty…" style={styles.container}>
+      <View style={styles.centerCard}>
+        <SkeletonAvatar size={72} />
+        <Skeleton width={170} height={22} style={{ marginTop: space.sm }} />
+        <Skeleton width={120} height={14} style={{ marginTop: space.xs }} />
+        <View style={[styles.rowGap, { marginTop: space.sm }]}>
+          <Skeleton width={90} height={22} borderRadius={radius.sm} />
+          <Skeleton width={70} height={22} borderRadius={radius.sm} />
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <Skeleton width={110} height={16} />
+        <SkeletonText lines={4} gap={space.md} style={{ marginTop: space.md }} />
+      </View>
+
+      <Skeleton width="100%" height={48} borderRadius={radius.md} />
+    </SkeletonWrapper>
+  )
+}
+
+export function MobileSettingsSkeleton() {
+  return (
+    <SkeletonWrapper label="Ładowanie ustawień…" style={styles.container}>
+      <View style={styles.cardRow}>
+        <SkeletonAvatar size={48} />
+        <View style={{ gap: space.xs, flex: 1 }}>
+          <Skeleton width="50%" height={18} />
+          <Skeleton width="70%" height={14} />
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <Skeleton width={130} height={16} />
+        <View style={{ gap: space.md, marginTop: space.md }}>
+          <Skeleton width="100%" height={44} borderRadius={radius.md} />
+          <Skeleton width="100%" height={44} borderRadius={radius.md} />
+          <Skeleton width="100%" height={44} borderRadius={radius.md} />
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <Skeleton width={150} height={16} />
+        <View style={{ gap: space.md, marginTop: space.md }}>
+          <Skeleton width="100%" height={44} borderRadius={radius.md} />
+          <Skeleton width="100%" height={44} borderRadius={radius.md} />
+        </View>
+      </View>
+    </SkeletonWrapper>
+  )
+}
+
+export function MobileVisitRequestSkeleton() {
+  return (
+    <SkeletonWrapper label="Ładowanie formularza wizyty…" style={styles.container}>
+      <View style={styles.card}>
+        <Skeleton width={140} height={16} />
+        <View style={[styles.rowGap, { marginTop: space.md }]}>
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} width={60} height={60} circle />
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <Skeleton width={120} height={16} />
+        <View style={{ gap: space.sm, marginTop: space.md }}>
+          <Skeleton width="100%" height={48} borderRadius={radius.md} />
+          <Skeleton width="100%" height={48} borderRadius={radius.md} />
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <Skeleton width={150} height={16} />
+        <Skeleton width="100%" height={44} borderRadius={radius.md} style={{ marginTop: space.md }} />
+      </View>
+    </SkeletonWrapper>
+  )
+}
+
 const styles = StyleSheet.create({
   container: {
     gap: space.base,

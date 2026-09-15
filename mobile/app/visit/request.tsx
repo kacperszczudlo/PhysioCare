@@ -7,6 +7,7 @@ import { api, getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { TherapyType } from '@/api/types'
 import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { MobileVisitRequestSkeleton } from '@/components/skeletons/MobileSkeletons'
 import { Button } from '@/components/Button'
 import { DateTimePickerField } from '@/components/DateTimePickerField'
 import { Field } from '@/components/Field'
@@ -178,7 +179,10 @@ export default function VisitRequestScreen() {
     <>
       <Stack.Screen options={{ title: 'Umów wizytę', headerShown: true }} />
       {loading ? (
-        <LoadingBlock label="Ładowanie formularza wizyty…" />
+        <LoadingBlock
+          label="Ładowanie formularza wizyty…"
+          skeleton={<MobileVisitRequestSkeleton />}
+        />
       ) : (
         <KeyboardAwareForm style={styles.flex} contentContainerStyle={styles.content}>
           <Text style={styles.lead}>

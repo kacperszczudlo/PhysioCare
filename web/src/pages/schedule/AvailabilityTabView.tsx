@@ -3,6 +3,7 @@ import { schedulingApi } from '@/api/scheduling'
 import type { AvailabilitySlot, Holiday } from '@/api/types'
 import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
+import { AvailabilitySkeleton } from '@/components/skeletons/WebSkeletons'
 import { CustomTimePicker } from '@/components/ui/CustomTimePicker'
 import { DateCarousel } from '@/components/ui/DateCarousel'
 import { useToast } from '@/components/ui/ToastContext'
@@ -284,7 +285,7 @@ export function AvailabilityTabView() {
   const specificSlots = slots.filter((s) => !s.is_recurring)
 
   if (loading) {
-    return <div className="avail-tab-loading">Ładowanie grafiku pracy...</div>
+    return <AvailabilitySkeleton />
   }
 
   return (

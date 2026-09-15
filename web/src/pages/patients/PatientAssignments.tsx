@@ -4,6 +4,7 @@ import { exercisesApi } from '@/api/exercises'
 import { getErrorMessage } from '@/api/client'
 import type { ExerciseAssignment } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
+import { PatientAssignmentsSkeleton } from '@/components/skeletons/WebSkeletons'
 import { Button } from '@/components/ui/Button'
 import { DateCarousel } from '@/components/ui/DateCarousel'
 import { Field } from '@/components/ui/Field'
@@ -125,7 +126,9 @@ export function PatientAssignments({ patientId, episodeId = null }: PatientAssig
         </div>
       </div>
 
-      {loading ? <LoadingBlock label="Ładowanie zaleceń…" /> : null}
+      {loading ? (
+        <LoadingBlock label="Ładowanie zaleceń…" skeleton={<PatientAssignmentsSkeleton />} />
+      ) : null}
 
       {!loading && error ? <ErrorBanner message={error} onRetry={() => void load()} /> : null}
 
