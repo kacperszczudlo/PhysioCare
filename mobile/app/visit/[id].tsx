@@ -73,11 +73,10 @@ export default function VisitDetailScreen() {
       return
     }
     if (newStart.getTime() <= Date.now()) {
-      setError('Termin musi być w przyszłości.')
+      toast.error('Nieprawidłowa data', 'Termin musi być w przyszłości.')
       return
     }
     setBusy(true)
-    setError(null)
     try {
       const startIso = newStart.toISOString()
       const endIso = addMinutesISO(startIso, visit.therapy_type_duration_min || 45)
@@ -90,8 +89,15 @@ export default function VisitDetailScreen() {
       toast.success('Termin wizyty został zmieniony.')
     } catch (err) {
       const msg = getErrorMessage(err, 'Nie udało się zmienić terminu.')
-      setError(msg)
-      toast.error(msg)
+      let title = 'Błąd zmiany terminu'
+      if (msg.includes('zarezerwowana') || msg.includes('zajęt')) {
+        title = 'Godzina zajęta'
+      } else if (msg.includes('godzinach przyjęć')) {
+        title = 'Poza godzinami pracy'
+      } else if (msg.includes('wolnym od pracy') || msg.includes('święto')) {
+        title = 'Dzień wolny'
+      }
+      toast.error(title, msg)
     } finally {
       setBusy(false)
     }
@@ -113,7 +119,6 @@ export default function VisitDetailScreen() {
                 return
               }
               setBusy(true)
-              setError(null)
               try {
                 const updated = await patientApi.cancelVisit(visit.id, cancelReason.trim())
                 setVisit(updated)
@@ -123,7 +128,6 @@ export default function VisitDetailScreen() {
                   err,
                   pending ? 'Nie udało się wycofać zgłoszenia.' : 'Nie udało się odwołać wizyty.',
                 )
-                setError(msg)
                 toast.error(msg)
               } finally {
                 setBusy(false)

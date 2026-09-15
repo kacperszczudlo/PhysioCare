@@ -406,6 +406,18 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
                 {'start_at': 'Wybrany termin nie mieści się w godzinach przyjęć tego fizjoterapeuty. Wybierz inną datę lub godzinę.'}
             )
 
+        overlapping = Visit.objects.filter(
+            therapist=therapist,
+            start_at__lt=end_at,
+            end_at__gt=start_at,
+        ).exclude(status=VisitStatus.CANCELLED)
+        if self.instance:
+            overlapping = overlapping.exclude(pk=self.instance.pk)
+        if overlapping.exists():
+            raise serializers.ValidationError(
+                {'start_at': 'Wybrana godzina jest już zarezerwowana przez innego pacjenta. Wybierz inny termin.'}
+            )
+
         attrs['therapist'] = therapist
         return attrs
 
@@ -499,6 +511,32 @@ class VisitRescheduleSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'end_at': 'Koniec wizyty musi być po rozpoczęciu.'}
             )
+        if start_at < timezone.now():
+            raise serializers.ValidationError(
+                {'start_at': 'Termin wizyty musi być w przyszłości.'}
+            )
+
+        therapist = visit.therapist
+        if not is_visit_within_therapist_availability(therapist, start_at, end_at):
+            is_holiday, holiday_name = is_polish_holiday(start_at.date())
+            if is_holiday:
+                raise serializers.ValidationError(
+                    {'start_at': f'Wybrany dzień ({holiday_name}) jest dniem wolnym od pracy.'}
+                )
+            raise serializers.ValidationError(
+                {'start_at': 'Wybrany termin nie mieści się w godzinach przyjęć tego fizjoterapeuty.'}
+            )
+
+        overlapping = Visit.objects.filter(
+            therapist=therapist,
+            start_at__lt=end_at,
+            end_at__gt=start_at,
+        ).exclude(pk=visit.pk).exclude(status=VisitStatus.CANCELLED)
+        if overlapping.exists():
+            raise serializers.ValidationError(
+                {'start_at': 'Wybrana godzina jest już zarezerwowana przez innego pacjenta. Wybierz inny termin.'}
+            )
+
         return attrs
 
 

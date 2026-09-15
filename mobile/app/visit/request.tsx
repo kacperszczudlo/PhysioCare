@@ -141,13 +141,11 @@ export default function VisitRequestScreen() {
     }
     if (startAt.getTime() <= Date.now()) {
       const msg = 'Wybierz termin wizyty w przyszłości.'
-      setError(msg)
       toast.error('Nieprawidłowa data', msg)
       return
     }
 
     setBusy(true)
-    setError(null)
     try {
       const startIso = startAt.toISOString()
       const endIso = addMinutesISO(startIso, selectedType.duration_min)
@@ -162,7 +160,15 @@ export default function VisitRequestScreen() {
       router.replace(`/visit/${visit.id}`)
     } catch (err) {
       const errMsg = getErrorMessage(err, 'Nie udało się wysłać zgłoszenia.')
-      toast.error('Brak możliwości rezerwacji', errMsg)
+      let title = 'Brak możliwości rezerwacji'
+      if (errMsg.includes('zarezerwowana') || errMsg.includes('zajęt')) {
+        title = 'Godzina zajęta'
+      } else if (errMsg.includes('godzinach przyjęć') || errMsg.includes('grafik')) {
+        title = 'Poza godzinami pracy'
+      } else if (errMsg.includes('wolnym od pracy') || errMsg.includes('święto')) {
+        title = 'Dzień wolny'
+      }
+      toast.error(title, errMsg)
     } finally {
       setBusy(false)
     }

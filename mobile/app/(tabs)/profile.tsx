@@ -97,7 +97,6 @@ export default function ProfileScreen() {
 
   async function saveProfile() {
     setSaving(true)
-    setError(null)
 
     const phoneError = getPhoneError(phoneNational, phoneCountryCode)
     const peselError = getPeselError(pesel)
@@ -140,21 +139,16 @@ export default function ProfileScreen() {
           pesel: apiPesel ?? undefined,
         })
       }
-      const errMsg = getErrorMessage(err, 'Nie udało się zapisać profilu.')
-      setError(errMsg)
-      toast.error(errMsg)
+      toast.error(getErrorMessage(err, 'Nie udało się zapisać profilu.'))
     } finally {
       setSaving(false)
     }
   }
 
   async function pickAvatar() {
-    setError(null)
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (!permission.granted) {
-      const msg = 'Brak uprawnień do galerii zdjęć.'
-      setError(msg)
-      toast.error(msg)
+      toast.error('Brak uprawnień do galerii zdjęć.')
       return
     }
 
@@ -180,9 +174,7 @@ export default function ProfileScreen() {
       toast.success('Zdjęcie profilowe zostało zapisane.')
     } catch (err) {
       setAvatarPreviewUri(null)
-      const errMsg = getErrorMessage(err, 'Nie udało się przesłać avatara.')
-      setError(errMsg)
-      toast.error(errMsg)
+      toast.error(getErrorMessage(err, 'Nie udało się przesłać avatara.'))
     } finally {
       setAvatarLoading(false)
     }

@@ -91,17 +91,12 @@ export default function SettingsScreen() {
   }, [prefs])
 
   async function changePassword() {
-    setError(null)
-
     if (!currentPassword.trim()) {
-      const msg = 'Podaj obecne hasło.'
-      setError(msg)
-      toast.error(msg)
+      toast.error('Podaj obecne hasło.')
       return
     }
     const passwordError = getPasswordError(newPassword)
     if (passwordError) {
-      setError(passwordError)
       toast.error(passwordError)
       return
     }
@@ -114,42 +109,33 @@ export default function SettingsScreen() {
       setNewPassword('')
       await logout()
     } catch (err) {
-      const errMsg = getErrorMessage(err, 'Nie udało się zmienić hasła.')
-      setError(errMsg)
-      toast.error(errMsg)
+      toast.error(getErrorMessage(err, 'Nie udało się zmienić hasła.'))
     } finally {
       setPwdLoading(false)
     }
   }
 
   async function toggleOptionalConsent(type: 'marketing' | 'research', value: boolean) {
-    setError(null)
     try {
       const next = await patientApi.updateOptionalConsents({ [type]: value })
       setConsents(next)
       toast.success('Zgoda została zaktualizowana.')
     } catch (err) {
-      const errMsg = getErrorMessage(err, 'Nie udało się zaktualizować zgody.')
-      setError(errMsg)
-      toast.error(errMsg)
+      toast.error(getErrorMessage(err, 'Nie udało się zaktualizować zgody.'))
     }
   }
 
   async function togglePref(key: string, value: boolean) {
-    setError(null)
     try {
       const next = await patientApi.updateNotificationPreferences({ [key]: value })
       setPrefs(next)
       toast.success('Preferencje powiadomień zostały zapisane.')
     } catch (err) {
-      const errMsg = getErrorMessage(err, 'Nie udało się zapisać preferencji.')
-      setError(errMsg)
-      toast.error(errMsg)
+      toast.error(getErrorMessage(err, 'Nie udało się zapisać preferencji.'))
     }
   }
 
   async function enableSystemNotifications() {
-    setError(null)
     setPushBusy(true)
     try {
       if (pushPermission === 'denied') {
@@ -164,25 +150,18 @@ export default function SettingsScreen() {
         return
       }
       if (status !== 'granted') {
-        const msg = 'Aby dostawać powiadomienia na telefon, włącz je w ustawieniach systemu.'
-        setError(msg)
-        toast.error(msg)
+        toast.error('Aby dostawać powiadomienia na telefon, włącz je w ustawieniach systemu.')
         return
       }
-      const msg = 'Push działa na fizycznym telefonie w Expo Go lub w buildzie EAS.'
-      setError(msg)
-      toast.warning(msg)
+      toast.warning('Push działa na fizycznym telefonie w Expo Go lub w buildzie EAS.')
     } catch (err) {
-      const errMsg = getErrorMessage(err, 'Nie udało się włączyć powiadomień systemowych.')
-      setError(errMsg)
-      toast.error(errMsg)
+      toast.error(getErrorMessage(err, 'Nie udało się włączyć powiadomień systemowych.'))
     } finally {
       setPushBusy(false)
     }
   }
 
   async function runDataExport() {
-    setError(null)
     setExportBusy(true)
     try {
       const payload = await patientApi.requestDataExport()
@@ -202,16 +181,13 @@ export default function SettingsScreen() {
         )
       }
     } catch (err) {
-      const errMsg = getErrorMessage(err, 'Eksport nie powiódł się.')
-      setError(errMsg)
-      toast.error(errMsg)
+      toast.error(getErrorMessage(err, 'Eksport nie powiódł się.'))
     } finally {
       setExportBusy(false)
     }
   }
 
   async function requestDeletion(reason: string) {
-    setError(null)
     setDeletionBusy(true)
     try {
       // Unregister push while the session is still valid (deletion deactivates the user).
@@ -221,9 +197,7 @@ export default function SettingsScreen() {
       toast.success('Wniosek o usunięcie konta został złożony.')
       await logout()
     } catch (err) {
-      const errMsg = getErrorMessage(err, 'Nie udało się zgłosić wniosku.')
-      setError(errMsg)
-      toast.error(errMsg)
+      toast.error(getErrorMessage(err, 'Nie udało się zgłosić wniosku.'))
     } finally {
       setDeletionBusy(false)
     }
