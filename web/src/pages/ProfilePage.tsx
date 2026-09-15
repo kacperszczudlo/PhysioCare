@@ -184,8 +184,6 @@ export function ProfilePage() {
     setCourses((prev) => prev.filter((_, i) => i !== index))
   }
 
-
-
   async function onSaveProfile(event: FormEvent) {
     event.preventDefault()
     setError(null)
@@ -439,7 +437,11 @@ export function ProfilePage() {
             <div className="profile-fields profile-fields--split">
               <div className="ui-field" style={{ gridColumn: '1 / -1' }}>
                 <span className="ui-field__label">Kwalifikacja zawodowa</span>
-                <div className="qualification-grid" role="radiogroup" aria-label="Kwalifikacja zawodowa">
+                <div
+                  className="qualification-grid"
+                  role="radiogroup"
+                  aria-label="Kwalifikacja zawodowa"
+                >
                   {QUALIFICATION_TILES.map((tile) => {
                     const isSelected = qualificationLevel === tile.value
                     return (
@@ -458,7 +460,8 @@ export function ProfilePage() {
                   })}
                 </div>
                 <span className="ui-field__hint" style={{ marginTop: '0.5rem' }}>
-                  Determinuje prawo do diagnozy funkcjonalnej i ordynacji wyrobów medycznych w panelu.
+                  Determinuje prawo do diagnozy funkcjonalnej i ordynacji wyrobów medycznych w
+                  panelu.
                 </span>
               </div>
 
@@ -592,7 +595,6 @@ export function ProfilePage() {
         </form>
 
         <aside className="profile-aside">
-
           {profile.competences ? (
             <section className="profile-card" aria-labelledby="comp-heading">
               <header className="profile-card__head">
