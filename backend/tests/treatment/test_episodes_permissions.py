@@ -3,12 +3,7 @@ from rest_framework import status
 
 from patients.models import PatientTherapistLink
 from treatment.models import (
-    DiagnosticRecommendation,
-    MedicalDeviceOrder,
-    PhysicianOrderRefusal,
-    ReceptaNaRuchReferral,
     TreatmentEpisode,
-    VisitNote,
 )
 
 

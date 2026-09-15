@@ -140,6 +140,7 @@ class MeTherapistLinkView(PatientSelfMixin, APIView):
         therapist_code = request.data.get('therapist_code')
 
         from django.db.models import Q
+
         from patients.models import LinkStatus, PatientTherapistLink
         from therapists.models import TherapistProfile
 

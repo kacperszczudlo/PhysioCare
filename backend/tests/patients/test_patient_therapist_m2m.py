@@ -3,10 +3,9 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from accounts.models import CustomUser, RoleChoices
-from patients.models import PatientProfile, PatientTherapistLink, LinkStatus
+from patients.models import LinkStatus, PatientProfile
+from scheduling.models import TherapyType
 from therapists.models import TherapistProfile
-from scheduling.models import TherapyType, Visit, VisitStatus
-from treatment.models import TreatmentEpisode, VisitNote, DiagnosticRecommendation
 
 
 @pytest.fixture
@@ -154,8 +153,9 @@ class TestPatientTherapistM2M:
             duration_min=45,
         )
 
-        from django.utils import timezone
         import datetime
+
+        from django.utils import timezone
         start = timezone.now() + datetime.timedelta(days=2)
         end = start + datetime.timedelta(minutes=45)
 

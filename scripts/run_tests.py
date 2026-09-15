@@ -2,8 +2,8 @@
 """Uruchamia pełną paczkę testów PhysioCare: Backend (pytest), Web (vitest) oraz Mobile (vitest)."""
 from __future__ import annotations
 
-import sys
 import subprocess
+import sys
 
 from _common import ROOT_DIR, backend_python, run
 

@@ -1,7 +1,6 @@
 import pytest
 from django.db import connection
 
-from patients.models import PatientProfile
 from privacy.account_deletion import anonymize_user_for_deletion
 from treatment.models import EpisodeStatus, TreatmentEpisode
 

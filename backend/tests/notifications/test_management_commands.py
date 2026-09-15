@@ -41,7 +41,7 @@ def test_notify_upcoming_visits_command_real_execution(
 ):
     # Arrange
     now = timezone.now()
-    visit = Visit.objects.create(
+    Visit.objects.create(
         patient=patient,
         therapist=therapist,
         therapy_type=therapy_type,

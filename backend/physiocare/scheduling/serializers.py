@@ -344,7 +344,6 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(list(exc.messages)) from exc
 
     def validate(self, attrs):
-        patient = self.context['patient']
         therapy_type_id = attrs['therapy_type_id']
         therapy_type = TherapyType.objects.filter(pk=therapy_type_id).first()
         if not therapy_type:

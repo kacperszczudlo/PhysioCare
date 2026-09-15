@@ -1,8 +1,8 @@
 import pytest
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import status
 
 from core.field_policies import normalize_and_validate_icd10
-from django.core.exceptions import ValidationError as DjangoValidationError
 from treatment.models import EpisodeStatus, TreatmentEpisode
 from treatment.serializers import TreatmentEpisodeSerializer
 

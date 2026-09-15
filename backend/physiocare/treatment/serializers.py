@@ -45,9 +45,7 @@ def _is_read_only(serializer, obj):
     if not request or not hasattr(request.user, 'therapist_profile'):
         return False
     current_therapist = request.user.therapist_profile
-    if getattr(obj, 'therapist_id', None) is not None and obj.therapist_id != current_therapist.id:
-        return True
-    return False
+    return getattr(obj, 'therapist_id', None) is not None and obj.therapist_id != current_therapist.id
 
 
 class TreatmentEpisodeSerializer(serializers.ModelSerializer):
