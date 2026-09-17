@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import URLPattern, URLResolver, path
 
 from core.avatar_views import TherapistAvatarUploadView
 
@@ -10,7 +10,7 @@ from .views import (
     TherapistPublicView,
 )
 
-urlpatterns = [
+urlpatterns: list[URLPattern | URLResolver] = [
     path('therapist/profile/', TherapistProfileView.as_view(), name='therapist-profile'),
     path(
         'therapist/profile/avatar/',

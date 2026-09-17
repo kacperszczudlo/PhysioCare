@@ -2,12 +2,15 @@ import os
 
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db.models import QuerySet
 from django.http import FileResponse, Http404
 from django.utils._os import safe_join
 from rest_framework import generics, parsers, status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 
 from core.field_policies import (
     DOCUMENT_TITLE_REQUIRED,
@@ -26,21 +29,46 @@ from .serializers import MedicalDocumentSerializer
 
 
 class MeDocumentsListView(PatientSelfMixin, generics.ListAPIView):
+    """Widok listy dokumentów medycznych należących do zalogowanego pacjenta."""
+
     serializer_class = MedicalDocumentSerializer
     permission_classes = [IsAuthenticated, IsPatient]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[MedicalDocument]:
+        """Pobiera listę dokumentów medycznych dla zalogowanego pacjenta.
+
+        Returns:
+            QuerySet[MedicalDocument]: Queryset dokumentów medycznych posortowanych od najnowszych.
+        """
         return MedicalDocument.objects.filter(
             patient=self.get_patient_profile(),
         ).order_by('-created_at')
 
 
 class TherapistDocumentUploadView(generics.CreateAPIView):
+    """Widok umożliwiający terapeucie wgrywanie dokumentów medycznych dla pacjenta."""
+
     serializer_class = MedicalDocumentSerializer
     permission_classes = [IsAuthenticated, IsTherapist]
     parser_classes = [parsers.MultiPartParser, parsers.FormParser]
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Przetwarza przesłany plik dokumentu medycznego i przypisuje go do pacjenta.
+
+        Args:
+            request (Request): Obiekt żądania HTTP DRF.
+            *args (object): Pozycyjne argumenty dodatkowe.
+            **kwargs (object): Słownikowe argumenty dodatkowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z utworzonym obiektem dokumentu medycznego lub błędem walidacji.
+
+        Raises:
+            TypeError: Gdy parametr request nie jest instancją Request.
+        """
+        if not isinstance(request, Request):
+            raise TypeError('Argument request musi być instancją Request.')
+
         uploaded = request.FILES.get('file')
         if uploaded is None:
             return Response(
@@ -126,9 +154,29 @@ class TherapistDocumentUploadView(generics.CreateAPIView):
 
 
 class DocumentDownloadView(APIView):
+    """Widok pobierania pliku dokumentu medycznego."""
+
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, pk):
+    def get(self, request: Request, pk: object, *args: object, **kwargs: object) -> FileResponse:
+        """Pobiera i serwuje plik dokumentu medycznego, sprawdzając uprawnienia użytkownika.
+
+        Args:
+            request (Request): Obiekt żądania HTTP.
+            pk (object): Identyfikator dokumentu medycznego.
+            *args (object): Pozycyjne argumenty dodatkowe.
+            **kwargs (object): Słownikowe argumenty dodatkowe.
+
+        Returns:
+            FileResponse: Strumieniowana odpowiedź plikowa FileResponse.
+
+        Raises:
+            TypeError: Gdy parametr request nie jest instancją Request.
+            Http404: Gdy dokument nie istnieje, brak uprawnień lub plik fizyczny nie został odnaleziony.
+        """
+        if not isinstance(request, Request):
+            raise TypeError('Argument request musi być instancją Request.')
+
         document = MedicalDocument.objects.select_related('patient').filter(pk=pk).first()
         if document is None:
             raise Http404
@@ -144,7 +192,6 @@ class DocumentDownloadView(APIView):
             raise Http404 from exc
         if not path or not os.path.isfile(path):
             raise Http404
-        # FileResponse closes the file handle after the response is sent.
         response = FileResponse(
             open(path, 'rb'),  # noqa: SIM115
             content_type=document.mime_type,
@@ -153,3 +200,4 @@ class DocumentDownloadView(APIView):
         response['X-Content-Type-Options'] = 'nosniff'
         response['Cache-Control'] = 'private, no-store'
         return response
+

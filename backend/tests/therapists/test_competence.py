@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import pytest
 
 from therapists.competence import (
@@ -6,9 +8,17 @@ from therapists.competence import (
     can_order_device_group,
 )
 
+if TYPE_CHECKING:
+    from rest_framework.test import APIClient
+    from patients.models import PatientProfile
+    from therapists.models import TherapistProfile
 
-def test_magister_without_experience_cannot_plan_therapy():
+
+def test_magister_without_experience_cannot_plan_therapy() -> None:
+    """Sprawdza ograniczenie uprawnień do planowania terapii dla magistra bez wymaganego stażu."""
+    # Arrange
     snap = build_competence_snapshot(QualificationLevel.MAGISTER, experience_years=1)
+    # Assert
     assert snap.allows('functional_diagnosis')
     assert not snap.allows('plan_modify_therapy')
     assert snap.allows('order_serial_devices')
@@ -17,14 +27,20 @@ def test_magister_without_experience_cannot_plan_therapy():
     assert not snap.allows('prescribe_medications')
 
 
-def test_magister_with_3_years_can_plan():
+def test_magister_with_3_years_can_plan() -> None:
+    """Sprawdza nadanie uprawnień do planowania terapii dla magistra po 3 latach doświadczenia."""
+    # Arrange
     snap = build_competence_snapshot(QualificationLevel.MAGISTER, experience_years=3)
+    # Assert
     assert snap.allows('plan_modify_therapy')
     assert not snap.allows('supervise_others')
 
 
-def test_fizjo_spec_can_order_specialist_devices():
+def test_fizjo_spec_can_order_specialist_devices() -> None:
+    """Sprawdza uprawnienia specjalisty fizjoterapii do zlecania wyrobów specjalistycznych."""
+    # Arrange
     snap = build_competence_snapshot(QualificationLevel.FIZJO_SPEC, experience_years=0)
+    # Assert
     assert snap.allows('order_specialist_devices')
     assert snap.allows('plan_modify_therapy')
     assert can_order_device_group(QualificationLevel.FIZJO_SPEC, 'W')
@@ -32,8 +48,11 @@ def test_fizjo_spec_can_order_specialist_devices():
     assert not can_order_device_group(QualificationLevel.MAGISTER, 'W')
 
 
-def test_licencjat_has_executive_scope_only():
+def test_licencjat_has_executive_scope_only() -> None:
+    """Sprawdza ograniczony zakres kompetencji dla poziomu licencjata."""
+    # Arrange
     snap = build_competence_snapshot(QualificationLevel.LICENCJAT, experience_years=10)
+    # Assert
     assert not snap.allows('functional_diagnosis')
     assert not snap.allows('order_serial_devices')
     assert snap.allows('refuse_physician_order')
@@ -41,12 +60,16 @@ def test_licencjat_has_executive_scope_only():
 
 
 @pytest.mark.django_db
-def test_competences_endpoint(api_client, therapist):
+def test_competences_endpoint(api_client: 'APIClient', therapist: 'TherapistProfile') -> None:
+    """Sprawdza odpowiedź endpointu z zestawieniem kompetencji fizjoterapeuty."""
+    # Arrange
     therapist.qualification_level = QualificationLevel.MAGISTER
     therapist.experience_years = 4
     therapist.save()
     api_client.force_authenticate(user=therapist.user)
+    # Act
     response = api_client.get('/api/v1/therapist/competences/')
+    # Assert
     assert response.status_code == 200
     assert response.data['qualification_level'] == 'MAGISTER'
     assert response.data['can_plan_therapy'] is True
@@ -54,7 +77,13 @@ def test_competences_endpoint(api_client, therapist):
 
 
 @pytest.mark.django_db
-def test_magister_can_issue_serial_device_order(api_client, therapist, patient):
+def test_magister_can_issue_serial_device_order(
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+) -> None:
+    """Sprawdza wystawienie zlecenia na wyroby seryjne przez magistra z odpowiednim stażem."""
+    # Arrange
     from treatment.models import MedicalDeviceOrder, TreatmentEpisode
 
     therapist.qualification_level = QualificationLevel.MAGISTER
@@ -63,6 +92,7 @@ def test_magister_can_issue_serial_device_order(api_client, therapist, patient):
     episode = TreatmentEpisode.objects.create(patient=patient, icd10_code='M25.5')
 
     api_client.force_authenticate(user=therapist.user)
+    # Act
     response = api_client.post(
         f'/api/v1/episodes/{episode.id}/device-orders/',
         {
@@ -75,6 +105,7 @@ def test_magister_can_issue_serial_device_order(api_client, therapist, patient):
         },
         format='json',
     )
+    # Assert
     assert response.status_code == 201
     assert response.data['device_group'] == 'J'
     assert response.data['access_code'] == '9012'
@@ -82,7 +113,13 @@ def test_magister_can_issue_serial_device_order(api_client, therapist, patient):
 
 
 @pytest.mark.django_db
-def test_magister_cannot_issue_fizjo_spec_device(api_client, therapist, patient):
+def test_magister_cannot_issue_fizjo_spec_device(
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+) -> None:
+    """Sprawdza blokadę wystawiania wyrobów specjalistycznych przez magistra."""
+    # Arrange
     from treatment.models import TreatmentEpisode
 
     therapist.qualification_level = QualificationLevel.MAGISTER
@@ -90,6 +127,7 @@ def test_magister_cannot_issue_fizjo_spec_device(api_client, therapist, patient)
     episode = TreatmentEpisode.objects.create(patient=patient, icd10_code='C50.9')
 
     api_client.force_authenticate(user=therapist.user)
+    # Act
     response = api_client.post(
         f'/api/v1/episodes/{episode.id}/device-orders/',
         {
@@ -98,13 +136,18 @@ def test_magister_cannot_issue_fizjo_spec_device(api_client, therapist, patient)
         },
         format='json',
     )
+    # Assert
     assert response.status_code == 400
 
 
 @pytest.mark.django_db
 def test_diagnostic_recommendation_marks_referred_on_red_flags(
-    api_client, therapist, patient,
-):
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+) -> None:
+    """Sprawdza zmianę statusu odcinka na skierowany przy obecności czerwonych flag."""
+    # Arrange
     from treatment.models import EpisodeStatus, TreatmentEpisode
 
     therapist.qualification_level = QualificationLevel.MAGISTER
@@ -112,6 +155,7 @@ def test_diagnostic_recommendation_marks_referred_on_red_flags(
     episode = TreatmentEpisode.objects.create(patient=patient)
 
     api_client.force_authenticate(user=therapist.user)
+    # Act
     response = api_client.post(
         f'/api/v1/episodes/{episode.id}/diagnostic-recommendations/',
         {
@@ -124,14 +168,22 @@ def test_diagnostic_recommendation_marks_referred_on_red_flags(
         },
         format='json',
     )
+    # Assert
     assert response.status_code == 201
     episode.refresh_from_db()
     assert episode.status == EpisodeStatus.REFERRED
 
 
 @pytest.mark.django_db
-def test_recepta_na_ruch_requires_readiness(api_client, therapist, patient):
+def test_recepta_na_ruch_requires_readiness(
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+) -> None:
+    """Sprawdza wymóg potwierdzenia gotowości pacjenta przy wystawianiu Recepty na Ruch."""
+    # Arrange
     api_client.force_authenticate(user=therapist.user)
+    # Act
     response = api_client.post(
         f'/api/v1/patients/{patient.id}/recepta-na-ruch/',
         {
@@ -140,6 +192,7 @@ def test_recepta_na_ruch_requires_readiness(api_client, therapist, patient):
         },
         format='json',
     )
+    # Assert
     assert response.status_code == 400
 
     ok = api_client.post(
@@ -154,7 +207,13 @@ def test_recepta_na_ruch_requires_readiness(api_client, therapist, patient):
 
 
 @pytest.mark.django_db
-def test_licencjat_cannot_write_functional_diagnosis(api_client, therapist, patient):
+def test_licencjat_cannot_write_functional_diagnosis(
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+) -> None:
+    """Sprawdza blokadę wprowadzania diagnozy funkcjonalnej przez licencjata."""
+    # Arrange
     from treatment.models import TreatmentEpisode
 
     therapist.qualification_level = QualificationLevel.LICENCJAT
@@ -162,9 +221,12 @@ def test_licencjat_cannot_write_functional_diagnosis(api_client, therapist, pati
     episode = TreatmentEpisode.objects.create(patient=patient)
 
     api_client.force_authenticate(user=therapist.user)
+    # Act
     response = api_client.patch(
         f'/api/v1/episodes/{episode.id}/',
         {'functional_diagnosis': 'Deficyt zgięcia biodra L'},
         format='json',
     )
+    # Assert
     assert response.status_code == 400
+

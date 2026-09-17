@@ -14,31 +14,35 @@ from notifications.sse import (
 
 
 @pytest.fixture(autouse=True)
-def _reset_bus():
+def _reset_bus() -> object:
+    """Resetuje magistralę zdarzeń SSE przed i po każdym teście."""
     reset_sse_bus()
     yield
     reset_sse_bus()
 
 
-def test_inmemory_bus_metrics_tracking():
-    bus = InMemorySseBus()
-    user1 = 'user-1'
-    user2 = 'user-2'
+def test_inmemory_bus_metrics_tracking() -> None:
+    """Sprawdza zliczanie metryk połączeń (streamów i użytkowników) w InMemorySseBus."""
+    # Arrange
+    bus: InMemorySseBus = InMemorySseBus()
+    user1: str = 'user-1'
+    user2: str = 'user-2'
 
+    # Assert
     assert bus.active_streams_count() == 0
     assert bus.active_users_count() == 0
 
-    q1_sync = bus.subscribe(user1)
+    q1_sync: object = bus.subscribe(user1)
     assert bus.active_streams_count() == 1
     assert bus.active_users_count() == 1
 
-    async def _sub_async():
-        q1_async = bus.subscribe_async(user1)
-        q2_async = bus.subscribe_async(user2)
+    async def _sub_async() -> None:
+        q1_async: object = bus.subscribe_async(user1)
+        q2_async: object = bus.subscribe_async(user2)
         assert bus.active_streams_count() == 3
         assert bus.active_users_count() == 2
 
-        metrics = bus.get_metrics()
+        metrics: dict[str, object] = bus.get_metrics()
         assert metrics['engine'] == 'inmemory'
         assert metrics['active_streams'] == 3
         assert metrics['active_users'] == 2
@@ -56,15 +60,18 @@ def test_inmemory_bus_metrics_tracking():
     assert bus.active_users_count() == 0
 
 
-def test_published_and_dropped_metrics():
-    bus = InMemorySseBus()
-    user = 'user-drop'
-    q = bus.subscribe(user)
+def test_published_and_dropped_metrics() -> None:
+    """Sprawdza zliczanie liczby opublikowanych i porzuconych komunikatów w metrykach SSE."""
+    # Arrange
+    bus: InMemorySseBus = InMemorySseBus()
+    user: str = 'user-drop'
+    q: object = bus.subscribe(user)
 
-    event = SseEvent(type='ping', resource_id=None, at=pytest.importorskip('django.utils.timezone').now())
+    event: SseEvent = SseEvent(type='ping', resource_id=None, at=pytest.importorskip('django.utils.timezone').now())
     bus.publish(user, event)
 
-    metrics = bus.get_metrics()
+    metrics: dict[str, object] = bus.get_metrics()
+    # Assert
     assert metrics['total_published'] == 1
     assert metrics['total_dropped'] == 0
 
@@ -72,17 +79,23 @@ def test_published_and_dropped_metrics():
 
 
 @pytest.mark.django_db
-def test_sse_stats_api_requires_auth(api_client):
-    response = api_client.get('/api/v1/me/events/stats/')
+def test_sse_stats_api_requires_auth(api_client: object) -> None:
+    """Sprawdza wymóg autoryzacji przy próbie pobrania statystyk SSE za pośrednictwem API."""
+    # Arrange
+    response: object = api_client.get('/api/v1/me/events/stats/')
+    # Assert
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
 @pytest.mark.django_db
-def test_sse_stats_api_returns_metrics(api_client, patient):
+def test_sse_stats_api_returns_metrics(api_client: object, patient: object) -> None:
+    """Sprawdza zwracanie metryk i statystyk połączeń SSE dla autoryzowanego użytkownika."""
+    # Arrange
     api_client.force_authenticate(user=patient.user)
-    response = api_client.get('/api/v1/me/events/stats/')
+    response: object = api_client.get('/api/v1/me/events/stats/')
+    # Assert
     assert response.status_code == status.HTTP_200_OK
-    data = response.json()
+    data: dict[str, object] = response.json()
     assert 'engine' in data
     assert 'active_streams' in data
     assert 'active_users' in data
@@ -92,24 +105,28 @@ def test_sse_stats_api_returns_metrics(api_client, patient):
 
 @pytest.mark.django_db
 @override_settings(SSE_HEARTBEAT_SECONDS=1, SSE_MAX_FRAMES=1)
-def test_aiter_sse_frames_async_metrics_increment(patient):
-    user_id = str(patient.user.pk)
+def test_aiter_sse_frames_async_metrics_increment(patient: object) -> None:
+    """Sprawdza inkrementację metryk podczas asynchronicznego pobierania ramek SSE."""
+    # Arrange
+    user_id: str = str(patient.user.pk)
 
-    async def _run():
+    async def _run() -> None:
         assert get_sse_metrics()['active_streams'] == 0
-        gen = aiter_sse_frames(user_id)
-        first_chunk = await gen.__anext__()
+        gen: object = aiter_sse_frames(user_id)
+        first_chunk: str = await gen.__anext__()
         assert first_chunk == ': connected\n\n'
         assert get_sse_metrics()['active_streams'] == 1
         assert get_sse_metrics()['active_users'] == 1
 
-        ping_frame = await gen.__anext__()
+        ping_frame: str = await gen.__anext__()
         assert 'event: ping' in ping_frame
 
         with pytest.raises(StopAsyncIteration):
             await gen.__anext__()
 
     asyncio.run(_run())
+    # Assert
     assert get_sse_metrics()['active_streams'] == 0
     assert get_sse_metrics()['active_users'] == 0
+
 

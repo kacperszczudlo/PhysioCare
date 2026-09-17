@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 import uuid
 from datetime import timedelta
 
@@ -13,23 +14,35 @@ from scheduling.serializers import (
     VisitRescheduleSerializer,
 )
 
+if TYPE_CHECKING:
+    from patients.models import PatientProfile
+    from scheduling.models import TherapyType
+    from therapists.models import TherapistProfile
+
 
 @pytest.mark.django_db
-def test_therapy_type_serializer_validations():
-    # Invalid color_hex
+def test_therapy_type_serializer_validations() -> None:
+    """Sprawdza walidację koloru szesnastkowego oraz czasu trwania w serializatorze typu terapii."""
+    # Arrange
     ser = TherapyTypeSerializer(data={'name': 'Terapia', 'color_hex': 'invalid', 'duration_min': 45})
+    # Assert
     assert ser.is_valid() is False
     assert 'color_hex' in ser.errors
 
-    # Invalid duration
     ser = TherapyTypeSerializer(data={'name': 'Terapia', 'color_hex': '#123456', 'duration_min': 0})
     assert ser.is_valid() is False
     assert 'duration_min' in ser.errors
 
 
 @pytest.mark.django_db
-def test_visit_create_serializer_validations(therapist, patient, therapist_b, therapy_type):
-    # Patient not belonging to therapist
+def test_visit_create_serializer_validations(
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+    therapist_b: 'TherapistProfile',
+    therapy_type: 'TherapyType',
+) -> None:
+    """Sprawdza odrzucenie pacjenta lub typu terapii nienależącego do wybranego fizjoterapeuty."""
+    # Arrange
     ser = VisitCreateSerializer(
         data={
             'patient_id': str(uuid.uuid4()),
@@ -39,10 +52,10 @@ def test_visit_create_serializer_validations(therapist, patient, therapist_b, th
         },
         context={'therapist': therapist},
     )
+    # Assert
     assert ser.is_valid() is False
     assert 'patient_id' in ser.errors
 
-    # Therapy type not belonging to therapist
     other_therapy_type = TherapyTypeSerializer().create({
         'therapist': therapist_b,
         'name': 'Inna terapia',
@@ -63,7 +76,12 @@ def test_visit_create_serializer_validations(therapist, patient, therapist_b, th
 
 
 @pytest.mark.django_db
-def test_patient_visit_request_in_past_raises(patient, therapy_type):
+def test_patient_visit_request_in_past_raises(
+    patient: 'PatientProfile',
+    therapy_type: 'TherapyType',
+) -> None:
+    """Sprawdza odrzucenie wniosku pacjenta o wizytę z datą z przeszłości."""
+    # Arrange
     past_time = timezone.now() - timedelta(hours=2)
     ser = PatientVisitRequestSerializer(
         data={
@@ -73,12 +91,19 @@ def test_patient_visit_request_in_past_raises(patient, therapy_type):
         },
         context={'patient': patient},
     )
+    # Assert
     assert ser.is_valid() is False
     assert 'start_at' in ser.errors
 
 
 @pytest.mark.django_db
-def test_visit_reschedule_completed_visit_raises(patient, therapist, therapy_type):
+def test_visit_reschedule_completed_visit_raises(
+    patient: 'PatientProfile',
+    therapist: 'TherapistProfile',
+    therapy_type: 'TherapyType',
+) -> None:
+    """Sprawdza odrzucenie próby przełożenia wizyty, która została już zakończona."""
+    # Arrange
     visit = Visit.objects.create(
         patient=patient,
         therapist=therapist,
@@ -95,11 +120,16 @@ def test_visit_reschedule_completed_visit_raises(patient, therapist, therapy_typ
             'end_at': (new_start + timedelta(minutes=45)).isoformat(),
         },
     )
+    # Assert
     assert ser.is_valid() is False
     assert 'detail' in ser.errors
 
 
-def test_visit_cancel_serializer_reason_too_long():
+def test_visit_cancel_serializer_reason_too_long() -> None:
+    """Sprawdza odrzucenie zbyt długiego powodu odwołania wizyty w serializatorze."""
+    # Arrange
     ser = VisitCancelSerializer(data={'cancel_reason': 'X' * 501})
+    # Assert
     assert ser.is_valid() is False
     assert 'cancel_reason' in ser.errors
+

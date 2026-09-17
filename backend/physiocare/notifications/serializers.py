@@ -8,13 +8,28 @@ EXPO_TOKEN_PREFIXES = ('ExponentPushToken[', 'ExpoPushToken[')
 
 
 class NotificationPreferenceSerializer(serializers.ModelSerializer):
+    """Serializator pojedynczej preferencji powiadomień."""
+
     class Meta:
         model = NotificationPreference
         fields = ['pref_key', 'enabled']
 
 
 class NotificationPreferencePatchSerializer(serializers.Serializer):
-    def to_internal_value(self, data):
+    """Serializator do masowej aktualizacji preferencji powiadomień użytkownika."""
+
+    def to_internal_value(self, data: object) -> dict[str, bool]:
+        """Przekształca i waliduje wejściową mapę preferencji.
+
+        Args:
+            data (object): Słownik danych wejściowych z preferencjami.
+
+        Returns:
+            dict[str, bool]: Słownik zmapowanych preferencji w postaci {pref_key: bool}.
+
+        Raises:
+            serializers.ValidationError: Gdy dane są niepoprawnego typu lub zawierają nieznane klucze.
+        """
         if not isinstance(data, dict):
             raise serializers.ValidationError(
                 'Oczekiwano obiektu JSON z kluczami preferencji.'
@@ -51,6 +66,8 @@ class NotificationPreferencePatchSerializer(serializers.Serializer):
 
 
 class DeviceTokenSerializer(serializers.ModelSerializer):
+    """Serializator tokenu urządzenia powiadomień push."""
+
     class Meta:
         model = DeviceToken
         fields = ['id', 'expo_push_token', 'platform', 'is_active', 'updated_at']
@@ -58,6 +75,8 @@ class DeviceTokenSerializer(serializers.ModelSerializer):
 
 
 class DeviceTokenWriteSerializer(serializers.Serializer):
+    """Serializator zapisu/rejestracji nowego tokenu urządzenia Expo."""
+
     expo_push_token = serializers.CharField(max_length=200)
     platform = serializers.ChoiceField(
         choices=DevicePlatform.choices,
@@ -65,8 +84,21 @@ class DeviceTokenWriteSerializer(serializers.Serializer):
         default=DevicePlatform.UNKNOWN,
     )
 
-    def validate_expo_push_token(self, value):
-        token = (value or '').strip()
+    def validate_expo_push_token(self, value: str) -> str:
+        """Waliduje poprawność formatu tokenu Expo Push.
+
+        Args:
+            value (str): Ciąg znaków reprezentujący token.
+
+        Returns:
+            str: Oczyszczony i zwalidowany token Expo Push.
+
+        Raises:
+            serializers.ValidationError: Gdy format tokenu jest nieprawidłowy.
+        """
+        if not isinstance(value, str):
+            raise serializers.ValidationError('Token musi być ciągiem znaków.')
+        token = value.strip()
         if not (
             token.endswith(']')
             and any(token.startswith(prefix) for prefix in EXPO_TOKEN_PREFIXES)
@@ -77,5 +109,25 @@ class DeviceTokenWriteSerializer(serializers.Serializer):
         return token
 
 
+
 class DeviceTokenDeleteSerializer(serializers.Serializer):
+    """Serializator do usuwania tokenu urządzenia po podaniu expo_push_token."""
+
     expo_push_token = serializers.CharField(max_length=200)
+
+    def validate_expo_push_token(self, value: str) -> str:
+        """Waliduje token Expo Push podany do usunięcia.
+
+        Args:
+            value (str): Ciąg znaków reprezentujący token.
+
+        Returns:
+            str: Oczyszczony token.
+
+        Raises:
+            serializers.ValidationError: Gdy token nie jest ciągiem znaków.
+        """
+        if not isinstance(value, str):
+            raise serializers.ValidationError('Token musi być ciągiem znaków.')
+        return value.strip()
+

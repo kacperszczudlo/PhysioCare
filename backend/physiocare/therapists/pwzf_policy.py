@@ -1,21 +1,19 @@
-"""PWZFz (physiotherapist license) validation with Polish messages."""
-
 from __future__ import annotations
 
 import re
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 
-PWZF_REQUIRED = 'Podaj numer PWZFz.'
-PWZF_INVALID = (
+PWZF_REQUIRED: str = 'Podaj numer PWZFz.'
+PWZF_INVALID: str = (
     'Podaj prawidłowy numer PWZFz - dokładnie 5 cyfr (np. 12345).'
 )
-PWZF_TOO_LONG = 'Numer PWZFz może mieć co najwyżej 20 znaków.'
-PWZF_TAKEN = (
+PWZF_TOO_LONG: str = 'Numer PWZFz może mieć co najwyżej 20 znaków.'
+PWZF_TAKEN: str = (
     'Konto z tym numerem PWZFz już istnieje. Zaloguj się lub użyj innego numeru.'
 )
 
-PWZF_FIELD_ERRORS = {
+PWZF_FIELD_ERRORS: dict[str, str] = {
     'blank': PWZF_REQUIRED,
     'required': PWZF_REQUIRED,
     'null': PWZF_REQUIRED,
@@ -23,19 +21,31 @@ PWZF_FIELD_ERRORS = {
     'invalid': PWZF_INVALID,
 }
 
-_PWZF_PATTERN = re.compile(r'^\d{5}$')
-_PREFIX_PATTERN = re.compile(
+_PWZF_PATTERN: re.Pattern[str] = re.compile(r'^\d{5}$')
+_PREFIX_PATTERN: re.Pattern[str] = re.compile(
     r'^(?:pwzfz|pwzf)(?:\s*nr\.?|\s*nr|:|-)?\s*',
     re.IGNORECASE,
 )
 
 
 def normalize_and_validate_pwzf(value: str | None) -> str:
-    """Normalize and validate PWZFz: exactly 5 digits (KIF).
+    """Normalizuje oraz waliduje numer PWZFz (dokładnie 5 cyfr KIF).
 
-    Accepts common stamp forms like ``PWZFz nr 12345`` and stores ``12345``.
+    Akceptuje formy z pieczątek, np. "PWZFz nr 12345" i zwraca znormalizowany ciąg "12345".
+
+    Args:
+        value (str | None): Weryfikowany numer PWZFz.
+
+    Returns:
+        str: Znormalizowany 5-cyfrowy numer PWZFz.
+
+    Raises:
+        DjangoValidationError: Gdy numer jest pusty, przekracza 20 znaków lub ma nieprawidłowy format.
     """
-    if value is None or str(value).strip() == '':
+    if value is not None and not isinstance(value, str):
+        raise DjangoValidationError(PWZF_INVALID, code='invalid')
+
+    if value is None or value.strip() == '':
         raise DjangoValidationError(PWZF_REQUIRED, code='required')
 
     raw = str(value).strip()

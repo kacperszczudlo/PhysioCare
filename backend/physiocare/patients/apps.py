@@ -2,4 +2,7 @@ from django.apps import AppConfig
 
 
 class PatientsConfig(AppConfig):
-    name = 'patients'
+    """Konfiguracja aplikacji Django dla pacjentów."""
+
+    name: str = 'patients'
+

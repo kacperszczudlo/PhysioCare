@@ -1,5 +1,3 @@
-"""Shared e-mail helpers for accounts (password reset and related notices)."""
-
 from __future__ import annotations
 
 import logging
@@ -16,8 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 def _attach_brand_logo(message: EmailMultiAlternatives) -> None:
-    """Attach PhysioCare logo as inline CID attachment if file exists."""
-    root_dir = getattr(settings, 'ROOT_DIR', None)
+    """Załącza sygnet/logo PhysioCare jako osadzony załącznik inline CID.
+
+    Args:
+        message (EmailMultiAlternatives): Obiekt wiadomości e-mail.
+
+    Raises:
+        TypeError: Gdy message nie jest instancją EmailMultiAlternatives.
+    """
+    if not isinstance(message, EmailMultiAlternatives):
+        raise TypeError("Argument 'message' musi być instancją EmailMultiAlternatives.")
+
+    root_dir = settings.ROOT_DIR if hasattr(settings, 'ROOT_DIR') else None
     if not root_dir:
         root_dir = Path(settings.BASE_DIR).parent.parent
 
@@ -52,13 +60,31 @@ def send_templated_mail(
     subject: str,
     to: list[str],
     template_basename: str,
-    context: dict,
+    context: dict[str, object],
 ) -> bool:
-    """
-    Render ``{basename}.txt`` + optional ``{basename}.html`` and send.
+    """Renderuje szablony `{basename}.txt` oraz opcjonalnie `{basename}.html` i wysyła wiadomość e-mail.
 
-    Returns True on success, False on SMTP/OS failure (errors are logged).
+    Args:
+        subject (str): Temat wiadomości e-mail.
+        to (list[str]): Lista adresatów e-mail.
+        template_basename (str): Bazowa nazwa pliku szablonu.
+        context (dict[str, object]): Kontekst z danymi do wyrenderowania szablonu.
+
+    Returns:
+        bool: True w przypadku powodzenia wysyłki, False w razie błędu protokołu SMTP lub systemu plików.
+
+    Raises:
+        TypeError: Gdy któryś z argumentów ma nieprawidłowy typ.
     """
+    if not isinstance(subject, str):
+        raise TypeError("Argument 'subject' musi być typu str.")
+    if not isinstance(to, list):
+        raise TypeError("Argument 'to' musi być typu list[str].")
+    if not isinstance(template_basename, str):
+        raise TypeError("Argument 'template_basename' musi być typu str.")
+    if not isinstance(context, dict):
+        raise TypeError("Argument 'context' musi być typu dict[str, object].")
+
     text_body = render_to_string(f'{template_basename}.txt', context)
     html_body: str | None
     try:
@@ -82,7 +108,9 @@ def send_templated_mail(
         logger.exception('Templated e-mail failed subject=%s to=%s', subject, to)
         return False
 
-    if settings.DEBUG:
+    if hasattr(settings, 'DEBUG') and settings.DEBUG:
         logger.info('E-mail sent subject=%s to=%s', subject, to)
     return True
+
+
 

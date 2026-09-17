@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import URLPattern, URLResolver, include, path
 
 from core.media_views import ProtectedMediaServeView
 from documents.urls import me_urlpatterns as documents_me_urls
@@ -9,7 +9,7 @@ from patients.urls import me_urlpatterns as patients_me_urls
 from scheduling.urls import me_urlpatterns as scheduling_me_urls
 from treatment.urls import me_urlpatterns as treatment_me_urls
 
-me_urlpatterns = (
+me_urlpatterns: list[URLPattern | URLResolver] = (
     patients_me_urls
     + scheduling_me_urls
     + exercises_me_urls
@@ -18,7 +18,7 @@ me_urlpatterns = (
     + treatment_me_urls
 )
 
-urlpatterns = [
+urlpatterns: list[URLPattern | URLResolver] = [
     path('admin/', admin.site.urls),
     path('api/v1/auth/', include('accounts.urls')),
     path('api/v1/patients/', include('patients.urls')),
@@ -28,6 +28,5 @@ urlpatterns = [
     path('api/v1/', include('exercises.urls')),
     path('api/v1/', include('documents.urls')),
     path('api/v1/', include('therapists.urls')),
-    # Always authenticated - never use django.conf.urls.static for MEDIA.
     path('media/<path:path>', ProtectedMediaServeView.as_view(), name='protected-media'),
 ]

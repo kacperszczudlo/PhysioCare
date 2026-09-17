@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import URLPattern, URLResolver, path
 
 from .views import (
     EpisodeBodyPainDetailView,
@@ -20,7 +20,7 @@ from .views import (
     PatientReceptaNaRuchListCreateView,
 )
 
-urlpatterns = [
+urlpatterns: list[URLPattern | URLResolver] = [
     path(
         'patients/<uuid:patient_id>/episodes/',
         PatientEpisodeListCreateView.as_view(),
@@ -89,7 +89,7 @@ urlpatterns = [
     ),
 ]
 
-me_urlpatterns = [
+me_urlpatterns: list[URLPattern | URLResolver] = [
     path(
         'clinical-documents/',
         MeClinicalDocumentsListView.as_view(),

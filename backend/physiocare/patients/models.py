@@ -1,22 +1,39 @@
+from typing import TYPE_CHECKING
+
 from django.conf import settings
 from django.db import models
 
 from core.fields import EncryptedCharField
 from core.models import TimestampedModel, TimestampedUpdatedModel
 
+if TYPE_CHECKING:
+    from therapists.models import TherapistProfile
+
 
 class PatientProfileQuerySet(models.QuerySet):
-    def active(self):
-        """Exclude soft-deleted / anonymized accounts (user.is_active=False)."""
+    """QuerySet dla profilu pacjenta z metodami pomocniczymi."""
+
+    def active(self) -> 'PatientProfileQuerySet':
+        """Zwraca tylko aktywne profile pacjentów.
+
+        Wyklucza zanonimizowane lub usunięte konta (gdzie user.is_active=False).
+
+        Returns:
+            PatientProfileQuerySet: Przefiltrowany zestaw danych z aktywnymi użytkownikami.
+        """
         return self.filter(user__is_active=True)
 
 
 class LinkStatus(models.TextChoices):
+    """Statusy powiązania pacjenta z fizjoterapeutą."""
+
     ACTIVE = 'ACTIVE', 'Aktywny'
     ARCHIVED = 'ARCHIVED', 'Zarchiwizowany'
 
 
 class PatientTherapistLink(TimestampedUpdatedModel):
+    """Model relacji łączącej pacjenta z fizjoterapeutą."""
+
     patient = models.ForeignKey(
         'patients.PatientProfile',
         on_delete=models.CASCADE,
@@ -46,12 +63,27 @@ class PatientTherapistLink(TimestampedUpdatedModel):
             models.Index(fields=['therapist', 'status'], name='idx_pt_link_therapist_status'),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Reprezentacja tekstowa powiązania pacjenta z fizjoterapeutą.
+
+        Returns:
+            str: Łańcuch opisujący relację pacjenta i fizjoterapeuty oraz jej status.
+        """
         return f'{self.patient} <-> {self.therapist} ({self.status})'
 
 
 class PatientProfileManager(models.Manager.from_queryset(PatientProfileQuerySet)):
-    def create(self, **kwargs):
+    """Menedżer modeli dla profilu pacjenta."""
+
+    def create(self, **kwargs: object) -> 'PatientProfile':
+        """Tworzy nowy profil pacjenta oraz opcjonalne powiązanie z fizjoterapeutą.
+
+        Args:
+            **kwargs (object): Argumenty słownikowe wykorzystywane do utworzenia profilu.
+
+        Returns:
+            PatientProfile: Utworzona instancja profilu pacjenta.
+        """
         therapist = kwargs.pop('therapist', None)
         therapist_id = kwargs.pop('therapist_id', None)
         patient_profile = super().create(**kwargs)
@@ -71,6 +103,8 @@ class PatientProfileManager(models.Manager.from_queryset(PatientProfileQuerySet)
 
 
 class PatientProfile(TimestampedModel):
+    """Model profilu pacjenta w systemie PhysioCare."""
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -91,14 +125,30 @@ class PatientProfile(TimestampedModel):
         db_table = 'patient_profiles'
         ordering = ['user__last_name', 'user__first_name']
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Reprezentacja tekstowa profilu pacjenta.
+
+        Returns:
+            str: Imię i nazwisko pacjenta.
+        """
         return f'{self.user.first_name} {self.user.last_name}'
 
     @property
-    def therapist(self):
+    def therapist(self) -> 'TherapistProfile | None':
+        """Pobiera pierwszego aktywnego fizjoterapeutę przypisanego do pacjenta.
+
+        Returns:
+            TherapistProfile | None: Instancja profilu aktywnego fizjoterapeuty lub None.
+        """
         return self.therapists.filter(patient_links__status=LinkStatus.ACTIVE).first()
 
     @property
-    def therapist_id(self):
+    def therapist_id(self) -> object | None:
+        """Pobiera identyfikator pierwszego aktywnego fizjoterapeuty.
+
+        Returns:
+            object | None: Identyfikator fizjoterapeuty lub None.
+        """
         t = self.therapist
         return t.id if t else None
+

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import pytest
 from django.db import IntegrityError, connection
 from django.test.utils import CaptureQueriesContext
@@ -6,14 +8,23 @@ from rest_framework import status
 
 from scheduling.models import Visit, VisitStatus
 
+if TYPE_CHECKING:
+    from rest_framework.test import APIClient
+    from patients.models import PatientProfile
+    from scheduling.models import TherapyType
+    from therapists.models import TherapistProfile
+
 
 @pytest.mark.django_db
 def test_create_overlapping_visit_for_same_therapist_raises_integrity_error(
-    patient, therapist, therapy_type
-):
+    patient: 'PatientProfile',
+    therapist: 'TherapistProfile',
+    therapy_type: 'TherapyType',
+) -> None:
+    """Sprawdza odrzucenie utworzenia nakładającej się wizyty dla tego samego fizjoterapeuty."""
+    # Arrange
     from django.db import transaction
 
-    # Arrange
     now = timezone.now()
     start_at = now + timezone.timedelta(hours=2)
     end_at = start_at + timezone.timedelta(minutes=45)
@@ -27,7 +38,7 @@ def test_create_overlapping_visit_for_same_therapist_raises_integrity_error(
         status=VisitStatus.SCHEDULED,
     )
 
-    # Act & Assert - Attempt to create an overlapping visit inside atomic savepoint
+    # Act
     with transaction.atomic(), pytest.raises(IntegrityError):
         Visit.objects.create(
             patient=patient,
@@ -41,16 +52,18 @@ def test_create_overlapping_visit_for_same_therapist_raises_integrity_error(
 
 @pytest.mark.django_db
 def test_adjacent_non_overlapping_visits_allowed(
-    patient, therapist, therapy_type
-):
+    patient: 'PatientProfile',
+    therapist: 'TherapistProfile',
+    therapy_type: 'TherapyType',
+) -> None:
+    """Sprawdza możliwość utworzenia bezpośrednio sąsiadujących wizyt bez nakładania przedziałów."""
     # Arrange
     now = timezone.now()
     v1_start = now + timezone.timedelta(hours=5)
     v1_end = v1_start + timezone.timedelta(minutes=45)
-    v2_start = v1_end  # Touches exact end time of v1
+    v2_start = v1_end
     v2_end = v2_start + timezone.timedelta(minutes=45)
 
-    # Act & Assert
     v1 = Visit.objects.create(
         patient=patient,
         therapist=therapist,
@@ -68,12 +81,19 @@ def test_adjacent_non_overlapping_visits_allowed(
         status=VisitStatus.SCHEDULED,
     )
 
+    # Assert
     assert v1.id != v2.id
     assert Visit.objects.filter(therapist=therapist).count() == 2
 
 
 @pytest.mark.django_db
-def test_therapist_calendar_queries_are_optimized(api_client, therapist, patient, therapy_type):
+def test_therapist_calendar_queries_are_optimized(
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+    therapy_type: 'TherapyType',
+) -> None:
+    """Sprawdza optymalizację zapapytań SQL podczas pobierania kalendarza wizyt terapeuty."""
     # Arrange
     now = timezone.now()
     for i in range(5):
@@ -95,3 +115,4 @@ def test_therapist_calendar_queries_are_optimized(api_client, therapist, patient
     # Assert
     assert response.status_code == status.HTTP_200_OK
     assert len(context.captured_queries) <= 4
+

@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import URLPattern, URLResolver, path
 
 from .views import (
     ChangePasswordView,
@@ -20,7 +20,7 @@ from .views import (
     TherapistRegisterView,
 )
 
-urlpatterns = [
+urlpatterns: list[URLPattern | URLResolver] = [
     path('login/', LoginView.as_view(), name='login'),
     path('google/', GoogleLoginView.as_view(), name='login-google'),
     path('logout/', LogoutView.as_view(), name='logout'),

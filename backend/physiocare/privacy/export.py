@@ -1,5 +1,3 @@
-"""Assemble a patient data-export payload (Art. 15 metadata, not file bytes)."""
-
 from django.utils import timezone
 
 from documents.models import MedicalDocument
@@ -17,18 +15,35 @@ from treatment.models import (
 )
 
 
-def build_patient_export(user, profile) -> dict:
-    consents = Consent.objects.filter(user=user)
-    visits = Visit.objects.filter(patient=profile).select_related('therapy_type')
-    episodes = TreatmentEpisode.objects.filter(patient=profile)
-    documents = MedicalDocument.objects.filter(patient=profile)
-    assignments = ExerciseAssignment.objects.filter(patient=profile).select_related('exercise')
-    device_orders = MedicalDeviceOrder.objects.filter(patient=profile)
-    referrals = ReceptaNaRuchReferral.objects.filter(patient=profile)
-    recommendations = DiagnosticRecommendation.objects.filter(episode__patient=profile)
-    refusals = PhysicianOrderRefusal.objects.filter(episode__patient=profile)
+def build_patient_export(user: object, profile: object) -> dict[str, object]:
+    """Buduje kompletny słownik eksportu danych osobowych pacjenta (zgodnie z Art. 15 RODO).
 
-    payload = {
+    Args:
+        user (object): Obiekt użytkownika Django.
+        profile (object): Obiekt profilu pacjenta (PatientProfile).
+
+    Returns:
+        dict[str, object]: Słownik zawierający zagregowane dane pacjenta.
+
+    Raises:
+        TypeError: Gdy argument user lub profile jest None.
+    """
+    if user is None:
+        raise TypeError("Argument 'user' nie może być None.")
+    if profile is None:
+        raise TypeError("Argument 'profile' nie może być None.")
+
+    consents: object = Consent.objects.filter(user=user)
+    visits: object = Visit.objects.filter(patient=profile).select_related('therapy_type')
+    episodes: object = TreatmentEpisode.objects.filter(patient=profile)
+    documents: object = MedicalDocument.objects.filter(patient=profile)
+    assignments: object = ExerciseAssignment.objects.filter(patient=profile).select_related('exercise')
+    device_orders: object = MedicalDeviceOrder.objects.filter(patient=profile)
+    referrals: object = ReceptaNaRuchReferral.objects.filter(patient=profile)
+    recommendations: object = DiagnosticRecommendation.objects.filter(episode__patient=profile)
+    refusals: object = PhysicianOrderRefusal.objects.filter(episode__patient=profile)
+
+    payload: dict[str, object] = {
         'exported_at': timezone.now().isoformat(),
         'profile': MeProfileSerializer(profile).data,
         'consents': ConsentSerializer(consents, many=True).data,
@@ -45,7 +60,7 @@ def build_patient_export(user, profile) -> dict:
                 'patient_note': visit.patient_note,
                 'cancel_reason': visit.cancel_reason,
             }
-            for visit in visits
+            for visit in visits  # type: ignore[union-attr]
         ],
         'episodes': [
             {
@@ -67,7 +82,7 @@ def build_patient_export(user, profile) -> dict:
                     for entry in episode.body_pain_entries.all()
                 ],
             }
-            for episode in episodes.prefetch_related('body_pain_entries')
+            for episode in episodes.prefetch_related('body_pain_entries')  # type: ignore[union-attr]
         ],
         'documents': [
             {
@@ -77,7 +92,7 @@ def build_patient_export(user, profile) -> dict:
                 'created_at': document.created_at.isoformat(),
                 'file_url': document.file_url,
             }
-            for document in documents
+            for document in documents  # type: ignore[union-attr]
         ],
         'exercise_assignments': [
             {
@@ -94,7 +109,7 @@ def build_patient_export(user, profile) -> dict:
                     for completion in assignment.completions.all()
                 ],
             }
-            for assignment in assignments.prefetch_related('completions')
+            for assignment in assignments.prefetch_related('completions')  # type: ignore[union-attr]
         ],
         'device_orders': [
             {
@@ -104,7 +119,7 @@ def build_patient_export(user, profile) -> dict:
                 'access_code': order.access_code,
                 'status': order.status,
             }
-            for order in device_orders
+            for order in device_orders  # type: ignore[union-attr]
         ],
         'diagnostic_recommendations': [
             {
@@ -112,14 +127,14 @@ def build_patient_export(user, profile) -> dict:
                 'recommendation_type': item.recommendation_type,
                 'justification': item.justification,
             }
-            for item in recommendations
+            for item in recommendations  # type: ignore[union-attr]
         ],
         'physician_order_refusals': [
             {
                 'id': str(item.id),
                 'refusal_reason': item.refusal_reason,
             }
-            for item in refusals
+            for item in refusals  # type: ignore[union-attr]
         ],
         'recepta_na_ruch': [
             {
@@ -127,7 +142,7 @@ def build_patient_export(user, profile) -> dict:
                 'status': item.status,
                 'activity_notes': item.activity_notes,
             }
-            for item in referrals
+            for item in referrals  # type: ignore[union-attr]
         ],
     }
     payload.update(notification_export_payload(user))

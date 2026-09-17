@@ -6,24 +6,32 @@ from notifications.keys import NotificationPreferenceKey
 
 
 class DevicePlatform(models.TextChoices):
-    IOS = 'ios', 'iOS'
-    ANDROID = 'android', 'Android'
-    UNKNOWN = 'unknown', 'Nieznana'
+    """Wybór platformy urządzenia mobilnego."""
+
+    IOS: str = 'ios', 'iOS'
+    ANDROID: str = 'android', 'Android'
+    UNKNOWN: str = 'unknown', 'Nieznana'
 
 
 class DeliveryChannel(models.TextChoices):
-    PUSH = 'push', 'Push'
-    EMAIL = 'email', 'E-mail'
-    NONE = 'none', 'Brak'
+    """Kanał dostarczenia powiadomienia."""
+
+    PUSH: str = 'push', 'Push'
+    EMAIL: str = 'email', 'E-mail'
+    NONE: str = 'none', 'Brak'
 
 
 class DeliveryStatus(models.TextChoices):
-    SENT = 'sent', 'Wysłane'
-    SKIPPED = 'skipped', 'Pominięte'
-    FAILED = 'failed', 'Błąd'
+    """Status wysyłki powiadomienia."""
+
+    SENT: str = 'sent', 'Wysłane'
+    SKIPPED: str = 'skipped', 'Pominięte'
+    FAILED: str = 'failed', 'Błąd'
 
 
 class NotificationPreference(UUIDModel):
+    """Model przechowujący indywidualne preferencje powiadomień użytkownika."""
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -36,19 +44,36 @@ class NotificationPreference(UUIDModel):
     enabled = models.BooleanField(default=True)
 
     class Meta:
-        db_table = 'notification_preferences'
-        constraints = [
+        """Metadane modelu NotificationPreference."""
+
+        db_table: str = 'notification_preferences'
+        constraints: list[object] = [
             models.UniqueConstraint(
                 fields=['user', 'pref_key'],
                 name='uniq_notification_pref_user_key',
             ),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Zwraca reprezentację tekstową preferencji powiadomienia.
+
+        Returns:
+            str: Napis w formacie 'email - klucz_preferencji'.
+        """
         return f'{self.user.email} - {self.pref_key}'
+
+    def is_preference_enabled(self) -> bool:
+        """Sprawdza czy dana preferencja powiadomień jest aktywna.
+
+        Returns:
+            bool: True jeśli powiadomienia są włączone, False w przeciwnym razie.
+        """
+        return self.enabled
 
 
 class DeviceToken(TimestampedUpdatedModel):
+    """Model rejestrujący tokeny urządzeń mobilnych użytkownika (Expo Push Token)."""
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -63,16 +88,42 @@ class DeviceToken(TimestampedUpdatedModel):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        db_table = 'device_tokens'
-        indexes = [
+        """Metadane modelu DeviceToken."""
+
+        db_table: str = 'device_tokens'
+        indexes: list[models.Index] = [
             models.Index(fields=['user', 'is_active'], name='idx_device_token_user_active'),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Zwraca reprezentację tekstową tokenu urządzenia.
+
+        Returns:
+            str: Napis w formacie 'email - platforma'.
+        """
         return f'{self.user.email} - {self.platform}'
+
+    def matches_platform(self, target_platform: str) -> bool:
+        """Sprawdza czy urządzenie odpowiada podanej platformie.
+
+        Args:
+            target_platform (str): Oczekiwana nazwa platformy (np. 'ios', 'android').
+
+        Returns:
+            bool: True jeśli platforma zgadza się, False w przeciwnym razie.
+
+        Raises:
+            TypeError: Gdy argument target_platform nie jest napisem.
+        """
+        if not isinstance(target_platform, str):
+            raise TypeError("Argument 'target_platform' musi być typu str.")
+
+        return self.platform == target_platform
 
 
 class NotificationDelivery(TimestampedModel):
+    """Model rejestrujący historię dostarczenia i wysyłki powiadomień."""
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -88,13 +139,28 @@ class NotificationDelivery(TimestampedModel):
     error_message = models.CharField(max_length=300, blank=True, default='')
 
     class Meta:
-        db_table = 'notification_deliveries'
-        indexes = [
+        """Metadane modelu NotificationDelivery."""
+
+        db_table: str = 'notification_deliveries'
+        indexes: list[models.Index] = [
             models.Index(
                 fields=['user', 'dedupe_key'],
                 name='idx_notif_delivery_user_dedupe',
             ),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Zwraca reprezentację tekstową rekordu doręczenia powiadomienia.
+
+        Returns:
+            str: Napis w formacie 'email - klucz_preferencji - status'.
+        """
         return f'{self.user.email} - {self.pref_key} - {self.status}'
+
+    def is_failed(self) -> bool:
+        """Sprawdza czy wysyłka powiadomienia zakończyła się błędem.
+
+        Returns:
+            bool: True jeśli status to FAILED, False w przeciwnym razie.
+        """
+        return self.status == DeliveryStatus.FAILED

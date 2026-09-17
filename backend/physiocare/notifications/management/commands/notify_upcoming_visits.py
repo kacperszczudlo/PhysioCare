@@ -14,9 +14,17 @@ SLACK = timedelta(minutes=30)
 
 
 class Command(BaseCommand):
+    """Polecenie zarządcze Django wysyłające przypomnienia o nadchodzących wizytach (okna 24h oraz 2h)."""
+
     help = 'Wyślij przypomnienia o wizytach (okna 24h i 2h).'
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:
+        """Główna logika wysyłania przypomnień o wizytach.
+
+        Args:
+            *args: Argumenty pozycyjne.
+            **options: Opcje wiersza poleceń.
+        """
         now = timezone.now()
         sent = 0
         visits = Visit.objects.filter(

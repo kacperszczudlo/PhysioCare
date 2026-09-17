@@ -1,10 +1,3 @@
-"""
-Kompetencje fizjoterapeuty wg ustawy o zawodzie fizjoterapeuty
-oraz rozporządzeń MZ w sprawie wyrobów medycznych (stan interpretacyjny 2024).
-
-To nie jest poradnictwo prawne - reguły modelują granice produktu PhysioCare.
-"""
-
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
@@ -15,35 +8,38 @@ if TYPE_CHECKING:
 
 
 class QualificationLevel:
-    TECHNIK = 'TECHNIK'
-    LICENCJAT = 'LICENCJAT'
-    MAGISTER = 'MAGISTER'
-    FIZJO_SPEC = 'FIZJO_SPEC'
+    """Poziomy kwalifikacji zawodowych fizjoterapeutów w Polsce."""
 
-    CHOICES = (
+    TECHNIK: str = 'TECHNIK'
+    LICENCJAT: str = 'LICENCJAT'
+    MAGISTER: str = 'MAGISTER'
+    FIZJO_SPEC: str = 'FIZJO_SPEC'
+
+    CHOICES: tuple[tuple[str, str], ...] = (
         (TECHNIK, 'Technik fizjoterapii'),
         (LICENCJAT, 'Licencjat fizjoterapii'),
         (MAGISTER, 'Magister fizjoterapii'),
         (FIZJO_SPEC, 'Specjalista w dziedzinie fizjoterapii (FIZJO SPEC)'),
     )
 
-    LABELS = dict(CHOICES)
+    LABELS: dict[str, str] = dict(CHOICES)
 
 
-# Magistrowie: grupy seryjne (J, L, M/L, O, S) - stan na 2024 z raportu.
-MAGISTER_DEVICE_GROUPS = frozenset({'J', 'L', 'M', 'O', 'S'})
+MAGISTER_DEVICE_GROUPS: frozenset[str] = frozenset({'J', 'L', 'M', 'O', 'S'})
 
-# Specjalista: dodatkowo protezy, ortezy na miarę, zaawansowany sprzęt, grupa W.
-FIZJO_SPEC_EXTRA_GROUPS = frozenset({'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'Ł', 'N', 'P', 'W'})
+FIZJO_SPEC_EXTRA_GROUPS: frozenset[str] = frozenset({'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'Ł', 'N', 'P', 'W'})
 
-ALL_ORDINABLE_GROUPS = MAGISTER_DEVICE_GROUPS | FIZJO_SPEC_EXTRA_GROUPS
+ALL_ORDINABLE_GROUPS: frozenset[str] = MAGISTER_DEVICE_GROUPS | FIZJO_SPEC_EXTRA_GROUPS
 
-YEARS_FOR_INDEPENDENT_PLANNING = 3
-YEARS_FOR_SUPERVISION = 5
+YEARS_FOR_INDEPENDENT_PLANNING: int = 3
+YEARS_FOR_SUPERVISION: int = 5
+
 
 
 @dataclass(frozen=True)
 class CompetenceCapability:
+    """Reprezentacja pojedynczego uprawnienia zawodowego fizjoterapeuty."""
+
     code: str
     allowed: bool
     label: str
@@ -52,6 +48,8 @@ class CompetenceCapability:
 
 @dataclass(frozen=True)
 class CompetenceSnapshot:
+    """Migawka uprawnień zawodowych fizjoterapeuty."""
+
     qualification_level: str
     qualification_label: str
     experience_years: int
@@ -62,30 +60,85 @@ class CompetenceSnapshot:
     device_groups: tuple[str, ...]
     capabilities: tuple[CompetenceCapability, ...]
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
+        """Konwertuje migawkę kompetencji do słownika.
+
+        Returns:
+            dict[str, object]: Słownik reprezentujący dane migawki kompetencji.
+        """
         data = asdict(self)
         return data
 
     def capability(self, code: str) -> CompetenceCapability | None:
+        """Wyszukuje uprawnienie o podanym kodzie w migawce.
+
+        Args:
+            code (str): Kod uprawnienia.
+
+        Returns:
+            CompetenceCapability | None: Obiekt uprawnienia lub None, jeśli nie znaleziono.
+        """
+        if not isinstance(code, str):
+            return None
         for item in self.capabilities:
             if item.code == code:
                 return item
         return None
 
     def allows(self, code: str) -> bool:
+        """Sprawdza, czy dane uprawnienie jest dozwolone.
+
+        Args:
+            code (str): Kod uprawnienia.
+
+        Returns:
+            bool: True, jeśli uprawnienie jest dozwolone, w przeciwnym razie False.
+        """
+        if not isinstance(code, str):
+            return False
         item = self.capability(code)
         return bool(item and item.allowed)
 
 
 def _is_magister_or_above(level: str) -> bool:
+    """Sprawdza, czy poziom kwalifikacji odpowiada magistrowi lub specjaliscie.
+
+    Args:
+        level (str): Kod poziomu kwalifikacji.
+
+    Returns:
+        bool: True, jeśli poziom to MAGISTER lub FIZJO_SPEC.
+    """
+    if not isinstance(level, str):
+        return False
     return level in (QualificationLevel.MAGISTER, QualificationLevel.FIZJO_SPEC)
 
 
 def _is_fizjo_spec(level: str) -> bool:
+    """Sprawdza, czy poziom kwalifikacji odpowiada specjaliście fizjoterapii.
+
+    Args:
+        level (str): Kod poziomu kwalifikacji.
+
+    Returns:
+        bool: True, jeśli poziom to FIZJO_SPEC.
+    """
+    if not isinstance(level, str):
+        return False
     return level == QualificationLevel.FIZJO_SPEC
 
 
 def allowed_device_groups(level: str) -> frozenset[str]:
+    """Zwraca zbiór grup wyrobów medycznych dozwolonych do ordynacji dla danego poziomu.
+
+    Args:
+        level (str): Kod poziomu kwalifikacji.
+
+    Returns:
+        frozenset[str]: Zbiór symboli grup wyrobów medycznych.
+    """
+    if not isinstance(level, str):
+        return frozenset()
     if _is_fizjo_spec(level):
         return ALL_ORDINABLE_GROUPS
     if level == QualificationLevel.MAGISTER:
@@ -94,6 +147,17 @@ def allowed_device_groups(level: str) -> frozenset[str]:
 
 
 def can_order_device_group(level: str, group: str) -> bool:
+    """Sprawdza, czy dany poziom kwalifikacji umożliwia ordynację grupy wyrobów medycznych.
+
+    Args:
+        level (str): Kod poziomu kwalifikacji.
+        group (str): Symbol grupy wyrobów medycznych.
+
+    Returns:
+        bool: True, jeśli ordynacja danej grupy jest dozwolona.
+    """
+    if not isinstance(level, str) or not isinstance(group, str):
+        return False
     return group.upper() in allowed_device_groups(level)
 
 
@@ -101,8 +165,17 @@ def build_competence_snapshot(
     qualification_level: str,
     experience_years: int = 0,
 ) -> CompetenceSnapshot:
-    level = qualification_level or QualificationLevel.MAGISTER
-    years = max(0, int(experience_years or 0))
+    """Buduje pełną migawkę kompetencji na podstawie poziomu kwalifikacji i stażu pracy.
+
+    Args:
+        qualification_level (str): Kod poziomu wykształcenia/kwalifikacji.
+        experience_years (int): Liczba lat doświadczenia zawodowego.
+
+    Returns:
+        CompetenceSnapshot: Wygenerowana migawka kompetencji.
+    """
+    level = qualification_level if isinstance(qualification_level, str) and qualification_level else QualificationLevel.MAGISTER
+    years = max(0, int(experience_years or 0)) if isinstance(experience_years, (int, float, str)) else 0
     magister_plus = _is_magister_or_above(level)
     fizjo_spec = _is_fizjo_spec(level)
     can_plan = fizjo_spec or (level == QualificationLevel.MAGISTER and years >= YEARS_FOR_INDEPENDENT_PLANNING)
@@ -207,13 +280,42 @@ def build_competence_snapshot(
 
 
 def snapshot_for_therapist(therapist: TherapistProfile) -> CompetenceSnapshot:
+    """Generuje migawkę kompetencji dla wskazanego profilu fizjoterapeuty.
+
+    Args:
+        therapist (TherapistProfile): Instancja profilu fizjoterapeuty.
+
+    Returns:
+        CompetenceSnapshot: Migawka kompetencji dla danego fizjoterapeuty.
+
+    Raises:
+        TypeError: Gdy parametr therapist nie jest instancją TherapistProfile.
+    """
+    from therapists.models import TherapistProfile
+    if not isinstance(therapist, TherapistProfile):
+        raise TypeError('Argument therapist musi być instancją TherapistProfile.')
+
+    qual = therapist.qualification_level if hasattr(therapist, 'qualification_level') else QualificationLevel.MAGISTER
+    exp = therapist.experience_years if hasattr(therapist, 'experience_years') else 0
     return build_competence_snapshot(
-        qualification_level=therapist.qualification_level,
-        experience_years=therapist.experience_years,
+        qualification_level=qual,
+        experience_years=exp,
     )
 
 
+
 def deny_message(capability_code: str, snapshot: CompetenceSnapshot) -> str:
+    """Zwraca przyczyny odmowy dostępu do określonego uprawnienia.
+
+    Args:
+        capability_code (str): Kod uprawnienia.
+        snapshot (CompetenceSnapshot): Migawka kompetencji fizjoterapeuty.
+
+    Returns:
+        str: Komunikat uzasadniający odmowę dostępu.
+    """
+    if not isinstance(capability_code, str) or not isinstance(snapshot, CompetenceSnapshot):
+        return 'Brak uprawnienia do tej operacji.'
     item = snapshot.capability(capability_code)
     if item is None:
         return 'Brak uprawnienia do tej operacji.'

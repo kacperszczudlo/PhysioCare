@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import URLPattern, URLResolver, path
 
 from core.avatar_views import MeAvatarUploadView
 
@@ -15,12 +15,12 @@ from .views import (
     PatientListView,
 )
 
-urlpatterns = [
+urlpatterns: list[URLPattern | URLResolver] = [
     path('', PatientListView.as_view(), name='patient-list'),
     path('<uuid:pk>/', PatientDetailView.as_view(), name='patient-detail'),
 ]
 
-me_urlpatterns = [
+me_urlpatterns: list[URLPattern | URLResolver] = [
     path('profile/', MeProfileView.as_view(), name='me-profile'),
     path('profile/avatar/', MeAvatarUploadView.as_view(), name='me-profile-avatar'),
     path('therapists/', MeTherapistsView.as_view(), name='me-therapists'),

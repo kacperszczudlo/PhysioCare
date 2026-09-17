@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import URLPattern, URLResolver, path
 
 from .views import (
     MeTherapyTypeListView,
@@ -19,7 +19,7 @@ from .views import (
     VisitRescheduleView,
 )
 
-urlpatterns = [
+urlpatterns: list[URLPattern | URLResolver] = [
     path('scheduling/holidays/', PolishHolidaysView.as_view(), name='polish-holidays'),
     path(
         'therapist/availabilities/',
@@ -80,7 +80,7 @@ urlpatterns = [
     path('visits/<uuid:pk>/cancel/', VisitCancelView.as_view(), name='visit-cancel'),
 ]
 
-me_urlpatterns = [
+me_urlpatterns: list[URLPattern | URLResolver] = [
     path('visits/', MeVisitListCreateView.as_view(), name='me-visits'),
     path('therapy-types/', MeTherapyTypeListView.as_view(), name='me-therapy-types'),
 ]

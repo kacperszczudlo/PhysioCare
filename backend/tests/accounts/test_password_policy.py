@@ -19,7 +19,9 @@ from accounts.serializers import TherapistRegistrationSerializer
         ('SecurePass123', PASSWORD_NO_SPECIAL),
     ],
 )
-def test_therapist_register_rejects_weak_password(password, expected_fragment):
+def test_therapist_register_rejects_weak_password(password: str, expected_fragment: str) -> None:
+    """Sprawdza, czy rejestracja fizjoterapeuty odrzuca słabe hasła z odpowiednim komunikatem."""
+    # Arrange
     serializer = TherapistRegistrationSerializer(
         data={
             'email': 'new.therapist@physiocare.test',
@@ -31,13 +33,16 @@ def test_therapist_register_rejects_weak_password(password, expected_fragment):
         }
     )
 
+    # Assert
     assert not serializer.is_valid()
     assert 'password' in serializer.errors
     assert expected_fragment in str(serializer.errors['password'])
 
 
 @pytest.mark.django_db
-def test_therapist_register_rejects_password_similar_to_email():
+def test_therapist_register_rejects_password_similar_to_email() -> None:
+    """Sprawdza, czy rejestracja odrzuca hasło zbyt podobne do adresu e-mail."""
+    # Arrange
     serializer = TherapistRegistrationSerializer(
         data={
             'email': 'jan.nowak@physiocare.test',
@@ -49,13 +54,16 @@ def test_therapist_register_rejects_password_similar_to_email():
         }
     )
 
+    # Assert
     assert not serializer.is_valid()
     assert 'password' in serializer.errors
     assert 'podobne' in str(serializer.errors['password']).lower()
 
 
 @pytest.mark.django_db
-def test_therapist_register_accepts_strong_password():
+def test_therapist_register_accepts_strong_password() -> None:
+    """Sprawdza, czy rejestracja akceptuje silne, spełniające kryteria polityki hasło."""
+    # Arrange
     serializer = TherapistRegistrationSerializer(
         data={
             'email': 'strong.therapist@physiocare.test',
@@ -67,6 +75,8 @@ def test_therapist_register_accepts_strong_password():
         }
     )
 
+    # Assert
     assert serializer.is_valid(), serializer.errors
     user = serializer.save()
     assert user.check_password('SecurePass123!')
+

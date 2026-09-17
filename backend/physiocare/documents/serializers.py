@@ -11,6 +11,8 @@ from .models import MedicalDocument
 
 
 class MedicalDocumentSerializer(serializers.ModelSerializer):
+    """Serializator dla dokumentu medycznego pacjenta."""
+
     title = serializers.CharField(max_length=200)
 
     class Meta:
@@ -21,7 +23,21 @@ class MedicalDocumentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'file_url', 'uploaded_by', 'created_at']
 
-    def validate_title(self, value):
+    def validate_title(self, value: str | None) -> str:
+        """Waliduje i normalizuje tytuł dokumentu medycznego.
+
+        Args:
+            value (str | None): Wartość wejściowa tytułu dokumentu.
+
+        Returns:
+            str: Znormalizowana treść tytułu.
+
+        Raises:
+            serializers.ValidationError: Gdy tytuł jest pusty lub zbyt długi.
+        """
+        if value is not None and not isinstance(value, str):
+            raise serializers.ValidationError('Tytuł musi być ciągiem znaków.')
+
         try:
             return normalize_optional_text(
                 value,
@@ -32,3 +48,4 @@ class MedicalDocumentSerializer(serializers.ModelSerializer):
             )
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
+

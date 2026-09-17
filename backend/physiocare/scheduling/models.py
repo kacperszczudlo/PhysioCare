@@ -7,11 +7,18 @@ from core.models import TimestampedModel, TimestampedUpdatedModel
 
 
 class TsTzRange(Func):
+    """Funkcja bazodanowa PostgreSQL generująca zakres typu TSTZRANGE.
+
+    Służy do tworzenia przedziałów czasowych w zapytaniach SQL dla wykluczeń nakładających się wizyt.
+    """
+
     function = 'TSTZRANGE'
     output_field = DateTimeRangeField()
 
 
 class VisitStatus(models.TextChoices):
+    """Przechowuje dostępne statusy wizyty fizjoterapeutycznej."""
+
     PENDING_APPROVAL = 'PENDING_APPROVAL', 'Oczekuje na zatwierdzenie'
     SCHEDULED = 'SCHEDULED', 'Zaplanowana'
     COMPLETED = 'COMPLETED', 'Zakończona'
@@ -20,6 +27,8 @@ class VisitStatus(models.TextChoices):
 
 
 class TherapyType(TimestampedModel):
+    """Model reprezentujący typ/usługę terapii oferowaną przez fizjoterapeutę."""
+
     therapist = models.ForeignKey(
         'therapists.TherapistProfile',
         on_delete=models.CASCADE,
@@ -30,6 +39,8 @@ class TherapyType(TimestampedModel):
     duration_min = models.PositiveSmallIntegerField(default=45)
 
     class Meta:
+        """Metadane modelu TherapyType."""
+
         db_table = 'therapy_types'
         constraints = [
             models.UniqueConstraint(
@@ -38,11 +49,18 @@ class TherapyType(TimestampedModel):
             ),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Zwraca reprezentację tekstową typu terapii.
+
+        Returns:
+            str: Nazwa typu terapii oraz reprezentacja fizjoterapeuty.
+        """
         return f'{self.name} ({self.therapist})'
 
 
 class Visit(TimestampedModel):
+    """Model reprezentujący wizytę fizjoterapeutyczną pacjenta u terapeuty."""
+
     patient = models.ForeignKey(
         'patients.PatientProfile',
         on_delete=models.CASCADE,
@@ -74,12 +92,13 @@ class Visit(TimestampedModel):
     )
     location_address = models.CharField(max_length=300, blank=True, default='')
     prep_instructions = models.TextField(blank=True, default='')
-    # After-visit summary for the patient (plain language) - not the clinical VisitNote.
     patient_summary = models.TextField(blank=True, default='')
     patient_note = models.TextField(blank=True, default='')
     cancel_reason = models.TextField(blank=True, default='')
 
     class Meta:
+        """Metadane modelu Visit."""
+
         db_table = 'visits'
         indexes = [
             models.Index(
@@ -110,11 +129,18 @@ class Visit(TimestampedModel):
             ),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Zwraca reprezentację tekstową wizyty.
+
+        Returns:
+            str: Opis wizyty z dają rozpoczęcia i pacjentem.
+        """
         return f'Wizyta {self.start_at} - {self.patient}'
 
 
 class TherapistAvailabilitySlot(TimestampedUpdatedModel):
+    """Model reprezentujący slot dostępności (godziny przyjęć) fizjoterapeuty."""
+
     therapist = models.ForeignKey(
         'therapists.TherapistProfile',
         on_delete=models.CASCADE,
@@ -133,6 +159,8 @@ class TherapistAvailabilitySlot(TimestampedUpdatedModel):
     is_active = models.BooleanField(default=True)
 
     class Meta:
+        """Metadane modelu TherapistAvailabilitySlot."""
+
         db_table = 'therapist_availability_slots'
         indexes = [
             models.Index(
@@ -162,7 +190,12 @@ class TherapistAvailabilitySlot(TimestampedUpdatedModel):
             ),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Zwraca reprezentację tekstową slotu dostępności.
+
+        Returns:
+            str: Opis okresu dostępności jednorazowej lub cyklicznej.
+        """
         if self.is_recurring:
             return f'Dostępność cykliczna DOW:{self.day_of_week} ({self.start_time}-{self.end_time}) - {self.therapist}'
         return f'Dostępność {self.start_at} do {self.end_at} - {self.therapist}'

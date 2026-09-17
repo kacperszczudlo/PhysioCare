@@ -18,7 +18,9 @@ from accounts.serializers import (
         'jan example.com',
     ],
 )
-def test_patient_register_rejects_invalid_email_with_polish_message(email, therapist):
+def test_patient_register_rejects_invalid_email_with_polish_message(email: str, therapist: object) -> None:
+    """Sprawdza, czy rejestracja pacjenta odrzuca niepoprawny e-mail polskim komunikatem."""
+    # Arrange
     serializer = PatientRegistrationSerializer(
         data={
             'email': email,
@@ -30,6 +32,7 @@ def test_patient_register_rejects_invalid_email_with_polish_message(email, thera
         }
     )
 
+    # Assert
     assert not serializer.is_valid()
     assert 'email' in serializer.errors
     assert EMAIL_INVALID in str(serializer.errors['email'])
@@ -38,7 +41,9 @@ def test_patient_register_rejects_invalid_email_with_polish_message(email, thera
 
 
 @pytest.mark.django_db
-def test_patient_register_rejects_blank_email(therapist):
+def test_patient_register_rejects_blank_email(therapist: object) -> None:
+    """Sprawdza, czy rejestracja pacjenta odrzuca pusty e-mail."""
+    # Arrange
     serializer = PatientRegistrationSerializer(
         data={
             'email': '',
@@ -50,12 +55,15 @@ def test_patient_register_rejects_blank_email(therapist):
         }
     )
 
+    # Assert
     assert not serializer.is_valid()
     assert EMAIL_REQUIRED in str(serializer.errors['email'])
 
 
 @pytest.mark.django_db
-def test_patient_register_rejects_taken_email(patient, therapist):
+def test_patient_register_rejects_taken_email(patient: object, therapist: object) -> None:
+    """Sprawdza, czy rejestracja pacjenta odrzuca już zajęty e-mail."""
+    # Arrange
     serializer = PatientRegistrationSerializer(
         data={
             'email': patient.user.email,
@@ -67,12 +75,15 @@ def test_patient_register_rejects_taken_email(patient, therapist):
         }
     )
 
+    # Assert
     assert not serializer.is_valid()
     assert EMAIL_TAKEN in str(serializer.errors['email'])
 
 
 @pytest.mark.django_db
-def test_therapist_register_rejects_invalid_email():
+def test_therapist_register_rejects_invalid_email() -> None:
+    """Sprawdza, czy rejestracja fizjoterapeuty odrzuca niepoprawny e-mail."""
+    # Arrange
     serializer = TherapistRegistrationSerializer(
         data={
             'email': 'zly-email',
@@ -84,18 +95,24 @@ def test_therapist_register_rejects_invalid_email():
         }
     )
 
+    # Assert
     assert not serializer.is_valid()
     assert EMAIL_INVALID in str(serializer.errors['email'])
 
 
-def test_password_reset_request_rejects_invalid_email():
+def test_password_reset_request_rejects_invalid_email() -> None:
+    """Sprawdza, czy wniosek o reset hasła odrzuca niepoprawny e-mail."""
+    # Arrange
     serializer = PasswordResetRequestSerializer(data={'email': 'niepoprawny'})
+    # Assert
     assert not serializer.is_valid()
     assert EMAIL_INVALID in str(serializer.errors['email'])
 
 
 @pytest.mark.django_db
-def test_therapist_register_pwzf_format_is_polish():
+def test_therapist_register_pwzf_format_is_polish() -> None:
+    """Sprawdza, czy błąd formatu numeru PWZF jest w języku polskim."""
+    # Arrange
     serializer = TherapistRegistrationSerializer(
         data={
             'email': 'ok.therapist@physiocare.test',
@@ -107,8 +124,10 @@ def test_therapist_register_pwzf_format_is_polish():
         }
     )
 
+    # Assert
     assert not serializer.is_valid()
     assert 'pwzf_number' in serializer.errors
     message = str(serializer.errors['pwzf_number'])
     assert '5' in message
     assert 'Ensure this field' not in message
+

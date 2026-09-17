@@ -1,5 +1,3 @@
-"""PESEL validation with Polish user-facing messages."""
-
 from __future__ import annotations
 
 import re
@@ -7,13 +5,13 @@ from datetime import date
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 
-PESEL_REQUIRED = 'Podaj numer PESEL.'
-PESEL_INVALID_FORMAT = 'PESEL musi składać się z dokładnie 11 cyfr.'
-PESEL_INVALID_CHECKSUM = 'Numer PESEL jest nieprawidłowy (błędna suma kontrolna).'
-PESEL_INVALID_DATE = 'Numer PESEL jest nieprawidłowy (błędna data urodzenia).'
-PESEL_TOO_LONG = 'Numer PESEL może mieć co najwyżej 11 znaków.'
+PESEL_REQUIRED: str = 'Podaj numer PESEL.'
+PESEL_INVALID_FORMAT: str = 'PESEL musi składać się z dokładnie 11 cyfr.'
+PESEL_INVALID_CHECKSUM: str = 'Numer PESEL jest nieprawidłowy (błędna suma kontrolna).'
+PESEL_INVALID_DATE: str = 'Numer PESEL jest nieprawidłowy (błędna data urodzenia).'
+PESEL_TOO_LONG: str = 'Numer PESEL może mieć co najwyżej 11 znaków.'
 
-PESEL_FIELD_ERRORS = {
+PESEL_FIELD_ERRORS: dict[str, str] = {
     'blank': PESEL_REQUIRED,
     'required': PESEL_REQUIRED,
     'null': PESEL_REQUIRED,
@@ -21,12 +19,25 @@ PESEL_FIELD_ERRORS = {
     'invalid': PESEL_INVALID_FORMAT,
 }
 
-_PESEL_DIGITS = re.compile(r'^\d{11}$')
-_PESEL_WEIGHTS = (1, 3, 7, 9, 1, 3, 7, 9, 1, 3)
+_PESEL_DIGITS: re.Pattern[str] = re.compile(r'^\d{11}$')
+_PESEL_WEIGHTS: tuple[int, ...] = (1, 3, 7, 9, 1, 3, 7, 9, 1, 3)
 
 
 def _decode_pesel_birth_date(digits: str) -> date | None:
-    """Extract birth date from PESEL or return None if impossible."""
+    """Wyciąga datę urodzenia z ciągu cyfr numeru PESEL lub zwraca None.
+
+    Args:
+        digits (str): Ciąg 11 cyfr numeru PESEL.
+
+    Returns:
+        date | None: Wyliczona data urodzenia lub None, jeśli data/kod jest niepoprawny.
+
+    Raises:
+        TypeError: Gdy parametr digits nie jest ciągiem znaków.
+    """
+    if not isinstance(digits, str):
+        raise TypeError('Parametr digits musi być ciągiem znaków.')
+
     year = int(digits[0:2])
     month = int(digits[2:4])
     day = int(digits[4:6])
@@ -55,6 +66,21 @@ def _decode_pesel_birth_date(digits: str) -> date | None:
 
 
 def _has_valid_checksum(digits: str) -> bool:
+    """Sprawdza poprawność cyfry kontrolnej numeru PESEL.
+
+    Args:
+        digits (str): Ciąg 11 cyfr numeru PESEL.
+
+    Returns:
+        bool: True jeśli suma kontrolna jest poprawna, False w przeciwnym razie.
+
+    Raises:
+        TypeError: Gdy parametr digits nie jest ciągiem znaków.
+    """
+    if not isinstance(digits, str):
+        raise TypeError('Parametr digits musi być ciągiem znaków.')
+    if len(digits) != 11:
+        return False
     total = sum(
         weight * int(digit)
         for weight, digit in zip(_PESEL_WEIGHTS, digits[:10], strict=True)
@@ -64,13 +90,31 @@ def _has_valid_checksum(digits: str) -> bool:
 
 
 def normalize_and_validate_pesel(value: str | None, *, allow_blank: bool = True) -> str | None:
-    """Normalize and validate PESEL. Blank/None allowed when allow_blank=True."""
+    """Normalizuje oraz waliduje poprawność numeru PESEL.
+
+    Args:
+        value (str | None): Weryfikowany numer PESEL.
+        allow_blank (bool): Czy pusty numer PESEL jest dozwolony.
+
+    Returns:
+        str | None: Znormalizowany numer PESEL lub None.
+
+    Raises:
+        DjangoValidationError: Gdy format, data lub suma kontrolna są nieprawidłowe.
+        TypeError: Gdy parametr allow_blank nie jest wartością logiczną (bool).
+    """
+    if not isinstance(allow_blank, bool):
+        raise TypeError('Parametr allow_blank musi być wartością logiczną (bool).')
+
+    if value is not None and not isinstance(value, str):
+        raise DjangoValidationError(PESEL_INVALID_FORMAT, code='invalid')
+
     if value is None:
         if allow_blank:
             return None
         raise DjangoValidationError(PESEL_REQUIRED, code='required')
 
-    raw = str(value).strip()
+    raw = value.strip()
     if raw == '':
         if allow_blank:
             return None
@@ -89,3 +133,4 @@ def normalize_and_validate_pesel(value: str | None, *, allow_blank: bool = True)
         raise DjangoValidationError(PESEL_INVALID_CHECKSUM, code='invalid_checksum')
 
     return raw
+

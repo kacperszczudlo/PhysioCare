@@ -1,8 +1,10 @@
 from django.db import IntegrityError, transaction
+from django.db.models import QuerySet
 from django.utils import timezone
-from rest_framework import generics, parsers, status
+from rest_framework import generics, parsers, serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -29,7 +31,17 @@ from .serializers import (
 )
 
 
-def _assignment_integrity_error(exc):
+def _assignment_integrity_error(exc: Exception) -> ValidationError:
+    """Przekształca wyjątek IntegrityError bazy danych na ValidationError DRF.
+
+    Args:
+        exc (Exception): Wyjątek bazodanowy IntegrityError.
+
+    Returns:
+        ValidationError: Wyjątek walidacji DRF z odpowiednim komunikatem.
+    """
+    if not isinstance(exc, Exception):
+        return ValidationError({'detail': 'Nie udało się zapisać zalecenia.'})
     message = str(exc).lower()
     if 'exclude_overlapping_exercise_assignments' in message:
         return ValidationError({'exercise_id': OVERLAPPING_ASSIGNMENT_MESSAGE})
@@ -41,21 +53,49 @@ def _assignment_integrity_error(exc):
 
 
 class TherapistExerciseListCreateView(generics.ListCreateAPIView):
+    """Widok listy i tworzenia ćwiczeń dla fizjoterapeuty."""
+
     permission_classes = [IsAuthenticated, IsTherapist]
     parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Exercise]:
+        """Zwraca przefiltrowaną listę ćwiczeń należących do zalogowanego fizjoterapeuty.
+
+        Returns:
+            QuerySet[Exercise]: Przefiltrowany zestaw ćwiczeń.
+        """
         qs = Exercise.objects.filter(
             therapist=self.request.user.therapist_profile,
         ).prefetch_related('categories')
         return filter_exercises_queryset(qs, self.request.query_params).order_by('-created_at')
 
-    def get_serializer_class(self):
+    def get_serializer_class(self) -> type[serializers.Serializer]:
+        """Zwraca odpowiednią klasę serializera w zależności od metody HTTP.
+
+        Returns:
+            type[serializers.Serializer]: Klasa serializera do użycia.
+        """
         if self.request.method == 'POST':
             return ExerciseCreateSerializer
         return ExerciseSerializer
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Obsługuje tworzenie nowego ćwiczenia wraz z wgrywaniem pliku media.
+
+        Args:
+            request (Request): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty słownikowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z danymi utworzonego ćwiczenia.
+
+        Raises:
+            TypeError: Gdy parametr request nie jest instancją Request.
+        """
+        if not isinstance(request, Request):
+            raise TypeError('Argument request musi być instancją Request.')
+
         uploaded = request.FILES.get('file')
         if uploaded is None:
             return Response(
@@ -74,21 +114,49 @@ class TherapistExerciseListCreateView(generics.ListCreateAPIView):
 
 
 class TherapistExerciseDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Widok szczegółów, edycji i usuwania ćwiczenia dla fizjoterapeuty."""
+
     permission_classes = [IsAuthenticated, IsTherapist]
     parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
     http_method_names = ['get', 'put', 'patch', 'delete', 'head', 'options']
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Exercise]:
+        """Zwraca zestaw danych ćwiczeń zalogowanego fizjoterapeuty.
+
+        Returns:
+            QuerySet[Exercise]: Zestaw ćwiczeń terapeuty.
+        """
         return Exercise.objects.filter(
             therapist=self.request.user.therapist_profile,
         ).prefetch_related('categories')
 
-    def get_serializer_class(self):
+    def get_serializer_class(self) -> type[serializers.Serializer]:
+        """Zwraca klasę serializatora odpowiednią dla metody HTTP.
+
+        Returns:
+            type[serializers.Serializer]: Klasa serializatora.
+        """
         if self.request.method in ('PUT', 'PATCH'):
             return ExerciseUpdateSerializer
         return ExerciseSerializer
 
-    def update(self, request, *args, **kwargs):
+    def update(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Aktualizuje ćwiczenie oraz opcjonalnie plik lub kategorie.
+
+        Args:
+            request (Request): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty słownikowe.
+
+        Returns:
+            Response: Zaktualizowane dane ćwiczenia.
+
+        Raises:
+            TypeError: Gdy parametr request nie jest instancją Request.
+        """
+        if not isinstance(request, Request):
+            raise TypeError('Argument request musi być instancją Request.')
+
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         uploaded = request.FILES.get('file')
@@ -131,18 +199,36 @@ class TherapistExerciseDetailView(generics.RetrieveUpdateDestroyAPIView):
         exercise = Exercise.objects.prefetch_related('categories').get(pk=exercise.pk)
         return Response(ExerciseSerializer(exercise).data)
 
-    def perform_destroy(self, instance):
+    def perform_destroy(self, instance: Exercise) -> None:
+        """Usuwa instancję ćwiczenia oraz powiązany plik z magazynu.
+
+        Args:
+            instance (Exercise): Usuwany obiekt ćwiczenia.
+
+        Raises:
+            TypeError: Gdy parametr instance nie jest instancją Exercise.
+        """
+        if not isinstance(instance, Exercise):
+            raise TypeError('Argument instance musi być instancją Exercise.')
+
         file_url = instance.file_url
         instance.delete()
         delete_media_url(file_url)
 
 
 class TherapistExerciseCategoryListView(generics.ListAPIView):
+    """Widok listy kategorii ćwiczeń dla fizjoterapeuty."""
+
     serializer_class = ExerciseCategorySerializer
     permission_classes = [IsAuthenticated, IsTherapist]
     pagination_class = None
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[ExerciseCategory]:
+        """Zwraca listę kategorii z opcjonalnym filtrowaniem po rodzaju (kind).
+
+        Returns:
+            QuerySet[ExerciseCategory]: Zestaw kategorii ćwiczeń.
+        """
         qs = ExerciseCategory.objects.all()
         kind = self.request.query_params.get('kind')
         if kind:
@@ -154,9 +240,16 @@ class TherapistExerciseCategoryListView(generics.ListAPIView):
 
 
 class TherapistExerciseAssignmentListCreateView(generics.ListCreateAPIView):
+    """Widok listy i przypisywania ćwiczeń pacjentom przez fizjoterapeutę."""
+
     permission_classes = [IsAuthenticated, IsTherapist]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[ExerciseAssignment]:
+        """Zwraca przypisania ćwiczeń dla aktywnych pacjentów fizjoterapeuty.
+
+        Returns:
+            QuerySet[ExerciseAssignment]: Przefiltrowany zestaw przypisań.
+        """
         qs = ExerciseAssignment.objects.filter(
             patient__therapist_links__therapist=self.request.user.therapist_profile,
             patient__therapist_links__status='ACTIVE',
@@ -170,17 +263,44 @@ class TherapistExerciseAssignmentListCreateView(generics.ListCreateAPIView):
             qs = qs.filter(start_date__lte=today, end_date__gte=today)
         return qs.order_by('-assigned_at')
 
-    def get_serializer_class(self):
+    def get_serializer_class(self) -> type[serializers.Serializer]:
+        """Zwraca odpowiedni serializator dla metody GET lub POST.
+
+        Returns:
+            type[serializers.Serializer]: Klasa serializatora.
+        """
         if self.request.method == 'POST':
             return ExerciseAssignmentCreateSerializer
         return ExerciseAssignmentSerializer
 
-    def get_serializer_context(self):
+    def get_serializer_context(self) -> dict[str, object]:
+        """Rozszerza kontekst serializatora o profil fizjoterapeuty.
+
+        Returns:
+            dict[str, object]: Kontekst z profilem terapeuty.
+        """
         context = super().get_serializer_context()
         context['therapist'] = self.request.user.therapist_profile
         return context
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Tworzy nowe przypisanie ćwiczenia i wysyła powiadomienie do pacjenta.
+
+        Args:
+            request (Request): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty słownikowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z danymi przypisanego ćwiczenia.
+
+        Raises:
+            TypeError: Gdy parametr request nie jest instancją Request.
+            ValidationError: Gdy zapis spowoduje błąd spójności danych.
+        """
+        if not isinstance(request, Request):
+            raise TypeError('Argument request musi być instancją Request.')
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -200,26 +320,60 @@ class TherapistExerciseAssignmentListCreateView(generics.ListCreateAPIView):
 
 
 class TherapistExerciseAssignmentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Widok szczegółów, aktualizacji i usuwania przypisania ćwiczenia."""
+
     permission_classes = [IsAuthenticated, IsTherapist]
     http_method_names = ['get', 'patch', 'put', 'delete', 'head', 'options']
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[ExerciseAssignment]:
+        """Zwraca przypisanie ćwiczenia należące do pacjenta terapeuty.
+
+        Returns:
+            QuerySet[ExerciseAssignment]: Zestaw przypisań ćwiczeń.
+        """
         return ExerciseAssignment.objects.filter(
             patient__therapist_links__therapist=self.request.user.therapist_profile,
             patient__therapist_links__status='ACTIVE',
         ).select_related('exercise', 'patient').distinct()
 
-    def get_serializer_class(self):
+    def get_serializer_class(self) -> type[serializers.Serializer]:
+        """Zwraca serializator do odczytu lub aktualizacji przypisania.
+
+        Returns:
+            type[serializers.Serializer]: Klasa serializatora.
+        """
         if self.request.method in ('PATCH', 'PUT'):
             return ExerciseAssignmentUpdateSerializer
         return ExerciseAssignmentSerializer
 
-    def get_serializer_context(self):
+    def get_serializer_context(self) -> dict[str, object]:
+        """Uzupełnia kontekst serializatora o dane fizjoterapeuty.
+
+        Returns:
+            dict[str, object]: Kontekst z profilem terapeuty.
+        """
         context = super().get_serializer_context()
         context['therapist'] = self.request.user.therapist_profile
         return context
 
-    def update(self, request, *args, **kwargs):
+    def update(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Aktualizuje szczegóły przypisania ćwiczenia.
+
+        Args:
+            request (Request): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty słownikowe.
+
+        Returns:
+            Response: Odpowiedź ze zaktualizowanym przypisaniem.
+
+        Raises:
+            TypeError: Gdy parametr request nie jest instancją Request.
+            ValidationError: Gdy aktualizacja narusza spójność danych.
+        """
+        if not isinstance(request, Request):
+            raise TypeError('Argument request musi być instancją Request.')
+
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -233,10 +387,17 @@ class TherapistExerciseAssignmentDetailView(generics.RetrieveUpdateDestroyAPIVie
 
 
 class MeExercisesTodayView(PatientSelfMixin, generics.ListAPIView):
+    """Widok listy ćwiczeń zaplanowanych dla zalogowanego pacjenta na dzisiejszy dzień."""
+
     serializer_class = TodayExerciseSerializer
     permission_classes = [IsAuthenticated, IsPatient]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[ExerciseAssignment]:
+        """Zwraca aktywne dzisiaj ćwiczenia pacjenta wraz z informacją o ich wykonaniu.
+
+        Returns:
+            QuerySet[ExerciseAssignment]: Zestaw ćwiczeń zaplanowanych na dziś.
+        """
         from django.db.models import Exists, OuterRef
 
         today = timezone.localdate()
@@ -259,15 +420,23 @@ class MeExercisesTodayView(PatientSelfMixin, generics.ListAPIView):
 
 
 class MeExercisesListView(PatientSelfMixin, generics.ListAPIView):
-    """
-    Pełny plan ćwiczeń pacjenta (HEP) z historią odhaczeń.
-    ?scope=active|past|all (domyślnie all).
+    """Pełny plan ćwiczeń pacjenta (HEP) z historią odhaczeń.
+
+    Filtrowanie parametrem `scope`:
+    - active: tylko aktywne ćwiczenia
+    - past: archiwalne ćwiczenia
+    - all: wszystkie ćwiczenia (domyślnie)
     """
 
     serializer_class = PatientExerciseAssignmentSerializer
     permission_classes = [IsAuthenticated, IsPatient]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[ExerciseAssignment]:
+        """Zwraca przypisane ćwiczenia pacjenta z opcjonalnym zakresem (active/past/all).
+
+        Returns:
+            QuerySet[ExerciseAssignment]: Zestaw przypisanych ćwiczeń pacjenta.
+        """
         from django.db.models import Exists, OuterRef, Prefetch
 
         today = timezone.localdate()
@@ -297,9 +466,27 @@ class MeExercisesListView(PatientSelfMixin, generics.ListAPIView):
 
 
 class MeExerciseCompletionCreateView(PatientSelfMixin, APIView):
+    """Widok do oznaczania wykonania ćwiczenia przez pacjenta."""
+
     permission_classes = [IsAuthenticated, IsPatient]
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Rejestruje wykonanie ćwiczenia w danym dniu.
+
+        Args:
+            request (Request): Obiekt żądania HTTP z `assignment_id` oraz flaga `done`.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty słownikowe.
+
+        Returns:
+            Response: Obiekt odpowiedzi z utworzonym lub zaktualizowanym wpisem wykonania.
+
+        Raises:
+            TypeError: Gdy parametr request nie jest instancją Request.
+        """
+        if not isinstance(request, Request):
+            raise TypeError('Argument request musi być instancją Request.')
+
         assignment_id = request.data.get('assignment_id')
         assignment = ExerciseAssignment.objects.filter(
             pk=assignment_id,
@@ -325,5 +512,6 @@ class MeExerciseCompletionCreateView(PatientSelfMixin, APIView):
 
         return Response(
             ExerciseCompletionSerializer(completion).data,
-            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+            status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED,
         )
+

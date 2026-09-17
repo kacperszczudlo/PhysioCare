@@ -3,10 +3,12 @@ from django.core.validators import MaxValueValidator
 from django.db import models
 
 from core.models import TimestampedModel
-from therapists.competence import QualificationLevel, snapshot_for_therapist
+from therapists.competence import CompetenceSnapshot, QualificationLevel, snapshot_for_therapist
 
 
 class TherapistProfile(TimestampedModel):
+    """Model profilu fizjoterapeuty w systemie PhysioCare."""
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -29,10 +31,24 @@ class TherapistProfile(TimestampedModel):
     )
 
     class Meta:
-        db_table = 'therapist_profiles'
+        """Metadane modelu profilu fizjoterapeuty."""
 
-    def __str__(self):
+        db_table: str = 'therapist_profiles'
+
+
+    def __str__(self) -> str:
+        """Reprezentacja tekstowa profilu fizjoterapeuty.
+
+        Returns:
+            str: Imię i nazwisko fizjoterapeuty.
+        """
         return f'{self.user.first_name} {self.user.last_name}'
 
-    def competence_snapshot(self):
+    def competence_snapshot(self) -> CompetenceSnapshot:
+        """Pobiera migawkę kompetencji dla fizjoterapeuty.
+
+        Returns:
+            CompetenceSnapshot: Migawka kompetencji wygenerowana na podstawie profilu.
+        """
         return snapshot_for_therapist(self)
+

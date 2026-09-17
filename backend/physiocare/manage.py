@@ -1,11 +1,14 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
 import os
 import sys
 
 
-def main():
-    """Run administrative tasks."""
+def main() -> None:
+    """Uruchamia zadania administracyjne CLI Django.
+
+    Raises:
+        ImportError: Gdy Django nie jest zainstalowane w środowisku produkcyjnym/wirtualnym.
+    """
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'physiocare.settings')
     try:
         from django.core.management import execute_from_command_line

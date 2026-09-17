@@ -1,5 +1,3 @@
-"""Google ID token verification for Sign in with Google."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,9 +8,16 @@ from google.oauth2 import id_token
 
 
 class GoogleAuthError(Exception):
-    """Raised when a Google ID token cannot be accepted."""
+    """Wyjątek zgłaszany w przypadku braku akceptacji tokenu Google ID Token."""
 
-    def __init__(self, code: str, message: str, *, http_status: int = 401):
+    def __init__(self, code: str, message: str, *, http_status: int = 401) -> None:
+        """Inicjalizuje błąd autoryzacji Google.
+
+        Args:
+            code (str): Kod błędu.
+            message (str): Komunikat błędu.
+            http_status (int): Status odpowiedzi HTTP.
+        """
         super().__init__(message)
         self.code = code
         self.message = message
@@ -21,6 +26,8 @@ class GoogleAuthError(Exception):
 
 @dataclass(frozen=True, slots=True)
 class GoogleIdentity:
+    """Reprezentacja zwalidowanych danych tożsamości z konta Google."""
+
     sub: str
     email: str
     email_verified: bool
@@ -29,11 +36,24 @@ class GoogleIdentity:
 
 
 def configured_google_client_ids() -> list[str]:
-    return list(getattr(settings, 'GOOGLE_CLIENT_IDS', []) or [])
+    """Zwraca listę skonfigurowanych identyfikatorów klienta Google (GOOGLE_CLIENT_IDS).
+
+    Returns:
+        list[str]: Lista identyfikatorów aplikacji.
+    """
+    client_ids = settings.GOOGLE_CLIENT_IDS if hasattr(settings, 'GOOGLE_CLIENT_IDS') else []
+    return list(client_ids or [])
 
 
 def extract_google_credential(data) -> str | None:
-    """Read GIS / Sign-In token from common request field names."""
+    """Odczytuje token logowania GIS / Google Sign-In z powszechnych nazw pól żądania.
+
+    Args:
+        data: Słownik lub obiekt danych żądania.
+
+    Returns:
+        str | None: Ciąg tokenu lub None.
+    """
     if not hasattr(data, 'get'):
         return None
     raw = data.get('credential') or data.get('id_token') or data.get('google_credential')
@@ -44,7 +64,17 @@ def extract_google_credential(data) -> str | None:
 
 
 def verify_google_id_token(credential: str) -> GoogleIdentity:
-    """Verify a GIS / Google Sign-In ID token and return normalized identity."""
+    """Weryfikuje token ID Google Sign-In i zwraca znormalizowaną tożsamość.
+
+    Args:
+        credential (str): Ciąg tokenu ID Google.
+
+    Returns:
+        GoogleIdentity: Znormalizowany obiekt danych tożsamości.
+
+    Raises:
+        GoogleAuthError: Gdy token nie może zostać zweryfikowany.
+    """
     client_ids = configured_google_client_ids()
     if not client_ids:
         raise GoogleAuthError(
@@ -53,7 +83,7 @@ def verify_google_id_token(credential: str) -> GoogleIdentity:
             http_status=503,
         )
 
-    if not credential or not str(credential).strip():
+    if not credential or not isinstance(credential, str) or not credential.strip():
         raise GoogleAuthError(
             'AUTH_021',
             'Brak tokenu Google.',
@@ -62,7 +92,7 @@ def verify_google_id_token(credential: str) -> GoogleIdentity:
 
     try:
         payload = id_token.verify_oauth2_token(
-            str(credential).strip(),
+            credential.strip(),
             google_requests.Request(),
             audience=client_ids,
         )
@@ -96,3 +126,4 @@ def verify_google_id_token(credential: str) -> GoogleIdentity:
         given_name=(payload.get('given_name') or '').strip(),
         family_name=(payload.get('family_name') or '').strip(),
     )
+

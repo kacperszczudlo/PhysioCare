@@ -5,7 +5,9 @@ from rest_framework import status
 
 
 @pytest.mark.django_db
-def test_login_throttle_blocks_repeated_failures(api_client, settings):
+def test_login_throttle_blocks_repeated_failures(api_client: object, settings: object) -> None:
+    """Sprawdza, czy powtarzające się nieudane próby logowania są blokowane przez limity zapytania (rate limiting / throttle)."""
+    # Arrange
     cache.clear()
     settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES']['login'] = '5/minute'
     url = reverse('login')
@@ -18,9 +20,12 @@ def test_login_throttle_blocks_repeated_failures(api_client, settings):
         )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
+    # Act
     response = api_client.post(
         url,
         {'email': 'unknown@example.com', 'password': 'wrong'},
         format='json',
     )
+    # Assert
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+

@@ -57,11 +57,29 @@ from .token_ops import (
     wants_tokens_in_body,
 )
 
-User = get_user_model()
-logger = logging.getLogger('physiocare.auth')
+User: type[object] = get_user_model()
+logger: logging.Logger = logging.getLogger('physiocare.auth')
 
 
-def _set_auth_cookies(response, *, access_token: str, refresh_token: str):
+def _set_auth_cookies(response: Response, *, access_token: str, refresh_token: str) -> Response:
+    """Ustawia ciasteczka HTTP-only dla tokenów dostępowego i odświeżania.
+
+    Args:
+        response (Response): Obiekt odpowiedzi Django/DRF.
+        access_token (str): Token dostępowy JWT.
+        refresh_token (str): Token odświeżania JWT.
+
+    Returns:
+        Response: Obiekt odpowiedzi z ustawionymi ciasteczkami.
+
+    Raises:
+        TypeError: Gdy response jest None lub tokeny nie są typu str.
+    """
+    if response is None:
+        raise TypeError("Argument 'response' nie może być None.")
+    if not isinstance(access_token, str) or not isinstance(refresh_token, str):
+        raise TypeError('Tokeny muszą być ciągami znaków.')
+
     secure = settings.SECURE_COOKIES
 
     response.set_cookie(
@@ -83,7 +101,21 @@ def _set_auth_cookies(response, *, access_token: str, refresh_token: str):
     return response
 
 
-def _clear_auth_cookies(response):
+def _clear_auth_cookies(response: Response) -> Response:
+    """Usuwa ciasteczka uwierzytelniające z odpowiedzi HTTP.
+
+    Args:
+        response (Response): Obiekt odpowiedzi Django/DRF.
+
+    Returns:
+        Response: Obiekt odpowiedzi z wyczyszczonymi ciasteczkami.
+
+    Raises:
+        TypeError: Gdy response jest None.
+    """
+    if response is None:
+        raise TypeError("Argument 'response' nie może być None.")
+
     secure = settings.SECURE_COOKIES
     for key in (
         settings.SIMPLE_JWT.get('AUTH_COOKIE_ACCESS', 'access_token'),
@@ -101,24 +133,81 @@ def _clear_auth_cookies(response):
     return response
 
 
-def _user_payload(user):
+def _user_payload(user: object) -> dict[str, object]:
+    """Tworzy słownik z podstawowymi danymi użytkownika dla odpowiedzi API.
+
+    Args:
+        user (object): Instancja użytkownika.
+
+    Returns:
+        dict[str, object]: Słownik z danymi użytkownika.
+
+    Raises:
+        TypeError: Gdy user jest None.
+    """
+    if user is None:
+        raise TypeError("Argument 'user' nie może być None.")
+
+    user_id = user.id if hasattr(user, 'id') else ''
+    email = user.email if hasattr(user, 'email') else ''
+    role = user.role if hasattr(user, 'role') else ''
+    first_name = user.first_name if hasattr(user, 'first_name') else ''
+    last_name = user.last_name if hasattr(user, 'last_name') else ''
+
     return {
-        'id': str(user.id),
-        'email': user.email,
-        'role': user.role,
-        'first_name': user.first_name,
-        'last_name': user.last_name,
+        'id': str(user_id),
+        'email': email,
+        'role': role,
+        'first_name': first_name,
+        'last_name': last_name,
     }
 
 
 def _token_pair(refresh: RefreshToken) -> dict[str, str]:
+    """Generuje słownik z parami tokenów JWT.
+
+    Args:
+        refresh (RefreshToken): Instancja tokenu odświeżania.
+
+    Returns:
+        dict[str, str]: Słownik zawierający token dostępowy i odświeżania.
+
+    Raises:
+        TypeError: Gdy refresh nie jest typu RefreshToken.
+    """
+    if not isinstance(refresh, RefreshToken):
+        raise TypeError("Argument 'refresh' musi być typu RefreshToken.")
+
     return {
         'access': str(refresh.access_token),
         'refresh': str(refresh),
     }
 
 
-def _auth_response(request, user, refresh: RefreshToken, *, status_code=status.HTTP_200_OK):
+def _auth_response(request: object, user: object, refresh: RefreshToken, *, status_code: int = status.HTTP_200_OK) -> Response:
+    """Buduje odpowiedź uwierzytelniania zawierającą dane użytkownika oraz ciasteczka JWT.
+
+    Args:
+        request (object): Obiekt żądania HTTP.
+        user (object): Zalogowany użytkownik.
+        refresh (RefreshToken): Instancja tokenu odświeżania.
+        status_code (int): Kod statusu HTTP (domyślnie 200 OK).
+
+    Returns:
+        Response: Odpowiedź HTTP z danymi użytkownika i ustawionymi ciasteczkami.
+
+    Raises:
+        TypeError: Gdy argumenty mają niepoprawne typy.
+    """
+    if request is None:
+        raise TypeError("Argument 'request' nie może być None.")
+    if user is None:
+        raise TypeError("Argument 'user' nie może być None.")
+    if not isinstance(refresh, RefreshToken):
+        raise TypeError("Argument 'refresh' musi być typu RefreshToken.")
+    if not isinstance(status_code, int):
+        raise TypeError("Argument 'status_code' musi być typu int.")
+
     tokens = _token_pair(refresh)
     payload = {'user': _user_payload(user)}
     if wants_tokens_in_body(request):
@@ -131,7 +220,24 @@ def _auth_response(request, user, refresh: RefreshToken, *, status_code=status.H
     )
 
 
-def _needs_verification_response(*, email: str, status_code=status.HTTP_201_CREATED):
+def _needs_verification_response(*, email: str, status_code: int = status.HTTP_201_CREATED) -> Response:
+    """Tworzy odpowiedź informującą o konieczności weryfikacji adresu e-mail.
+
+    Args:
+        email (str): Adres e-mail wymagający weryfikacji.
+        status_code (int): Kod statusu HTTP (domyślnie 201 Created).
+
+    Returns:
+        Response: Odpowiedź HTTP z informacją o weryfikacji e-mail.
+
+    Raises:
+        TypeError: Gdy email nie jest napisem lub status_code nie jest liczbą.
+    """
+    if not isinstance(email, str):
+        raise TypeError('Adres e-mail musi być ciągiem znaków.')
+    if not isinstance(status_code, int):
+        raise TypeError('Argument status_code musi być typu int.')
+
     detail = 'Konto utworzone. Sprawdź e-mail i wpisz kod weryfikacyjny.'
     if settings.DEBUG and 'console' in settings.EMAIL_BACKEND.lower():
         detail = (
@@ -148,19 +254,51 @@ def _needs_verification_response(*, email: str, status_code=status.HTTP_201_CREA
     )
 
 
-def _mark_email_verified(user) -> None:
-    if user.email_verified_at is None:
+def _mark_email_verified(user: object) -> None:
+    """Oznacza e-mail użytkownika jako zweryfikowany i zapisuje czas weryfikacji.
+
+    Args:
+        user (object): Instancja użytkownika.
+
+    Raises:
+        TypeError: Gdy user jest None.
+    """
+    if user is None:
+        raise TypeError("Argument 'user' nie może być None.")
+
+    email_verified_at = user.email_verified_at if hasattr(user, 'email_verified_at') else None
+    if email_verified_at is None:
         user.email_verified_at = timezone.now()
-        user.save(update_fields=['email_verified_at', 'updated_at'])
+        if hasattr(user, 'save'):
+            user.save(update_fields=['email_verified_at', 'updated_at'])
 
 
 class LoginView(APIView):
-    permission_classes = []
-    throttle_classes = [LoginRateThrottle]
+    """Widok logowania przy użyciu adresu e-mail i hasła."""
 
-    def post(self, request, *args, **kwargs):
-        email = request.data.get('email')
-        password = request.data.get('password')
+    permission_classes: list[type[object]] = []
+    throttle_classes: list[type[object]] = [LoginRateThrottle]
+
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Obsługuje żądanie logowania użytkownika.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z danymi sesji, wymogiem 2FA/weryfikacji e-mail lub błędem logowania.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        data = request.data if hasattr(request, 'data') else {}
+        email = data.get('email')
+        password = data.get('password')
 
         user = authenticate(request, email=email, password=password)
 
@@ -235,11 +373,30 @@ class LoginView(APIView):
 
 
 class MFALoginView(APIView):
+    """Widok weryfikacji drugiego składnika autentykacji (2FA) podczas logowania."""
+
     permission_classes = []
     throttle_classes = [LoginRateThrottle]
 
-    def post(self, request, *args, **kwargs):
-        serializer = MFALoginSerializer(data=request.data)
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Obsługuje weryfikację kodu 2FA lub zapasowego na podstawie tokenu preautoryzacji.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z tokenami sesji lub błędem 2FA.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        data = request.data if hasattr(request, 'data') else {}
+        serializer = MFALoginSerializer(data=data)
         if not serializer.is_valid():
             return Response(
                 {
@@ -303,10 +460,28 @@ class MFALoginView(APIView):
 
 
 class MFASetupView(APIView):
+    """Widok inicjalizacji konfiguracji 2FA (generowanie sekretu TOTP oraz kodu QR)."""
+
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
-        user = request.user
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Generuje nowy sekret TOTP i kod QR w formacie SVG dla zalogowanego użytkownika.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z kluczem sekretnym, URI TOTP i kodem QR SVG.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        user = request.user if hasattr(request, 'user') else None
         user_mfa, created = UserMFA.objects.get_or_create(
             user=user,
             defaults={'secret_key': generate_totp_secret(), 'is_enabled': False},
@@ -342,10 +517,28 @@ class MFASetupView(APIView):
 
 
 class MFAEnableView(APIView):
+    """Widok aktywacji 2FA po zweryfikowaniu pierwszego kodu z aplikacji autoryzującej."""
+
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
-        user = request.user
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Weryfikuje podany kod TOTP, włącza 2FA i zwraca kody zapasowe.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z potwierdzeniem aktywacji oraz listą kodów zapasowych.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        user = request.user if hasattr(request, 'user') else None
         if not hasattr(user, 'mfa') or not user.mfa.secret_key:
             return Response(
                 {
@@ -371,7 +564,8 @@ class MFAEnableView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        serializer = MFAEnableSerializer(data=request.data)
+        data = request.data if hasattr(request, 'data') else {}
+        serializer = MFAEnableSerializer(data=data)
         if not serializer.is_valid():
             return Response(
                 {
@@ -402,7 +596,8 @@ class MFAEnableView(APIView):
         user_mfa.backup_codes = hashed_codes
         user_mfa.save(update_fields=['is_enabled', 'backup_codes', 'updated_at'])
 
-        logger.info('2FA enabled for user=%s', user.email)
+        user_email = user.email if hasattr(user, 'email') else 'unknown'
+        logger.info('2FA enabled for user=%s', user_email)
 
         return Response(
             {
@@ -414,10 +609,28 @@ class MFAEnableView(APIView):
 
 
 class MFADisableView(APIView):
+    """Widok wyłączania 2FA dla zalogowanego użytkownika."""
+
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, *args, **kwargs):
-        user = request.user
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Weryfikuje hasło oraz opcjonalny kod 2FA i wyłącza autentykację dwuskładnikową.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z potwierdzeniem wyłączenia 2FA.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        user = request.user if hasattr(request, 'user') else None
         if not hasattr(user, 'mfa') or not user.mfa.is_enabled:
             return Response(
                 {
@@ -430,7 +643,8 @@ class MFADisableView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        serializer = MFADisableSerializer(data=request.data)
+        data = request.data if hasattr(request, 'data') else {}
+        serializer = MFADisableSerializer(data=data)
         if not serializer.is_valid():
             return Response(
                 {
@@ -480,7 +694,8 @@ class MFADisableView(APIView):
         user_mfa.backup_codes = []
         user_mfa.save(update_fields=['is_enabled', 'backup_codes', 'updated_at'])
 
-        logger.info('2FA disabled for user=%s', user.email)
+        user_email = user.email if hasattr(user, 'email') else 'unknown'
+        logger.info('2FA disabled for user=%s', user_email)
 
         return Response(
             {
@@ -490,13 +705,34 @@ class MFADisableView(APIView):
         )
 
 
+
 class MFAStatusView(APIView):
+    """Widok sprawdzania statusu 2FA dla zalogowanego użytkownika."""
+
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        user = request.user
+    def get(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Zwraca informację o stanie aktywacji 2FA oraz wymogu roli.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z polami is_enabled oraz mfa_required_for_role.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        user = request.user if hasattr(request, 'user') else None
         is_enabled = hasattr(user, 'mfa') and user.mfa.is_enabled
-        mfa_required_for_role = user.role == RoleChoices.THERAPIST or user.is_staff
+        user_role = user.role if hasattr(user, 'role') else None
+        is_staff = user.is_staff if hasattr(user, 'is_staff') else False
+        mfa_required_for_role = user_role == RoleChoices.THERAPIST or is_staff
 
         return Response(
             {
@@ -507,17 +743,33 @@ class MFAStatusView(APIView):
         )
 
 
-
 class GoogleLoginView(APIView):
-    """Exchange a Google ID token for PhysioCare JWT session (cookie or body)."""
+    """Widok logowania i rejestracji za pomocą konta Google (ID Token)."""
 
-    permission_classes = []
-    throttle_classes = [LoginRateThrottle]
+    permission_classes: list[type[object]] = []
+    throttle_classes: list[type[object]] = [LoginRateThrottle]
 
-    def post(self, request, *args, **kwargs):
-        credential = request.data.get('credential') or request.data.get('id_token')
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Wymienia token ID z Google na sesję PhysioCare JWT.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z tokenami sesji lub błędem autoryzacji Google.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        data = request.data if hasattr(request, 'data') else {}
+        credential = data.get('credential') or data.get('id_token')
         try:
-            identity = verify_google_id_token(credential)
+            identity = verify_google_id_token(str(credential) if credential else '')
         except GoogleAuthError as exc:
             return Response(
                 {
@@ -532,7 +784,6 @@ class GoogleLoginView(APIView):
 
         user = User.objects.filter(google_sub=identity.sub).first()
         if user is not None and not user.is_active:
-            # Soft-deleted accounts must not block Google re-registration.
             user = None
         if user is None:
             user = User.objects.filter(email__iexact=identity.email, is_active=True).first()
@@ -593,22 +844,61 @@ class GoogleLoginView(APIView):
 
 
 class LogoutView(APIView):
+    """Widok wylogowania użytkownika i unieważnienia tokenów JWT."""
+
     permission_classes = []
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Unieważnia token odświeżający i czyści ciasteczka uwierzytelniające.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z komunikatem o wylogowaniu.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        data = request.data if hasattr(request, 'data') else {}
+        cookies = request.COOKIES if hasattr(request, 'COOKIES') else {}
         refresh_cookie = settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token')
-        raw_refresh = request.data.get('refresh') or request.COOKIES.get(refresh_cookie)
-        blacklist_refresh_value(raw_refresh)
+        raw_refresh = data.get('refresh') or cookies.get(refresh_cookie)
+        blacklist_refresh_value(str(raw_refresh) if raw_refresh else None)
         response = Response({'detail': 'Wylogowano.'}, status=status.HTTP_200_OK)
         return _clear_auth_cookies(response)
 
 
 class PatientRegisterView(APIView):
+    """Widok rejestracji nowego pacjenta."""
+
     permission_classes = []
     throttle_classes = [RegisterRateThrottle]
 
-    def post(self, request, *args, **kwargs):
-        serializer = PatientRegistrationSerializer(data=request.data)
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Rejestruje nowego pacjenta i wysyła kod weryfikacyjny e-mail.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z tokenami sesji (dla Google) lub informacją o konieczności weryfikacji e-mail.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        data = request.data if hasattr(request, 'data') else {}
+        serializer = PatientRegistrationSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         if user.email_verified_at is not None:
@@ -619,11 +909,30 @@ class PatientRegisterView(APIView):
 
 
 class TherapistRegisterView(APIView):
+    """Widok rejestracji nowego fizjoterapeuty."""
+
     permission_classes = []
     throttle_classes = [RegisterRateThrottle]
 
-    def post(self, request, *args, **kwargs):
-        serializer = TherapistRegistrationSerializer(data=request.data)
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Rejestruje nowego fizjoterapeutę i wysyła kod weryfikacyjny e-mail.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z tokenami sesji (dla Google) lub informacją o konieczności weryfikacji e-mail.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        data = request.data if hasattr(request, 'data') else {}
+        serializer = TherapistRegistrationSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         if user.email_verified_at is not None:
@@ -634,11 +943,30 @@ class TherapistRegisterView(APIView):
 
 
 class EmailVerifyView(APIView):
+    """Widok weryfikacji adresu e-mail za pomocą kodu OTP."""
+
     permission_classes = []
     throttle_classes = [PasswordResetRateThrottle]
 
-    def post(self, request, *args, **kwargs):
-        serializer = EmailVerifySerializer(data=request.data)
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Weryfikuje kod jednorazowy i aktywuje weryfikację e-mail użytkownika.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z tokenami sesji po pomyślnej weryfikacji.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        data = request.data if hasattr(request, 'data') else {}
+        serializer = EmailVerifySerializer(data=data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
         code = serializer.validated_data['code']
@@ -684,11 +1012,30 @@ class EmailVerifyView(APIView):
 
 
 class EmailResendView(APIView):
+    """Widok ponownej wysyłki kodu weryfikacji adresu e-mail."""
+
     permission_classes = []
     throttle_classes = [PasswordResetRateThrottle]
 
-    def post(self, request, *args, **kwargs):
-        serializer = EmailResendSerializer(data=request.data)
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Wysyła ponowne żądanie z kodem weryfikacji e-mail, jeśli konto nie jest zweryfikowane.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z informacją o wysłaniu kodu.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        data = request.data if hasattr(request, 'data') else {}
+        serializer = EmailResendSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
 
@@ -706,11 +1053,31 @@ class EmailResendView(APIView):
 
 
 class CookieTokenRefreshView(TokenRefreshView):
+    """Widok odświeżania tokenu dostępowego JWT z ciasteczka lub treści żądania."""
+
     permission_classes = []
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Odświeża token dostępowy na podstawie ważnego tokenu odświeżenia.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z nowym tokenem dostępowym i ciasteczkami.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        data = request.data if hasattr(request, 'data') else {}
+        cookies = request.COOKIES if hasattr(request, 'COOKIES') else {}
         refresh_cookie = settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token')
-        refresh_value = request.data.get('refresh') or request.COOKIES.get(refresh_cookie)
+        refresh_value = data.get('refresh') or cookies.get(refresh_cookie)
         if not refresh_value:
             return Response(
                 {
@@ -742,7 +1109,7 @@ class CookieTokenRefreshView(TokenRefreshView):
         access = serializer.validated_data['access']
         new_refresh = serializer.validated_data.get('refresh', refresh_value)
         payload = {'detail': 'Token odświeżony.'}
-        if request.data.get('refresh'):
+        if data.get('refresh'):
             payload['access'] = access
             payload['refresh'] = new_refresh
         response = Response(payload, status=status.HTTP_200_OK)
@@ -750,11 +1117,30 @@ class CookieTokenRefreshView(TokenRefreshView):
 
 
 class PasswordResetRequestView(APIView):
-    permission_classes = []
-    throttle_classes = [PasswordResetRateThrottle]
+    """Widok żądania resetowania hasła i wysyłki kodu OTP na e-mail."""
 
-    def post(self, request, *args, **kwargs):
-        serializer = PasswordResetRequestSerializer(data=request.data)
+    permission_classes: list[type[object]] = []
+    throttle_classes: list[type[object]] = [PasswordResetRateThrottle]
+
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Wysyła 6-cyfrowy kod resetu hasła na podany adres e-mail.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z potwierdzeniem wysłania kodu resetu.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        data = request.data if hasattr(request, 'data') else {}
+        serializer = PasswordResetRequestSerializer(data=data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
 
@@ -835,11 +1221,30 @@ class PasswordResetRequestView(APIView):
 
 
 class PasswordResetVerifyView(APIView):
+    """Widok weryfikacji kodu OTP resetowania hasła."""
+
     permission_classes = []
     throttle_classes = [PasswordResetRateThrottle]
 
-    def post(self, request, *args, **kwargs):
-        serializer = PasswordResetVerifySerializer(data=request.data)
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Weryfikuje kod OTP resetowania hasła i wydaje tymczasowy token resetu.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP zawierająca token sesji resetu hasła.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        data = request.data if hasattr(request, 'data') else {}
+        serializer = PasswordResetVerifySerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
         user = User.objects.filter(
@@ -887,18 +1292,37 @@ class PasswordResetVerifyView(APIView):
 
 
 class PasswordResetConfirmView(APIView):
+    """Widok zatwierdzania nowego hasła po weryfikacji tokenu resetu."""
+
     permission_classes = []
     throttle_classes = [PasswordResetRateThrottle]
 
-    def post(self, request, *args, **kwargs):
-        token_raw = request.data.get('reset_token')
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Ustawia nowe hasło użytkownika po pomyślnej weryfikacji tokenu resetu.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z potwierdzeniem zmiany hasła.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        data = request.data if hasattr(request, 'data') else {}
+        token_raw = data.get('reset_token')
         peek = lookup_password_reset_token(
-            raw_token=token_raw if isinstance(token_raw, str) else '',
+            raw_token=str(token_raw) if token_raw else '',
         )
         user = peek.user if peek is not None else None
 
         serializer = PasswordResetConfirmSerializer(
-            data=request.data,
+            data=data,
             context={'user': user},
         )
         serializer.is_valid(raise_exception=True)
@@ -931,8 +1355,28 @@ class PasswordResetConfirmView(APIView):
 
 
 class ChangePasswordView(APIView):
-    def post(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
+    """Widok zmiany hasła przez zalogowanego użytkownika."""
+
+    def post(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Zmienia obecne hasło zalogowanego użytkownika na nowe.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź HTTP z potwierdzeniem zmiany hasła i wyczyszczonymi ciasteczkami.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        user = request.user if hasattr(request, 'user') else None
+        is_authenticated = user.is_authenticated if hasattr(user, 'is_authenticated') else False
+        if not is_authenticated:
             return Response(
                 {
                     'error': {
@@ -944,13 +1388,13 @@ class ChangePasswordView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
+        data = request.data if hasattr(request, 'data') else {}
         serializer = ChangePasswordSerializer(
-            data=request.data,
+            data=data,
             context={'request': request},
         )
         serializer.is_valid(raise_exception=True)
 
-        user = request.user
         if not user.has_usable_password():
             return Response(
                 {
@@ -980,3 +1424,5 @@ class ChangePasswordView(APIView):
         blacklist_user_refresh_tokens(user)
         response = Response({'detail': 'Hasło zostało zmienione. Zaloguj się ponownie.'})
         return _clear_auth_cookies(response)
+
+
