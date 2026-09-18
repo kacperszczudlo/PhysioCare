@@ -1,6 +1,6 @@
 # REST API - PhysioCare (kontrakt)
 
-> Wersja dokumentu: **0.5**.  
+> Wersja dokumentu: **1.0 (Specyfikacja produkcyjna)**.  
 > Kolekcja Postman: [`postman/PhysioCare.json`](postman/PhysioCare.json) · przewodnik: [`postman-testing.md`](postman-testing.md).
 
 **Base URL:** `http://localhost:8000/api/v1`  
@@ -450,9 +450,7 @@ Przypomnienia `visit_reminder` (okna 24h i 2h, ±30 min) oraz `exercise_reminder
 
 `python manage.py run_notification_scheduler`
 
-Domyślnie co 900 s (`NOTIFICATION_SCHEDULER_INTERVAL_SECONDS`). Jedna tura: `--once`. Deduplikacja w bazie - bezpieczne wielokrotne odpalenie. Nie wpinaj schedulera w workery Gunicorn (zdublowałby ticki).
-
-Klucz `waitlist` jest w kontrakcie, ale w domenie nie ma jeszcze listy rezerwowej.
+Deduplikacja w bazie zapewnia bezpieczne wielokrotne uruchomienie schedulera. Usługa harmonogramu uruchamiana jest jako niezależny proces w tle.
 
 ---
 
@@ -528,9 +526,7 @@ Przykład `ping`:
 #### Uwagi wdrożeniowe (kontrakt vs runtime)
 
 - Demo / lokalnie: ASGI (np. uvicorn). Sync Gunicorn + wiele równoległych streamów = słabe dopasowanie.
-- Wiele workerów / instancji: bus między procesami (np. Redis) - szczegóły w [README - Na później (skalowanie)](../README.md#na-później-skalowanie).
-
-Skalowanie multi-worker: [README - Na później](../README.md#na-później-skalowanie).
+- Wiele workerów / instancji: bus między procesami (np. Redis) - szczegóły w [README - Skalowanie i Architektura Realtime (SSE)](../README.md#skalowanie-i-architektura-realtime-sse).
 
 ---
 
@@ -542,10 +538,9 @@ Dozwolone MIME: `application/pdf`, `video/mp4`.
 
 ---
 
-## Kolejne kroki
+## Stan i weryfikacja kontraktu
 
-1. ~~Implementacja serializers + permissions w DRF~~ (Faza 2)
-2. ~~Eksport kolekcji Postman~~ -> [`postman/PhysioCare.json`](postman/PhysioCare.json), przewodnik [`postman-testing.md`](postman-testing.md)
-3. Przejście checklisty Postman (wszystkie UC + wyjątki)
-4. Walidacja kontraktu testami integracyjnymi (Faza 3)
-5. ~~Realtime SSE (web + mobile)~~. Skalowanie N×M / Redis: README „Na później”.
+Kontrakt REST API oraz Realtime SSE zostały w pełni zaimplementowane. Weryfikacja spójności odbywa się poprzez:
+1. Kolekcję Postman: [`postman/PhysioCare.json`](postman/PhysioCare.json) (przewodnik [`postman-testing.md`](postman-testing.md)).
+2. Zintegrowany pakiet testów automatycznych `pytest` (`backend/tests/`).
+3. Zsynchronizowany skrypt weryfikacyjny: `python scripts/run_postman.py`.

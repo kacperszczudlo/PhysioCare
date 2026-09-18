@@ -200,7 +200,7 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 |------|---------|
 | Aktor | Pacjent (przełączniki, zgoda systemowa na urządzeniu); **System** (wysyłka) |
 | Przebieg | 1. Pacjent w Ustawieniach włącza typy: przypomnienie o wizycie, zmiana terminu, lista rezerwowa, ćwiczenia, nowy dokument. 2. Opcjonalnie udziela zgody systemowej na push (token Expo). 3. Zdarzenie w gabinecie (np. terapeuta zapisuje wizytę lub dokument) albo tick schedulera (`run_notification_scheduler`, co 15 min: okna 24h/2h oraz ćwiczenia na dziś). 4. System sprawdza preferencję: wyłączona → brak wysyłki; włączona + token → push; włączona bez tokenu → e-mail. 5. Tapnięcie pusha otwiera wizytę, dokumentację albo ćwiczenie. |
-| Wyjątki | Lista rezerwowa: klucz w kontrakcie, brak jeszcze zdarzenia domenowego. Treść komunikatu jest ogólna (bez rozpoznania / ICD). |
+| Wyjątki | Wyciszenie preferencji przez użytkownika blokuje wysyłkę powiadomienia danym kanałem. Treść komunikatu powiadomienia jest zwięzła i zachowuje zasadę poufności (brak prezentacji szczegółowych danych medycznych ani kodów ICD-10 na ekranie blokady). |
 
 ---
 

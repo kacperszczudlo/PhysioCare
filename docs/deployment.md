@@ -1,6 +1,6 @@
-# Wdrożenie - PhysioCare (Faza 6.5)
+# Wdrożenie i Produkcja - PhysioCare
 
-Przewodnik demo / staging. Lokalny rozwój pozostaje w root `README.md`.
+Przewodnik wdrożeniowy dla środowisk staging i produkcyjnych. Uruchomienie lokalne opisane jest w głównym [README.md](../README.md).
 
 ## Architektura wdrożenia
 
@@ -16,7 +16,7 @@ Przewodnik demo / staging. Lokalny rozwój pozostaje w root `README.md`.
 |-----------|-------------------|
 | Backend + API | Railway / Render / VPS - **uvicorn (ASGI)** gdy włączone live UI |
 | PostgreSQL | Managed Postgres (Railway/Render) lub Docker na VPS |
-| Redis (opcjonalnie) | Managed Redis - throttle przy >1 workerze; **wymagany** pod SSE multi-worker (na później) |
+| Redis (opcjonalnie) | Managed Redis - throttle przy >1 workerze; wymagany przy skalowaniu magistrali SSE (multi-worker) |
 | Web | Railway static / Cloudflare Pages / Nginx na VPS |
 | Mobile | Expo EAS Update + build preview (Android APK) |
 
@@ -197,8 +197,8 @@ Live wizyty/dokumenty/ćwiczenia: SSE z Bearer (foreground); push Expo zostaje n
 - [ ] Logi JSON widoczne w panelu hostingu ([monitoring](monitoring.md))
 - [ ] Procedura rollback przetestowana raz na staging
 - [ ] Build mobile **native** (EAS / Expo Go na telefonie) - **nie** Expo web jako produkcja (localStorage)
-- [ ] Checklist live SSE z [e2e-checklist.md](e2e-checklist.md#live-ui-sse) zaliczona
+- [ ] Testy jednostkowe i integracyjne `pytest` zaliczone
 
-## Alternatywa „tylko laptop”
+## Tryb demonstracyjny w środowisku lokalnym
 
-Jeśli hosting nie jest wymagany na obronie: demo lokalne (Docker Postgres + `runserver` lub `uvicorn` + Vite + Expo) + nagranie / tunel (`ngrok`) dla mobile. `runserver` wystarcza do pokazu SSE przy małej liczbie klientów.
+W przypadku prezentacji w środowisku lokalnym (np. podczas obrony): serwer bazy danych PostgreSQL, API (`uvicorn`/`runserver`), panel webowy (Vite) oraz aplikacja mobilna (Expo) uruchamiane są na maszynie lokalnej. Dostęp mobilny realizowany jest w tej samej sieci LAN lub poprzez tunelowanie.

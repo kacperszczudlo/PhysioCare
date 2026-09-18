@@ -1,43 +1,42 @@
-# Konspekt prezentacji - PhysioCare
+# Konspekt prezentacji dyplomowej - PhysioCare
 
-Slajdy i pokaz na żywo (Faza 6.7). Ramowy czas: 10-12 minut.
+Plan wystąpienia i pokazu na żywo. Ramowy czas wystąpienia: 10–12 minut.
 
-## Slajdy (propozycja 10)
+## Slajdy (Struktura prezentacji)
 
-1. **Tytuł** - PhysioCare, autor, uczelnia, rok
-2. **Problem** - rozrzucona dokumentacja wizyt i brak śladu ćwiczeń domowych
-3. **Cel i zakres** - web (terapeuta), mobile (pacjent), wspólne REST API
-4. **Architektura** - diagram kontenerów (`docs/diagrams/architecture.drawio`)
-5. **Model danych** - ERD (epizod, wizyta, ćwiczenia, zgody)
-6. **API i bezpieczeństwo** - JWT, role, throttle, envelope błędów, blacklist refresh
-7. **Aplikacje klienckie** - kluczowe ekrany web + mobile (screenshoty)
-8. **Jakość** - pytest, Ruff, ESLint/Prettier, monitoring (`X-Request-ID`, latency)
-9. **Demo** - ścieżka krytyczna (niżej)
-10. **Zamknięcie** - co powstało, czego nie ma, możliwe dalsze kroki
+1. **Strona tytułowa** – Tytuł pracy, autor, kierunek, uczelnia, rok akademicki.
+2. **Sformułowanie problemu** – Wyzwania organizacji dokumentacji fizjoterapeutycznej i kontroli zaleceń domowych.
+3. **Cel i zakres projektu** – Zintegrowany system trójwarstwowy: panel WWW, aplikacja mobilna, centralny backend REST.
+4. **Architektura systemu** – Schemat kontenerów (`docs/diagrams/architecture.drawio`) oraz protokół SSE.
+5. **Model danych** – Schemat ERD (epizody leczenia, wizyty, plan ćwiczeń, zgody RODO).
+6. **API i bezpieczeństwo** – Bezstanowy JWT, mechanizm 2FA, ochrona PESEL/notatek (AES-128 Fernet), rate limiting.
+7. **Interfejsy użytkownika** – Prezentacja kluczowych ekranów panelu fizjoterapeuty i aplikacji pacjenta.
+8. **Jakość oprogramowania i monitoring** – Testy jednostkowe/integracyjne, logi strukturalne JSON (`X-Request-ID`), obsługa błędów.
+9. **Pokaz na żywo (Demo)** – Przebieg ścieżki krytycznej (opis poniżej).
+10. **Podsumowanie i wnioski** – Wnioski końcowe, osiągnięte cele oraz kierunki rozwoju systemu.
 
-## Demo live (3-4 min)
+## Pokaz na żywo (Demo live: 3–4 min)
 
-Kolejność:
+Kolejność prezentacji:
 
-1. Wejście terapeuty (web) → kalendarz → karta pacjenta
-2. Przypisanie ćwiczenia
-3. Wejście pacjenta (mobile) → pulpit → oznaczenie wykonania
-4. (Opcjonalnie) log JSON backendu z `request_id`
+1. **Panel fizjoterapeuty (Web):** Logowanie, prezentacja harmonogramu oraz otwarcie karty pacjenta z mapą bólu VAS.
+2. **Przypisanie ćwiczenia:** Wybór z bazy ćwiczeń, ustalenie dawkowania i przydzielenie pacjentowi.
+3. **Aplikacja pacjenta (Mobile):** Odbiór powiadomienia w czasie rzeczywistym (SSE), przejście do zaleceń na dziś i oznaczenie wykonania (compliance).
+4. **Weryfikacja w logach:** Prezentacja wpisu logu strukturalnego JSON z nagłówkiem `X-Request-ID`.
 
-Rezerwa: nagranie ekranu albo smoke w Postmanie, gdy padnie sieć albo emulator.
+*Rezerwa techniczna:* Material wideo prezentujący działanie systemu przygotowany na przypadek awarii sieci.
 
-## Materiały
+## Materiały źródłowe
 
-| Plik | Użycie |
-|------|--------|
-| `docs/diagrams/*.drawio` | Slajdy architektury / ERD / UC |
-| `docs/e2e-checklist.md` | Scenariusz próby generalnej |
-| `docs/monitoring.md` | Slajd jakości / ops |
-| `docs/deployment.md` | Pytania o hosting |
-| Screenshoty (katalog `docs/screenshots/` - do uzupełnienia) | Slajd UI |
+| Plik / Zasób | Zastosowanie w prezentacji |
+| :--- | :--- |
+| `docs/diagrams/*.drawio` | Slajdy architektury, schematu ERD oraz przypadek użycia |
+| `docs/monitoring.md` | Slajd poświęcony obserwowalności i jakości |
+| `docs/deployment.md` | Odpowiedzi na pytania dotyczące infrastruktury |
+| `docs/screenshots/` | Zrzuty ekranu interfejsów klienckich |
 
-## Pytania - szybkie odpowiedzi
+## Przygotowane odpowiedzi na pytania komisji
 
-- **Dlaczego monorepo?** Jeden kontrakt API, jedna historia Git, prościej trzymać typy w ryzach.
-- **Dlaczego JWT w cookie (web) i Bearer (mobile)?** Ograniczenie XSS versus natywny SecureStore; ten sam backend.
-- **Co z RODO?** Zgody przy rejestracji pacjenta, eksport i wniosek o usunięcie na API, w logach `user_id` bez haseł.
+- **Dlaczego architektura monorepo?** Wspólny kontrakt REST API, jednolity rejestr typów oraz łatwiejsza kontrola spójności wersji.
+- **Dlaczego JWT w cookie (Web) i Bearer (Mobile)?** Ochrona przed atakami XSS w przeglądarce przy jednoczesnym wykorzystaniu natywnego magazynu `SecureStore` w systemach mobilnych.
+- **Jak obsłużono wymogi RODO?** Dwuetapowa akceptacja zgód przy rejestracji, prawa DSAR (eksport i anonimizacja konta) oraz szyfrowanie danych medycznych at-rest.

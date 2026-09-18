@@ -1,6 +1,6 @@
 # Monitoring i logowanie - PhysioCare
 
-Opis warstwy obserwowalności (Faza 6.2-6.3): strukturalne logi serwera oraz metryki czasu odpowiedzi HTTP.
+Opis warstwy obserwowalności systemu: strukturalne logi serwera oraz metryki czasu odpowiedzi HTTP.
 
 ## Cele
 
@@ -81,7 +81,7 @@ Niezmieniony kontrakt z `docs/api.md`:
 
 Każdy błąd DRF jest dodatkowo logowany (WARNING/ERROR) z `request_id` i `error_code`. Nieobsłużone wyjątki w produkcji zwracają generyczny `SERVER_ERROR` i pełny stacktrace tylko w logach.
 
-## Jak czytać logi lokalnie
+## Diagnostyka logów w środowisku deweloperskim
 
 ```powershell
 cd backend\physiocare
