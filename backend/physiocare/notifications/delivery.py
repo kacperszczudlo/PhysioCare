@@ -72,7 +72,7 @@ def schedule_notify(
     data: dict[str, object] | None = None,
     dedupe_key: str = '',
 ) -> None:
-    """Bezpiecznie szereguje wysyłkę powiadomienia do użytkownika przechwytując ewentualne wyjątki.
+    """Bezpiecznie szereguje wysyłkę powiadomienia do użytkownika za pośrednictwem Celery lub synchronicznie.
 
     Args:
         user (object): Adresat powiadomienia.
@@ -90,17 +90,35 @@ def schedule_notify(
     if not isinstance(pref_key, str) or not isinstance(title, str) or not isinstance(body, str):
         raise TypeError('Parametry pref_key, title oraz body muszą być ciągami znaków.')
 
+    user_pk = getattr(user, 'pk', None)
+    payload_data = dict(data or {})
+
+    try:
+        if user_pk is not None:
+            from notifications.tasks import send_notification_task
+
+            send_notification_task.delay(
+                user_pk,
+                pref_key,
+                title,
+                body,
+                data=payload_data,
+                dedupe_key=dedupe_key,
+            )
+            return
+    except Exception:
+        logger.warning('Celery notification dispatch failed, falling back to sync execution.')
+
     try:
         notify_user(
             user,
             pref_key,
             title,
             body,
-            data=dict(data or {}),
+            data=payload_data,
             dedupe_key=dedupe_key,
         )
     except Exception:
-        user_pk: object = getattr(user, 'pk', 'unknown') if hasattr(user, 'pk') else 'unknown'
         user_id_str: str = str(user.pk) if hasattr(user, 'pk') else 'unknown'
         logger.exception('Notification dispatch failed for user_id=%s', user_id_str)
 

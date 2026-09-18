@@ -23,15 +23,41 @@ services:
     restart: unless-stopped
     ports:
       - "${REDIS_PORT:-6379}:6379"
-    volumes:
-      - physiocare_redisdata:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+  celery-worker:
+    build:
+      context: ./backend
+    container_name: physiocare-celery-worker
+    restart: unless-stopped
+    command: celery -A physiocare worker -l info
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-beat:
+    build:
+      context: ./backend
+    container_name: physiocare-celery-beat
+    restart: unless-stopped
+    command: celery -A physiocare beat -l info
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   physiocare_pgdata:
-  physiocare_redisdata:
-

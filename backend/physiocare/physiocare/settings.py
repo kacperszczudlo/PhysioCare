@@ -353,6 +353,26 @@ else:
         }
     }
 
+CELERY_BROKER_URL: str = os.environ.get('CELERY_BROKER_URL', _REDIS_URL or 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND: str = os.environ.get('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
+CELERY_ACCEPT_CONTENT: list[str] = ['json']
+CELERY_TASK_SERIALIZER: str = 'json'
+CELERY_RESULT_SERIALIZER: str = 'json'
+CELERY_TIMEZONE: str = TIME_ZONE
+CELERY_TASK_ALWAYS_EAGER: bool = env_bool('CELERY_TASK_ALWAYS_EAGER', 'true' if not _REDIS_URL else 'false')
+CELERY_TASK_EAGER_PROPAGATES: bool = True
+
+CELERY_BEAT_SCHEDULE: dict[str, dict[str, object]] = {
+    'notify-upcoming-visits-every-15m': {
+        'task': 'notifications.tasks.run_upcoming_visits_job_task',
+        'schedule': 900.0,
+    },
+    'notify-today-exercises-daily': {
+        'task': 'notifications.tasks.run_today_exercises_job_task',
+        'schedule': 86400.0,
+    },
+}
+
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_FROM', 'noreply@example.com')
 
 EMAIL_BACKEND = os.environ.get(
