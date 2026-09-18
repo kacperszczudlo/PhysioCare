@@ -6,7 +6,7 @@ from therapists.competence import (
     QualificationLevel,
 )
 
-DEVICE_CATALOG: tuple[dict[str, str], ...] = (
+DEVICE_CATALOG: tuple[dict, ...] = (
     {
         'code': 'J.ANKLE',
         'group': 'J',
