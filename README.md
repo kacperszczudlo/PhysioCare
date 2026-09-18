@@ -45,8 +45,6 @@ PhysioCare/
 | [docs/legal/polityka-prywatnosci.md](docs/legal/polityka-prywatnosci.md) | Polityka prywatności (RODO / PKE) |
 | [docs/legal/polityka-cookies.md](docs/legal/polityka-cookies.md) | Polityka cookies i technologie w urządzeniu |
 | [docs/monitoring.md](docs/monitoring.md) | Logi strukturalne, latency, request id |
-| [docs/deployment.md](docs/deployment.md) | Wdrożenie demo (Railway / VPS / EAS) |
-| [docs/presentation-outline.md](docs/presentation-outline.md) | Konspekt prezentacji |
 | [docs/postman-testing.md](docs/postman-testing.md) | Kolekcja Postman, macierz UC, checklista |
 | [docs/postman/PhysioCare.json](docs/postman/PhysioCare.json) | Importowalna kolekcja Postman |
 | [docs/diagrams/](docs/diagrams/) | ERD, architektura, moduły, use case (draw.io) |
@@ -86,7 +84,7 @@ Copy-Item .env.example .env
 ```
 
 W `.env` ustaw co najmniej: `POSTGRES_*`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`.  
-Opcjonalnie: `EMAIL_*` (reset hasła), `GOOGLE_CLIENT_IDS` (logowanie Google) — patrz [docs/deployment.md](docs/deployment.md).
+Opcjonalnie: `EMAIL_*` (reset hasła), `GOOGLE_CLIENT_IDS` (logowanie Google).
 
 Jeśli PostgreSQL jest świeżo zainstalowany, utwórz użytkownika, bazę i `btree_gist`:
 
