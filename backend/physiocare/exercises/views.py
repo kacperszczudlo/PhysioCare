@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 from django.utils import timezone
@@ -70,10 +71,10 @@ class TherapistExerciseListCreateView(generics.ListCreateAPIView):
         return filter_exercises_queryset(qs, self.request.query_params).order_by('-created_at')
 
     def get_serializer_class(self) -> type[serializers.Serializer]:
-        """Zwraca odpowiednią klasę serializera w zależności od metody HTTP.
+        """Zwraca odpowiednią klasę serializatora w zależności od metody HTTP.
 
         Returns:
-            type[serializers.Serializer]: Klasa serializera do użycia.
+            type[serializers.Serializer]: Klasa serializatora do użycia.
         """
         if self.request.method == 'POST':
             return ExerciseCreateSerializer
@@ -99,44 +100,49 @@ class TherapistExerciseListCreateView(generics.ListCreateAPIView):
         uploaded = request.FILES.get('file')
         if uploaded is None:
             return Response(
-                {'error': {'code': 'FILE_REQUIRED', 'message': 'Wymagany plik.', 'details': {}}},
+                {
+                    'error': {
+                        'code': 'VALIDATION',
+                        'message': 'Plik ćwiczenia jest wymagany.',
+                        'details': {'file': ['To pole jest wymagane.']},
+                    }
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        file_url, _sniffed = save_upload(uploaded, subdir='exercises')
-        serializer = ExerciseCreateSerializer(
-            data=request.data,
-            context={'therapist': request.user.therapist_profile, 'file_url': file_url},
-        )
+
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        exercise = serializer.save()
-        exercise = Exercise.objects.prefetch_related('categories').get(pk=exercise.pk)
+        file_url = save_upload(uploaded, subfolder='exercises')
+        exercise = serializer.save(
+            therapist=request.user.therapist_profile,
+            file_url=file_url,
+        )
         return Response(ExerciseSerializer(exercise).data, status=status.HTTP_201_CREATED)
 
 
 class TherapistExerciseDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """Widok szczegółów, edycji i usuwania ćwiczenia dla fizjoterapeuty."""
+    """Widok szczegółów, edycji oraz usuwania ćwiczenia."""
 
     permission_classes = [IsAuthenticated, IsTherapist]
     parser_classes = [parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser]
-    http_method_names = ['get', 'put', 'patch', 'delete', 'head', 'options']
 
     def get_queryset(self) -> QuerySet[Exercise]:
-        """Zwraca zestaw danych ćwiczeń zalogowanego fizjoterapeuty.
+        """Zwraca listę ćwiczeń należących do zalogowanego fizjoterapeuty.
 
         Returns:
-            QuerySet[Exercise]: Zestaw ćwiczeń terapeuty.
+            QuerySet[Exercise]: Przefiltrowany zestaw ćwiczeń.
         """
         return Exercise.objects.filter(
             therapist=self.request.user.therapist_profile,
         ).prefetch_related('categories')
 
     def get_serializer_class(self) -> type[serializers.Serializer]:
-        """Zwraca klasę serializatora odpowiednią dla metody HTTP.
+        """Zwraca serializator do odczytu lub aktualizacji ćwiczenia.
 
         Returns:
             type[serializers.Serializer]: Klasa serializatora.
         """
-        if self.request.method in ('PUT', 'PATCH'):
+        if self.request.method in ('PATCH', 'PUT'):
             return ExerciseUpdateSerializer
         return ExerciseSerializer
 
@@ -217,7 +223,7 @@ class TherapistExerciseDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class TherapistExerciseCategoryListView(generics.ListAPIView):
-    """Widok listy kategorii ćwiczeń dla fizjoterapeuty."""
+    """Widok listy kategorii ćwiczeń dla fizjoterapeuty z obsługą pamięci podręcznej (Cache)."""
 
     serializer_class = ExerciseCategorySerializer
     permission_classes = [IsAuthenticated, IsTherapist]
@@ -237,6 +243,32 @@ class TherapistExerciseCategoryListView(generics.ListAPIView):
                 return qs.none()
             qs = qs.filter(kind=kind)
         return qs.order_by('kind', 'name')
+
+    def list(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Zwraca listę kategorii ćwiczeń z pamięci podręcznej lub z bazy danych.
+
+        Args:
+            request (Request): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty słownikowe.
+
+        Returns:
+            Response: Odpowiedź zawierająca wybuforowaną lub pobraną listę kategorii.
+        """
+        if not isinstance(request, Request):
+            raise TypeError('Argument request musi być instancją Request.')
+
+        kind = (request.query_params.get('kind') or 'all').upper()
+        cache_key = f'exercise_categories:{kind}'
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data, status=status.HTTP_200_OK)
+
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        data = serializer.data
+        cache.set(cache_key, data, timeout=3600)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class TherapistExerciseAssignmentListCreateView(generics.ListCreateAPIView):

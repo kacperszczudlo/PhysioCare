@@ -341,6 +341,7 @@ if _REDIS_URL:
         'default': {
             'BACKEND': 'django.core.cache.backends.redis.RedisCache',
             'LOCATION': _REDIS_URL,
+            'KEY_PREFIX': 'physiocare',
         }
     }
 else:
@@ -348,6 +349,7 @@ else:
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
             'LOCATION': 'physiocare-default',
+            'KEY_PREFIX': 'physiocare',
         }
     }
 
