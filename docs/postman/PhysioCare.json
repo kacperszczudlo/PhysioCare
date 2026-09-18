@@ -888,6 +888,167 @@
               }
             }
           ]
+        },
+        {
+          "name": "POST /auth/2fa/setup/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/setup/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "2fa",
+                "setup"
+              ]
+            },
+            "description": "Setup 2FA TOTP secret & QR"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/2fa/enable/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/enable/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "2fa",
+                "enable"
+              ]
+            },
+            "description": "Enable 2FA TOTP",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"123456\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /auth/2fa/status/",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/status/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "2fa",
+                "status"
+              ]
+            },
+            "description": "Check 2FA status"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/2fa/login/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "2fa",
+                "login"
+              ]
+            },
+            "description": "2FA Step 2 Login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mfa_token\": \"...\",\n  \"code\": \"123456\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/2fa/disable/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/2fa/disable/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "2fa",
+                "disable"
+              ]
+            },
+            "description": "Disable 2FA",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"SecurePass123!\",\n  \"code\": \"123456\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/logout/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Logout session"
+          },
+          "response": []
         }
       ]
     },
@@ -2201,6 +2362,139 @@
               }
             }
           ]
+        },
+        {
+          "name": "POST /therapist/visits/{{visit_id}}/approve/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/visits/{{visit_id}}/approve/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "visits",
+                "{{visit_id}}",
+                "approve"
+              ]
+            },
+            "description": "Therapist approve pending visit"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /therapist/visits/{{visit_id}}/reject/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/visits/{{visit_id}}/reject/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "visits",
+                "{{visit_id}}",
+                "reject"
+              ]
+            },
+            "description": "Therapist reject visit",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Brak wolnych terminów\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /therapists/{{therapist_profile_id}}/available-slots/",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/therapists/{{therapist_profile_id}}/available-slots/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapists",
+                "{{therapist_profile_id}}",
+                "available-slots"
+              ]
+            },
+            "description": "Get therapist public available slots"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /therapist/availabilities/",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/availabilities/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "availabilities"
+              ]
+            },
+            "description": "List therapist work availability slots"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /therapist/availabilities/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/therapist/availabilities/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "availabilities"
+              ]
+            },
+            "description": "Create work availability slot",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"day_of_week\": 1,\n  \"start_time\": \"08:00:00\",\n  \"end_time\": \"16:00:00\"\n}"
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -2941,13 +3235,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/patient/clinical-documents/",
+              "raw": "{{baseUrl}}/me/clinical-documents/",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "patient",
-                "clinical-documents"
+                "me",
+                "clinical-documents",
+                ""
               ]
             },
             "description": "Pobiera listę dokumentów klinicznych (zlecenia na wyroby medyczne, skierowania, odmowy) przypisanych do pacjenta.",
@@ -3703,6 +3998,84 @@
               }
             }
           ]
+        },
+        {
+          "name": "GET /me/therapists/",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/therapists/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "therapists"
+              ]
+            },
+            "description": "UC-20 List patient linked therapists"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /me/therapists/link/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/therapists/link/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "therapists",
+                "link"
+              ]
+            },
+            "description": "UC-20 Link therapist to patient",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"therapist_id\": \"{{therapist_profile_id}}\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /me/therapists/{{therapist_profile_id}}/",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/therapists/{{therapist_profile_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "therapists",
+                "{{therapist_profile_id}}"
+              ]
+            },
+            "description": "UC-20 Unlink therapist from patient"
+          },
+          "response": []
         }
       ]
     },
@@ -3716,13 +4089,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/therapist/medical-devices/",
+              "raw": "{{baseUrl}}/medical-devices/catalog/",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "therapist",
-                "medical-devices"
+                "medical-devices",
+                "catalog",
+                ""
               ]
             },
             "description": "Pobiera listę wyrobów medycznych z uwzględnieniem uprawnień wynikających z poziomu kwalifikacji terapeuty.",

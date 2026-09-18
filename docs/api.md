@@ -263,6 +263,9 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** - hasło z
 | GET | `/me/profile` | Dane pacjenta |
 | PATCH | `/me/profile` | Edycja PESEL, telefon |
 | POST | `/me/profile/avatar` | Upload avatara (`multipart`, pole `file`: JPEG/PNG/WebP) |
+| GET | `/me/therapists` | Lista powiązanych fizjoterapeutów pacjenta (UC-20) |
+| POST | `/me/therapists/link` | Powiązanie fizjoterapeuty (`{ "therapist_id": "uuid" }`) |
+| DELETE | `/me/therapists/{id}` | Usunięcie powiązania z fizjoterapeutą |
 | GET | `/me/consents` | Lista zgód |
 | PATCH | `/me/consents/optional` | Marketing, badania |
 | POST | `/me/data-export` | Eksport RODO (profil, zgody, wizyty, epizody, dokumenty, ćwiczenia, preferencje i logi powiadomień) |
@@ -283,6 +286,8 @@ Wymaga sesji. Body: `{ "current_password", "new_password" }`. **200** - hasło z
 | GET | `/therapist/visits?upcoming=1` | THERAPIST | Najbliższe zaplanowane (od teraz) |
 | POST | `/therapist/visits` | THERAPIST | Nowa wizyta |
 | PATCH | `/therapist/visits/{id}` | THERAPIST | Edycja / drag slot |
+| POST | `/therapist/visits/{id}/approve` | THERAPIST | Zatwierdzenie prośby o wizytę (`PENDING_APPROVAL`) |
+| POST | `/therapist/visits/{id}/reject` | THERAPIST | Odrzucenie prośby o wizytę (`PENDING_APPROVAL`) |
 | GET | `/therapist/availabilities/` | THERAPIST | Lista slotów dostępności terapeuty |
 | POST | `/therapist/availabilities/` | THERAPIST | Utworzenie nowego slotu pracy (cykliczny/jednorazowy) |
 | DELETE | `/therapist/availabilities/{id}` | THERAPIST | Usunięcie slotu dostępności |
@@ -423,7 +428,8 @@ Wymiary `type` / `region` / `muscle` / `injury` łączone są **AND** (ćwiczeni
 | PATCH | `/therapist/profile` | Edycja (telefon, bio, kursy) |
 | POST | `/therapist/profile/avatar` | Upload avatara (`multipart`, pole `file`: JPEG/PNG/WebP) |
 | GET | `/therapist/dashboard/stats` | Widgety pulpitu |
-| GET | `/therapists/{id}/public` | Wizytówka dla pacjenta |
+| GET | `/therapists/public` | Lista publicznych wizytówek fizjoterapeutów (`?search=...`) |
+| GET | `/therapists/{id}/public` | Wizytówka pojedynczego fizjoterapeuty dla pacjenta |
 
 ---
 

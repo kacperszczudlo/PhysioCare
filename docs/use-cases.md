@@ -214,7 +214,7 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
-## UC-20 - Wniosek o usunięcie konta i anonimizacja RODO
+## UC-21 - Wniosek o usunięcie konta i anonimizacja RODO
 
 | Pole | Wartość |
 |------|---------|
@@ -242,4 +242,4 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | UC-05-09 | ✓ | - | patients, privacy | profiles, consents |
 | UC-10-16 | - | ✓ | treatment, scheduling, exercises | episodes, visits |
 | UC-17-18 | ✓ | - | therapists, notifications | profiles, prefs |
-| UC-19-20 | ✓ | ✓ | therapists, privacy | medical_devices, deleted_users |
+| UC-19-21 | ✓ | ✓ | therapists, privacy | medical_devices, deleted_users |
