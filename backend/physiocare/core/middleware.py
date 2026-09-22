@@ -177,7 +177,7 @@ class SecurityHeadersMiddleware:
                 "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style https://fonts.googleapis.com; "
                 "font-src 'self' https://fonts.gstatic.com data:; "
                 "img-src 'self' data: blob: https://*.googleusercontent.com https://www.gstatic.com; "
-                "connect-src 'self' http://localhost:* ws://localhost:* https://www.google.com "
+                "connect-src 'self' https: wss: http://localhost:* ws://localhost:* https://www.google.com "
                 "https://accounts.google.com https://exp.host https://*.sentry.io; "
                 "frame-src 'self' https://www.google.com/recaptcha/ https://recaptcha.google.com/ "
                 "https://accounts.google.com/; "

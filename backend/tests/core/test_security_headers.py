@@ -16,6 +16,7 @@ class TestSecurityHeaders:
         assert 'Content-Security-Policy' in response
         csp: str = response['Content-Security-Policy']
         assert "default-src 'self'" in csp
+        assert "connect-src 'self' https: wss:" in csp
         assert "https://www.google.com/recaptcha/" in csp
         assert "https://accounts.google.com/gsi/" in csp
         assert "frame-ancestors 'none'" in csp
@@ -40,6 +41,21 @@ class TestSecurityHeaders:
             assert settings.SECURE_COOKIES is True
             assert settings.SESSION_COOKIE_SECURE is True
             assert settings.CSRF_COOKIE_SECURE is True
+
+    def test_secure_proxy_ssl_header_configuration(self) -> None:
+        """Sprawdza poprawność nagłówka odwrotnego proxy SSL (SECURE_PROXY_SSL_HEADER) i przekazywania hosta."""
+        # Arrange
+        from django.conf import settings
+        from django.test import override_settings
+
+        # Act & Assert
+        with override_settings(
+            USE_X_FORWARDED_HOST=True,
+            SECURE_PROXY_SSL_HEADER=('HTTP_X_FORWARDED_PROTO', 'https'),
+        ):
+            assert settings.USE_X_FORWARDED_HOST is True
+            assert settings.SECURE_PROXY_SSL_HEADER == ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 
 

@@ -334,6 +334,11 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_COOKIES = True
 
+USE_X_FORWARDED_HOST = env_bool('DJANGO_USE_X_FORWARDED_HOST', 'true')
+if env_bool('DJANGO_SECURE_PROXY_SSL_HEADER', 'true' if not DEBUG else 'false'):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
 
 _REDIS_URL = os.environ.get('REDIS_URL', '').strip()
 if _REDIS_URL:
