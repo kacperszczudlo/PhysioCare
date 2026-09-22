@@ -1,14 +1,28 @@
+/**
+ * @file ToastItem.tsx
+ * @description Komponent pojedynczej kafelki powiadomienia z animacją wejścia/wyjścia oraz obsługą ręcznego zamykania.
+ */
+
 import React, { useCallback, useEffect, useRef } from 'react'
 import { Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import { colors, radius, space, typography } from '@/theme/tokens'
 import type { ToastItemData } from './ToastContext'
 
+/** Właściwości komponentu {@link ToastItem}. */
 interface ToastItemProps {
+  /** Dane pojedynczego powiadomienia. */
   toast: ToastItemData
+  /** Callback do usunięcia powiadomienia po id. */
   onClose: (id: string) => void
 }
 
+/**
+ * Animowana kafelka powiadomienia Toast z opcjonalnym przyciskiem akcji i zamykania.
+ *
+ * @param props Właściwości komponentu powiadomienia.
+ * @returns Element React Native zawierający animowany widok Toast.
+ */
 export function ToastItem({ toast, onClose }: ToastItemProps) {
   const translateY = useRef(new Animated.Value(-40)).current
   const opacity = useRef(new Animated.Value(0)).current

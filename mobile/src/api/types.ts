@@ -1,26 +1,47 @@
+/**
+ * @file types.ts
+ * @description Definicje typów, interfejsów DTO oraz struktur danych wymienianych między aplikacją mobilną a backendem API PhysioCare.
+ */
+
+/** Rola użytkownika w systemie */
 export type UserRole = 'PATIENT' | 'THERAPIST'
 
+/** Status wizyty fizjoterapeutycznej */
 export type VisitStatus = 'PENDING_APPROVAL' | 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
 
+/** Typ załączonego pliku multimedialnego ćwiczenia */
 export type MediaType = 'VIDEO' | 'PDF'
 
+/** Kategoria lub klasyfikacja ćwiczenia fizjoterapeutycznego */
 export type CategoryKind = 'TYPE' | 'REGION' | 'MUSCLE' | 'INJURY'
 
+/** Interfejs reprezentujący kategorię ćwiczenia */
 export interface ExerciseCategory {
+  /** Identyfikator kategorii */
   id: string
+  /** Nazwa kategorii */
   name: string
+  /** Rodzaj kategorii */
   kind: CategoryKind
+  /** Przejrzysty identyfikator słowny (slug) */
   slug: string
 }
 
+/** Podstawowy obiekt zalogowanego użytkownika */
 export interface User {
+  /** Unikalny identyfikator (UUID) */
   id: string
+  /** Adres e-mail */
   email: string
+  /** Rola w systemie */
   role: UserRole
+  /** Imię */
   first_name: string
+  /** Nazwisko */
   last_name: string
 }
 
+/** Struktura ciała błędu zwracanego przez backend API */
 export interface ApiErrorBody {
   error?: {
     code?: string
@@ -31,24 +52,37 @@ export interface ApiErrorBody {
   [key: string]: unknown
 }
 
+/** Uniwersalna struktura dla stronnicowanych odpowiedzi API */
 export interface Paginated<T> {
+  /** Łączna liczba wszystkich elementów w bazie */
   count: number
+  /** Link do następnej strony (jeśli istnieje) */
   next: string | null
+  /** Link do poprzedniej strony (jeśli istnieje) */
   previous: string | null
+  /** Tablica wyników dla bieżącej strony */
   results: T[]
 }
 
+/** Para tokenów autoryzacyjnych JWT */
 export interface AuthTokens {
+  /** Token dostępowy o krótkim czasie ważności */
   access: string
+  /** Token odświeżający o dłuższym czasie ważności */
   refresh: string
 }
 
+/** Odpowiedź z serwera po pomyślnym zalogowaniu */
 export interface AuthResponse {
+  /** Dane zalogowanego użytkownika */
   user: User
+  /** Access token JWT */
   access: string
+  /** Refresh token JWT */
   refresh: string
 }
 
+/** Pełny profil pacjenta w systemie */
 export interface PatientProfile {
   id: string
   email: string
@@ -60,12 +94,14 @@ export interface PatientProfile {
   therapist: string
 }
 
+/** Udzielona zgoda prawna lub marketingowa */
 export interface Consent {
   consent_type: string
   granted: boolean
   granted_at: string
 }
 
+/** Obiekt pojedynczej wizyty pacjenta */
 export interface Visit {
   id: string
   patient: string
@@ -91,6 +127,7 @@ export interface Visit {
   created_at: string
 }
 
+/** Usługa lub rodzaj zabiegu fizjoterapeutycznego */
 export interface TherapyType {
   id: string
   name: string
@@ -99,6 +136,7 @@ export interface TherapyType {
   created_at: string
 }
 
+/** Ładunek zgłoszenia nowej rezerwacji wizyty */
 export interface VisitRequestPayload {
   therapist_id?: string
   therapy_type_id: string
@@ -107,6 +145,7 @@ export interface VisitRequestPayload {
   patient_note?: string
 }
 
+/** Ćwiczenie zaplanowane do wykonania na dzisiejszy dzień */
 export interface TodayExercise {
   id: string
   exercise: string
@@ -124,13 +163,16 @@ export interface TodayExercise {
   completed_today: boolean
 }
 
+/** Pozycja z pełnego planu ćwiczeń wraz z historią zaliczeń */
 export interface ExercisePlanItem extends TodayExercise {
   completions: ExerciseCompletion[]
   is_active: boolean
 }
 
+/** Status trwania epizodu leczenia fizjoterapeutycznego */
 export type EpisodeStatus = 'IN_PROGRESS' | 'COMPLETED_SUCCESS' | 'REFERRED' | 'INTERRUPTED'
 
+/** Epizod leczenia (cykl terapeutyczny) pacjenta */
 export interface TreatmentEpisode {
   id: string
   icd10_code: string
@@ -143,6 +185,7 @@ export interface TreatmentEpisode {
   created_at: string
 }
 
+/** Rekord zaliczenia wykonania ćwiczenia domowego */
 export interface ExerciseCompletion {
   id: string
   assignment: string
@@ -151,6 +194,7 @@ export interface ExerciseCompletion {
   completed_at: string
 }
 
+/** Dokument medyczny przesłany lub powiązany z pacjentem */
 export interface MedicalDocument {
   id: string
   title: string
@@ -162,9 +206,15 @@ export interface MedicalDocument {
   created_at: string
 }
 
+/** Kategoria generowanego pliku lub dokumentu klinicznego */
 export type ClinicalDocumentKind =
-  'recommendation' | 'device_order' | 'refusal' | 'recepta_na_ruch' | 'pdf'
+  | 'recommendation'
+  | 'device_order'
+  | 'refusal'
+  | 'recepta_na_ruch'
+  | 'pdf'
 
+/** Pozycja dokumentu klinicznego wystawionego przez fizjoterapeutę */
 export interface ClinicalDocumentItem {
   id: string
   kind: ClinicalDocumentKind
@@ -179,6 +229,7 @@ export interface ClinicalDocumentItem {
   details: Record<string, unknown>
 }
 
+/** Uprawnienie zawodowe lub kompetencyjne fizjoterapeuty */
 export interface CompetenceCapability {
   code: string
   allowed: boolean
@@ -186,6 +237,7 @@ export interface CompetenceCapability {
   detail: string
 }
 
+/** Migawka kwalifikacji i kompetencji zawodowych fizjoterapeuty */
 export interface CompetenceSnapshot {
   qualification_level: string
   qualification_label: string
@@ -198,6 +250,7 @@ export interface CompetenceSnapshot {
   capabilities: CompetenceCapability[]
 }
 
+/** Publiczne dane wizytówkowe fizjoterapeuty */
 export interface TherapistPublic {
   id: string
   first_name: string
@@ -214,14 +267,21 @@ export interface TherapistPublic {
   competences?: CompetenceSnapshot
 }
 
+/** Klucz preferencji powiadomień Push */
 export type NotificationPrefKey =
-  'visit_reminder' | 'visit_change' | 'waitlist' | 'exercise_reminder' | 'new_document'
+  | 'visit_reminder'
+  | 'visit_change'
+  | 'waitlist'
+  | 'exercise_reminder'
+  | 'new_document'
 
+/** Wpis pojedynczej preferencji powiadomień */
 export interface NotificationPreference {
   pref_key: NotificationPrefKey | string
   enabled: boolean
 }
 
+/** Token powiadomień urządzenia mobilnego */
 export interface DeviceToken {
   id: string
   expo_push_token: string
@@ -230,12 +290,12 @@ export interface DeviceToken {
   updated_at: string
 }
 
-/** Sync RODO export payload from POST /me/data-export/ (Art. 15 metadata). */
+/** Ładunek zrzutu eksportu danych osobowych pacjenta w ramach RODO (Art. 15) */
 export interface PatientDataExport {
   exported_at: string
   profile: PatientProfile
   consents: Consent[]
-  visits: Array<{
+  visits: {
     id: string
     start_at: string
     end_at: string
@@ -246,8 +306,8 @@ export interface PatientDataExport {
     patient_summary: string
     patient_note: string
     cancel_reason: string
-  }>
-  episodes: Array<{
+  }[]
+  episodes: {
     id: string
     icd10_code: string
     functional_diagnosis: string
@@ -255,62 +315,62 @@ export interface PatientDataExport {
     summary_note: string
     started_at: string | null
     ended_at: string | null
-    body_pain: Array<{
+    body_pain: {
       body_region: string
       view_side: string
       vas_score: number
       pain_character: string
       treatment_targets: string
-    }>
-  }>
-  documents: Array<{
+    }[]
+  }[]
+  documents: {
     id: string
     title: string
     mime_type: string
     created_at: string
     file_url: string
-  }>
-  exercise_assignments: Array<{
+  }[]
+  exercise_assignments: {
     id: string
     exercise_title: string
     dosage: string
     start_date: string
     end_date: string
-    completions: Array<{
+    completions: {
       completed_on: string
       done: boolean
-    }>
-  }>
-  device_orders: Array<{
+    }[]
+  }[]
+  device_orders: {
     id: string
     device_code: string
     device_name: string
     access_code: string
     status: string
-  }>
-  diagnostic_recommendations: Array<{
+  }[]
+  diagnostic_recommendations: {
     id: string
     recommendation_type: string
     justification: string
-  }>
-  physician_order_refusals: Array<{
+  }[]
+  physician_order_refusals: {
     id: string
     refusal_reason: string
-  }>
-  recepta_na_ruch: Array<{
+  }[]
+  recepta_na_ruch: {
     id: string
     status: string
     activity_notes: string
-  }>
+  }[]
   notification_preferences: NotificationPreference[]
-  device_tokens: Array<{
+  device_tokens: {
     id: string
     platform: string
     is_active: boolean
     updated_at: string
     token_fingerprint: string
-  }>
-  notification_deliveries: Array<{
+  }[]
+  notification_deliveries: {
     pref_key: string
     channel: string
     status: string
@@ -318,5 +378,6 @@ export interface PatientDataExport {
     body: string
     data: Record<string, unknown>
     created_at: string
-  }>
+  }[]
 }
+

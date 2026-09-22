@@ -1,3 +1,8 @@
+/**
+ * @file googleSignIn.tsx
+ * @description Komponent przycisku oraz logika pomocnicza autoryzacji z wykorzystaniem natywnego SDK Google Sign-In (`@react-native-google-signin/google-signin`).
+ */
+
 import { useCallback, useEffect, useState } from 'react'
 import {
   ActivityIndicator,
@@ -20,6 +25,7 @@ type GoogleSignInModule = typeof import('@react-native-google-signin/google-sign
 let googleModule: GoogleSignInModule | null | undefined
 let configured = false
 
+/** Sprawdza obecność natywnego modułu Google Sign-In na poziomie środowiska uruchomieniowego */
 function hasNativeGoogleSignin(): boolean {
   try {
     return TurboModuleRegistry.get('RNGoogleSignin') != null
@@ -28,6 +34,7 @@ function hasNativeGoogleSignin(): boolean {
   }
 }
 
+/** Pobiera bezpiecznie instancję natywnego modułu Google Sign-In */
 function getGoogleModule(): GoogleSignInModule | null {
   if (!hasNativeGoogleSignin()) {
     googleModule = null
@@ -45,12 +52,19 @@ function getGoogleModule(): GoogleSignInModule | null {
   return googleModule
 }
 
+/** Wskaźnik określający, czy identyfikator klienta Google Web został zdefiniowany w zmiennych środowiskowych */
 export const isGoogleSignInConfigured = Boolean(webClientId)
 
+/**
+ * Sprawdza, czy natywna obsługa Google Sign-In jest dostępna na podłączonym urządzeniu.
+ *
+ * @returns True jeśli natywny moduł jest zainstalowany.
+ */
 export function isGoogleNativeAvailable(): boolean {
   return hasNativeGoogleSignin()
 }
 
+/** Konfiguruje parametry natywnej biblioteki Google Sign-In */
 function ensureGoogleConfigured() {
   const mod = getGoogleModule()
   if (!mod || configured || !webClientId) {
@@ -64,6 +78,11 @@ function ensureGoogleConfigured() {
   configured = true
 }
 
+/**
+ * Inicjuje natywny przepływ logowania Google i zwraca ID Token JWT.
+ *
+ * @returns Zwraca obietnicę z ciągiem idToken.
+ */
 export async function getGoogleIdToken(): Promise<string> {
   const mod = getGoogleModule()
   if (!webClientId || !mod) {
@@ -75,7 +94,6 @@ export async function getGoogleIdToken(): Promise<string> {
     await mod.GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true })
   }
 
-  // Force Google native Account Picker modal ("Wybierz konto") every time
   try {
     await mod.GoogleSignin.signOut()
   } catch {
@@ -94,13 +112,13 @@ export async function getGoogleIdToken(): Promise<string> {
   return idToken
 }
 
+/** Mapuje natywne błędy pakietu Google Sign-In na polskie czytelne komunikaty */
 function mapGoogleError(error: unknown): string {
   const mod = getGoogleModule()
   const raw = error as { code?: string | number; message?: string }
   const code = raw?.code
   const message = typeof raw?.message === 'string' ? raw.message : ''
 
-  // Android OAuth misconfig (SHA-1 / package / webClientId).
   if (
     code === 10 ||
     code === '10' ||
@@ -133,16 +151,29 @@ function mapGoogleError(error: unknown): string {
   return 'Logowanie Google nie powiodło się.'
 }
 
+/** Właściwości komponentu `GoogleSignInButton` */
 type GoogleSignInButtonProps = {
+  /** Czy trwają prace asynchroniczne (stan ładowania) */
   loading?: boolean
+  /** Czy przycisk ma być zablokowany */
   disabled?: boolean
+  /** Etykieta przycisku (domyślnie "Kontynuuj z Google") */
   title?: string
+  /** Opcjonalna wskazówka wyświetlana pod przyciskiem */
   hint?: string
+  /** Opcjonalny callback uruchamiany przed otwarciem okna logowania Google */
   onBeforePrompt?: () => boolean | Promise<boolean>
+  /** Callback wywoływany po pomyślnym odebraniu tokenu ID z Google */
   onSuccess: (idToken: string) => void | Promise<void>
+  /** Callback przekazujący komunikat błędu po niepowodzeniu logowania */
   onError: (message: string) => void
 }
 
+/**
+ * Dedykowany przycisk autoryzacji kontem Google zintegrowany z natywnym interfejsem systemowym.
+ *
+ * @param props - Właściwości przycisku logowania Google (`GoogleSignInButtonProps`).
+ */
 export function GoogleSignInButton({
   loading = false,
   disabled = false,
@@ -271,3 +302,4 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 })
+

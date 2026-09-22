@@ -1,9 +1,20 @@
+/**
+ * @file AsyncState.tsx
+ * @description Komponenty pomocnicze prezentujące stany asynchroniczne interfejsu użytkownika (ładowanie, błędne wykonanie, komunikat sukcesu, informacja oraz pusty stan).
+ */
+
 import type { ReactNode } from 'react'
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { colors, radius, space, typography } from '@/theme/tokens'
 import { Button } from './Button'
 
+/**
+ * Blok wskaźnika ładowania danych z opcjonalnym podglądem szkieletu UI.
+ *
+ * @param props.label - Etykieta tekstu ładowania (domyślnie "Ładowanie…").
+ * @param props.skeleton - Opcjonalny komponent szkieletowy (Skeleton).
+ */
 export function LoadingBlock({
   label = 'Ładowanie…',
   skeleton,
@@ -26,6 +37,12 @@ export function LoadingBlock({
   )
 }
 
+/**
+ * Komponent baneru komunikatu błędu z przyciskiem ponowienia operacji.
+ *
+ * @param props.message - Treść komunikatu błędu.
+ * @param props.onRetry - Opcjonalny callback ponowienia akcji.
+ */
 export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <View style={styles.errorBox} accessibilityRole="alert">
@@ -39,6 +56,11 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
   )
 }
 
+/**
+ * Komponent baneru pomyślnej operacji.
+ *
+ * @param props.message - Treść komunikatu sukcesu.
+ */
 export function SuccessBanner({ message }: { message: string }) {
   return (
     <View style={styles.successBox} accessibilityRole="text" accessibilityLiveRegion="polite">
@@ -47,6 +69,11 @@ export function SuccessBanner({ message }: { message: string }) {
   )
 }
 
+/**
+ * Komponent baneru informacyjnego.
+ *
+ * @param props.message - Treść wiadomości informacyjnej.
+ */
 export function InfoBanner({ message }: { message: string }) {
   return (
     <View style={styles.infoBox} accessibilityRole="text" accessibilityLiveRegion="polite">
@@ -55,6 +82,14 @@ export function InfoBanner({ message }: { message: string }) {
   )
 }
 
+/**
+ * Komponent puszki pustego stanu (Empty State) wyświetlany, gdy brak danych na liście.
+ *
+ * @param props.title - Główny tytuł powiadomienia o braku danych.
+ * @param props.description - Opcjonalny opis pomocniczy.
+ * @param props.actionLabel - Opcjonalna etykieta przycisku akcji.
+ * @param props.onAction - Opcjonalny callback przycisku akcji.
+ */
 export function EmptyState({
   title,
   description,
@@ -144,3 +179,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 })
+

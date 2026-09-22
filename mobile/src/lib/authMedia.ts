@@ -1,3 +1,8 @@
+/**
+ * @file authMedia.ts
+ * @description Plik pomocniczy do obsługi chronionych zasobów multimedialnych (obrazy, filmy, PDF) wymagających nagłówka autoryzacyjnego Bearer JWT.
+ */
+
 import { useEffect, useState } from 'react'
 
 import { API_BASE_URL } from '@/api/client'
@@ -5,15 +10,22 @@ import { tokenStorage } from '@/api/tokenStorage'
 import { rewriteLocalhostToLan } from '@/lib/lanHost'
 import { resolveMediaUrl } from '@/lib/mediaUrl'
 
+/**
+ * Struktura źródła pliku multimedialnego z dołączonymi nagłówkami autoryzacji HTTP.
+ */
 export type AuthenticatedMediaSource = {
+  /** Adres URL pliku multimedialnego */
   uri: string
+  /** Nagłówki HTTP (w tym Authorization Bearer) */
   headers?: Record<string, string>
 }
 
 /**
- * Build a media source that sends Bearer JWT (required - /media is auth-gated).
- * Suitable for expo-video. For Image / PDF use downloadAuthenticatedMediaToCache
- * or useAuthenticatedCachedUri - RN Image often ignores custom headers.
+ * Buduje obiekt źródła multimediów zawierający token Bearer JWT.
+ * Przydatne dla komponentów obsługujących nagłówki (np. `expo-video`).
+ *
+ * @param path - Względna lub bezwzględna ścieżka do pliku multimedialnego.
+ * @returns Zwraca obietnicę z obiektem `AuthenticatedMediaSource` lub `null`.
  */
 export async function getAuthenticatedMediaSource(
   path: string | null | undefined,
@@ -34,6 +46,7 @@ export async function getAuthenticatedMediaSource(
   }
 }
 
+/** Tworzy bezwzględny URL z uwzględnieniem mapowania hosta LAN */
 function mediaAbsoluteUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) {
     return rewriteLocalhostToLan(path)
@@ -45,6 +58,7 @@ function mediaAbsoluteUrl(path: string): string {
   return resolveMediaUrl(path) ?? path
 }
 
+/** Wyciąga bezpieczną nazwę pliku z podanej ścieżki */
 function filenameFromPath(path: string, fallback: string): string {
   const cleaned = path.split('?')[0] ?? path
   const base = cleaned.split('/').pop()
@@ -55,8 +69,12 @@ function filenameFromPath(path: string, fallback: string): string {
 }
 
 /**
- * Download an auth-protected file to the device cache and return a local file:// URI.
- * Prefer this for RN Image - native image loaders frequently drop Authorization headers.
+ * Pobiera chroniony plik ze stosowaniem tokenu JWT i zapisuje go w pamięci podręcznej urządzenia (cache), zwracając lokalny URI file://.
+ * Zalecane rozwiązanie dla komponentu React Native Image, który nie zawsze poprawnie przekazuje nagłówki HTTP na poziomie natywnym.
+ *
+ * @param path - Ścieżka pliku z serwera.
+ * @param filenameHint - Opcjonalny wariant nazwy pliku (domyślnie 'document.pdf').
+ * @returns Zwraca obietnicę z lokalnym adresem file:// lub null w przypadku niepowodzenia.
  */
 export async function downloadAuthenticatedMediaToCache(
   path: string | null | undefined,
@@ -90,6 +108,12 @@ export async function downloadAuthenticatedMediaToCache(
   return result.uri
 }
 
+/**
+ * Hook React do asynchronicznego pobierania autoryzowanego źródła multimediów.
+ *
+ * @param path - Ścieżka do chronionego pliku.
+ * @returns Obiekt ze stanem źródła, wskaźnikiem ładowania i błędu.
+ */
 export function useAuthenticatedMediaSource(path: string | null | undefined): {
   source: AuthenticatedMediaSource | null
   loading: boolean
@@ -141,7 +165,10 @@ export function useAuthenticatedMediaSource(path: string | null | undefined): {
 }
 
 /**
- * Download auth-gated media to a local file:// URI for RN Image (and similar).
+ * Hook React pobierający i keszujący chroniony plik na urządzeniu w lokalnym pliku file://.
+ *
+ * @param path - Ścieżka pliku z serwera API.
+ * @returns Obiekt zawierający lokalny adres `uri`, status ładowania oraz stan błędu.
  */
 export function useAuthenticatedCachedUri(path: string | null | undefined): {
   uri: string | null
@@ -193,3 +220,4 @@ export function useAuthenticatedCachedUri(path: string | null | undefined): {
 
   return { uri, loading, error }
 }
+

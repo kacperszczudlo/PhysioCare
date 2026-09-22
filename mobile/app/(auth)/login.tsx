@@ -1,3 +1,8 @@
+/**
+ * @file login.tsx
+ * @description Ekran logowania pacjenta (e-mail + hasło oraz SSO Google).
+ */
+
 import { Link, useLocalSearchParams, useRouter, type Href } from 'expo-router'
 import { useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
@@ -22,6 +27,11 @@ function firstParam(value: string | string[] | undefined): string {
   return (value ?? '').trim()
 }
 
+/**
+ * Ekran formularza logowania pacjenta do serwisu PhysioCare.
+ *
+ * @returns Element React Native prezentujący ekran logowania.
+ */
 export default function LoginScreen() {
   const { login, loginWithGoogle } = useAuth()
   const router = useRouter()

@@ -1,11 +1,23 @@
+/**
+ * @file LegalDocumentScreen.tsx
+ * @description Widok dokumentów prawnych (polityka prywatności, polityka cookies) w aplikacji mobilnej.
+ */
+
 import { Stack, Link } from 'expo-router'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { COOKIE_SECTIONS, PRIVACY_META, PRIVACY_SECTIONS } from '@/content/legalPrivacy'
 import { colors, space, typography } from '@/theme/tokens'
 
+/** Typ wybranego dokumentu prawnego. */
 type Doc = 'privacy' | 'cookies'
 
+/**
+ * Ekran prezentujący treść dokumentów prawnych wraz z nawigacją między politykami.
+ *
+ * @param props Obiekt z właściwością `doc` określającą prezentowany dokument.
+ * @returns Element React Native zawierający treść prawną i odnośniki.
+ */
 export function LegalDocumentScreen({ doc }: { doc: Doc }) {
   const sections = doc === 'privacy' ? PRIVACY_SECTIONS : COOKIE_SECTIONS
   const title = doc === 'privacy' ? PRIVACY_META.title : 'Polityka cookies'

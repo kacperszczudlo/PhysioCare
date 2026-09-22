@@ -1,3 +1,8 @@
+/**
+ * @file NotificationObserver.tsx
+ * @description Niewidoczny komponent obserwatora powiadomień Push (NotificationObserver) odpowiadający za automatyczną rejestrację tokena po zalogowaniu oraz obsługę przekierowań nawigacyjnych po kliknięciu powiadomienia.
+ */
+
 import { useRouter } from 'expo-router'
 import { useEffect, useRef } from 'react'
 
@@ -9,6 +14,11 @@ import {
   subscribeNotificationResponses,
 } from '@/notifications/push'
 
+/**
+ * Komponent obserwatora powiadomień systemowych w tle.
+ *
+ * @returns Komponent nie renderujący żadnego widoku (zwraca null).
+ */
 export function NotificationObserver() {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
@@ -52,3 +62,4 @@ export function NotificationObserver() {
 
   return null
 }
+

@@ -1,3 +1,8 @@
+/**
+ * @file AuthContext.tsx
+ * @description Kontekst uwierzytelniania aplikacji mobilnej (AuthContext) – obsługa logowania e-mail/hasło oraz Google, rejestracji, przywracania sesji z pamięci i zrzutów profilu offline.
+ */
+
 import {
   createContext,
   useCallback,
@@ -22,23 +27,39 @@ import type { User } from '@/api/types'
 import { useNetworkOptional } from '@/network/NetworkContext'
 import { unregisterPushToken } from '@/notifications/push'
 
+/**
+ * Interfejs udostępniający wartości i metody kontekstu autoryzacji.
+ */
 interface AuthContextValue {
+  /** Zalogowany użytkownik lub null */
   user: User | null
+  /** Czy trwa ładowanie/przywracanie sesji z magazynu */
   isLoading: boolean
+  /** Czy użytkownik jest uwierzytelniony */
   isAuthenticated: boolean
+  /** Loguje pacjenta za pomocą adresu e-mail i hasła */
   login: (email: string, password: string) => Promise<void>
+  /** Loguje pacjenta za pomocą tokena Google */
   loginWithGoogle: (credential: string) => Promise<void>
+  /** Rejestruje konto nowego pacjenta */
   register: (payload: PatientRegisterPayload) => Promise<RegisterResult>
+  /** Weryfikuje kod przesłany na adres e-mail */
   verifyEmail: (email: string, code: string) => Promise<void>
+  /** Wysłanie ponowne kodu weryfikacji e-mail */
   resendEmailCode: (email: string) => Promise<string>
+  /** Wylogowuje użytkownika z systemu */
   logout: () => Promise<void>
+  /** Wysyła żądanie zresetowania hasła */
   requestPasswordReset: (email: string) => Promise<string>
+  /** Weryfikuje kod resetujący hasło */
   verifyPasswordResetCode: (email: string, code: string) => Promise<string>
+  /** Potwierdza ustawienie nowego hasła */
   confirmPasswordReset: (payload: PasswordResetConfirmPayload) => Promise<string>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+/** Zamienia profil pobrany z API na obiekt User */
 function profileToUser(profile: Awaited<ReturnType<typeof patientApi.getProfile>>): User {
   return {
     id: profile.id,
@@ -49,6 +70,11 @@ function profileToUser(profile: Awaited<ReturnType<typeof patientApi.getProfile>
   }
 }
 
+/**
+ * Dostawca kontekstu autoryzacji (AuthProvider) zarządzający stanem zalogowanego użytkownika.
+ *
+ * @param props - Komponenty potomne (children).
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -269,6 +295,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
+/**
+ * Hook dający dostęp do stanu autoryzacji oraz funkcji autoryzacyjnych.
+ *
+ * @returns Instancja `AuthContextValue`.
+ */
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext)
   if (!ctx) {
@@ -276,3 +307,4 @@ export function useAuth(): AuthContextValue {
   }
   return ctx
 }
+

@@ -1,3 +1,8 @@
+/**
+ * @file ToastContext.tsx
+ * @description Kontekst powiadomień mobilnych (Toast) obsługujący ich wyświetlanie, automatyczne usuwanie i odpowiedź haptyczną.
+ */
+
 import React, {
   createContext,
   useCallback,
@@ -8,21 +13,32 @@ import React, {
 } from 'react'
 import { Vibration } from 'react-native'
 
+/** Typ powiadomienia (sukces, błąd, ostrzeżenie, informacja). */
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
 
+/** Opcjonalna akcja wewnątrz powiadomienia toast. */
 export interface ToastAction {
+  /** Etykieta przycisku akcji. */
   label: string
+  /** Funkcja wywoływana po kliknięciu w akcję. */
   onPress: () => void
 }
 
+/** Opcje konfiguracji wywołania powiadomienia. */
 export interface ToastOptions {
+  /** Opcjonalny tytuł powiadomienia. */
   title?: string
+  /** Treść komunikatu. */
   message: string
+  /** Typ powiadomienia. */
   type?: ToastType
+  /** Czas wyświetlania w ms. */
   duration?: number
+  /** Opcjonalna akcja do wykonania. */
   action?: ToastAction
 }
 
+/** Obiekt przechowywanego powiadomienia na liście stanów. */
 export interface ToastItemData extends Required<Omit<ToastOptions, 'title' | 'action'>> {
   id: string
   title?: string
@@ -30,6 +46,7 @@ export interface ToastItemData extends Required<Omit<ToastOptions, 'title' | 'ac
   createdAt: number
 }
 
+/** Typ pomocniczy dla skrótowych funkcji wywołania toast (np. toast.success("Komunikat")). */
 export type ToastHelperFn = (
   messageOrTitle: string,
   optionsOrMessage?: Omit<ToastOptions, 'message' | 'type'> | string,
@@ -49,8 +66,15 @@ interface ToastContextValue {
 
 const ToastContext = createContext<ToastContextValue | null>(null)
 
+/** Domyślny czas trwania powiadomienia toast (4000 ms). */
 export const DEFAULT_TOAST_DURATION = 4000
 
+/**
+ * Dostawca kontekstu powiadomień Toast dla aplikacji mobilnej.
+ *
+ * @param props Komponenty podrzędne.
+ * @returns Dostawca kontekstu React.
+ */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItemData[]>([])
 
@@ -132,6 +156,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return <ToastContext.Provider value={value}>{children}</ToastContext.Provider>
 }
 
+/**
+ * Hook dostępowy do kontekstu powiadomień mobilnych Toast.
+ *
+ * @returns Obiekt zarządcy powiadomień zawierający m.in. metody toast.success(), toast.error().
+ */
 export function useToast(): ToastContextValue {
   const context = useContext(ToastContext)
   if (!context) {

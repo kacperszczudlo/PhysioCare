@@ -1,15 +1,31 @@
+/**
+ * @file DataExportModal.tsx
+ * @description Komponent okna modalnego potwierdzającego żądanie eksportu danych osobowych użytkownika (RODO/GDPR).
+ */
+
 import { Modal, StyleSheet, Text, View } from 'react-native'
 
 import { Button } from '@/components/Button'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
+/** Właściwości komponentu {@link DataExportModal}. */
 interface DataExportModalProps {
+  /** Czy modal jest widoczny. */
   open: boolean
+  /** Czy trwa operacja generowania eksportu (blokuje akcje i pokazuje spinner). */
   busy?: boolean
+  /** Callback wywoływany przy próbie zamknięcia/anulowania. */
   onClose: () => void
+  /** Callback wywoływany po zatwierdzeniu eksportu. */
   onConfirm: () => void
 }
 
+/**
+ * Modal informacyjny i potwierdzający eksport danych pacjenta do pliku JSON.
+ *
+ * @param props Właściwości komponentu okna eksportu.
+ * @returns Element React Native prezentujący modal eksportu.
+ */
 export function DataExportModal({ open, busy = false, onClose, onConfirm }: DataExportModalProps) {
   function close() {
     if (!busy) {

@@ -1,3 +1,8 @@
+/**
+ * @file verify-email.tsx
+ * @description Ekran potwierdzania adresu e-mail za pomocą 6-cyfrowego kodu aktywacyjnego.
+ */
+
 import { Link, useLocalSearchParams, useRouter } from 'expo-router'
 import { useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
@@ -18,6 +23,11 @@ function firstParam(value: string | string[] | undefined): string {
   return (value ?? '').trim()
 }
 
+/**
+ * Ekran weryfikacji konta po rejestracji (wprowadzenie kodu OTP przesłanego na skrzynkę e-mail).
+ *
+ * @returns Element React Native prezentujący ekran potwierdzania adresu e-mail.
+ */
 export default function EmailVerifyScreen() {
   const { verifyEmail, resendEmailCode } = useAuth()
   const router = useRouter()

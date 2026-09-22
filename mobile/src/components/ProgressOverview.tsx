@@ -1,14 +1,25 @@
+/**
+ * @file ProgressOverview.tsx
+ * @description Podsumowanie postępów pacjenta w wykonywaniu zaleceń (wskaźnik dzisiejszy, kafelki wizyt oraz słupkowy wykres z 7 dni).
+ */
+
 import { useEffect, useState } from 'react'
 import { AccessibilityInfo, Animated, StyleSheet, Text, View, type ViewProps } from 'react-native'
 
 import type { DayProgress } from '@/lib/patientProgress'
 import { colors, motion, radius, space, typography } from '@/theme/tokens'
 
+/** Właściwości komponentu {@link ProgressOverview}. */
 interface ProgressOverviewProps extends ViewProps {
+  /** Liczba wykonanych dzisiaj zaleceń. */
   todayDone: number
+  /** Całkowita liczba zaleceń na dzisiaj. */
   todayTotal: number
+  /** Postęp w poszczególnych dniach tygodnia. */
   weekDays: DayProgress[]
+  /** Liczba zrealizowanych wizyt. */
   completedVisits: number
+  /** Liczba zaplanowanych nadchodzących wizyt. */
   upcomingVisits: number
 }
 
@@ -130,6 +141,12 @@ function WeekBar({ day, reduceMotion }: { day: DayProgress; reduceMotion: boolea
   )
 }
 
+/**
+ * Widok podsumowujący postępy pacjenta (dzisiejszy pasek postępu, liczniki wizyt oraz podgląd ostatnich 7 dni).
+ *
+ * @param props Właściwości podsumowania postępów.
+ * @returns Element React Native prezentujący statystyki i wykres.
+ */
 export function ProgressOverview({
   todayDone,
   todayTotal,

@@ -1,3 +1,8 @@
+/**
+ * @file BrandMark.tsx
+ * @description Komponent renderujący logo lub sygnet marki PhysioCare w różnych wariantach i rozmiarach.
+ */
+
 import {
   Image,
   StyleSheet,
@@ -10,11 +15,17 @@ import {
 
 import { colors, space, typography } from '@/theme/tokens'
 
+/**
+ * Właściwości komponentu {@link BrandMark}.
+ */
 type BrandMarkProps = {
-  /** Full lockup for auth heroes; sygnet for compact chrome. */
+  /** Wariant logo (pełny logotyp dla ekranów logowania lub sygnet dla nagłówka). */
   variant?: 'logo' | 'sygnet'
+  /** Rozmiar komponentu grafik (sm, md, lg). */
   size?: 'sm' | 'md' | 'lg'
+  /** Opcjonalne hasło/podpis pod logo. */
   tagline?: string
+  /** Opcjonalne style dla kontenera zewnętrznego. */
   style?: StyleProp<ViewStyle>
 }
 
@@ -34,6 +45,12 @@ const SIZES = {
   },
 } as const
 
+/**
+ * Wyświetla znak graficzny marki PhysioCare (wariant pełny lub sygnet) z opcjonalnym podpisem.
+ *
+ * @param props Właściwości konfiguracji widoku marki.
+ * @returns Element React Native prezentujący logo.
+ */
 export function BrandMark({ variant = 'logo', size = 'md', tagline, style }: BrandMarkProps) {
   const dims = SIZES[variant][size]
   return (

@@ -1,3 +1,9 @@
+/**
+ * @file peselPolicy.ts
+ * @description Zasady walidacji polskiego numeru PESEL (weryfikacja formatu 11 cyfr, dekodowanie daty urodzenia z uwzględnieniem stuleci oraz obliczanie sumy kontrolnej).
+ */
+
+/** Komunikaty błędów walidacji numeru PESEL */
 export const PESEL_MESSAGES = {
   required: 'Podaj numer PESEL.',
   invalidFormat: 'PESEL musi składać się z dokładnie 11 cyfr.',
@@ -8,6 +14,7 @@ export const PESEL_MESSAGES = {
 
 const PESEL_WEIGHTS = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3] as const
 
+/** Dekoduje i weryfikuje poprawność daty urodzenia zapisanej w numerze PESEL */
 function decodePeselBirthDate(digits: string): Date | null {
   const year = Number(digits.slice(0, 2))
   let month = Number(digits.slice(2, 4))
@@ -44,6 +51,7 @@ function decodePeselBirthDate(digits: string): Date | null {
   return date
 }
 
+/** Oblicza i sprawdza zgodność cyfry kontrolnej numeru PESEL */
 function hasValidChecksum(digits: string): boolean {
   const total = PESEL_WEIGHTS.reduce(
     (sum, weight, index) => sum + weight * Number(digits[index]),
@@ -53,6 +61,13 @@ function hasValidChecksum(digits: string): boolean {
   return control === Number(digits[10])
 }
 
+/**
+ * Weryfikuje poprawność 11-cyfrowego numeru PESEL.
+ *
+ * @param pesel - Numer PESEL w postaci ciągu cyfr.
+ * @param options - Opcja allowBlank pozwalająca na puste pole.
+ * @returns Komunikat błędu po polsku lub null w przypadku sprawnego numeru PESEL.
+ */
 export function getPeselError(pesel: string, { allowBlank = true } = {}): string | null {
   const value = pesel.trim()
   if (!value) {
@@ -72,3 +87,4 @@ export function getPeselError(pesel: string, { allowBlank = true } = {}): string
   }
   return null
 }
+

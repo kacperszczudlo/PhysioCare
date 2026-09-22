@@ -1,17 +1,32 @@
+/**
+ * @file Field.tsx
+ * @description Standardowe pole wprowadzania tekstu w formularzach z obsługą etykiety, błędów, wskazówek oraz przełącznika widoczności hasła.
+ */
+
 import { Ionicons } from '@expo/vector-icons'
 import { useState } from 'react'
 import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native'
 
 import { colors, controlSize, iconSize, radius, space, typography } from '@/theme/tokens'
 
+/** Właściwości komponentu {@link Field}. */
 interface FieldProps extends TextInputProps {
+  /** Etykieta pola tekstowego. */
   label: string
+  /** Opcjonalny komunikat błędu walidacji. */
   error?: string | null
+  /** Opcjonalny tekst pomocniczy/wskazówka. */
   hint?: string
-  /** When secureTextEntry is set, show a reveal toggle (default true). */
+  /** Gdy secureTextEntry jest włączone, określa czy pokazywać przycisk odsłaniania hasła (domyślnie true). */
   revealable?: boolean
 }
 
+/**
+ * Komponent uniwersalnego pola formularza z etykietą, komunikatem błędu oraz obsługą ukrywania/pokazywania hasła.
+ *
+ * @param props Właściwości pola tekstowego.
+ * @returns Element React Native prezentujący pole tekstowe.
+ */
 export function Field({
   label,
   error,

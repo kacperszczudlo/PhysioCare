@@ -1,3 +1,8 @@
+/**
+ * @file DateTimePickerField.tsx
+ * @description Komponent wyboru daty i godziny dostosowany do urządzeń mobilnych z kafelkami dni oraz bębnami przewijania godzin/minut.
+ */
+
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   NativeScrollEvent,
@@ -20,23 +25,47 @@ const DEFAULT_MINUTE_STEP = 15
 const CLINIC_START_HOUR = 7
 const CLINIC_END_HOUR = 20
 
+/** Właściwości komponentu {@link DateTimePickerField}. */
 interface DateTimePickerFieldProps {
+  /** Etykieta formularza. */
   label: string
+  /** Aktualnie wybrana data i godzina. */
   value: Date
+  /** Callback wywoływany po zmianie daty lub godziny. */
   onChange: (next: Date) => void
+  /** Opcjonalna wskazówka. */
   hint?: string
+  /** Opcjonalny komunikat błędu. */
   error?: string | null
+  /** Minimalna dopuszczalna data. */
   minimumDate?: Date
+  /** Liczba widocznych dni w kalendarzu. */
   dayCount?: number
+  /** Krok w minutach (domyślnie 15). */
   minuteStep?: number
+  /** Godzina rozpoczęcia pracy kliniki (domyślnie 7). */
   startHour?: number
+  /** Godzina zakończenia pracy kliniki (domyślnie 20). */
   endHour?: number
 }
 
+/**
+ * Zwraca początek wskazanego dnia (godzina 00:00:00.000).
+ *
+ * @param date Data do zerowania.
+ * @returns Nowy obiekt Date ustawiony na początek dnia.
+ */
 export function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate())
 }
 
+/**
+ * Sprawdza czy dwie daty oznaczają ten sam dzień kalendarzowy.
+ *
+ * @param a Pierwsza data.
+ * @param b Druga data.
+ * @returns True jeśli rok, miesiąc i dzień są identyczne.
+ */
 export function sameDay(a: Date, b: Date): boolean {
   return (
     a.getFullYear() === b.getFullYear() &&
@@ -45,6 +74,13 @@ export function sameDay(a: Date, b: Date): boolean {
   )
 }
 
+/**
+ * Ogranicza datę tak, by nie była wcześniejsza niż podany punkt odniesienia min.
+ *
+ * @param date Data wejściowa.
+ * @param min Minimalna dopuszczalna data.
+ * @returns Przetestowana i przycięta data.
+ */
 export function clampDate(date: Date, min?: Date): Date {
   if (!min) {
     return date
@@ -52,6 +88,13 @@ export function clampDate(date: Date, min?: Date): Date {
   return date.getTime() < min.getTime() ? new Date(min) : date
 }
 
+/**
+ * Buduje tablicę obiektów Date dla określonej liczby kolejnych dni.
+ *
+ * @param from Data początkowa.
+ * @param count Liczba dni do wygenerowania.
+ * @returns Tablica dat.
+ */
 export function buildDays(from: Date, count: number): Date[] {
   const base = startOfDay(from)
   return Array.from({ length: count }, (_, index) => {
@@ -61,6 +104,13 @@ export function buildDays(from: Date, count: number): Date[] {
   })
 }
 
+/**
+ * Buduje tablicę godzin z zakresu od startHour do endHour.
+ *
+ * @param startHour Godzina początkowa.
+ * @param endHour Godzina końcowa.
+ * @returns Tablica liczb reprezentujących godziny.
+ */
 export function buildHours(startHour: number, endHour: number): number[] {
   const hours: number[] = []
   for (let hour = startHour; hour <= endHour; hour += 1) {
@@ -69,6 +119,12 @@ export function buildHours(startHour: number, endHour: number): number[] {
   return hours
 }
 
+/**
+ * Buduje tablicę minut z określonym krokiem (np. 0, 15, 30, 45).
+ *
+ * @param step Krok w minutach.
+ * @returns Tablica minut.
+ */
 export function buildMinutes(step: number): number[] {
   const minutes: number[] = []
   for (let minute = 0; minute < 60; minute += step) {
@@ -77,6 +133,13 @@ export function buildMinutes(step: number): number[] {
   return minutes
 }
 
+/**
+ * Zaokrągla minuty do najbliższego wielokrotności kroku.
+ *
+ * @param minute Wartość minut.
+ * @param step Krok minuty.
+ * @returns Zaokrąglona wartość minut.
+ */
 export function snapMinute(minute: number, step: number): number {
   const snapped = Math.round(minute / step) * step
   return snapped === 60 ? 60 - step : snapped
@@ -108,6 +171,14 @@ function pad2(n: number): string {
   return String(n).padStart(2, '0')
 }
 
+/**
+ * Oblicza indeks pozycji bębna przewijania na podstawie przesunięcia pikselowego.
+ *
+ * @param offsetY Przesunięcie w pionie.
+ * @param length Liczba elementów na liście.
+ * @param itemHeight Wysokość pojedynczego elementu.
+ * @returns Indeks wskazanego elementu.
+ */
 export function indexFromOffset(
   offsetY: number,
   length: number,
@@ -235,6 +306,12 @@ function WheelColumn({
   )
 }
 
+/**
+ * Zaawansowane pole wyboru daty i godziny (wybór dnia z poziomej listy kafelków oraz godzin/minut za pomocą bębnów).
+ *
+ * @param props Właściwości konfiguracji pickera.
+ * @returns Element React Native do wyboru daty i godziny wizyty.
+ */
 export function DateTimePickerField({
   label,
   value,

@@ -1,18 +1,28 @@
+/**
+ * @file dataExport.ts
+ * @description Funkcje pomocnicze do generowania, zapisywania i udostępniania pliku JSON z pełnym eksportem danych osobowych RODO (Art. 15 / 20 GDPR).
+ */
+
 import * as FileSystem from 'expo-file-system'
 import { NativeModules, Platform, Share } from 'react-native'
 
 import type { PatientDataExport } from '@/api/types'
 
+/**
+ * Wynik operacji udostępnienia lub zapisu pliku eksportu danych pacjenta.
+ */
 export type DataExportResult =
   | { delivered: true; mode: 'shared' | 'saved'; uri: string; fileName: string }
   | { delivered: false; uri: string; fileName: string }
 
+/** Generuje nazwę pliku eksportu JSON na podstawie daty wykonania zrzutu */
 function exportFileName(exportedAt?: string): string {
   const raw = exportedAt?.slice(0, 10)
   const date = raw && /^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : new Date().toISOString().slice(0, 10)
   return `physiocare-dane-${date}.json`
 }
 
+/** Sprawdza, czy moduł natywny ExpoSharing jest zainstalowany i dostępny */
 function hasExpoSharingNativeModule(): boolean {
   return Boolean(
     (NativeModules as Record<string, unknown>).ExpoSharing ??
@@ -20,6 +30,7 @@ function hasExpoSharingNativeModule(): boolean {
   )
 }
 
+/** Wywołuje udostępnianie pliku z wykorzystaniem modułu ExpoSharing */
 async function shareWithExpoSharing(uri: string): Promise<boolean> {
   if (!hasExpoSharingNativeModule()) {
     return false
@@ -40,7 +51,7 @@ async function shareWithExpoSharing(uri: string): Promise<boolean> {
   }
 }
 
-/** iOS can attach a file:// URL via the built-in Share sheet. */
+/** Wywołuje systemowe okno udostępniania pliku w systemie iOS */
 async function shareFileOnIos(uri: string): Promise<boolean> {
   try {
     const result = await Share.share({
@@ -53,10 +64,7 @@ async function shareFileOnIos(uri: string): Promise<boolean> {
   }
 }
 
-/**
- * Android without expo-sharing: system folder picker + write a real .json file
- * (Downloads / Documents) via Storage Access Framework — already in expo-file-system.
- */
+/** Zapisuje plik JSON w wybranym folderze urządzenia z wykorzystaniem Storage Access Framework (SAF) na Androidzie */
 async function saveJsonViaSaf(
   fileName: string,
   contents: string,
@@ -83,8 +91,10 @@ async function saveJsonViaSaf(
 }
 
 /**
- * Builds a portable RODO export as a real `.json` file (industry default for
- * Art. 15/20 machine-readable access), then lets the user save or send it.
+ * Zapisuje i inicjuje udostępnienie pliku eksportu danych osobowych i medycznych pacjenta w formacie `.json` (zgodnie z wymogami Art. 15 RODO).
+ *
+ * @param payload - Ładunek danych zwrócony z zapytania `POST /me/data-export/`.
+ * @returns Wynik operacji (`DataExportResult`).
  */
 export async function sharePatientDataExport(
   payload: PatientDataExport,
@@ -118,6 +128,6 @@ export async function sharePatientDataExport(
     return { delivered: false, uri, fileName }
   }
 
-  // Web / other: leave file in cache; caller shows soft success.
   return { delivered: false, uri, fileName }
 }
+

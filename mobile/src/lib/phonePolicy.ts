@@ -1,3 +1,8 @@
+/**
+ * @file phonePolicy.ts
+ * @description Zasady walidacji oraz parsowania i formatowania numerów telefonów w standardzie międzynarodowym E.164.
+ */
+
 import {
   DEFAULT_COUNTRY_CODE,
   findCountryByDial,
@@ -5,26 +10,37 @@ import {
   type CountryDial,
 } from './countries'
 
+/** Komunikaty błędów dotyczące numeru telefonu */
 export const PHONE_MESSAGES = {
   required: 'Podaj numer telefonu.',
   invalid: 'Podaj prawidłowy numer telefonu (tylko cyfry numeru lokalnego).',
   tooLong: 'Numer telefonu może mieć co najwyżej 20 znaków.',
 } as const
 
+/** Struktura części składowych numeru telefonu */
 export interface PhoneParts {
+  /** Kod ISO kraju */
   countryCode: string
+  /** Krajowy numer telefonu (bez kierunkowego) */
   nationalNumber: string
 }
 
+/** Zwraca obiekt domyślnego kraju (Polska) */
 export function getDefaultCountry(): CountryDial {
   return getCountryByCode(DEFAULT_COUNTRY_CODE)!
 }
 
+/** Wyciąga z podanego ciągu znaków tylko cyfry */
 export function digitsOnly(value: string): string {
   return value.replace(/\D+/g, '')
 }
 
-/** Split stored E.164 (+48123456789) into country + national number. */
+/**
+ * Parsuje zapisany numer E.164 (np. +48123456789) na kod kraju oraz numer krajowy.
+ *
+ * @param value - Zapisany numer telefonu.
+ * @returns Obiekt `PhoneParts`.
+ */
 export function parseStoredPhone(value: string | null | undefined): PhoneParts {
   const raw = (value ?? '').trim()
   if (!raw) {
@@ -38,10 +54,19 @@ export function parseStoredPhone(value: string | null | undefined): PhoneParts {
   return { countryCode: country.code, nationalNumber: national }
 }
 
+/** Normalizuje krajowy numer telefonu, usuwając znaki niebędące cyframi */
 export function normalizeNationalNumber(value: string): string {
   return digitsOnly(value)
 }
 
+/**
+ * Waliduje krajowy numer telefonu przy podanym kodzie kraju.
+ *
+ * @param nationalNumber - Krajowy numer telefonu.
+ * @param countryCode - Kod ISO kraju.
+ * @param options - Opcja allowBlank pozwalająca na puste pole.
+ * @returns Komunikat błędu po polsku lub null w przypadku sprawnego numeru.
+ */
 export function getPhoneError(
   nationalNumber: string,
   countryCode: string,
@@ -67,6 +92,13 @@ export function getPhoneError(
   return null
 }
 
+/**
+ * Formatuje numer krajowy i kod kraju do pełnego ciągu E.164 akceptowanego przez backend API.
+ *
+ * @param nationalNumber - Krajowy numer telefonu.
+ * @param countryCode - Kod ISO kraju.
+ * @returns Sformatowany numer E.164 (np. "+48123456789") lub pusty ciąg.
+ */
 export function formatPhoneForApi(nationalNumber: string, countryCode: string): string {
   const national = normalizeNationalNumber(nationalNumber)
   if (!national) {
@@ -75,3 +107,4 @@ export function formatPhoneForApi(nationalNumber: string, countryCode: string): 
   const country = getCountryByCode(countryCode) ?? getDefaultCountry()
   return `+${country.dial}${national}`
 }
+

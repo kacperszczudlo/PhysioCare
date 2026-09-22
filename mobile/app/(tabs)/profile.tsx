@@ -1,6 +1,11 @@
+/**
+ * @file profile.tsx
+ * @description Ekran profilu użytkownika umożliwiający edycję danych osobowych, numeru telefonu, numeru PESEL i awatara.
+ */
+
 import { useFocusEffect, useRouter } from 'expo-router'
 import * as ImagePicker from 'expo-image-picker'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Image, RefreshControl, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage, getFieldError } from '@/api/client'
@@ -20,6 +25,11 @@ import { getPeselError } from '@/lib/peselPolicy'
 import { formatPhoneForApi, getPhoneError, parseStoredPhone } from '@/lib/phonePolicy'
 import { colors, space, typography } from '@/theme/tokens'
 
+/**
+ * Ekran edycji danych osobowych pacjenta oraz wyboru zdjęcia profilowego.
+ *
+ * @returns Element React Native prezentujący profil pacjenta.
+ */
 export default function ProfileScreen() {
   const router = useRouter()
   const { toast } = useToast()

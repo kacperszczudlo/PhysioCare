@@ -1,3 +1,8 @@
+/**
+ * @file ToastMobile.test.ts
+ * @description Testy jednostkowe logiki tworzenia i konfigurowania powiadomień mobilnych Toast.
+ */
+
 import { describe, it, expect, vi } from 'vitest'
 import {
   DEFAULT_TOAST_DURATION,
@@ -12,7 +17,8 @@ vi.mock('react-native', () => ({
 }))
 
 describe('Mobile Toast Logic & Helpers', () => {
-  it('creates a correctly structured toast item', () => {
+  it('tworzy poprawnie ustrukturyzowane powiadomienie toast', () => {
+    // Arrange
     const options: ToastOptions = {
       title: 'Powiadomienie',
       message: 'Operacja powiodła się',
@@ -20,6 +26,7 @@ describe('Mobile Toast Logic & Helpers', () => {
       duration: 3000,
     }
 
+    // Act
     const toastItem: ToastItemData = {
       id: 'test-id-1',
       title: options.title,
@@ -29,6 +36,7 @@ describe('Mobile Toast Logic & Helpers', () => {
       createdAt: Date.now(),
     }
 
+    // Assert
     expect(toastItem.id).toBe('test-id-1')
     expect(toastItem.title).toBe('Powiadomienie')
     expect(toastItem.message).toBe('Operacja powiodła się')
@@ -36,11 +44,13 @@ describe('Mobile Toast Logic & Helpers', () => {
     expect(toastItem.duration).toBe(3000)
   })
 
-  it('uses DEFAULT_TOAST_DURATION when duration is omitted', () => {
+  it('używa DEFAULT_TOAST_DURATION gdy czas trwania nie jest podany', () => {
+    // Arrange & Act & Assert
     expect(DEFAULT_TOAST_DURATION).toBe(4000)
   })
 
-  it('supports action callback payload in toast options', () => {
+  it('obsługuje callback przycisku akcji w opcjach toastu', () => {
+    // Arrange
     const actionMock = vi.fn()
     const options: ToastOptions = {
       message: 'Usunięto wpis',
@@ -51,8 +61,11 @@ describe('Mobile Toast Logic & Helpers', () => {
       },
     }
 
-    expect(options.action?.label).toBe('Cofnij')
+    // Act
     options.action?.onPress()
+
+    // Assert
+    expect(options.action?.label).toBe('Cofnij')
     expect(actionMock).toHaveBeenCalledTimes(1)
   })
 })

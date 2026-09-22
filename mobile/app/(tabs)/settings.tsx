@@ -1,16 +1,19 @@
+/**
+ * @file settings.tsx
+ * @description Ekran ustawień konta, preferencji powiadomień, zgód RODO, eksportu danych oraz usuwania konta.
+ */
+
 import { Link, useFocusEffect, useRouter } from 'expo-router'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   Linking,
   Platform,
-  Pressable,
   RefreshControl,
   StyleSheet,
   Switch,
   Text,
   View,
 } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
 
 import { authApi } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'
@@ -42,8 +45,13 @@ import {
   unregisterPushToken,
   type PushPermissionStatus,
 } from '@/notifications/push'
-import { colors, radius, space, typography } from '@/theme/tokens'
+import { colors, space, typography } from '@/theme/tokens'
 
+/**
+ * Ekran ustawień aplikacji mobilnej zarządzający powiadomieniami, zgodami RODO, zmianą hasła i usunięciem konta.
+ *
+ * @returns Element React Native prezentujący ekran ustawień.
+ */
 export default function SettingsScreen() {
   const { logout, user } = useAuth()
   const router = useRouter()

@@ -1,3 +1,8 @@
+/**
+ * @file password-reset.tsx
+ * @description Ekran wielokrokowego procesu resetowania hasła (żądanie kodu, weryfikacja kodu 6-cyfrowego, zmiana hasła).
+ */
+
 import { Link, useLocalSearchParams, useRouter, type Href } from 'expo-router'
 import { useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
@@ -19,6 +24,7 @@ import {
 } from '@/lib/passwordPolicy'
 import { colors, space, typography } from '@/theme/tokens'
 
+/** Krok w formularzu resetu hasła. */
 type Step = 'request' | 'code' | 'password'
 
 function firstParam(value: string | string[] | undefined): string {
@@ -28,6 +34,11 @@ function firstParam(value: string | string[] | undefined): string {
   return (value ?? '').trim()
 }
 
+/**
+ * Ekran resetu/odzyskiwania hasła z trzyetapowym procesem weryfikacji dwuskładnikowej przez e-mail.
+ *
+ * @returns Element React Native prezentujący ekran resetowania hasła.
+ */
 export default function PasswordResetScreen() {
   const {
     requestPasswordReset,

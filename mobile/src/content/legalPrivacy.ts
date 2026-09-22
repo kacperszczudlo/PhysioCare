@@ -1,17 +1,30 @@
+/**
+ * @file legalPrivacy.ts
+ * @description Teksty i struktury sekcji prawnej (Polityka Prywatności oraz Polityka Plików Cookie / PKE) wyświetlane w aplikacji mobilnej.
+ */
+
 import { DATA_CONTROLLER } from '@/content/dataController'
 
+/**
+ * Struktura pojedynczej sekcji dokumentu prawnego.
+ */
 export type LegalSection = {
+  /** Identyfikator sekcji */
   id: string
+  /** Tytuł nagłówkowy sekcji */
   title: string
+  /** Treść akapitów sekcji */
   paragraphs: string[]
 }
 
+/** Meta-informacje o aktualnej wersji polityki prywatności */
 export const PRIVACY_META = {
   title: 'Polityka prywatności',
   version: '1.1',
   updatedAt: '8 września 2026 r.',
 }
 
+/** Sekcje polityki prywatności systemu PhysioCare */
 export const PRIVACY_SECTIONS: LegalSection[] = [
   {
     id: 'summary',
@@ -81,6 +94,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   },
 ]
 
+/** Sekcje dokumentu dotyczącego plików cookie oraz pamięci lokalnej (PKE) */
 export const COOKIE_SECTIONS: LegalSection[] = [
   {
     id: 'essential',
@@ -98,3 +112,4 @@ export const COOKIE_SECTIONS: LegalSection[] = [
     ],
   },
 ]
+

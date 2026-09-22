@@ -1,3 +1,14 @@
+/**
+ * @file format.ts
+ * @description Moduł funkcji pomocniczych do formatowania dat, godzin, zakresów czasowych oraz mapowania kluczy statusów na polskie etykiety.
+ */
+
+/**
+ * Formatuje pełną datę i godzinę w formacie polskim (np. "wt., 22 wrz, 14:30").
+ *
+ * @param iso - Data i czas w formacie ISO-8601.
+ * @returns Sformatowana data.
+ */
 export function formatDateTime(iso: string): string {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) {
@@ -12,6 +23,12 @@ export function formatDateTime(iso: string): string {
   }).format(date)
 }
 
+/**
+ * Formatuje samą datę w języku polskim (np. "22 września 2026").
+ *
+ * @param iso - Data w formacie ISO-8601.
+ * @returns Sformatowana data.
+ */
 export function formatDate(iso: string): string {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) {
@@ -24,6 +41,13 @@ export function formatDate(iso: string): string {
   }).format(date)
 }
 
+/**
+ * Formatuje przedział godzinowy wizyty (np. "14:00-14:45").
+ *
+ * @param startIso - Czas rozpoczęcia w formacie ISO.
+ * @param endIso - Czas zakończenia w formacie ISO.
+ * @returns Sformatowany zakres godzin.
+ */
 export function formatTimeRange(startIso: string, endIso: string): string {
   const start = new Date(startIso)
   const end = new Date(endIso)
@@ -37,6 +61,11 @@ export function formatTimeRange(startIso: string, endIso: string): string {
   return `${fmt.format(start)}-${fmt.format(end)}`
 }
 
+/**
+ * Zwraca dzisiejszą datę w formacie RRRR-MM-DD.
+ *
+ * @returns Ciąg znaków daty (np. "2026-09-22").
+ */
 export function todayISODate(): string {
   const now = new Date()
   const y = now.getFullYear()
@@ -45,12 +74,25 @@ export function todayISODate(): string {
   return `${y}-${m}-${d}`
 }
 
+/**
+ * Dodaje określoną liczbę minut do podanego czasu ISO.
+ *
+ * @param iso - Czas początkowy w formacie ISO.
+ * @param minutes - Liczba minut do dodania.
+ * @returns Nowy czas w formacie ISO.
+ */
 export function addMinutesISO(iso: string, minutes: number): string {
   const date = new Date(iso)
   date.setMinutes(date.getMinutes() + minutes)
   return date.toISOString()
 }
 
+/**
+ * Zwraca polską czytelną etykietę dla statusu wizyty.
+ *
+ * @param status - Kod statusu wizyty (np. 'SCHEDULED').
+ * @returns Nazwa statusu po polsku.
+ */
 export function visitStatusLabel(status: string): string {
   switch (status) {
     case 'PENDING_APPROVAL':
@@ -68,6 +110,12 @@ export function visitStatusLabel(status: string): string {
   }
 }
 
+/**
+ * Zwraca polską czytelną etykietę dla typu zgody prawnej.
+ *
+ * @param type - Kod zgody (np. 'TERMS_REQUIRED').
+ * @returns Nazwa zgody po polsku.
+ */
 export function consentLabel(type: string): string {
   switch (type) {
     case 'TERMS_REQUIRED':
@@ -83,10 +131,17 @@ export function consentLabel(type: string): string {
   }
 }
 
+/**
+ * Sprawdza, czy podany kod zgody jest zgodą obowiazkową do korzystania z systemu.
+ *
+ * @param type - Kod zgody.
+ * @returns True jeśli zgoda jest wymagana.
+ */
 export function isRequiredConsent(type: string): boolean {
   return type === 'TERMS_REQUIRED' || type === 'MEDICAL_DATA_REQUIRED'
 }
 
+/** Słownik domyślnych etykiet dla preferencji powiadomień Push */
 export const DEFAULT_NOTIFICATION_PREFS: Record<string, string> = {
   visit_reminder: 'Przypomnienia o wizytach',
   visit_change: 'Zmiany terminów',
@@ -94,3 +149,4 @@ export const DEFAULT_NOTIFICATION_PREFS: Record<string, string> = {
   exercise_reminder: 'Przypomnienia o ćwiczeniach',
   new_document: 'Nowe dokumenty',
 }
+

@@ -1,7 +1,14 @@
+/**
+ * @file passwordPolicy.ts
+ * @description Zasady walidacji haseł użytkowników (wymogi długości, znaki specjalne, wykluczenie haseł numerycznych oraz podobieństwa do danych osobowych).
+ */
+
+/** Minimalna dopuszczalna długość hasła w znakach */
 export const MIN_PASSWORD_LENGTH = 8
 
 const SPECIAL_CHAR_PATTERN = /[^A-Za-z0-9_]/
 
+/** Komunikaty błędów walidacji hasła w języku polskim */
 export const PASSWORD_MESSAGES = {
   tooShort: `Hasło musi mieć co najmniej ${MIN_PASSWORD_LENGTH} znaków.`,
   entirelyNumeric: 'Hasło nie może składać się wyłącznie z cyfr.',
@@ -11,14 +18,17 @@ export const PASSWORD_MESSAGES = {
   mismatch: 'Hasła nie są identyczne.',
 } as const
 
+/** Identyfikatory poszczególnych reguł siły hasła */
 export type PasswordRequirementId = 'minLength' | 'notNumeric' | 'hasSpecial' | 'notSimilar'
 
+/** Struktura pojedynczego wymogu dotyczącego hasła z wskaźnikiem jego spełnienia */
 export interface PasswordRequirement {
   id: PasswordRequirementId
   label: string
   met: boolean
 }
 
+/** Dane pomocnicze użytkownika służące do weryfikacji braku podobieństwa hasła */
 export interface PasswordUserHints {
   email?: string
   firstName?: string
@@ -48,10 +58,23 @@ function attributeFragments(hints: PasswordUserHints): string[] {
   return fragments
 }
 
+/**
+ * Sprawdza, czy hasło zawiera co najmniej jeden znak specjalny.
+ *
+ * @param password - Wprowadzone hasło.
+ * @returns True jeśli hasło zawiera znak specjalny.
+ */
 export function hasSpecialCharacter(password: string): boolean {
   return SPECIAL_CHAR_PATTERN.test(password)
 }
 
+/**
+ * Sprawdza, czy wpisane hasło zawiera w sobie fragmenty e-maila, imienia lub nazwiska.
+ *
+ * @param password - Hasło do przetestowania.
+ * @param hints - Dane profilowe użytkownika.
+ * @returns True jeśli hasło jest zbyt podobne.
+ */
 export function isPasswordTooSimilar(password: string, hints: PasswordUserHints): boolean {
   const pw = normalize(password)
   if (pw.length < 3) {
@@ -62,6 +85,13 @@ export function isPasswordTooSimilar(password: string, hints: PasswordUserHints)
   )
 }
 
+/**
+ * Zwraca listę poszczególnych wymagań siły hasła ze statusem ich spełnienia.
+ *
+ * @param password - Testowane hasło.
+ * @param hints - Opcjonalne dane użytkownika.
+ * @returns Lista obiektów `PasswordRequirement`.
+ */
 export function getPasswordRequirements(
   password: string,
   hints: PasswordUserHints = {},
@@ -95,6 +125,13 @@ export function getPasswordRequirements(
   return requirements
 }
 
+/**
+ * Zwraca opis pierwszego niespełnionego błędu polityki haseł.
+ *
+ * @param password - Wpisane hasło.
+ * @param hints - Wskazówki danych osobowych.
+ * @returns Komunikat błędu po polsku lub null w przypadku sprawnego hasła.
+ */
 export function getPasswordError(password: string, hints: PasswordUserHints = {}): string | null {
   if (!password) {
     return PASSWORD_MESSAGES.required
@@ -114,6 +151,14 @@ export function getPasswordError(password: string, hints: PasswordUserHints = {}
   return null
 }
 
+/**
+ * Sprawdza, czy podane dwa hasła są ze sobą tożsame.
+ *
+ * @param password - Pierwsze hasło.
+ * @param confirm - Powtórzone nowe hasło.
+ * @returns True jeśli hasła pasują do siebie.
+ */
 export function passwordsMatch(password: string, confirm: string): boolean {
   return password.length > 0 && password === confirm
 }
+

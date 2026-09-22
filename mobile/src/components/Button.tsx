@@ -1,15 +1,31 @@
+/**
+ * @file Button.tsx
+ * @description Komponent przycisku z obsługą stany ładowania, wariantów kolorystycznych i niedostępności.
+ */
+
 import { ActivityIndicator, Pressable, StyleSheet, Text, type PressableProps } from 'react-native'
 
 import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
+/** Wariant stylistyczny przycisku. */
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost'
 
+/** Właściwości komponentu {@link Button}. */
 interface ButtonProps extends PressableProps {
+  /** Etykieta tekstowa wyświetlana na przycisku. */
   title: string
+  /** Czy przycisk jest w stanie ładowania (wyświetla wskaźnik akcji). */
   loading?: boolean
+  /** Wariant wizualny przycisku. */
   variant?: Variant
 }
 
+/**
+ * Standardowy przycisk aplikacji PhysioCare wspierający różne warianty kolorystyczne i wskaźnik ładowania.
+ *
+ * @param props Właściwości przycisku.
+ * @returns Element React Native typu Pressable z odpowiednią stylizacją.
+ */
 export function Button({
   title,
   loading = false,

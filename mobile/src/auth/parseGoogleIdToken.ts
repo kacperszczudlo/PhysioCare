@@ -1,11 +1,21 @@
-/** Decode JWT payload without verifying signature (UI prefill only). */
+/**
+ * @file parseGoogleIdToken.ts
+ * @description Dekodowanie ładunku tokena JWT z Google (ID Token) bez weryfikacji podpisu w celu wstępnego uzupełnienia pól profilowych (imię, nazwisko, e-mail).
+ */
 
+/**
+ * Dane użytkownika odczytane z roszczeń (claims) tokena tożsamości Google.
+ */
 export type GoogleIdTokenClaims = {
+  /** Adres e-mail konta Google */
   email?: string
+  /** Imię z profilu Google (`given_name`) */
   first_name?: string
+  /** Nazwisko z profilu Google (`family_name`) */
   last_name?: string
 }
 
+/** Dekoduje ciąg znaków zakodowany w Base64 do tekstu w formacie UTF-8 */
 function decodeBase64Utf8(base64Str: string): string {
   const binary = globalThis.atob(base64Str)
   if (typeof TextDecoder !== 'undefined') {
@@ -26,6 +36,7 @@ function decodeBase64Utf8(base64Str: string): string {
   }
 }
 
+/** Parsuje ładunek (payload) tokena JWT */
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
     const part = token.split('.')[1]
@@ -41,7 +52,12 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   }
 }
 
-/** Extract email / given_name / family_name from a Google ID token for form prefill. */
+/**
+ * Dekoduje token ID z usługi Google i wyciąga pola `email`, `given_name` oraz `family_name`.
+ *
+ * @param credential - Surowy token ID z Google.
+ * @returns Odczytane roszczenia profilowe (`GoogleIdTokenClaims`).
+ */
 export function parseGoogleIdTokenClaims(credential: string): GoogleIdTokenClaims {
   const payload = decodeJwtPayload(credential)
   if (!payload) {
@@ -53,3 +69,4 @@ export function parseGoogleIdTokenClaims(credential: string): GoogleIdTokenClaim
     last_name: typeof payload.family_name === 'string' ? payload.family_name : undefined,
   }
 }
+

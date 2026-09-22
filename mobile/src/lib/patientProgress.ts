@@ -1,17 +1,29 @@
+/**
+ * @file patientProgress.ts
+ * @description Moduł obliczania statystyk i postępu pacjenta (zrealizowane ćwiczenia w ujęciu tygodniowym, zrealizowane oraz nadchodzące wizyty).
+ */
+
 import type { ExercisePlanItem, Visit } from '@/api/types'
 
+/**
+ * Postęp wykonywania ćwiczeń w konkretnym dniu kalendarzowym.
+ */
 export interface DayProgress {
-  /** Local calendar date YYYY-MM-DD */
+  /** Data w formacie RRRR-MM-DD */
   date: string
-  /** Short weekday label in pl-PL, e.g. "pn" */
+  /** Krótka nazwa dnia tygodnia (np. "pn", "wt") */
   label: string
+  /** Liczba wykonanych ćwiczeń w danym dniu */
   done: number
+  /** Łączna liczba przypisanych ćwiczeń na ten dzień */
   total: number
-  /** 0–1 completion ratio; 0 when nothing was assigned that day */
+  /** Współczynnik ukończenia od 0 do 1 (0 w przypadku braku ćwiczeń) */
   ratio: number
+  /** Czy dany dzień jest dniem dzisiejszym */
   isToday: boolean
 }
 
+/** Zamienia obiekt Date na lokalny ciąg znaków RRRR-MM-DD */
 function toLocalISODate(date: Date): string {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
@@ -19,16 +31,25 @@ function toLocalISODate(date: Date): string {
   return `${y}-${m}-${d}`
 }
 
+/** Zwraca obiekt Date wyzerowany do godziny 00:00:00.000 */
 function startOfLocalDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate())
 }
 
+/** Parsuje ciąg daty RRRR-MM-DD na lokalny obiekt Date */
 function parseISODateLocal(iso: string): Date {
   const [y, m, d] = iso.split('-').map(Number)
   return new Date(y, (m ?? 1) - 1, d ?? 1)
 }
 
-/** Last `days` calendar days inclusive, ending today. */
+/**
+ * Oblicza dzienny postęp wykonywania planu ćwiczeń dla ostatnich N dni (domyślnie 7).
+ *
+ * @param assignments - Lista przypisanych zadań treningowych.
+ * @param days - Liczba dni wstecz do uwzględnienia (domyślnie 7).
+ * @param now - Aktualna data referencyjna.
+ * @returns Tablica obiektów `DayProgress` reprezentująca postęp dzień po dniu.
+ */
 export function buildWeekExerciseProgress(
   assignments: ExercisePlanItem[],
   days = 7,
@@ -71,10 +92,23 @@ export function buildWeekExerciseProgress(
   return result
 }
 
+/**
+ * Zlicza liczbę wizyt o statucie 'COMPLETED' (zakończone).
+ *
+ * @param visits - Lista wizyt pacjenta.
+ * @returns Liczba zakończonych wizyt.
+ */
 export function countCompletedVisits(visits: Visit[]): number {
   return visits.filter((v) => v.status === 'COMPLETED').length
 }
 
+/**
+ * Zlicza liczbę zaplanowanych lub oczekujących wizyt.
+ *
+ * @param visits - Lista wizyt pacjenta.
+ * @returns Liczba nadchodzących wizyt.
+ */
 export function countUpcomingVisits(visits: Visit[]): number {
   return visits.filter((v) => v.status === 'SCHEDULED' || v.status === 'PENDING_APPROVAL').length
 }
+
