@@ -1,3 +1,8 @@
+/**
+ * @file register.tsx
+ * @description Ekran rejestracji nowego konta pacjenta z obsługą haseł, zgód RODO/medycznych oraz SSO Google.
+ */
+
 import { Link, useRouter, type Href } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
@@ -31,6 +36,11 @@ import {
 import { formatPhoneForApi, getPhoneError } from '@/lib/phonePolicy'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
+/**
+ * Ekran zakładania nowego konta pacjenta z walidacją pól i zgodami prawnymi.
+ *
+ * @returns Element React Native prezentujący ekran rejestracji.
+ */
 export default function RegisterScreen() {
   const { register } = useAuth()
   const router = useRouter()
@@ -467,6 +477,12 @@ export default function RegisterScreen() {
   )
 }
 
+/**
+ * Przełącznik akceptacji zgody (checkbox z etykietą).
+ *
+ * @param props Właściwości pola zgody.
+ * @returns Element React Native typu Pressable ze stanem checkboxa.
+ */
 function ConsentToggle({
   label,
   checked,

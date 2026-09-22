@@ -1,3 +1,8 @@
+/**
+ * @file account-deletion.tsx
+ * @description Ekran informacyjny dotyczący procedury usuwania konta pacjenta i anonimizacji danych osobowych.
+ */
+
 import { Link } from 'expo-router'
 import * as Linking from 'expo-linking'
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native'
@@ -5,6 +10,11 @@ import { Pressable, ScrollView, StyleSheet, Text } from 'react-native'
 import { ACCOUNT_DELETION_MAILTO, DATA_CONTROLLER } from '@/content/dataController'
 import { colors, space, typography } from '@/theme/tokens'
 
+/**
+ * Ekran z instrukcją krok po kroku jak usunąć konto w aplikacji mobilnej lub złożyć wniosek drogą mailową.
+ *
+ * @returns Element React Native prezentujący instrukcję usuwania konta.
+ */
 export default function AccountDeletionScreen() {
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>

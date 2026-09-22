@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 import pytest
 from django.utils import timezone
@@ -6,10 +7,22 @@ from rest_framework import status
 
 from scheduling.models import Visit, VisitStatus
 
+if TYPE_CHECKING:
+    from rest_framework.test import APIClient
+
+    from patients.models import PatientProfile
+    from scheduling.models import TherapyType
+    from therapists.models import TherapistProfile
+
 
 @pytest.mark.django_db
-def test_valid_visit_status_lifecycle(therapist, patient, therapy_type):
+def test_valid_visit_status_lifecycle(
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+    therapy_type: 'TherapyType',
+) -> None:
     """Przejścia stanów: SCHEDULED -> COMPLETED oraz SCHEDULED -> CANCELLED."""
+    # Arrange
     now = timezone.now()
     visit = Visit.objects.create(
         patient=patient,
@@ -20,13 +33,12 @@ def test_valid_visit_status_lifecycle(therapist, patient, therapy_type):
         status=VisitStatus.SCHEDULED,
     )
 
-    # Transition to COMPLETED
     visit.status = VisitStatus.COMPLETED
     visit.save()
     visit.refresh_from_db()
+    # Assert
     assert visit.status == VisitStatus.COMPLETED
 
-    # Create another visit for cancellation
     visit2 = Visit.objects.create(
         patient=patient,
         therapist=therapist,
@@ -42,8 +54,14 @@ def test_valid_visit_status_lifecycle(therapist, patient, therapy_type):
 
 
 @pytest.mark.django_db
-def test_cancel_visit_via_api(api_client, therapist, patient, therapy_type):
+def test_cancel_visit_via_api(
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+    therapy_type: 'TherapyType',
+) -> None:
     """Anulowanie zaplanowanej wizyty przez API z użyciem dedykowanego endpointu."""
+    # Arrange
     now = timezone.now()
     visit = Visit.objects.create(
         patient=patient,
@@ -55,20 +73,28 @@ def test_cancel_visit_via_api(api_client, therapist, patient, therapy_type):
     )
 
     api_client.force_authenticate(user=therapist.user)
+    # Act
     response = api_client.post(
         f'/api/v1/visits/{visit.id}/cancel/',
         data={'reason': 'Pacjent odwołał wizytę telefonicznie'},
         format='json',
     )
 
+    # Assert
     assert response.status_code == status.HTTP_200_OK
     visit.refresh_from_db()
     assert visit.status == VisitStatus.CANCELLED
 
 
 @pytest.mark.django_db
-def test_cannot_cancel_already_cancelled_visit(api_client, therapist, patient, therapy_type):
+def test_cannot_cancel_already_cancelled_visit(
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+    therapy_type: 'TherapyType',
+) -> None:
     """Próba ponownego anulowania już odwołanej wizyty powinna zostać odrzucona (HTTP 400)."""
+    # Arrange
     now = timezone.now()
     visit = Visit.objects.create(
         patient=patient,
@@ -80,11 +106,14 @@ def test_cannot_cancel_already_cancelled_visit(api_client, therapist, patient, t
     )
 
     api_client.force_authenticate(user=therapist.user)
+    # Act
     response = api_client.post(
         f'/api/v1/visits/{visit.id}/cancel/',
         data={'reason': 'Ponowna próba anulowania'},
         format='json',
     )
 
+    # Assert
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.data['error']['code'] in ['INVALID', 'VALIDATION_ERROR', 'ALREADY_CANCELLED', 'VISIT_NOT_CANCELLABLE']
+

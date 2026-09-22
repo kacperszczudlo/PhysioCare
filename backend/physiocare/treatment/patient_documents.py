@@ -1,14 +1,6 @@
-"""
-Budowa skrzynki dokumentacji klinicznej dla pacjenta.
-
-Wystawienie przez terapeutę = automatyczna widoczność dla pacjenta
-(bez osobnego kroku „wyślij PDF”).
-"""
-
 from __future__ import annotations
 
 import contextlib
-from typing import Any
 
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -25,13 +17,13 @@ from treatment.models import (
     RecommendationType,
 )
 
-KIND_RECOMMENDATION = 'recommendation'
-KIND_DEVICE_ORDER = 'device_order'
-KIND_REFUSAL = 'refusal'
-KIND_RECEPTA = 'recepta_na_ruch'
-KIND_PDF = 'pdf'
+KIND_RECOMMENDATION: str = 'recommendation'
+KIND_DEVICE_ORDER: str = 'device_order'
+KIND_REFUSAL: str = 'refusal'
+KIND_RECEPTA: str = 'recepta_na_ruch'
+KIND_PDF: str = 'pdf'
 
-KIND_LABELS = {
+KIND_LABELS: dict[str, str] = {
     KIND_RECOMMENDATION: 'Kierowanie',
     KIND_DEVICE_ORDER: 'Wyrób medyczny',
     KIND_REFUSAL: 'Odmowa zabiegu',
@@ -39,35 +31,101 @@ KIND_LABELS = {
     KIND_PDF: 'Dokument PDF',
 }
 
-REFUSAL_PATIENT_NOTICE = (
+REFUSAL_PATIENT_NOTICE: str = (
     'Twój fizjoterapeuta odmówił wykonania zlecenia lekarskiego. '
     'Skonsultuj się z lekarzem prowadzącym.'
 )
 
 
-def _therapist_name(therapist) -> str:
-    user = therapist.user
-    name = f'{user.first_name} {user.last_name}'.strip()
-    return name or user.email
+
+def _therapist_name(therapist: object) -> str:
+    """Tworzy czytelne imię i nazwisko fizjoterapeuty lub zwraca jego e-mail.
+
+    Args:
+        therapist (object): Obiekt fizjoterapeuty.
+
+    Returns:
+        str: Imię i nazwisko lub e-mail.
+    """
+    if therapist is None:
+        return ''
+    user = therapist.user if hasattr(therapist, 'user') else None
+    if user is None:
+        return ''
+    first_name = user.first_name if hasattr(user, 'first_name') else ''
+    last_name = user.last_name if hasattr(user, 'last_name') else ''
+    email = user.email if hasattr(user, 'email') else ''
+    name = f'{first_name} {last_name}'.strip()
+    return name or email
 
 
-def _choice_label(choices, value: str) -> str:
+def _choice_label(choices: object, value: str) -> str:
+    """Zwraca etykietę opcji z listy wyboru Django Choices.
+
+    Args:
+        choices (object): Lista lub krotka opcji wyboru (tuple/list choices).
+        value (str): Wartość klucza.
+
+    Returns:
+        str: Etykieta opcji lub oryginalna wartość.
+
+    Raises:
+        TypeError: Gdy argumenty mają niepoprawne typy.
+    """
+    if not isinstance(choices, (list, tuple, dict)):
+        raise TypeError('Parametr choices musi być listą, krotką lub słownikiem.')
+    if not isinstance(value, str):
+        raise TypeError('Parametr value musi być ciągiem znaków.')
     return dict(choices).get(value, value)
 
 
 def _item(
     *,
     kind: str,
-    obj_id,
+    obj_id: object,
     title: str,
     summary: str,
-    created_at,
+    created_at: object,
     therapist_name: str,
-    episode_id=None,
+    episode_id: object = None,
     status: str | None = None,
     file_url: str | None = None,
-    details: dict[str, Any] | None = None,
-) -> dict[str, Any]:
+    details: dict[str, object] | None = None,
+) -> dict[str, object]:
+    """Buduje ustrukturyzowany słownik elementu dokumentacji pacjenta.
+
+    Args:
+        kind (str): Rodzaj dokumentu.
+        obj_id (object): Identyfikator obiektu.
+        title (str): Tytuł dokumentu.
+        summary (str): Podsumowanie dokumentu.
+        created_at (object): Data utworzenia.
+        therapist_name (str): Imię i nazwisko wystawiającego fizjoterapeuty.
+        episode_id (object): Opcjonalny identyfikator epizodu leczenia.
+        status (str | None): Opcjonalny status dokumentu.
+        file_url (str | None): Opcjonalna ścieżka pobierania pliku.
+        details (dict[str, object] | None): Szczegółowe metadane dokumentu.
+
+    Returns:
+        dict[str, object]: Słownik pojedynczej pozycji w historii dokumentacji.
+
+    Raises:
+        TypeError: Gdy parametry mają niepoprawny typ.
+    """
+    if not isinstance(kind, str):
+        raise TypeError('Parametr kind musi być ciągiem znaków.')
+    if not isinstance(title, str):
+        raise TypeError('Parametr title musi być ciągiem znaków.')
+    if not isinstance(summary, str):
+        raise TypeError('Parametr summary musi być ciągiem znaków.')
+    if not isinstance(therapist_name, str):
+        raise TypeError('Parametr therapist_name musi być ciągiem znaków.')
+    if status is not None and not isinstance(status, str):
+        raise TypeError('Parametr status musi być ciągiem znaków lub None.')
+    if file_url is not None and not isinstance(file_url, str):
+        raise TypeError('Parametr file_url musi być ciągiem znaków lub None.')
+    if details is not None and not isinstance(details, dict):
+        raise TypeError('Parametr details musi być słownikiem lub None.')
     return {
         'id': str(obj_id),
         'kind': kind,
@@ -83,7 +141,20 @@ def _item(
     }
 
 
-def serialize_recommendation(rec: DiagnosticRecommendation) -> dict[str, Any]:
+def serialize_recommendation(rec: DiagnosticRecommendation) -> dict[str, object]:
+    """Serializuje rekomendację diagnostyczną do postaci podsumowania w historii pacjenta.
+
+    Args:
+        rec (DiagnosticRecommendation): Obiekt rekomendacji.
+
+    Returns:
+        dict[str, object]: Zserializowany słownik danych rekomendacji.
+
+    Raises:
+        TypeError: Gdy parametr rec ma nieprawidłowy typ.
+    """
+    if not isinstance(rec, DiagnosticRecommendation):
+        raise TypeError('Parametr rec musi być instancją DiagnosticRecommendation.')
     type_label = _choice_label(RecommendationType.choices, rec.recommendation_type)
     parts = [type_label]
     if rec.target_specialty:
@@ -116,7 +187,20 @@ def serialize_recommendation(rec: DiagnosticRecommendation) -> dict[str, Any]:
     )
 
 
-def serialize_device_order(order: MedicalDeviceOrder) -> dict[str, Any]:
+def serialize_device_order(order: MedicalDeviceOrder) -> dict[str, object]:
+    """Serializuje zlecenie na wyrób medyczny do postaci podsumowania w historii pacjenta.
+
+    Args:
+        order (MedicalDeviceOrder): Obiekt zlecenia wyrobu.
+
+    Returns:
+        dict[str, object]: Zserializowany słownik zlecenia wyrobu medycznego.
+
+    Raises:
+        TypeError: Gdy parametr order ma nieprawidłowy typ.
+    """
+    if not isinstance(order, MedicalDeviceOrder):
+        raise TypeError('Parametr order musi być instancją MedicalDeviceOrder.')
     side_label = _choice_label(
         (
             ('LEFT', 'lewa'),
@@ -160,7 +244,20 @@ def serialize_device_order(order: MedicalDeviceOrder) -> dict[str, Any]:
     )
 
 
-def serialize_refusal(refusal: PhysicianOrderRefusal) -> dict[str, Any]:
+def serialize_refusal(refusal: PhysicianOrderRefusal) -> dict[str, object]:
+    """Serializuje odmowę wykonania zlecenia lekarskiego.
+
+    Args:
+        refusal (PhysicianOrderRefusal): Obiekt odmowy zabiegu.
+
+    Returns:
+        dict[str, object]: Zserializowany słownik danych odmowy.
+
+    Raises:
+        TypeError: Gdy parametr refusal ma nieprawidłowy typ.
+    """
+    if not isinstance(refusal, PhysicianOrderRefusal):
+        raise TypeError('Parametr refusal musi być instancją PhysicianOrderRefusal.')
     summary = refusal.physician_order_description[:160]
     if len(refusal.physician_order_description) > 160:
         summary = f'{summary}…'
@@ -181,7 +278,20 @@ def serialize_refusal(refusal: PhysicianOrderRefusal) -> dict[str, Any]:
     )
 
 
-def serialize_recepta(ref: ReceptaNaRuchReferral) -> dict[str, Any]:
+def serialize_recepta(ref: ReceptaNaRuchReferral) -> dict[str, object]:
+    """Serializuje skierowanie do programu Recepta na Ruch.
+
+    Args:
+        ref (ReceptaNaRuchReferral): Obiekt skierowania.
+
+    Returns:
+        dict[str, object]: Zserializowane dane skierowania.
+
+    Raises:
+        TypeError: Gdy parametr ref ma nieprawidłowy typ.
+    """
+    if not isinstance(ref, ReceptaNaRuchReferral):
+        raise TypeError('Parametr ref musi być instancją ReceptaNaRuchReferral.')
     summary = ref.activity_notes.strip() or 'Skierowanie do programu Recepta na Ruch'
     return _item(
         kind=KIND_RECEPTA,
@@ -203,7 +313,20 @@ def serialize_recepta(ref: ReceptaNaRuchReferral) -> dict[str, Any]:
     )
 
 
-def serialize_pdf(doc: MedicalDocument) -> dict[str, Any]:
+def serialize_pdf(doc: MedicalDocument) -> dict[str, object]:
+    """Serializuje udostępniony plik PDF dokumentu medycznego.
+
+    Args:
+        doc (MedicalDocument): Obiekt dokumentu medycznego.
+
+    Returns:
+        dict[str, object]: Zserializowany słownik pliku PDF.
+
+    Raises:
+        TypeError: Gdy parametr doc ma nieprawidłowy typ.
+    """
+    if not isinstance(doc, MedicalDocument):
+        raise TypeError('Parametr doc musi być instancją MedicalDocument.')
     uploader = doc.uploaded_by
     therapist_name = f'{uploader.first_name} {uploader.last_name}'.strip() or uploader.email
     with contextlib.suppress(ObjectDoesNotExist):
@@ -216,7 +339,6 @@ def serialize_pdf(doc: MedicalDocument) -> dict[str, Any]:
         created_at=doc.created_at,
         therapist_name=therapist_name,
         episode_id=doc.episode_id,
-        # Auth-gated download endpoint (not raw /media/ storage path).
         file_url=f'/api/v1/{doc.id}/download/',
         details={
             'mime_type': doc.mime_type,
@@ -225,13 +347,25 @@ def serialize_pdf(doc: MedicalDocument) -> dict[str, Any]:
     )
 
 
-def build_clinical_documents_for_patient(patient, *, kind: str | None = None) -> list[dict[str, Any]]:
+def build_clinical_documents_for_patient(patient: object, *, kind: str | None = None) -> list[dict[str, object]]:
     """Zwraca chronologiczną listę dokumentów widocznych dla pacjenta.
 
-    Podsumowania wizyt (`patient_summary`) celowo nie trafiają tutaj —
-    pacjent widzi je wyłącznie na karcie wizyty.
+    Args:
+        patient (object): Profil pacjenta.
+        kind (str | None): Opcjonalny typ filtrujący dokumenty.
+
+    Returns:
+        list[dict[str, object]]: Podsumowania wizyt pacjenta.
+
+    Raises:
+        TypeError: Gdy parametr patient lub kind ma nieprawidłowy typ.
     """
-    items: list[dict[str, Any]] = []
+    if patient is None:
+        raise TypeError('Parametr patient nie może być None.')
+    if kind is not None and not isinstance(kind, str):
+        raise TypeError('Parametr kind musi być ciągiem znaków lub None.')
+
+    items: list[dict[str, object]] = []
 
     if kind in (None, KIND_RECOMMENDATION):
         recs = (

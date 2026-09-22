@@ -11,6 +11,9 @@ import { Field } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/ToastContext'
 import './auth-forms.css'
 
+/**
+ * Widok strony logowania z obsługą uwierzytelniania adresem e-mail/hasłem, drugiego składnika 2FA/TOTP oraz Google OAuth.
+ */
 export function LoginPage() {
   const { login, loginMFA, loginWithGoogle } = useAuth()
   const navigate = useNavigate()

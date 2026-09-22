@@ -1,3 +1,8 @@
+/**
+ * @file KeyboardAwareForm.tsx
+ * @description Kontener przewijany dla formularzy dopasowujący układ do pojawiającej się klawiatury na urządzeniach mobilnych.
+ */
+
 import type { ReactNode } from 'react'
 import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native'
 import {
@@ -5,16 +10,23 @@ import {
   type KeyboardAwareScrollViewProps,
 } from 'react-native-keyboard-controller'
 
+/** Właściwości komponentu {@link KeyboardAwareForm}. */
 type Props = {
+  /** Zawartość formularza (pola, przyciski). */
   children: ReactNode
+  /** Opcjonalne style widoku zawartości przewijanej. */
   contentContainerStyle?: StyleProp<ViewStyle>
+  /** Opcjonalne style kontenera głównego. */
   style?: StyleProp<ViewStyle>
-  /** Distance between focused input and keyboard (and tab bar if present). */
+  /** Odstęp między aktywnym polem tekstowym a klawiaturą (domyślnie 40). */
   bottomOffset?: number
 } & Pick<KeyboardAwareScrollViewProps, 'refreshControl' | 'showsVerticalScrollIndicator'>
 
 /**
- * Form scroll container that keeps the focused TextInput visible above the keyboard.
+ * Kontener scrollable dla formularzy automatycznie przesuwający aktywne pole tekstowe ponad klawiaturę ekranową.
+ *
+ * @param props Właściwości kontenera formularza.
+ * @returns Element React Native bazujący na KeyboardAwareScrollView.
  */
 export function KeyboardAwareForm({
   children,

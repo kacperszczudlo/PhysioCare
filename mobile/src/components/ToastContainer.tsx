@@ -1,3 +1,8 @@
+/**
+ * @file ToastContainer.tsx
+ * @description Kontener warstwy powiadomień toast (pozycjonowany bezwzględnie na górze ekranu).
+ */
+
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -6,6 +11,11 @@ import { space } from '@/theme/tokens'
 import { useToast } from './ToastContext'
 import { ToastItem } from './ToastItem'
 
+/**
+ * Komponent renderujący aktywną listę powiadomień mobilnych na górze ekranu z uwzględnieniem bezpiecznych obszarów (Safe Area).
+ *
+ * @returns Element React Native zawierający powiadomienia lub null.
+ */
 export function ToastContainer() {
   const { toasts, removeToast } = useToast()
   const insets = useSafeAreaInsets()

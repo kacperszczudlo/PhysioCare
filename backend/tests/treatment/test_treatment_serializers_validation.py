@@ -8,25 +8,26 @@ from treatment.serializers import (
 )
 
 
-def test_treatment_episode_serializer_valid_icd10():
+def test_treatment_episode_serializer_valid_icd10() -> None:
+    """Sprawdza pomyślną walidację poprawnego kodu ICD-10 w serializatorze epizodu."""
     # Arrange
     serializer = TreatmentEpisodeCreateSerializer(data={
         'icd10_code': 'M54.5',
         'summary_note': 'Ból odcinka lędźwiowego',
     })
 
-    # Act & Assert
+    # Assert
     assert serializer.is_valid(), serializer.errors
     assert serializer.validated_data['icd10_code'] == 'M54.5'
 
 
-def test_treatment_episode_serializer_invalid_icd10():
+def test_treatment_episode_serializer_invalid_icd10() -> None:
+    """Sprawdza odrzucenie niepoprawnego kodu ICD-10 w serializatorze epizodu."""
     # Arrange
     serializer = TreatmentEpisodeCreateSerializer(data={
         'icd10_code': 'INVALID-ICD10-CODE',
     })
 
-    # Act
     is_valid = serializer.is_valid()
 
     # Assert
@@ -34,19 +35,21 @@ def test_treatment_episode_serializer_invalid_icd10():
     assert 'icd10_code' in serializer.errors
 
 
-def test_treatment_episode_serializer_functional_diagnosis_too_long():
+def test_treatment_episode_serializer_functional_diagnosis_too_long() -> None:
+    """Sprawdza odrzucenie zbyt długiego opisu diagnozy funkcjonalnej (ponad 5000 znaków)."""
     # Arrange
     serializer = TreatmentEpisodeCreateSerializer(data={
         'functional_diagnosis': 'A' * 5001,
     })
 
-    # Act & Assert
+    # Assert
     assert serializer.is_valid() is False
     assert 'functional_diagnosis' in serializer.errors
 
 
 @pytest.mark.parametrize('valid_vas', [0, 5, 10])
-def test_body_area_pain_serializer_valid_vas(valid_vas):
+def test_body_area_pain_serializer_valid_vas(valid_vas: int) -> None:
+    """Sprawdza akceptację poprawnych wartości skali bólu VAS (0 do 10)."""
     # Arrange
     serializer = BodyAreaPainSerializer(data={
         'body_region': 'Kręgosłup lędźwiowy',
@@ -56,12 +59,13 @@ def test_body_area_pain_serializer_valid_vas(valid_vas):
         'treatment_targets': ['Redukcja bólu'],
     })
 
-    # Act & Assert
+    # Assert
     assert serializer.is_valid(), serializer.errors
 
 
 @pytest.mark.parametrize('invalid_vas', [-1, 11])
-def test_body_area_pain_serializer_invalid_vas(invalid_vas):
+def test_body_area_pain_serializer_invalid_vas(invalid_vas: int) -> None:
+    """Sprawdza odrzucenie wartości skali VAS spoza zakresu 0-10."""
     # Arrange
     serializer = BodyAreaPainSerializer(data={
         'body_region': 'Brak',
@@ -69,12 +73,13 @@ def test_body_area_pain_serializer_invalid_vas(invalid_vas):
         'vas_score': invalid_vas,
     })
 
-    # Act & Assert
+    # Assert
     assert serializer.is_valid() is False
     assert 'vas_score' in serializer.errors
 
 
-def test_body_area_pain_serializer_invalid_character_type():
+def test_body_area_pain_serializer_invalid_character_type() -> None:
+    """Sprawdza odrzucenie charakteru bólu, jeśli podana wartość nie jest listą."""
     # Arrange
     serializer = BodyAreaPainSerializer(data={
         'body_region': 'Kolano',
@@ -82,7 +87,7 @@ def test_body_area_pain_serializer_invalid_character_type():
         'pain_character': 'not-a-list',
     })
 
-    # Act & Assert
+    # Assert
     assert serializer.is_valid() is False
     assert 'pain_character' in serializer.errors
 
@@ -96,13 +101,14 @@ def test_body_area_pain_serializer_invalid_character_type():
         ('ABCD', False),
     ],
 )
-def test_medical_device_order_access_code_validation(code, is_valid_code):
+def test_medical_device_order_access_code_validation(code: str, is_valid_code: bool) -> None:
+    """Sprawdza walidację 4-cyfrowego kodu dostępu dla zlecenia na wyrób medyczny."""
     # Arrange
     serializer = MedicalDeviceOrderSerializer()
 
-    # Act
     if is_valid_code:
         assert serializer.validate_access_code(code) == code.strip()
     else:
         with pytest.raises(ValidationError):
             serializer.validate_access_code(code)
+

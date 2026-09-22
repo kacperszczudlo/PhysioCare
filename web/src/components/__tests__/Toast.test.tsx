@@ -3,6 +3,11 @@ import { describe, it, expect, vi } from 'vitest'
 import { ToastProvider, useToast } from '../ui/ToastContext'
 import { ToastContainer } from '../ui/ToastContainer'
 
+/**
+ * @file Toast.test.tsx
+ * @description Zestaw testów dla systemu powiadomień tosterowych (ToastContext, ToastContainer, ToastItem).
+ */
+
 function TestConsumer() {
   const { toast } = useToast()
 

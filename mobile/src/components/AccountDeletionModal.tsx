@@ -1,9 +1,15 @@
+/**
+ * @file AccountDeletionModal.tsx
+ * @description Komponent modalny potwierdzenia usunięcia konta pacjenta z wyborem powodu rezygnacji i oświadczeniem zgody.
+ */
+
 import { useMemo, useState } from 'react'
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 
 import { Button } from '@/components/Button'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
+/** Dostępne powody rezygnacji z konta w systemie */
 export const DELETION_REASON_OPTIONS = [
   { id: 'not_using', label: 'Nie korzystam z aplikacji' },
   { id: 'technical', label: 'Problemy techniczne' },
@@ -14,13 +20,23 @@ export const DELETION_REASON_OPTIONS = [
 
 type ReasonId = (typeof DELETION_REASON_OPTIONS)[number]['id']
 
+/** Interfejs właściwości komponentu `AccountDeletionModal` */
 interface AccountDeletionModalProps {
+  /** Czy modal jest widoczny */
   open: boolean
+  /** Wskaźnik trwania operacji asynchronicznej (stan usuwania) */
   busy?: boolean
+  /** Funkcja wywoływana przy zamknięciu modala */
   onClose: () => void
+  /** Funkcja wywoływana po potwierdzeniu decyzji o usunięciu konta wraz ze skomponowanym powodem */
   onConfirm: (reason: string) => Promise<void>
 }
 
+/**
+ * Modal dialogowy umożliwiający pacjentowi trwale usunięcie konta z podaniem powodu rezygnacji.
+ *
+ * @param props - Właściwości komponentu (`AccountDeletionModalProps`).
+ */
 export function AccountDeletionModal({
   open,
   busy = false,

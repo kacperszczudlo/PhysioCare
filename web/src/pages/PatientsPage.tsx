@@ -11,6 +11,9 @@ import { Field } from '@/components/ui/Field'
 import { AuthMediaImg } from '@/components/AuthMedia'
 import './PatientsPage.css'
 
+/**
+ * Widok Kartoteki Pacjentów z podglądem kartotek, wyszukiwarką po imieniu/nazwisku i nawigacją do detali.
+ */
 export function PatientsPage() {
   const [patients, setPatients] = useState<PatientSummary[]>([])
   const [query, setQuery] = useState('')

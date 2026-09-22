@@ -12,14 +12,16 @@ from scheduling.models import Visit, VisitStatus
 
 
 @pytest.fixture(autouse=True)
-def _clear_sse_bus():
+def _clear_sse_bus() -> object:
+    """Czyszczenie magistrali zdarzeń SSE przed i po każdym teście."""
     get_sse_bus().clear()
     yield
     get_sse_bus().clear()
 
 
-def _drain(queue, *, expected: int, timeout: float = 1.0) -> list:
-    items = []
+def _drain(queue: object, *, expected: int, timeout: float = 1.0) -> list[object]:
+    """Pobiera oczekiwaną liczbę elementów z kolejki SSE oraz sprawdza jej opróżnienie."""
+    items: list[object] = []
     for _ in range(expected):
         items.append(queue.get(timeout=timeout))
     with pytest.raises(Empty):
@@ -29,18 +31,20 @@ def _drain(queue, *, expected: int, timeout: float = 1.0) -> list:
 
 @pytest.mark.django_db
 def test_therapist_visit_create_publishes_sse_to_both(
-    api_client,
-    therapist,
-    patient,
-    therapy_type,
-):
-    patient_q = get_sse_bus().subscribe(str(patient.user_id))
-    therapist_q = get_sse_bus().subscribe(str(therapist.user_id))
+    api_client: object,
+    therapist: object,
+    patient: object,
+    therapy_type: object,
+) -> None:
+    """Sprawdza publikację zdarzenia SSE visit.scheduled dla pacjenta i fizjoterapeuty przy utworzeniu wizyty."""
+    # Arrange
+    patient_q: object = get_sse_bus().subscribe(str(patient.user_id))
+    therapist_q: object = get_sse_bus().subscribe(str(therapist.user_id))
     api_client.force_authenticate(user=therapist.user)
-    start_at = timezone.now() + timedelta(days=2)
-    end_at = start_at + timedelta(minutes=45)
+    start_at: object = timezone.now() + timedelta(days=2)
+    end_at: object = start_at + timedelta(minutes=45)
 
-    response = api_client.post(
+    response: object = api_client.post(
         '/api/v1/therapist/visits/',
         {
             'patient_id': str(patient.id),
@@ -50,33 +54,36 @@ def test_therapist_visit_create_publishes_sse_to_both(
         },
         format='json',
     )
+    # Assert
     assert response.status_code == status.HTTP_201_CREATED
-    visit_id = response.data['id']
+    visit_id: str = response.data['id']
 
     for queue in (patient_q, therapist_q):
-        events = _drain(queue, expected=1)
+        events: list[object] = _drain(queue, expected=1)
         assert events[0].type == 'visit.scheduled'
         assert events[0].resource_id == visit_id
 
 
 @pytest.mark.django_db
 def test_patient_visit_request_publishes_sse_without_email_side_effect(
-    api_client,
-    patient,
-    therapy_type,
-    settings,
-):
+    api_client: object,
+    patient: object,
+    therapy_type: object,
+    settings: object,
+) -> None:
+    """Sprawdza publikację zdarzenia SSE przy prośbie pacjenta o wizytę bez wysyłania zbędnej wiadomości e-mail."""
+    # Arrange
     settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
     from django.core import mail
 
     mail.outbox.clear()
 
-    therapist = patient.therapist
-    patient_q = get_sse_bus().subscribe(str(patient.user_id))
-    therapist_q = get_sse_bus().subscribe(str(therapist.user_id))
+    therapist: object = patient.therapist
+    patient_q: object = get_sse_bus().subscribe(str(patient.user_id))
+    therapist_q: object = get_sse_bus().subscribe(str(therapist.user_id))
     api_client.force_authenticate(user=patient.user)
-    start_at = timezone.now() + timedelta(days=2)
-    end_at = start_at + timedelta(minutes=45)
+    start_at: object = timezone.now() + timedelta(days=2)
+    end_at: object = start_at + timedelta(minutes=45)
     from scheduling.models import TherapistAvailabilitySlot
     TherapistAvailabilitySlot.objects.create(
         therapist=therapist,
@@ -85,7 +92,7 @@ def test_patient_visit_request_publishes_sse_without_email_side_effect(
         end_at=end_at + timedelta(hours=1),
     )
 
-    response = api_client.post(
+    response: object = api_client.post(
         '/api/v1/me/visits/',
         {
             'therapy_type_id': str(therapy_type.id),
@@ -94,24 +101,27 @@ def test_patient_visit_request_publishes_sse_without_email_side_effect(
         },
         format='json',
     )
+    # Assert
     assert response.status_code == status.HTTP_201_CREATED
     assert mail.outbox == []
-    visit_id = response.data['id']
+    visit_id: str = response.data['id']
 
     for queue in (patient_q, therapist_q):
-        events = _drain(queue, expected=1)
+        events: list[object] = _drain(queue, expected=1)
         assert events[0].type == 'visit.scheduled'
         assert events[0].resource_id == visit_id
 
 
 @pytest.mark.django_db
 def test_patient_cancel_publishes_sse_to_therapist(
-    api_client,
-    therapist,
-    patient,
-    therapy_type,
-):
-    visit = Visit.objects.create(
+    api_client: object,
+    therapist: object,
+    patient: object,
+    therapy_type: object,
+) -> None:
+    """Sprawdza publikację zdarzenia SSE visit.cancelled po odwołaniu wizyty przez pacjenta."""
+    # Arrange
+    visit: Visit = Visit.objects.create(
         patient=patient,
         therapist=therapist,
         therapy_type=therapy_type,
@@ -119,41 +129,44 @@ def test_patient_cancel_publishes_sse_to_therapist(
         end_at=timezone.now() + timedelta(days=3, minutes=45),
         status=VisitStatus.SCHEDULED,
     )
-    therapist_q = get_sse_bus().subscribe(str(therapist.user_id))
-    patient_q = get_sse_bus().subscribe(str(patient.user_id))
+    therapist_q: object = get_sse_bus().subscribe(str(therapist.user_id))
+    patient_q: object = get_sse_bus().subscribe(str(patient.user_id))
     api_client.force_authenticate(user=patient.user)
 
-    response = api_client.post(
+    response: object = api_client.post(
         f'/api/v1/visits/{visit.id}/cancel/',
         {'cancel_reason': 'Konflikt'},
         format='json',
     )
+    # Assert
     assert response.status_code == status.HTTP_200_OK
 
     for queue in (patient_q, therapist_q):
-        events = _drain(queue, expected=1)
+        events: list[object] = _drain(queue, expected=1)
         assert events[0].type == 'visit.cancelled'
         assert events[0].resource_id == str(visit.id)
 
 
 @pytest.mark.django_db
 def test_exercise_assignment_publishes_sse_to_patient(
-    api_client,
-    therapist,
-    patient,
-):
-    exercise = Exercise.objects.create(
+    api_client: object,
+    therapist: object,
+    patient: object,
+) -> None:
+    """Sprawdza publikację zdarzenia SSE exercise.assigned do pacjenta po przypisaniu nowego ćwiczenia."""
+    # Arrange
+    exercise: Exercise = Exercise.objects.create(
         therapist=therapist,
         title='Mostek',
         media_type=MediaType.VIDEO,
         file_url='/media/exercises/mostek.mp4',
         instruction='Unieś biodra.',
     )
-    patient_q = get_sse_bus().subscribe(str(patient.user_id))
+    patient_q: object = get_sse_bus().subscribe(str(patient.user_id))
     api_client.force_authenticate(user=therapist.user)
-    today = timezone.localdate()
+    today: object = timezone.localdate()
 
-    response = api_client.post(
+    response: object = api_client.post(
         '/api/v1/therapist/exercise-assignments/',
         {
             'exercise_id': str(exercise.id),
@@ -164,52 +177,58 @@ def test_exercise_assignment_publishes_sse_to_patient(
         },
         format='json',
     )
+    # Assert
     assert response.status_code == status.HTTP_201_CREATED
-    events = _drain(patient_q, expected=1)
+    events: list[object] = _drain(patient_q, expected=1)
     assert events[0].type == 'exercise.assigned'
     assert events[0].resource_id == response.data['id']
 
 
 @pytest.mark.django_db
 def test_document_upload_publishes_sse_to_patient(
-    api_client,
-    therapist,
-    patient,
-):
-    patient_q = get_sse_bus().subscribe(str(patient.user_id))
+    api_client: object,
+    therapist: object,
+    patient: object,
+) -> None:
+    """Sprawdza publikację zdarzenia SSE document.created do pacjenta po wgraniu nowego dokumentu."""
+    # Arrange
+    patient_q: object = get_sse_bus().subscribe(str(patient.user_id))
     api_client.force_authenticate(user=therapist.user)
-    uploaded = SimpleUploadedFile(
+    uploaded: SimpleUploadedFile = SimpleUploadedFile(
         'skierowanie.pdf',
         b'%PDF-1.4 test document',
         content_type='application/pdf',
     )
-    response = api_client.post(
+    response: object = api_client.post(
         '/api/v1/therapist/documents/',
         {'patient_id': str(patient.id), 'title': 'Skierowanie', 'file': uploaded},
         format='multipart',
     )
+    # Assert
     assert response.status_code == status.HTTP_201_CREATED
-    events = _drain(patient_q, expected=1)
+    events: list[object] = _drain(patient_q, expected=1)
     assert events[0].type == 'document.created'
     assert events[0].resource_id == response.data['id']
 
 
 @pytest.mark.django_db
 def test_clinical_recommendation_publishes_document_sse(
-    api_client,
-    therapist,
-    patient,
-):
+    api_client: object,
+    therapist: object,
+    patient: object,
+) -> None:
+    """Sprawdza publikację zdarzenia SSE document.created po wygenerowaniu rekomendacji diagnostycznej."""
+    # Arrange
     from treatment.models import TreatmentEpisode
 
     therapist.qualification_level = 'MAGISTER'
     therapist.experience_years = 5
     therapist.save()
-    episode = TreatmentEpisode.objects.create(patient=patient, icd10_code='M25.5')
-    patient_q = get_sse_bus().subscribe(str(patient.user_id))
+    episode: TreatmentEpisode = TreatmentEpisode.objects.create(patient=patient, icd10_code='M25.5')
+    patient_q: object = get_sse_bus().subscribe(str(patient.user_id))
     api_client.force_authenticate(user=therapist.user)
 
-    response = api_client.post(
+    response: object = api_client.post(
         f'/api/v1/episodes/{episode.id}/diagnostic-recommendations/',
         {
             'recommendation_type': 'SPECIALIST_CONSULTATION',
@@ -221,7 +240,9 @@ def test_clinical_recommendation_publishes_document_sse(
         },
         format='json',
     )
+    # Assert
     assert response.status_code == status.HTTP_201_CREATED
-    events = _drain(patient_q, expected=1)
+    events: list[object] = _drain(patient_q, expected=1)
     assert events[0].type == 'document.created'
     assert events[0].resource_id == response.data['id']
+

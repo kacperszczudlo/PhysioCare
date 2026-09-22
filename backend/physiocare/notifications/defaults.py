@@ -3,6 +3,11 @@ from notifications.models import NotificationPreference
 
 
 def ensure_default_preferences(user) -> None:
+    """Zapewnia obecność domyślnych preferencji powiadomień dla podanego użytkownika.
+
+    Args:
+        user: Obiekt użytkownika, dla którego tworzone są brakujące preferencje.
+    """
     existing = set(
         NotificationPreference.objects.filter(user=user).values_list(
             'pref_key',

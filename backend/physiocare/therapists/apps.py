@@ -2,4 +2,7 @@ from django.apps import AppConfig
 
 
 class TherapistsConfig(AppConfig):
-    name = 'therapists'
+    """Konfiguracja aplikacji Django dla fizjoterapeutów."""
+
+    name: str = 'therapists'
+

@@ -1,3 +1,6 @@
+from collections.abc import Generator
+from typing import TYPE_CHECKING
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
@@ -16,18 +19,26 @@ from treatment.models import (
     TreatmentEpisode,
 )
 
+if TYPE_CHECKING:
+    from pytest_django.plugin import DjangoDbBlocker
+
 User = get_user_model()
 
 
 @pytest.fixture(scope='session')
-def django_db_setup(django_db_blocker, django_db_use_migrations):
+def django_db_setup(
+    django_db_blocker: 'DjangoDbBlocker',
+    django_db_use_migrations: bool,
+) -> None:
+    """Konfiguruje bazę danych dla sesji testowej Pytest."""
     with django_db_blocker.unblock():
         if django_db_use_migrations:
             call_command('migrate', verbosity=0)
 
 
 @pytest.fixture(autouse=True)
-def cleanup_test_data(db):
+def cleanup_test_data(db: object) -> Generator[None, None, None]:
+    """Automatyczna czyszcząca fixture usuwająca dane testowe po zakończeniu każdego testu."""
     yield
     ExerciseCompletion.objects.filter(
         assignment__patient__user__email__endswith='@physiocare.test',
@@ -54,7 +65,6 @@ def cleanup_test_data(db):
     Visit.objects.filter(patient__user__email__endswith='@physiocare.test').delete()
     TherapyType.objects.filter(therapist__user__email__endswith='@physiocare.test').delete()
     PatientProfile.objects.filter(user__email__endswith='@physiocare.test').delete()
-    # Soft-deleted accounts use @deleted.invalid after anonymization.
     PatientProfile.objects.filter(user__email__endswith='@deleted.invalid').delete()
     TherapistProfile.objects.filter(user__email__endswith='@physiocare.test').delete()
     User.objects.filter(email__endswith='@physiocare.test').delete()
@@ -62,12 +72,14 @@ def cleanup_test_data(db):
 
 
 @pytest.fixture
-def api_client():
+def api_client() -> APIClient:
+    """Tworzy instancję klienta API Django REST Framework do testowania endpointów."""
     return APIClient()
 
 
 @pytest.fixture
-def therapist(db):
+def therapist(db: object) -> TherapistProfile:
+    """Tworzy domyślny profil fizjoterapeuty z numerem PWZFz na potrzeby testów."""
     user = User.objects.create_user(
         email='therapist@physiocare.test',
         password='test-pass',
@@ -83,7 +95,8 @@ def therapist(db):
 
 
 @pytest.fixture
-def therapist_b(db):
+def therapist_b(db: object) -> TherapistProfile:
+    """Tworzy drugi profil fizjoterapeuty na potrzeby testowania uprawnień BOLA/AuthZ."""
     user = User.objects.create_user(
         email='therapistb@physiocare.test',
         password='test-pass',
@@ -99,7 +112,8 @@ def therapist_b(db):
 
 
 @pytest.fixture
-def therapy_type(therapist):
+def therapy_type(therapist: TherapistProfile) -> TherapyType:
+    """Tworzy domyślny typ terapii powiązany z pierwszym fizjoterapeutą."""
     return TherapyType.objects.create(
         therapist=therapist,
         name='Fizjoterapia',
@@ -107,7 +121,8 @@ def therapy_type(therapist):
 
 
 @pytest.fixture
-def patient(db, therapist):
+def patient(db: object, therapist: TherapistProfile) -> PatientProfile:
+    """Tworzy profil pacjenta przypisanego do domyślnego fizjoterapeuty."""
     user = User.objects.create_user(
         email='patient@physiocare.test',
         password='test-pass',
@@ -123,8 +138,9 @@ def patient(db, therapist):
 
 
 @pytest.fixture
-def patient_profiles(db, therapist):
-    patients = []
+def patient_profiles(db: object, therapist: TherapistProfile) -> list[PatientProfile]:
+    """Tworzy zestaw 10 profili pacjentów na potrzeby testowania współbieżności i list."""
+    patients: list[PatientProfile] = []
     for index in range(1, 11):
         user = User.objects.create_user(
             email=f'patient{index}@physiocare.test',
@@ -141,3 +157,4 @@ def patient_profiles(db, therapist):
             )
         )
     return patients
+

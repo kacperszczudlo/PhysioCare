@@ -8,6 +8,9 @@ type AuthMediaImgProps = {
   className?: string
 }
 
+/**
+ * Renders an image element using an authenticated Blob URL fetched securely from the backend storage.
+ */
 export function AuthMediaImg({ path, alt = '', className }: AuthMediaImgProps) {
   const { url } = useAuthenticatedMediaUrl(path)
   if (!url) {

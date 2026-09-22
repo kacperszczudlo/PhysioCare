@@ -5,13 +5,24 @@ import './Button.css'
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
 type Size = 'md' | 'sm'
 
+/** Właściwości przycisku interfejsu Button. */
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  /** Wariant wizualny przycisku (primary, secondary, ghost, danger). */
   variant?: Variant
+  /** Rozmiar przycisku (md, sm). */
   size?: Size
+  /** Flaga trwającego ładowania (wyświetla spinner i blokuje przycisk). */
   loading?: boolean
+  /** Zawartość przycisku (tekst lub ikony). */
   children: ReactNode
 }
 
+/**
+ * Podstawowy komponent przycisku interfejsu użytkownika wspierający stany ładowania, warianty i rozmiary.
+ *
+ * @example
+ * <Button variant="primary" loading={isSubmitting} onClick={handleSubmit}>Zapisz</Button>
+ */
 export function Button({
   variant = 'primary',
   size = 'md',

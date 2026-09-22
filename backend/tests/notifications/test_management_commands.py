@@ -10,14 +10,17 @@ from scheduling.models import Visit, VisitStatus
 
 
 @pytest.mark.django_db
-def test_notify_today_exercises_command_real_execution(patient, therapist):
-    # Arrange
+def test_notify_today_exercises_command_real_execution(
+    patient: object, therapist: object,
+) -> None:
+    """Sprawdza rzeczywiste wykonanie komendy CLI notify_today_exercises."""
+    # Act
     ExerciseAssignment.objects.all().delete()
-    exercise = Exercise.objects.create(
+    exercise: Exercise = Exercise.objects.create(
         therapist=therapist,
         title='Rozciąganie',
     )
-    today = timezone.localdate()
+    today: object = timezone.localdate()
     ExerciseAssignment.objects.create(
         patient=patient,
         exercise=exercise,
@@ -25,9 +28,8 @@ def test_notify_today_exercises_command_real_execution(patient, therapist):
         start_date=today,
         end_date=today,
     )
-    out = StringIO()
+    out: StringIO = StringIO()
 
-    # Act
     call_command('notify_today_exercises', stdout=out)
 
     # Assert
@@ -37,10 +39,11 @@ def test_notify_today_exercises_command_real_execution(patient, therapist):
 
 @pytest.mark.django_db
 def test_notify_upcoming_visits_command_real_execution(
-    patient, therapist, therapy_type
-):
+    patient: object, therapist: object, therapy_type: object,
+) -> None:
+    """Sprawdza rzeczywiste wykonanie komendy CLI notify_upcoming_visits."""
     # Arrange
-    now = timezone.now()
+    now: object = timezone.now()
     Visit.objects.create(
         patient=patient,
         therapist=therapist,
@@ -49,12 +52,12 @@ def test_notify_upcoming_visits_command_real_execution(
         end_at=now + timezone.timedelta(hours=24, minutes=45),
         status=VisitStatus.SCHEDULED,
     )
-    out = StringIO()
+    out: StringIO = StringIO()
 
-    # Act
     call_command('notify_upcoming_visits', stdout=out)
 
     # Assert
     assert 'Przypomnienia zakolejkowane:' in out.getvalue()
     assert NotificationDelivery.objects.filter(user=patient.user, pref_key='visit_reminder').exists()
+
 

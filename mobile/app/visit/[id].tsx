@@ -1,3 +1,8 @@
+/**
+ * @file [id].tsx
+ * @description Ekran szczegółów wizyty (lokalizacja na mapie, notatki, możliwość przełożenia lub odwołania).
+ */
+
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, Modal, StyleSheet, Text, View } from 'react-native'
@@ -31,6 +36,11 @@ function defaultRescheduleStart(from?: string): Date {
   return date
 }
 
+/**
+ * Ekran prezentujący szczegóły pojedynczej wizyty z opcją zmiany terminu lub odwołania.
+ *
+ * @returns Element React Native prezentujący widok wizyty.
+ */
 export default function VisitDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()

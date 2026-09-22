@@ -39,6 +39,9 @@ function monthShort(date: Date): string {
   return new Intl.DateTimeFormat('pl-PL', { month: 'short' }).format(date)
 }
 
+/**
+ * Karuzela szybkich poziomych przycisków wyboru daty (np. YYYY-MM-DD) z nawigacją strzałkami.
+ */
 export function DateCarousel({
   value,
   onChange,

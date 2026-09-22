@@ -1,12 +1,15 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 
+/** Wariant wizualny powiadomienia Toast (success, error, warning, info). */
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
 
+/** Dodatkowa akcja w powiadomieniu (przycisk z etykietą i callbackiem). */
 export interface ToastAction {
   label: string
   onClick: () => void
 }
 
+/** Opcje konfiguracji wyzwalania powiadomienia Toast. */
 export interface ToastOptions {
   title?: string
   message: string
@@ -15,6 +18,7 @@ export interface ToastOptions {
   action?: ToastAction
 }
 
+/** Wewnętrzne dane pojedynczego aktywnego powiadomienia w kolejce. */
 export interface ToastItemData extends Required<Omit<ToastOptions, 'title' | 'action'>> {
   id: string
   title?: string
@@ -22,6 +26,7 @@ export interface ToastItemData extends Required<Omit<ToastOptions, 'title' | 'ac
   createdAt: number
 }
 
+/** Zbiór właściwości i metod udostępnianych przez system powiadomień Toast. */
 interface ToastContextValue {
   toasts: ToastItemData[]
   showToast: (options: ToastOptions | string, type?: ToastType) => string
@@ -38,6 +43,9 @@ const ToastContext = createContext<ToastContextValue | null>(null)
 
 const DEFAULT_TOAST_DURATION = 4000
 
+/**
+ * Komponent dostawcy kontekstu powiadomień Toast w interfejsie użytkownika.
+ */
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItemData[]>([])
 
@@ -66,7 +74,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         createdAt: Date.now(),
       }
 
-      setToasts((prev) => [...prev.slice(-4), newToast]) // keep max 5 toasts active
+      setToasts((prev) => [...prev.slice(-4), newToast])
       return id
     },
     [],
@@ -99,6 +107,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return <ToastContext.Provider value={value}>{children}</ToastContext.Provider>
 }
 
+/**
+ * Hook React umożliwiający wyzwalanie powiadomień Toast (np. toast.success("Zapisano")).
+ *
+ * @returns Instancję ToastContextValue z metodami toast.success, toast.error, toast.warning, toast.info.
+ *
+ * @example
+ * const { toast } = useToast();
+ * toast.success("Poprawnie zaktualizowano dane pacjenta");
+ */
 // eslint-disable-next-line react-refresh/only-export-components
 export function useToast(): ToastContextValue {
   const context = useContext(ToastContext)

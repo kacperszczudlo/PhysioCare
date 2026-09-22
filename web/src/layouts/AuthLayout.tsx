@@ -2,6 +2,9 @@ import { Link, Outlet } from 'react-router-dom'
 
 import './AuthLayout.css'
 
+/**
+ * Szablon widoku uwierzytelniania (logowanie, rejestracja, odzyskiwanie hasła) z bocznym panelem informacyjno-weryfikacyjnym.
+ */
 export function AuthLayout() {
   return (
     <div className="auth-layout">

@@ -1,3 +1,8 @@
+/**
+ * @file [id].tsx
+ * @description Ekran profilu publicznego fizjoterapeuty (biogram, kwalifikacje, uprawnienia, kursy, mapa i kontakt).
+ */
+
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -25,6 +30,11 @@ function yearsLabel(years: number): string {
   return `${years} lat stażu`
 }
 
+/**
+ * Ekran wizytówki publicznej fizjoterapeuty z przyciskiem powiązania z kontem pacjenta.
+ *
+ * @returns Element React Native prezentujący profil specjalisty.
+ */
 export default function TherapistPublicScreen() {
   const router = useRouter()
   const { toast } = useToast()

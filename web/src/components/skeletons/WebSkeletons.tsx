@@ -1,6 +1,11 @@
 import { Skeleton, SkeletonAvatar, SkeletonText, SkeletonWrapper } from '@/components/ui/Skeleton'
 import './WebSkeletons.css'
 
+/**
+ * Zbiór ustrukturyzowanych komponentów szkieletowych (Skeleton Skeletons) imitujących układ graficzny stron podczas pobierania danych.
+ */
+
+/** Szkielet ładujący widok Pulpitu Głównego fizjoterapeuty. */
 export function DashboardSkeleton() {
   return (
     <SkeletonWrapper label="Ładowanie pulpitu…" className="skeleton-dashboard">

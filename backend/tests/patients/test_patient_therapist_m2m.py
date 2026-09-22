@@ -9,8 +9,9 @@ from therapists.models import TherapistProfile
 
 
 @pytest.fixture
-def therapist1(db):
-    user = CustomUser.objects.create_user(
+def therapist1(db: object) -> TherapistProfile:
+    """Tworzy pierwszego fizjoterapeutę testowego."""
+    user: CustomUser = CustomUser.objects.create_user(
         email='therapist1@example.com',
         password='Password123!',
         role=RoleChoices.THERAPIST,
@@ -26,8 +27,9 @@ def therapist1(db):
 
 
 @pytest.fixture
-def therapist2(db):
-    user = CustomUser.objects.create_user(
+def therapist2(db: object) -> TherapistProfile:
+    """Tworzy drugiego fizjoterapeutę testowego."""
+    user: CustomUser = CustomUser.objects.create_user(
         email='therapist2@example.com',
         password='Password123!',
         role=RoleChoices.THERAPIST,
@@ -43,8 +45,9 @@ def therapist2(db):
 
 
 @pytest.fixture
-def patient_user(db):
-    user = CustomUser.objects.create_user(
+def patient_user(db: object) -> CustomUser:
+    """Tworzy użytkownika-pacjenta testowego."""
+    user: CustomUser = CustomUser.objects.create_user(
         email='patient@example.com',
         password='Password123!',
         role=RoleChoices.PATIENT,
@@ -57,10 +60,13 @@ def patient_user(db):
 
 @pytest.mark.django_db
 class TestPatientTherapistM2M:
+    """Zbiór testów dla relacji wielu-do-wielu (M2M) pomiędzy pacjentami i fizjoterapeutami."""
 
-    def test_register_patient_without_therapist(self):
-        client = APIClient()
-        response = client.post(
+    def test_register_patient_without_therapist(self) -> None:
+        """Sprawdza rejestrację pacjenta bez przypisanego kodem fizjoterapeuty."""
+        # Arrange
+        client: APIClient = APIClient()
+        response: object = client.post(
             '/api/v1/auth/register/patient/',
             {
                 'email': 'newpatient@example.com',
@@ -71,13 +77,16 @@ class TestPatientTherapistM2M:
             },
             format='json',
         )
+        # Assert
         assert response.status_code == status.HTTP_201_CREATED
-        profile = PatientProfile.objects.get(user__email='newpatient@example.com')
+        profile: PatientProfile = PatientProfile.objects.get(user__email='newpatient@example.com')
         assert profile.therapist_links.count() == 0
 
-    def test_register_patient_with_therapist_code(self, therapist1):
-        client = APIClient()
-        response = client.post(
+    def test_register_patient_with_therapist_code(self, therapist1: TherapistProfile) -> None:
+        """Sprawdza automatyczne powiązanie pacjenta z fizjoterapeutą podczas rejestracji kodem PWZF."""
+        # Arrange
+        client: APIClient = APIClient()
+        response: object = client.post(
             '/api/v1/auth/register/patient/',
             {
                 'email': 'codedpatient@example.com',
@@ -89,65 +98,76 @@ class TestPatientTherapistM2M:
             },
             format='json',
         )
+        # Assert
         assert response.status_code == status.HTTP_201_CREATED
-        profile = PatientProfile.objects.get(user__email='codedpatient@example.com')
+        profile: PatientProfile = PatientProfile.objects.get(user__email='codedpatient@example.com')
         assert profile.therapist_links.filter(therapist=therapist1, status=LinkStatus.ACTIVE).exists()
 
-    def test_link_and_unlink_therapist_endpoints(self, patient_user, therapist1, therapist2):
-        client = APIClient()
+    def test_link_and_unlink_therapist_endpoints(
+        self, patient_user: CustomUser, therapist1: TherapistProfile, therapist2: TherapistProfile,
+    ) -> None:
+        """Sprawdza punkty końcowe dodawania i usuwania powiązania fizjoterapeuty przez pacjenta."""
+        # Arrange
+        client: APIClient = APIClient()
         client.force_authenticate(user=patient_user)
 
-        # Initially 0 linked therapists
-        res = client.get('/api/v1/me/therapists/')
+        res: object = client.get('/api/v1/me/therapists/')
+        # Assert
         assert res.status_code == status.HTTP_200_OK
-        data = res.data.get('results', res.data) if isinstance(res.data, dict) else res.data
+        data: object = res.data.get('results', res.data) if isinstance(res.data, dict) else res.data
         assert len(data) == 0
 
-        # Link therapist1 by ID
-        link_res = client.post(
+        link_res: object = client.post(
             '/api/v1/me/therapists/link/',
             {'therapist_id': str(therapist1.id)},
             format='json',
         )
         assert link_res.status_code == status.HTTP_201_CREATED
 
-        # Link therapist2 by PWZF code
-        link_res2 = client.post(
+        link_res2: object = client.post(
             '/api/v1/me/therapists/link/',
             {'therapist_code': therapist2.pwzf_number},
             format='json',
         )
         assert link_res2.status_code == status.HTTP_201_CREATED
+        # Act
 
-        # Check me therapists list
         res = client.get('/api/v1/me/therapists/')
         data = res.data.get('results', res.data) if isinstance(res.data, dict) else res.data
         assert len(data) == 2
 
-        # Unlink therapist1
-        unlink_res = client.delete(f'/api/v1/me/therapists/{therapist1.id}/')
+        unlink_res: object = client.delete(f'/api/v1/me/therapists/{therapist1.id}/')
         assert unlink_res.status_code == status.HTTP_200_OK
 
-        res_after = client.get('/api/v1/me/therapists/')
-        data_after = res_after.data.get('results', res_after.data) if isinstance(res_after.data, dict) else res_after.data
+        res_after: object = client.get('/api/v1/me/therapists/')
+        data_after: object = res_after.data.get('results', res_after.data) if isinstance(res_after.data, dict) else res_after.data
         assert len(data_after) == 1
         assert data_after[0]['id'] == str(therapist2.id)
 
-    def test_public_therapist_search(self, patient_user, therapist1, therapist2):
-        client = APIClient()
+    def test_public_therapist_search(
+        self, patient_user: CustomUser, therapist1: TherapistProfile, therapist2: TherapistProfile,
+    ) -> None:
+        """Sprawdza publiczne wyszukiwanie fizjoterapeutów po nazwisku przez pacjenta."""
+        # Arrange
+        client: APIClient = APIClient()
         client.force_authenticate(user=patient_user)
 
-        res = client.get('/api/v1/therapists/public/?search=Kowalski')
+        res: object = client.get('/api/v1/therapists/public/?search=Kowalski')
+        # Assert
         assert res.status_code == status.HTTP_200_OK
-        results = res.data.get('results', res.data) if isinstance(res.data, dict) else res.data
+        results: object = res.data.get('results', res.data) if isinstance(res.data, dict) else res.data
         assert len(results) == 1
         assert results[0]['id'] == str(therapist1.id)
 
-    def test_auto_link_on_visit_booking(self, patient_user, therapist1):
-        client = APIClient()
+    def test_auto_link_on_visit_booking(
+        self, patient_user: CustomUser, therapist1: TherapistProfile,
+    ) -> None:
+        """Sprawdza automatyczne utworzenie relacji z fizjoterapeutą po zarezerwowaniu u niego wizyty."""
+        # Arrange
+        client: APIClient = APIClient()
         client.force_authenticate(user=patient_user)
 
-        tt = TherapyType.objects.create(
+        tt: TherapyType = TherapyType.objects.create(
             therapist=therapist1,
             name='Konsultacja fizjoterapeutyczna',
             duration_min=45,
@@ -156,10 +176,10 @@ class TestPatientTherapistM2M:
         import datetime
 
         from django.utils import timezone
-        start = timezone.now() + datetime.timedelta(days=2)
-        end = start + datetime.timedelta(minutes=45)
 
-        # Mock availability slot (non-recurring explicit slot)
+        start: object = timezone.now() + datetime.timedelta(days=2)
+        end: object = start + datetime.timedelta(minutes=45)
+
         from scheduling.models import TherapistAvailabilitySlot
         TherapistAvailabilitySlot.objects.create(
             therapist=therapist1,
@@ -169,7 +189,7 @@ class TestPatientTherapistM2M:
             is_active=True,
         )
 
-        visit_res = client.post(
+        visit_res: object = client.post(
             '/api/v1/me/visits/',
             {
                 'therapist_id': str(therapist1.id),
@@ -180,8 +200,9 @@ class TestPatientTherapistM2M:
             },
             format='json',
         )
+        # Assert
         assert visit_res.status_code == status.HTTP_201_CREATED
 
-        # Verify auto-link was created
-        profile = patient_user.patient_profile
+        profile: PatientProfile = patient_user.patient_profile
         assert profile.therapist_links.filter(therapist=therapist1, status=LinkStatus.ACTIVE).exists()
+

@@ -77,6 +77,9 @@ interface DayConfig {
   blocks: { startTime: string; endTime: string }[]
 }
 
+/**
+ * Widok zakładek konfiguracji dostępności gabinetu (grafik powtarzalny, jednorazowy i dni wolne).
+ */
 export function AvailabilityTabView() {
   const { toast } = useToast()
   const [slots, setSlots] = useState<AvailabilitySlot[]>([])
@@ -85,19 +88,17 @@ export function AvailabilityTabView() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Weekly schedule matrix state (0=Mon, 6=Sun)
   const [weeklyConfig, setWeeklyConfig] = useState<Record<number, DayConfig>>(() => {
     const initial: Record<number, DayConfig> = {}
     for (let i = 0; i < 7; i++) {
       initial[i] = {
-        enabled: i < 5, // Mon-Fri enabled by default
+        enabled: i < 5,
         blocks: [{ startTime: '08:00', endTime: '16:00' }],
       }
     }
     return initial
   })
 
-  // Specific Date Override state
   const [overrideDate, setOverrideDate] = useState<string>(() => toDateInputValue(new Date()))
   const [overrideStart, setOverrideStart] = useState('09:00')
   const [overrideEnd, setOverrideEnd] = useState('17:00')
@@ -117,7 +118,6 @@ export function AvailabilityTabView() {
       setSlots(data)
       setHolidays(holidayList)
 
-      // Parse recurring slots into weeklyConfig
       const recurring = data.filter((s) => s.is_recurring && s.is_active)
       if (recurring.length > 0) {
         const updated: Record<number, DayConfig> = {}

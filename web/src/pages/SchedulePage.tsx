@@ -35,6 +35,9 @@ function formatPendingWhen(iso: string): string {
   }).format(date)
 }
 
+/**
+ * Widok Kalendarza i Harmonogramu pracy fizjoterapeuty z widokiem dziennym, siatką godzin i rezerwacjami.
+ */
 export function SchedulePage() {
   const [activeTab, setActiveTab] = useState<'VISITS' | 'AVAILABILITY'>('VISITS')
   const [day, setDay] = useState(() => startOfDay(new Date()))

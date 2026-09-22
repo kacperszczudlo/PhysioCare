@@ -25,9 +25,9 @@ Zgodnie z zatwierdzonym tematem pracy - szczegóły są w [docs/topic-selection.
 
 ```
 PhysioCare/
-├── backend/          # Django + DRF
-├── web/              # Panel fizjoterapeuty (React)
-├── mobile/           # Aplikacja pacjenta (Expo)
+├── backend/          # Django + DRF (oraz backend/README.md)
+├── web/              # Panel fizjoterapeuty (React + web/README.md)
+├── mobile/           # Aplikacja pacjenta (Expo + mobile/README.md)
 ├── database/         # schema.sql - referencja schematu
 ├── docs/             # Dokumentacja, diagramy, API
 ├── .env.example      # Zmienne środowiskowe (szablon)
@@ -39,16 +39,12 @@ PhysioCare/
 | Dokument | Opis |
 |----------|------|
 | [docs/topic-selection.md](docs/topic-selection.md) | Temat, cel, zakres, technologie |
-| [docs/development-plan.md](docs/development-plan.md) | Plan realizacji krok po kroku |
 | [docs/architecture.md](docs/architecture.md) | Architektura systemu |
 | [docs/use-cases.md](docs/use-cases.md) | Przypadki użycia |
 | [docs/api.md](docs/api.md) | Kontrakt REST API |
 | [docs/legal/polityka-prywatnosci.md](docs/legal/polityka-prywatnosci.md) | Polityka prywatności (RODO / PKE) |
 | [docs/legal/polityka-cookies.md](docs/legal/polityka-cookies.md) | Polityka cookies i technologie w urządzeniu |
 | [docs/monitoring.md](docs/monitoring.md) | Logi strukturalne, latency, request id |
-| [docs/e2e-checklist.md](docs/e2e-checklist.md) | Checklist ścieżek krytycznych |
-| [docs/deployment.md](docs/deployment.md) | Wdrożenie demo (Railway / VPS / EAS) |
-| [docs/presentation-outline.md](docs/presentation-outline.md) | Konspekt prezentacji |
 | [docs/postman-testing.md](docs/postman-testing.md) | Kolekcja Postman, macierz UC, checklista |
 | [docs/postman/PhysioCare.json](docs/postman/PhysioCare.json) | Importowalna kolekcja Postman |
 | [docs/diagrams/](docs/diagrams/) | ERD, architektura, moduły, use case (draw.io) |
@@ -66,8 +62,7 @@ Otwórz pliki `.drawio` w [diagrams.net](https://app.diagrams.net) lub rozszerze
 ## Uruchomienie lokalne
 
 Poniżej pełna ścieżka od zera do działającego stacku: **API + panel web + aplikacja pacjenta**.  
-Wszystkie komendy zakładają katalog główny repo (`PhysioCare/`) i **PowerShell** na Windowsie.  
-Na Windowsie używaj zawsze `npm.cmd` (nie `npm`) — ExecutionPolicy blokuje `npm.ps1`.
+Wszystkie komendy zakładają katalog główny repo (`PhysioCare/`) oraz środowisko **PowerShell** na Windowsie (wywołania npm zapisano jako `npm.cmd`).
 
 ### Wymagania
 
@@ -89,7 +84,7 @@ Copy-Item .env.example .env
 ```
 
 W `.env` ustaw co najmniej: `POSTGRES_*`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`.  
-Opcjonalnie: `EMAIL_*` (reset hasła), `GOOGLE_CLIENT_IDS` (logowanie Google) — patrz [docs/deployment.md](docs/deployment.md).
+Opcjonalnie: `EMAIL_*` (reset hasła), `GOOGLE_CLIENT_IDS` (logowanie Google).
 
 Jeśli PostgreSQL jest świeżo zainstalowany, utwórz użytkownika, bazę i `btree_gist`:
 

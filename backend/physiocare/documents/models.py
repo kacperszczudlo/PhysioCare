@@ -5,6 +5,8 @@ from core.models import TimestampedModel
 
 
 class MedicalDocument(TimestampedModel):
+    """Model dokumentu medycznego powiązanego z pacjentem, wizytą lub epizodem leczenia."""
+
     patient = models.ForeignKey(
         'patients.PatientProfile',
         on_delete=models.CASCADE,
@@ -42,5 +44,10 @@ class MedicalDocument(TimestampedModel):
             ),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Zwraca reprezentację tekstową dokumentu medycznego.
+
+        Returns:
+            Tytuł dokumentu medycznego.
+        """
         return self.title

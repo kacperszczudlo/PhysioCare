@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import URLPattern, URLResolver, path
 
 from .views import (
     MeDeviceTokenView,
@@ -7,7 +7,7 @@ from .views import (
     SseStatsView,
 )
 
-me_urlpatterns = [
+me_urlpatterns: list[URLPattern | URLResolver] = [
     path(
         'events/',
         MeEventsView.as_view(),
@@ -30,4 +30,4 @@ me_urlpatterns = [
     ),
 ]
 
-urlpatterns = []
+urlpatterns: list[URLPattern | URLResolver] = []

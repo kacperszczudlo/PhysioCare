@@ -1,3 +1,8 @@
+/**
+ * @file visits.tsx
+ * @description Ekran listy wizyt pacjenta (zakładka nadchodzących oraz archiwum wizyt przeszłych).
+ */
+
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -18,6 +23,11 @@ import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
 type TabKey = 'upcoming' | 'past'
 
+/**
+ * Ekran prezentujący listę wizyt podzieloną na nadchodzące oraz zakończone/odwołane.
+ *
+ * @returns Element React Native prezentujący wizyty.
+ */
 export default function VisitsScreen() {
   const router = useRouter()
   const [tab, setTab] = useState<TabKey>('upcoming')

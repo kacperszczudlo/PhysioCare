@@ -14,37 +14,146 @@ from notifications.models import (
     NotificationPreference,
 )
 
-logger = logging.getLogger('physiocare.notifications')
+logger: logging.Logger = logging.getLogger('physiocare.notifications')
 
 
-def is_pref_enabled(user, pref_key: str) -> bool:
+def is_pref_enabled(user: object, pref_key: str) -> bool:
+    """Sprawdza, czy dany typ powiadomienia jest włączony w preferencjach użytkownika.
+
+    Args:
+        user (object): Obiekt użytkownika Django.
+        pref_key (str): Klucz preferencji powiadomienia.
+
+    Returns:
+        bool: True jeśli powiadomienie jest włączone, False w przeciwnym razie.
+
+    Raises:
+        TypeError: Gdy parametr pref_key nie jest napisem lub user jest None.
+    """
+    if user is None:
+        raise TypeError("Argument 'user' nie może być None.")
+    if not isinstance(pref_key, str):
+        raise TypeError('Klucz preferencji (pref_key) musi być ciągiem znaków.')
+
     ensure_default_preferences(user)
-    pref = NotificationPreference.objects.filter(user=user, pref_key=pref_key).first()
+    pref: NotificationPreference | None = NotificationPreference.objects.filter(user=user, pref_key=pref_key).first()
     return bool(pref and pref.enabled)
 
 
-def already_delivered(user, dedupe_key: str) -> bool:
+def already_delivered(user: object, dedupe_key: str) -> bool:
+    """Sprawdza, czy powiadomienie o podanym kluczu deduplikacji zostało już doręczone.
+
+    Args:
+        user (object): Obiekt użytkownika Django.
+        dedupe_key (str): Unikalny klucz deduplikacji.
+
+    Returns:
+        bool: True jeśli powiadomienie już istnieje, False w przeciwnym wypadku.
+
+    Raises:
+        TypeError: Gdy dedupe_key nie jest typu str lub user jest None.
+    """
+    if user is None:
+        raise TypeError("Argument 'user' nie może być None.")
+    if not isinstance(dedupe_key, str):
+        raise TypeError("Argument 'dedupe_key' musi być typu str.")
+
     if not dedupe_key:
         return False
     return NotificationDelivery.objects.filter(user=user, dedupe_key=dedupe_key).exists()
 
 
-def schedule_notify(user, pref_key: str, title: str, body: str, *, data=None, dedupe_key=''):
+def schedule_notify(
+    user: object,
+    pref_key: str,
+    title: str,
+    body: str,
+    *,
+    data: dict[str, object] | None = None,
+    dedupe_key: str = '',
+) -> None:
+    """Bezpiecznie szereguje wysyłkę powiadomienia do użytkownika za pośrednictwem Celery lub synchronicznie.
+
+    Args:
+        user (object): Adresat powiadomienia.
+        pref_key (str): Klucz kategorii powiadomienia.
+        title (str): Tytuł powiadomienia.
+        body (str): Treść wiadomości.
+        data (dict[str, object] | None): Dodatkowe metadane w formacie słownika.
+        dedupe_key (str): Klucz deduplikacji.
+
+    Raises:
+        TypeError: Gdy parametry tekstowe nie są typu str lub user jest None.
+    """
+    if user is None:
+        raise TypeError("Argument 'user' nie może być None.")
+    if not isinstance(pref_key, str) or not isinstance(title, str) or not isinstance(body, str):
+        raise TypeError('Parametry pref_key, title oraz body muszą być ciągami znaków.')
+
+    user_pk = getattr(user, 'pk', None)
+    payload_data = dict(data or {})
+
+    try:
+        if user_pk is not None:
+            from notifications.tasks import send_notification_task
+
+            send_notification_task.delay(
+                user_pk,
+                pref_key,
+                title,
+                body,
+                data=payload_data,
+                dedupe_key=dedupe_key,
+            )
+            return
+    except Exception:
+        logger.warning('Celery notification dispatch failed, falling back to sync execution.')
+
     try:
         notify_user(
             user,
             pref_key,
             title,
             body,
-            data=dict(data or {}),
+            data=payload_data,
             dedupe_key=dedupe_key,
         )
     except Exception:
-        logger.exception('Notification dispatch failed for user_id=%s', user.pk)
+        user_id_str: str = str(user.pk) if hasattr(user, 'pk') else 'unknown'
+        logger.exception('Notification dispatch failed for user_id=%s', user_id_str)
 
 
-def notify_user(user, pref_key: str, title: str, body: str, *, data=None, dedupe_key=''):
-    data = data or {}
+def notify_user(
+    user: object,
+    pref_key: str,
+    title: str,
+    body: str,
+    *,
+    data: dict[str, object] | None = None,
+    dedupe_key: str = '',
+) -> None:
+    """Wysyła powiadomienie do użytkownika przy użyciu odpowiedniego kanału (Push/Email).
+
+    Args:
+        user (object): Obiekt użytkownika Django.
+        pref_key (str): Klucz typu powiadomienia.
+        title (str): Tytuł powiadomienia.
+        body (str): Treść wiadomości.
+        data (dict[str, object] | None): Dane dodatkowe payloadu.
+        dedupe_key (str): Klucz deduplikacji zapobiegający powieleniom.
+
+    Raises:
+        TypeError: Gdy parametry tekstowe nie są typu str lub user jest None.
+    """
+    if user is None:
+        raise TypeError("Argument 'user' nie może być None.")
+    if not isinstance(pref_key, str) or not isinstance(title, str) or not isinstance(body, str):
+        raise TypeError('Parametry pref_key, title oraz body muszą być ciągami znaków.')
+
+    payload_data: dict[str, object] = data or {}
+    if not isinstance(payload_data, dict):
+        payload_data = {}
+
     if already_delivered(user, dedupe_key):
         return
 
@@ -56,25 +165,53 @@ def notify_user(user, pref_key: str, title: str, body: str, *, data=None, dedupe
             status=DeliveryStatus.SKIPPED,
             title=title,
             body=body,
-            data=data,
+            data=payload_data,
             dedupe_key=dedupe_key,
         )
         return
 
-    tokens = list(
+    tokens: list[str] = list(
         DeviceToken.objects.filter(user=user, is_active=True).values_list(
             'expo_push_token',
             flat=True,
         )
     )
     if tokens:
-        _send_push(user, pref_key, title, body, data=data, dedupe_key=dedupe_key, tokens=tokens)
+        _send_push(user, pref_key, title, body, data=payload_data, dedupe_key=dedupe_key, tokens=tokens)
         return
-    _send_email(user, pref_key, title, body, data=data, dedupe_key=dedupe_key)
+    _send_email(user, pref_key, title, body, data=payload_data, dedupe_key=dedupe_key)
 
 
-def _send_push(user, pref_key, title, body, *, data, dedupe_key, tokens):
-    messages = [
+def _send_push(
+    user: object,
+    pref_key: str,
+    title: str,
+    body: str,
+    *,
+    data: dict[str, object],
+    dedupe_key: str,
+    tokens: list[str],
+) -> None:
+    """Wewnętrzna funkcja wysyłająca powiadomienie Push przez sieć Expo.
+
+    Args:
+        user (object): Obiekt użytkownika.
+        pref_key (str): Klucz kategorii powiadomień.
+        title (str): Tytuł.
+        body (str): Treść.
+        data (dict[str, object]): Dodatkowe dane.
+        dedupe_key (str): Klucz deduplikacji.
+        tokens (list[str]): Lista aktywnych tokenów urządzeń.
+
+    Raises:
+        TypeError: Gdy tokens nie jest listą lub user jest None.
+    """
+    if user is None:
+        raise TypeError("Argument 'user' nie może być None.")
+    if not isinstance(tokens, list):
+        raise TypeError("Argument 'tokens' musi być listą list[str].")
+
+    messages: list[dict[str, object]] = [
         {
             'to': token,
             'title': title,
@@ -85,9 +222,10 @@ def _send_push(user, pref_key, title, body, *, data, dedupe_key, tokens):
         for token in tokens
     ]
     try:
-        tickets = send_expo_push(messages)
+        tickets: list[dict[str, object]] = send_expo_push(messages)
     except ExpoPushError as exc:
-        logger.exception('Expo push failed for user_id=%s', user.pk)
+        user_id_str: str = str(user.pk) if hasattr(user, 'pk') else 'unknown'
+        logger.exception('Expo push failed for user_id=%s', user_id_str)
         NotificationDelivery.objects.create(
             user=user,
             pref_key=pref_key,
@@ -102,16 +240,16 @@ def _send_push(user, pref_key, title, body, *, data, dedupe_key, tokens):
         _send_email(user, pref_key, title, body, data=data, dedupe_key='')
         return
 
-    stale = []
-    any_ok = False
-    errors = []
+    stale: list[str] = []
+    any_ok: bool = False
+    errors: list[str] = []
     for token, ticket in zip(tokens, tickets, strict=False):
-        status = (ticket or {}).get('status')
-        if status == 'ok':
+        t_status: object = (ticket or {}).get('status')
+        if t_status == 'ok':
             any_ok = True
             continue
-        details = (ticket or {}).get('details') or {}
-        error_code = details.get('error') or (ticket or {}).get('message') or 'error'
+        details: dict[str, object] = (ticket or {}).get('details') or {}  # type: ignore[assignment]
+        error_code: object = details.get('error') or (ticket or {}).get('message') or 'error'
         errors.append(str(error_code))
         if error_code == 'DeviceNotRegistered':
             stale.append(token)
@@ -134,8 +272,32 @@ def _send_push(user, pref_key, title, body, *, data, dedupe_key, tokens):
         _send_email(user, pref_key, title, body, data=data, dedupe_key='')
 
 
-def _send_email(user, pref_key, title, body, *, data, dedupe_key):
-    email = getattr(user, 'email', '') or ''
+def _send_email(
+    user: object,
+    pref_key: str,
+    title: str,
+    body: str,
+    *,
+    data: dict[str, object],
+    dedupe_key: str,
+) -> None:
+    """Wewnętrzna funkcja wysyłająca powiadomienie e-mail w przypadku braku tokenów Push lub ich niepowodzenia.
+
+    Args:
+        user (object): Obiekt użytkownika.
+        pref_key (str): Klucz kategorii powiadomienia.
+        title (str): Tytuł e-maila.
+        body (str): Treść e-maila.
+        data (dict[str, object]): Dodatkowe dane.
+        dedupe_key (str): Klucz deduplikacji.
+
+    Raises:
+        TypeError: Gdy user jest None.
+    """
+    if user is None:
+        raise TypeError("Argument 'user' nie może być None.")
+
+    email: str = user.email if hasattr(user, 'email') and user.email else ''
     if not email:
         NotificationDelivery.objects.create(
             user=user,
@@ -150,7 +312,7 @@ def _send_email(user, pref_key, title, body, *, data, dedupe_key):
         )
         return
 
-    message = body
+    message: str = body
     try:
         send_mail(
             subject=f'PhysioCare - {title}',
@@ -160,7 +322,8 @@ def _send_email(user, pref_key, title, body, *, data, dedupe_key):
             fail_silently=False,
         )
     except (OSError, SMTPException) as exc:
-        logger.exception('Notification e-mail failed for user_id=%s', user.pk)
+        user_id_str: str = str(user.pk) if hasattr(user, 'pk') else 'unknown'
+        logger.exception('Notification e-mail failed for user_id=%s', user_id_str)
         NotificationDelivery.objects.create(
             user=user,
             pref_key=pref_key,

@@ -83,6 +83,9 @@ function StatusIcon({ type }: { type: ToastItemData['type'] }) {
   }
 }
 
+/**
+ * Pojedynczy komponent powiadomienia typu Toast z płynną animacją wejścia/wyjścia i obsługą gestów.
+ */
 export function ToastItem({ toast, onClose }: ToastItemProps) {
   const [isExiting, setIsExiting] = useState(false)
   const [progress, setProgress] = useState(100)

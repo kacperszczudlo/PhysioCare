@@ -30,6 +30,9 @@ function sideToModel(side: BodyViewSide): 'front' | 'back' {
   return side === 'FRONT' ? 'front' : 'back'
 }
 
+/**
+ * Interaktywny komponent mapy ciała (Body Mapper) do zaznaczania punktów bolesności w skali VAS (0-10) i struktur anatomicznych.
+ */
 export function DiagnosticMapper({ episodeId }: DiagnosticMapperProps) {
   const [side, setSide] = useState<BodyViewSide>('FRONT')
   const [entries, setEntries] = useState<BodyAreaPain[]>([])

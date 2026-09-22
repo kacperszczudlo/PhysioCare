@@ -1,23 +1,42 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import './Select.css'
 
+/** Definicja opcji wyboru w komponencie Select. */
 export interface SelectOption<T extends string = string> {
+  /** Unikalna wartość opcji. */
   value: T
+  /** Etykieta wyświetlana w menu rozwijanym. */
   label: string
+  /** Opcjonalna wskazówka pomocnicza przy opcji. */
   hint?: string
 }
 
+/** Właściwości dla dostosowanego komponentu wyboru Select. */
 export interface SelectProps<T extends string = string> {
+  /** Aktualnie wybrana wartość. */
   value: T
+  /** Callback przy zmianie wybranej opcji. */
   onChange: (value: T) => void
+  /** Lista dostępnych opcji do wyboru. */
   options: SelectOption<T>[]
+  /** Czy pole jest zablokowane. */
   disabled?: boolean
+  /** Dodatkowa klasa CSS. */
   className?: string
+  /** Identyfikator pola. */
   id?: string
+  /** Tekst domyślny przy braku wyboru. */
   placeholder?: string
+  /** Etykieta dostępności dla czytników ekranu. */
   ariaLabel?: string
 }
 
+/**
+ * Komponent listy rozwijanej Select dostosowany stylizacyjnie i dostępny z klawiatury (WCAG strzałki/enter/esc).
+ *
+ * @example
+ * <Select value={role} onChange={setRole} options={[{ value: 'PATIENT', label: 'Pacjent' }]} />
+ */
 export function Select<T extends string = string>({
   value,
   onChange,

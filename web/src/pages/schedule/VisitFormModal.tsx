@@ -49,6 +49,9 @@ function timeLocalFromDate(value: Date): string {
   return `${String(value.getHours()).padStart(2, '0')}:${String(value.getMinutes()).padStart(2, '0')}`
 }
 
+/**
+ * Modal planowania i edycji wizyty z wyborem typu terapii, pacjenta, miejsca i czasu.
+ */
 export function VisitFormModal({
   open,
   day,

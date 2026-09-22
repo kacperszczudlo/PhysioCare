@@ -217,6 +217,9 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
   )
 }
 
+/**
+ * Karuzela pionowa do wyboru godziny i minut wizyty z płynnym przewijaniem i przyciąganiem (snap).
+ */
 export function TimeCarousel({
   value,
   onChange,

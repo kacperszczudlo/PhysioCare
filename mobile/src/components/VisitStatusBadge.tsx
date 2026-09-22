@@ -1,13 +1,26 @@
+/**
+ * @file VisitStatusBadge.tsx
+ * @description Komponent odznaki (badge) wizyty wyświetlający przetłumaczony status z odpowiednim kolorem tła i tekstu.
+ */
+
 import { StyleSheet, Text, View, type TextStyle, type ViewStyle } from 'react-native'
 
 import type { VisitStatus } from '@/api/types'
 import { visitStatusLabel } from '@/lib/format'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
+/** Właściwości komponentu {@link VisitStatusBadge}. */
 interface VisitStatusBadgeProps {
+  /** Status wizyty (np. "SCHEDULED", "COMPLETED", "CANCELLED", itp.). */
   status: VisitStatus | string
 }
 
+/**
+ * Kolorowa odznaka prezentująca status wizyty w języku polskim.
+ *
+ * @param props Właściwości odznaki statusu.
+ * @returns Element React Native zawierający odznakę z etykietą statusu.
+ */
 export function VisitStatusBadge({ status }: VisitStatusBadgeProps) {
   const label = visitStatusLabel(status)
 

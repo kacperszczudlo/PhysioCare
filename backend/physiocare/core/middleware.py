@@ -1,32 +1,56 @@
-"""HTTP request logging, admin hardening, and response-time metrics."""
-
 from __future__ import annotations
 
 import logging
 import time
 import uuid
+from collections.abc import Callable
 
 from django.conf import settings
-from django.http import HttpResponseNotFound
+from django.http import HttpRequest, HttpResponse, HttpResponseNotFound
 
 logger = logging.getLogger('physiocare.api')
 
-_SKIP_PREFIXES = ('/static/', '/media/', '/favicon.ico')
+_SKIP_PREFIXES: tuple[str, ...] = ('/static/', '/media/', '/favicon.ico')
 
 
 class AdminAccessMiddleware:
-    """Restrict Django admin by enable flag and optional IP allowlist."""
+    """Ogranicza dostęp do panelu administracyjnego Django na podstawie flagi konfiguracyjnej oraz białej listy IP."""
 
-    def __init__(self, get_response):
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
+        """Inicjalizuje oprogramowanie pośredniczące.
+
+        Args:
+            get_response (Callable[[HttpRequest], HttpResponse]): Funkcja pobierająca odpowiedź HTTP.
+
+        Raises:
+            TypeError: Gdy get_response jest None.
+        """
+        if get_response is None:
+            raise TypeError("Argument 'get_response' nie może być None.")
         self.get_response = get_response
 
-    def __call__(self, request):
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        """Obsługuje żądanie wejściowe i sprawdza uprawnienia dostępu do ścieżki /admin.
+
+        Args:
+            request (HttpRequest): Obiekt żądania HTTP.
+
+        Returns:
+            HttpResponse: Odpowiedź HTTP.
+
+        Raises:
+            TypeError: Gdy request nie jest instancją HttpRequest.
+        """
+        if not isinstance(request, HttpRequest):
+            raise TypeError("Argument 'request' musi być instancją HttpRequest.")
+
         path = request.path
         if path == '/admin' or path.startswith('/admin/'):
-            if not getattr(settings, 'ADMIN_ENABLED', True):
+            admin_enabled = settings.ADMIN_ENABLED if hasattr(settings, 'ADMIN_ENABLED') else True
+            if not admin_enabled:
                 return HttpResponseNotFound()
 
-            allowed_ips = getattr(settings, 'ADMIN_ALLOWED_IPS', None) or []
+            allowed_ips = (settings.ADMIN_ALLOWED_IPS if hasattr(settings, 'ADMIN_ALLOWED_IPS') else None) or []
             if allowed_ips:
                 client_ip = request.META.get('REMOTE_ADDR', '')
                 if client_ip not in allowed_ips:
@@ -36,13 +60,40 @@ class AdminAccessMiddleware:
 
 
 class RequestTimingMiddleware:
-    """Attach request id, measure duration, and emit structured API logs."""
+    """Przypisuje identyfikator żądania (X-Request-ID), mierzy czas wykonania oraz generuje ustrukturyzowane logi API."""
 
-    def __init__(self, get_response):
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
+        """Inicjalizuje oprogramowanie pośredniczące.
+
+        Args:
+            get_response (Callable[[HttpRequest], HttpResponse]): Funkcja pobierająca odpowiedź HTTP.
+
+        Raises:
+            TypeError: Gdy get_response jest None.
+        """
+        if get_response is None:
+            raise TypeError("Argument 'get_response' nie może być None.")
         self.get_response = get_response
 
-    def __call__(self, request):
-        request_id = request.headers.get('X-Request-ID') or str(uuid.uuid4())
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        """Mierzy czas przetworzenia żądania i dodaje nagłówki diagnostyczne do odpowiedzi.
+
+        Args:
+            request (HttpRequest): Obiekt żądania HTTP.
+
+        Returns:
+            HttpResponse: Zmodyfikowany obiekt odpowiedzi HTTP.
+
+        Raises:
+            TypeError: Gdy request nie jest instancją HttpRequest.
+        """
+        if not isinstance(request, HttpRequest):
+            raise TypeError("Argument 'request' musi być instancją HttpRequest.")
+
+        request_id = request.headers.get('X-Request-ID') if hasattr(request, 'headers') else None
+        if not request_id:
+            request_id = str(uuid.uuid4())
+
         request.request_id = request_id
         started = time.perf_counter()
 
@@ -52,7 +103,7 @@ class RequestTimingMiddleware:
         response['X-Request-ID'] = request_id
         response['X-Response-Time-Ms'] = f'{duration_ms:.1f}'
 
-        path = request.path
+        path = request.path if hasattr(request, 'path') else ''
         if any(path.startswith(prefix) for prefix in _SKIP_PREFIXES):
             return response
 
@@ -63,15 +114,15 @@ class RequestTimingMiddleware:
         elif status_code >= 400:
             level = logging.WARNING
 
-        user = getattr(request, 'user', None)
-        user_id = getattr(user, 'pk', None) if user is not None and getattr(user, 'is_authenticated', False) else None
+        user = request.user if hasattr(request, 'user') else None
+        user_id = user.pk if user is not None and hasattr(user, 'is_authenticated') and user.is_authenticated else None
 
         logger.log(
             level,
             'request completed',
             extra={
                 'request_id': request_id,
-                'method': request.method,
+                'method': request.method if hasattr(request, 'method') else None,
                 'path': path,
                 'status_code': status_code,
                 'duration_ms': duration_ms,
@@ -82,12 +133,36 @@ class RequestTimingMiddleware:
 
 
 class SecurityHeadersMiddleware:
-    """Attach CSP, Permissions-Policy, and COOP security headers to HTTP responses."""
+    """Dołącza polityki bezpieczeństwa CSP, Permissions-Policy oraz COOP do odpowiedzi HTTP."""
 
-    def __init__(self, get_response):
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
+        """Inicjalizuje oprogramowanie pośredniczące.
+
+        Args:
+            get_response (Callable[[HttpRequest], HttpResponse]): Funkcja pobierająca odpowiedź HTTP.
+
+        Raises:
+            TypeError: Gdy get_response jest None.
+        """
+        if get_response is None:
+            raise TypeError("Argument 'get_response' nie może być None.")
         self.get_response = get_response
 
-    def __call__(self, request):
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        """Ustawia nagłówki bezpieczeństwa w odpowiedzi HTTP.
+
+        Args:
+            request (HttpRequest): Obiekt żądania HTTP.
+
+        Returns:
+            HttpResponse: Zmodyfikowana odpowiedź HTTP z nagłówkami bezpieczeństwa.
+
+        Raises:
+            TypeError: Gdy request nie jest instancją HttpRequest.
+        """
+        if not isinstance(request, HttpRequest):
+            raise TypeError("Argument 'request' musi być instancją HttpRequest.")
+
         response = self.get_response(request)
 
         if 'Content-Security-Policy' not in response:
@@ -99,7 +174,7 @@ class SecurityHeadersMiddleware:
                 "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style https://fonts.googleapis.com; "
                 "font-src 'self' https://fonts.gstatic.com data:; "
                 "img-src 'self' data: blob: https://*.googleusercontent.com https://www.gstatic.com; "
-                "connect-src 'self' http://localhost:* ws://localhost:* https://www.google.com "
+                "connect-src 'self' https: wss: http://localhost:* ws://localhost:* https://www.google.com "
                 "https://accounts.google.com https://exp.host https://*.sentry.io; "
                 "frame-src 'self' https://www.google.com/recaptcha/ https://recaptcha.google.com/ "
                 "https://accounts.google.com/; "
@@ -118,4 +193,6 @@ class SecurityHeadersMiddleware:
             response['Cross-Origin-Opener-Policy'] = "same-origin-allow-popups"
 
         return response
+
+
 

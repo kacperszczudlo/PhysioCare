@@ -1,12 +1,26 @@
+/**
+ * @file PasswordRequirements.tsx
+ * @description Listowanie kryteriów bezpieczeństwa hasła (długość, cyfry, znaki specjalne) z dynamicznym wskaźnikiem ich spełnienia.
+ */
+
 import type { PasswordRequirement } from '@/lib/passwordPolicy'
 import { colors, space, typography } from '@/theme/tokens'
 import { StyleSheet, Text, View } from 'react-native'
 
+/** Właściwości komponentu {@link PasswordRequirements}. */
 interface PasswordRequirementsProps {
+  /** Lista wymogów bezpieczeństwa hasła wraz ze stanem ich spełnienia. */
   requirements: PasswordRequirement[]
+  /** Czy wymuszać wyświetlanie błędów dla niespełnionych wymogów. */
   showErrors?: boolean
 }
 
+/**
+ * Komponent wizualizujący checklistę wymagań dotyczących haseł (np. 8+ znaków, duża litera).
+ *
+ * @param props Właściwości listy wymagań.
+ * @returns Element React Native prezentujący checklistę.
+ */
 export function PasswordRequirements({
   requirements,
   showErrors = false,

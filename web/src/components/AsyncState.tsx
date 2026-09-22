@@ -3,12 +3,22 @@ import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/Button'
 import './AsyncState.css'
 
+/** Prop-sy dla komponentu sygnalizującego stan ładowania danych. */
 interface LoadingBlockProps {
+  /** Komunikat informacyjny wyświetlany użytkownikowi (np. "Ładowanie listy pacjentów..."). */
   label?: string
+  /** Wariant wizualny: dyskretna etykieta tekstowa ('text') lub pełny panel ('panel'). */
   variant?: 'text' | 'panel'
+  /** Opcjonalny komponent szkieletowy (Skeleton) renderowany zamiast domyślnego wskaźnika. */
   skeleton?: ReactNode
 }
 
+/**
+ * Komponent sygnalizujący pobieranie danych w toku (z dostępnością dla czytników ekranu WCAG).
+ *
+ * @example
+ * <LoadingBlock label="Pobieranie historii wizyt..." variant="panel" />
+ */
 export function LoadingBlock({
   label = 'Ładowanie…',
   variant = 'text',
@@ -34,11 +44,20 @@ export function LoadingBlock({
   )
 }
 
+/** Prop-sy dla bannera prezentującego błąd pobierania lub operacji. */
 interface ErrorBannerProps {
+  /** Komunikat błędu do wyświetlenia w alertach UI. */
   message: string
+  /** Opcjonalny callback umożliwiający użytkownikowi powtórzenie nieudanej operacji. */
   onRetry?: () => void
 }
 
+/**
+ * Komponent bannera błędu z przyciskiem ponowienia akcji (`onRetry`).
+ *
+ * @example
+ * <ErrorBanner message="Nie udało się pobrać danych pacjenta." onRetry={refetch} />
+ */
 export function ErrorBanner({ message, onRetry }: ErrorBannerProps) {
   return (
     <div className="async-error" role="alert">
@@ -52,14 +71,19 @@ export function ErrorBanner({ message, onRetry }: ErrorBannerProps) {
   )
 }
 
+/** Prop-sy dla bannera potwierdzającego pomyślną operację. */
 interface SuccessBannerProps {
+  /** Treść komunikatu sukcesu (tekst lub JSX). */
   message: ReactNode
 }
 
+/**
+ * Komponent bannera potwierdzającego pomyślny zapis lub zmianę stanu.
+ */
 export function SuccessBanner({ message }: SuccessBannerProps) {
   return (
-    <div className="async-success" role="status">
-      {typeof message === 'string' || typeof message === 'number' ? <p>{message}</p> : message}
+    <div className="async-success" role="status" aria-live="polite">
+      <p>{message}</p>
     </div>
   )
 }

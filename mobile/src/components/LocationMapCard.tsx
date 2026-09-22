@@ -1,10 +1,18 @@
+/**
+ * @file LocationMapCard.tsx
+ * @description Karta z podglądem statycznej mapy i adresem kliniki, umożliwiająca przejście do zewnętrznej nawigacji.
+ */
+
 import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Skeleton } from '@/components/Skeleton'
 import { openAddressInMaps } from '@/lib/maps'
 
+/** Właściwości komponentu {@link LocationMapCard}. */
 interface LocationMapCardProps {
+  /** Adres geograficzny do wyświetlenia i geokodowania. */
   address: string
+  /** Tytuł nagłówka karty (domyślnie "Lokalizacja"). */
   title?: string
 }
 
@@ -13,6 +21,12 @@ interface Coords {
   lon: number
 }
 
+/**
+ * Karta z podglądem lokalizacji na mapie OpenStreetMap i przyciskiem otwieranym w natywnej aplikacji map.
+ *
+ * @param props Właściwości komponentu karty lokalizacji.
+ * @returns Element React Native prezentujący mapę i adres.
+ */
 export const LocationMapCard: React.FC<LocationMapCardProps> = ({
   address,
   title = 'Lokalizacja',

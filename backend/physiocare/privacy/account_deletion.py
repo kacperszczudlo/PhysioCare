@@ -1,5 +1,3 @@
-"""Account deletion: deactivate, anonymize PII, free e-mail for re-registration."""
-
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
@@ -15,10 +13,17 @@ User = get_user_model()
 
 @transaction.atomic
 def free_inactive_email_holder(email: str) -> bool:
-    """If an inactive user still holds ``email``, anonymize them so it can be reused.
+    """Anonimizuje nieaktywne konto posiadające dany e-mail, aby umożliwić ponowną rejestrację.
 
-    Returns True when an inactive holder was freed.
+    Args:
+        email (str): Adres e-mail do zwolnienia.
+
+    Returns:
+        bool: True jeśli znaleziono i zanonimizowano nieaktywnego użytkownika, False w przeciwnym razie.
     """
+    if not isinstance(email, str):
+        return False
+
     normalized = User.objects.normalize_email(email)
     holder = (
         User.objects.filter(email__iexact=normalized, is_active=False)
@@ -32,10 +37,24 @@ def free_inactive_email_holder(email: str) -> bool:
 
 
 @transaction.atomic
-def submit_account_deletion(user, *, reason: str = '') -> AccountDeletionRequest:
-    """Register deletion request, revoke sessions/tokens, and anonymize the user."""
-    reason = (reason or '').strip()[:2000]
-    original_email = user.email
+def submit_account_deletion(user: object, *, reason: str = '') -> AccountDeletionRequest:
+    """Rejestruje wniosek o usunięcie konta, unieważnia sesje i anonimizuje dane osobowe użytkownika.
+
+    Args:
+        user (object): Obiekt usuwanego użytkownika.
+        reason (str): Opcjonalny powód usunięcia konta podany przez użytkownika.
+
+    Returns:
+        AccountDeletionRequest: Obiekt zarejestrowanego wniosku o usunięcie.
+
+    Raises:
+        TypeError: Gdy parametr reason nie jest napisem.
+    """
+    if not isinstance(reason, str):
+        raise TypeError('Argument reason musi być typu str.')
+
+    reason_clean = (reason or '').strip()[:2000]
+    original_email = user.email if hasattr(user, 'email') else ''
 
     DeviceToken.objects.filter(user=user, is_active=True).update(
         is_active=False,
@@ -43,8 +62,8 @@ def submit_account_deletion(user, *, reason: str = '') -> AccountDeletionRequest
     )
 
     deletion, _created = AccountDeletionRequest.objects.get_or_create(user=user)
-    if reason:
-        deletion.reason = reason
+    if reason_clean:
+        deletion.reason = reason_clean
     if original_email and not original_email.startswith('deleted-'):
         note = f'email_at_request={original_email}'
         if deletion.notes:
@@ -54,18 +73,33 @@ def submit_account_deletion(user, *, reason: str = '') -> AccountDeletionRequest
             deletion.notes = note
     deletion.save()
 
-    anonymize_user_for_deletion(user, reason=reason, source='user_request')
+    anonymize_user_for_deletion(user, reason=reason_clean, source='user_request')
     return deletion
 
 
 def anonymize_user_for_deletion(
-    user,
+    user: object,
     *,
     reason: str = '',
     source: str = 'user_request',
 ) -> None:
-    """Soft-delete: deactivate, scrub PII, free e-mail and Google subject."""
-    if user.email.startswith('deleted-') and not user.is_active:
+    """Wykonuje anonimizację danych osobowych (soft-delete): czyszczenie PII, deaktywację i unieważnienie haseł.
+
+    Args:
+        user (object): Obiekt użytkownika.
+        reason (str): Uzasadnienie usunięcia.
+        source (str): Źródło operacji ('user_request' lub 're_registration').
+
+    Raises:
+        TypeError: Gdy parametry reason lub source nie są napisami.
+    """
+    if not isinstance(reason, str) or not isinstance(source, str):
+        raise TypeError('Parametry reason oraz source muszą być ciągami znaków.')
+
+    user_email = user.email if hasattr(user, 'email') and user.email else ''
+    is_active = user.is_active if hasattr(user, 'is_active') else True
+
+    if user_email.startswith('deleted-') and not is_active:
         return
 
     user.email = f'deleted-{user.pk}@deleted.invalid'
@@ -88,7 +122,7 @@ def anonymize_user_for_deletion(
         ]
     )
 
-    profile = getattr(user, 'patient_profile', None)
+    profile = user.patient_profile if hasattr(user, 'patient_profile') else None
     if profile is not None:
         profile.pesel = None
         profile.phone = ''
@@ -108,3 +142,5 @@ def anonymize_user_for_deletion(
                 'notes': 'anonymized_on_re_registration=1',
             },
         )
+
+

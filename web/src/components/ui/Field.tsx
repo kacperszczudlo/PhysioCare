@@ -2,10 +2,15 @@ import { useId, useState, type InputHTMLAttributes } from 'react'
 
 import './Field.css'
 
+/** Właściwości komponentu pola wprowadzania danych z etykietą i błędem. */
 interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
+  /** Etykieta formularza. */
   label: string
+  /** Komunikat błędu walidacji (wyświetlany pod polem w kolorze czerwonym). */
   error?: string
+  /** Wskazówka pomocnicza dla użytkownika. */
   hint?: string
+  /** Czy pole typu 'password' pozwala na podgląd ukrytego tekstu (przycisk z ikoną oka). */
   revealable?: boolean
 }
 
@@ -37,6 +42,12 @@ function EyeIcon({ open }: { open: boolean }) {
   )
 }
 
+/**
+ * Komponent pola formularza (input) z etykietą, błędem walidacji i opcją podglądu hasła.
+ *
+ * @example
+ * <Field label="Adres e-mail" error={errors.email} value={email} onChange={e => setEmail(e.target.value)} />
+ */
 export function Field({
   id,
   label,

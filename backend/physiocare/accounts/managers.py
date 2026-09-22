@@ -4,7 +4,28 @@ from django.utils.translation import gettext_lazy as _
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
+    """Menedżer modelu CustomUser obsługujący tworzenie zwykłych użytkowników oraz superużytkowników."""
+
+    def create_user(self, email: str | None, password: str | None = None, **extra_fields: object) -> object:
+        """Tworzy i zapisuje użytkownika o podanym adresie e-mail i haśle.
+
+        Args:
+            email (str | None): Adres e-mail użytkownika.
+            password (str | None): Hasło użytkownika. Domyślnie None (tworzy konto bez używalnego hasła).
+            **extra_fields (object): Dodatkowe pola modelu CustomUser.
+
+        Returns:
+            object: Utworzona instancja użytkownika.
+
+        Raises:
+            ValueError: Gdy adres e-mail nie zostanie podany.
+            TypeError: Gdy typ podanego adresu e-mail lub hasła jest nieprawidłowy.
+        """
+        if email is not None and not isinstance(email, str):
+            raise TypeError('Adres e-mail musi być ciągiem znaków.')
+        if password is not None and not isinstance(password, str):
+            raise TypeError('Hasło musi być ciągiem znaków lub None.')
+
         if not email:
             raise ValueError(_('Użytkownik musi posiadać adres e-mail.'))
 
@@ -17,7 +38,26 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
+    def create_superuser(self, email: str | None, password: str | None = None, **extra_fields: object) -> object:
+        """Tworzy i zapisuje superużytkownika o podanym adresie e-mail i haśle.
+
+        Args:
+            email (str | None): Adres e-mail superużytkownika.
+            password (str | None): Hasło superużytkownika.
+            **extra_fields (object): Dodatkowe pola modelu CustomUser.
+
+        Returns:
+            object: Utworzona instancja superużytkownika.
+
+        Raises:
+            ValueError: Gdy flagi is_staff lub is_superuser nie mają wartości True.
+            TypeError: Gdy typ podanego adresu e-mail lub hasła jest nieprawidłowy.
+        """
+        if email is not None and not isinstance(email, str):
+            raise TypeError('Adres e-mail musi być ciągiem znaków.')
+        if password is not None and not isinstance(password, str):
+            raise TypeError('Hasło musi być ciągiem znaków lub None.')
+
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
@@ -32,3 +72,5 @@ class CustomUserManager(BaseUserManager):
             raise ValueError(_('Konto typu Superuser musi posiadać flagę is_superuser=True.'))
 
         return self.create_user(email, password, **extra_fields)
+
+

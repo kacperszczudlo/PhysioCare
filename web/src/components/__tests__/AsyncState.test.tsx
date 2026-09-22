@@ -2,6 +2,11 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { LoadingBlock, ErrorBanner, SuccessBanner, EmptyState } from '../AsyncState'
 
+/**
+ * @file AsyncState.test.tsx
+ * @description Zestaw testów komponentów stanów asynchronicznych (ładowanie, błąd, sukces, pusty stan).
+ */
+
 describe('AsyncState Components', () => {
   it('renders LoadingBlock with accessible role', () => {
     render(<LoadingBlock label="Ładowanie pacjentów..." />)

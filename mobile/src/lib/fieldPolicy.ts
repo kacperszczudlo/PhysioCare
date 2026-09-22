@@ -1,3 +1,9 @@
+/**
+ * @file fieldPolicy.ts
+ * @description Zasady walidacji oraz komunikaty błędów dla pól tekstowych formularzy (imię, nazwisko, adres, bio, kursy, ICD-10, dawkowanie).
+ */
+
+/** Komunikaty błędów dotyczące imienia i nazwiska */
 export const NAME_MESSAGES = {
   firstRequired: 'Podaj imię.',
   lastRequired: 'Podaj nazwisko.',
@@ -18,6 +24,12 @@ function normalizeName(value: string): string {
   return value.trim().replace(/\s+/g, ' ')
 }
 
+/**
+ * Waliduje imię użytkownika.
+ *
+ * @param value - Wprowadzona wartość imienia.
+ * @returns Komunikat błędu po polsku lub null w przypadku braku błędu.
+ */
 export function getFirstNameError(value: string): string | null {
   const name = normalizeName(value)
   if (!name) {
@@ -35,6 +47,12 @@ export function getFirstNameError(value: string): string | null {
   return null
 }
 
+/**
+ * Waliduje nazwisko użytkownika.
+ *
+ * @param value - Wprowadzona wartość nazwiska.
+ * @returns Komunikat błędu po polsku lub null w przypadku braku błędu.
+ */
 export function getLastNameError(value: string): string | null {
   const name = normalizeName(value)
   if (!name) {
@@ -52,6 +70,7 @@ export function getLastNameError(value: string): string | null {
   return null
 }
 
+/** Komunikaty błędów dla pól pomocniczych i medycznych */
 export const FIELD_MESSAGES = {
   addressTooShort: 'Adres jest zbyt krótki - podaj ulicę i miejscowość.',
   addressTooLong: 'Adres może mieć co najwyżej 300 znaków.',
@@ -68,6 +87,7 @@ export const FIELD_MESSAGES = {
 
 const ICD10_PATTERN = /^[A-TV-Z][0-9]{2}(?:\.[0-9A-TV-Z]{1,4})?$/i
 
+/** Waliduje wprowadzony adres zamieszkania lub gabinetu */
 export function getAddressError(value: string, { allowBlank = true } = {}): string | null {
   const address = value.trim().replace(/\s+/g, ' ')
   if (!address) {
@@ -82,6 +102,7 @@ export function getAddressError(value: string, { allowBlank = true } = {}): stri
   return null
 }
 
+/** Waliduje opis profilu fizjoterapeuty (bio) */
 export function getBioError(value: string): string | null {
   if (value.trim().length > 2000) {
     return FIELD_MESSAGES.bioTooLong
@@ -89,6 +110,7 @@ export function getBioError(value: string): string | null {
   return null
 }
 
+/** Waliduje nazwę ukończonego kursu lub szkolenia */
 export function getCourseError(value: string): string | null {
   const course = value.trim().replace(/\s+/g, ' ')
   if (!course) {
@@ -100,6 +122,7 @@ export function getCourseError(value: string): string | null {
   return null
 }
 
+/** Waliduje składnię kodu ICD-10 */
 export function getIcd10Error(value: string, { allowBlank = true } = {}): string | null {
   const code = value.trim()
   if (!code) {
@@ -111,6 +134,7 @@ export function getIcd10Error(value: string, { allowBlank = true } = {}): string
   return null
 }
 
+/** Waliduje pole dawkowania ćwiczenia domowego */
 export function getDosageError(value: string): string | null {
   const dosage = value.trim()
   if (!dosage) {
@@ -122,6 +146,7 @@ export function getDosageError(value: string): string | null {
   return null
 }
 
+/** Waliduje tytuł dodawanego ćwiczenia */
 export function getExerciseTitleError(value: string): string | null {
   const title = value.trim()
   if (!title) {

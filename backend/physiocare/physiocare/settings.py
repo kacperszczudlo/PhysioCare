@@ -12,6 +12,20 @@ load_dotenv(ROOT_DIR / '.env')
 
 
 def require_env(name: str) -> str:
+    """Wymaga obecności zmiennej środowiskowej i zwraca jej wartość.
+
+    Args:
+        name (str): Nazwa zmiennej środowiskowej.
+
+    Returns:
+        str: Wartość zmiennej środowiskowej.
+
+    Raises:
+        ImproperlyConfigured: Gdy zmienna środowiskowa nie jest ustawiona.
+        TypeError: Gdy parametr name nie jest ciągiem znaków.
+    """
+    if not isinstance(name, str):
+        raise TypeError('Parametr name musi być ciągiem znaków.')
     value = os.environ.get(name)
     if not value:
         raise ImproperlyConfigured(
@@ -21,16 +35,44 @@ def require_env(name: str) -> str:
 
 
 def env_bool(name: str, default: str = 'false') -> bool:
+    """Odczytuje zmienną środowiskową jako wartość logiczną (bool).
+
+    Args:
+        name (str): Nazwa zmiennej środowiskowej.
+        default (str): Domyślna wartość w przypadku braku zmiennej.
+
+    Returns:
+        bool: True jeśli wartość oznacza binarne włączenie (1, true, yes).
+
+    Raises:
+        TypeError: Gdy nazwa lub domyślna wartość nie są ciągiem znaków.
+    """
+    if not isinstance(name, str) or not isinstance(default, str):
+        raise TypeError('Parametry name i default muszą być ciągami znaków.')
     return os.environ.get(name, default).lower() in ('1', 'true', 'yes')
 
 
 def env_list(name: str, default: str = '') -> list[str]:
+    """Odczytuje zmienną środowiskową rozdzieloną przecinkami jako listę napisów.
+
+    Args:
+        name (str): Nazwa zmiennej środowiskowej.
+        default (str): Domyślna wartość ciągu tekstowego.
+
+    Returns:
+        list[str]: Lista wyodrębnionych elementów.
+
+    Raises:
+        TypeError: Gdy nazwa lub domyślna wartość nie są ciągiem znaków.
+    """
+    if not isinstance(name, str) or not isinstance(default, str):
+        raise TypeError('Parametry name i default muszą być ciągami znaków.')
     return [item.strip() for item in os.environ.get(name, default).split(',') if item.strip()]
+
 
 
 SECRET_KEY = require_env('DJANGO_SECRET_KEY')
 
-# Secure default: production-safe. Local .env.example sets DJANGO_DEBUG=true.
 DEBUG = env_bool('DJANGO_DEBUG', 'false')
 
 ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
@@ -42,7 +84,6 @@ if not DEBUG and '*' in ALLOWED_HOSTS:
     )
 
 
-# Django admin: disable on public demo hosts, or restrict by REMOTE_ADDR.
 ADMIN_ENABLED = env_bool('DJANGO_ADMIN_ENABLED', 'true')
 ADMIN_ALLOWED_IPS = env_list('DJANGO_ADMIN_ALLOWED_IPS', '')
 
@@ -108,8 +149,26 @@ WSGI_APPLICATION = 'physiocare.wsgi.application'
 ASGI_APPLICATION = 'physiocare.asgi.application'
 
 
-def postgres_database(*, db_name=None, test_db_name=None):
+def postgres_database(*, db_name: str | None = None, test_db_name: str | None = None) -> dict[str, object]:
+    """Buduje słownik konfiguracji połączenia z bazą danych PostgreSQL.
+
+    Args:
+        db_name (str | None): Opcjonalna nazwa bazy danych.
+        test_db_name (str | None): Opcjonalna nazwa testowej bazy danych.
+
+    Returns:
+        dict[str, object]: Słownik konfiguracji bazy danych dla Django.
+
+    Raises:
+        TypeError: Gdy parametr db_name lub test_db_name ma niepoprawny typ.
+    """
+    if db_name is not None and not isinstance(db_name, str):
+        raise TypeError('Parametr db_name musi być typu str lub None.')
+    if test_db_name is not None and not isinstance(test_db_name, str):
+        raise TypeError('Parametr test_db_name musi być typu str lub None.')
+
     sslmode = os.environ.get('DB_SSLMODE', '').strip()
+
     config = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': db_name or require_env('POSTGRES_DB'),
@@ -182,8 +241,6 @@ CSRF_TRUSTED_ORIGINS = env_list(
 
 SECURE_COOKIES = env_bool('DJANGO_SECURE_COOKIES', 'true' if not DEBUG else 'false')
 
-# Comma-separated OAuth 2.0 Client IDs (Web + Android/iOS) accepted as ID token audience.
-# Also accepts singular GOOGLE_CLIENT_ID (GastroHub-compatible).
 GOOGLE_CLIENT_IDS = env_list('GOOGLE_CLIENT_IDS') or env_list('GOOGLE_CLIENT_ID')
 
 SIMPLE_JWT = {
@@ -277,14 +334,19 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_COOKIES = True
 
+USE_X_FORWARDED_HOST = env_bool('DJANGO_USE_X_FORWARDED_HOST', 'true')
+if env_bool('DJANGO_SECURE_PROXY_SSL_HEADER', 'true' if not DEBUG else 'false'):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
 
 _REDIS_URL = os.environ.get('REDIS_URL', '').strip()
 if _REDIS_URL:
-    # Shared cache across Gunicorn workers - required for correct rate limits in multi-process.
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.redis.RedisCache',
             'LOCATION': _REDIS_URL,
+            'KEY_PREFIX': 'physiocare',
         }
     }
 else:
@@ -292,8 +354,29 @@ else:
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
             'LOCATION': 'physiocare-default',
+            'KEY_PREFIX': 'physiocare',
         }
     }
+
+CELERY_BROKER_URL: str = os.environ.get('CELERY_BROKER_URL', _REDIS_URL or 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND: str = os.environ.get('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
+CELERY_ACCEPT_CONTENT: list[str] = ['json']
+CELERY_TASK_SERIALIZER: str = 'json'
+CELERY_RESULT_SERIALIZER: str = 'json'
+CELERY_TIMEZONE: str = TIME_ZONE
+CELERY_TASK_ALWAYS_EAGER: bool = env_bool('CELERY_TASK_ALWAYS_EAGER', 'true' if not _REDIS_URL else 'false')
+CELERY_TASK_EAGER_PROPAGATES: bool = True
+
+CELERY_BEAT_SCHEDULE: dict[str, dict[str, object]] = {
+    'notify-upcoming-visits-every-15m': {
+        'task': 'notifications.tasks.run_upcoming_visits_job_task',
+        'schedule': 900.0,
+    },
+    'notify-today-exercises-daily': {
+        'task': 'notifications.tasks.run_today_exercises_job_task',
+        'schedule': 86400.0,
+    },
+}
 
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_FROM', 'noreply@example.com')
 
@@ -307,8 +390,6 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', 'true')
 
-# TTL for email OTP (verify + password reset) and post-verify reset token, seconds.
-# 30 minutes is a common default for e-mail codes (SMS is usually shorter).
 PASSWORD_RESET_TIMEOUT = int(os.environ.get('PASSWORD_RESET_TIMEOUT', '1800'))
 EMAIL_CODE_MAX_ATTEMPTS = int(os.environ.get('EMAIL_CODE_MAX_ATTEMPTS', '5'))
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173').rstrip('/')
@@ -320,7 +401,6 @@ EXPO_PUSH_TIMEOUT = int(os.environ.get('EXPO_PUSH_TIMEOUT', '10'))
 NOTIFICATION_SCHEDULER_INTERVAL_SECONDS = int(
     os.environ.get('NOTIFICATION_SCHEDULER_INTERVAL_SECONDS', '900'),
 )
-# SSE (/api/v1/me/events/): heartbeat + optional frame cap (tests). 0 = unlimited.
 SSE_HEARTBEAT_SECONDS = int(os.environ.get('SSE_HEARTBEAT_SECONDS', '20'))
 SSE_MAX_FRAMES = int(os.environ.get('SSE_MAX_FRAMES', '0'))
 SSE_BUS_ENGINE = os.environ.get('SSE_BUS_ENGINE', 'auto').lower()
@@ -330,7 +410,6 @@ RECAPTCHA_ENABLED = env_bool('RECAPTCHA_ENABLED', 'false')
 RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
 RECAPTCHA_SCORE_THRESHOLD = float(os.environ.get('RECAPTCHA_SCORE_THRESHOLD', '0.5'))
 
-# Optional error alerting (production). Without DSN, errors stay in structured logs only.
 _SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()
 if _SENTRY_DSN:
     import sentry_sdk

@@ -1,22 +1,16 @@
-"""Canonical exercise category taxonomy (kinds + slugs).
+KIND_TYPE: str = 'TYPE'
+KIND_REGION: str = 'REGION'
+KIND_MUSCLE: str = 'MUSCLE'
+KIND_INJURY: str = 'INJURY'
 
-Used by migrations and tests. Keep slugs stable - API filters depend on them.
-Kind values match CategoryKind on ExerciseCategory.
-"""
-
-KIND_TYPE = 'TYPE'
-KIND_REGION = 'REGION'
-KIND_MUSCLE = 'MUSCLE'
-KIND_INJURY = 'INJURY'
-
-LEGACY_CATEGORY_MAP = {
+LEGACY_CATEGORY_MAP: dict[str, tuple[str, str]] = {
     'Rozciąganie': (KIND_TYPE, 'stretching'),
     'Mobilizacja': (KIND_TYPE, 'mobilization'),
     'Kończyna dolna': (KIND_REGION, 'lower_limb'),
     'Odcinek lędźwiowy': (KIND_REGION, 'lumbar'),
 }
 
-CATEGORY_SEED = [
+CATEGORY_SEED: list[tuple[str, str, str]] = [
     (KIND_TYPE, 'mobilization', 'Mobilizacja'),
     (KIND_TYPE, 'stretching', 'Rozciąganie'),
     (KIND_TYPE, 'strengthening', 'Wzmacnianie'),
@@ -66,3 +60,30 @@ CATEGORY_SEED = [
     (KIND_INJURY, 'piriformis_syndrome', 'Zespół gruszkowatego'),
     (KIND_INJURY, 'tmj', 'Staw skroniowo-żuchwowy'),
 ]
+
+
+def get_category_seed() -> list[tuple[str, str, str]]:
+    """Zwraca listę zdefiniowanych kategorii początkowych ćwiczeń.
+
+    Returns:
+        list[tuple[str, str, str]]: Kopia listy krotek określających typ, kod oraz nazwę kategorii.
+    """
+    return list(CATEGORY_SEED)
+
+
+def resolve_legacy_category(name: str) -> tuple[str, str] | None:
+    """Mapuje starą nazwę kategorii na nowy typ i kod kategorii.
+
+    Args:
+        name (str): Stara nazwa kategorii ćwiczenia.
+
+    Returns:
+        tuple[str, str] | None: Krotka (kind, code) lub None, jeśli nazwa nie występuje w mapowaniu.
+
+    Raises:
+        TypeError: Gdy argument name nie jest napisem.
+    """
+    if not isinstance(name, str):
+        raise TypeError("Argument 'name' musi być typu str.")
+
+    return LEGACY_CATEGORY_MAP.get(name)

@@ -1,3 +1,8 @@
+/**
+ * @file documents.tsx
+ * @description Ekran dokumentacji pacjenta (plany leczenia, ćwiczenia, zalecenia, wyroby e-ZWM, odmowy, pliki PDF).
+ */
+
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
@@ -59,6 +64,11 @@ function detailText(value: unknown): string {
   return ''
 }
 
+/**
+ * Ekran prezentujący podsumowanie leczenia, pełny plan ćwiczeń oraz dokumenty medyczne pacjenta.
+ *
+ * @returns Element React Native prezentujący dokumentację.
+ */
 export default function DocumentsScreen() {
   const router = useRouter()
   const [mainTab, setMainTab] = useState<MainTab>('treatment')

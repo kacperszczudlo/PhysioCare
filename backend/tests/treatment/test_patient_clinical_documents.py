@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 import pytest
 
 from documents.models import MedicalDocument
@@ -10,11 +12,21 @@ from treatment.models import (
     TreatmentEpisode,
 )
 
+if TYPE_CHECKING:
+    from rest_framework.test import APIClient
+
+    from patients.models import PatientProfile
+    from therapists.models import TherapistProfile
+
 
 @pytest.mark.django_db
 def test_patient_sees_clinical_documents_after_therapist_issues(
-    api_client, therapist, patient,
-):
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+) -> None:
+    """Sprawdza widoczność dokumentów klinicznych w skrzynce pacjenta po ich wystawieniu przez fizjoterapeutę."""
+    # Arrange
     therapist.qualification_level = 'MAGISTER'
     therapist.experience_years = 5
     therapist.save()
@@ -81,7 +93,9 @@ def test_patient_sees_clinical_documents_after_therapist_issues(
     )
 
     api_client.force_authenticate(user=patient.user)
+    # Act
     response = api_client.get('/api/v1/me/clinical-documents/')
+    # Assert
     assert response.status_code == 200
     assert response.data['count'] == 5
     kinds = {item['kind'] for item in response.data['results']}
@@ -106,7 +120,13 @@ def test_patient_sees_clinical_documents_after_therapist_issues(
 
 
 @pytest.mark.django_db
-def test_device_order_access_code_validation(api_client, therapist, patient):
+def test_device_order_access_code_validation(
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+) -> None:
+    """Sprawdza walidację kody dostępu przy wystawianiu zlecenia na wyrób medyczny."""
+    # Arrange
     from treatment.models import TreatmentEpisode
 
     therapist.qualification_level = 'MAGISTER'
@@ -115,6 +135,7 @@ def test_device_order_access_code_validation(api_client, therapist, patient):
     episode = TreatmentEpisode.objects.create(patient=patient, icd10_code='M25.5')
 
     api_client.force_authenticate(user=therapist.user)
+    # Act
     bad = api_client.post(
         f'/api/v1/episodes/{episode.id}/device-orders/',
         {
@@ -125,6 +146,7 @@ def test_device_order_access_code_validation(api_client, therapist, patient):
         },
         format='json',
     )
+    # Assert
     assert bad.status_code == 400
     assert 'access_code' in bad.data['error']['details']
 
@@ -150,7 +172,13 @@ def test_device_order_access_code_validation(api_client, therapist, patient):
 
 
 @pytest.mark.django_db
-def test_patient_clinical_documents_filter_by_kind(api_client, therapist, patient):
+def test_patient_clinical_documents_filter_by_kind(
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+) -> None:
+    """Sprawdza filtrowanie dokumentów klinicznych według parametru kind."""
+    # Arrange
     episode = TreatmentEpisode.objects.create(patient=patient)
     ReceptaNaRuchReferral.objects.create(
         patient=patient,
@@ -162,7 +190,9 @@ def test_patient_clinical_documents_filter_by_kind(api_client, therapist, patien
     )
 
     api_client.force_authenticate(user=patient.user)
+    # Act
     response = api_client.get('/api/v1/me/clinical-documents/?kind=recepta_na_ruch')
+    # Assert
     assert response.status_code == 200
     assert response.data['count'] == 1
     assert response.data['results'][0]['kind'] == 'recepta_na_ruch'
@@ -170,8 +200,13 @@ def test_patient_clinical_documents_filter_by_kind(api_client, therapist, patien
 
 @pytest.mark.django_db
 def test_patient_cannot_see_other_patient_clinical_documents(
-    api_client, therapist, patient, therapist_b,
-):
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+    therapist_b: 'TherapistProfile',
+) -> None:
+    """Sprawdza izolację RODO i brak dostępu pacjenta do dokumentów klinicznych innego pacjenta."""
+    # Arrange
     other_user = patient.user.__class__.objects.create_user(
         email='other@physiocare.test',
         password='test-pass',
@@ -191,27 +226,49 @@ def test_patient_cannot_see_other_patient_clinical_documents(
     )
 
     api_client.force_authenticate(user=patient.user)
+    # Act
     response = api_client.get('/api/v1/me/clinical-documents/')
+    # Assert
     assert response.status_code == 200
     assert response.data['count'] == 0
 
 
 @pytest.mark.django_db
-def test_therapist_cannot_access_patient_clinical_inbox(api_client, therapist):
+def test_therapist_cannot_access_patient_clinical_inbox(
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+) -> None:
+    """Sprawdza brak dostępu fizjoterapeuty do własnej skrzynki dokumentów pacjenta (HTTP 403)."""
+    # Arrange
     api_client.force_authenticate(user=therapist.user)
+    # Act
     response = api_client.get('/api/v1/me/clinical-documents/')
+    # Assert
     assert response.status_code == 403
 
 
 @pytest.mark.django_db
-def test_invalid_kind_returns_400(api_client, patient):
+def test_invalid_kind_returns_400(
+    api_client: 'APIClient',
+    patient: 'PatientProfile',
+) -> None:
+    """Sprawdza zwrócenie błędu HTTP 400 przy nieznanym typie dokumentu w parametrze kind."""
+    # Arrange
     api_client.force_authenticate(user=patient.user)
+    # Act
     response = api_client.get('/api/v1/me/clinical-documents/?kind=leki')
+    # Assert
     assert response.status_code == 400
 
 
 @pytest.mark.django_db
-def test_therapist_can_delete_clinical_documents(api_client, therapist, patient):
+def test_therapist_can_delete_clinical_documents(
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+) -> None:
+    """Sprawdza możliwość usunięcia dokumentów klinicznych przez wystawiającego je fizjoterapeutę."""
+    # Arrange
     episode = TreatmentEpisode.objects.create(patient=patient)
     rec = DiagnosticRecommendation.objects.create(
         episode=episode,
@@ -246,6 +303,7 @@ def test_therapist_can_delete_clinical_documents(api_client, therapist, patient)
     )
 
     api_client.force_authenticate(user=therapist.user)
+    # Assert
     assert api_client.delete(
         f'/api/v1/episodes/{episode.id}/diagnostic-recommendations/{rec.id}/',
     ).status_code == 204
@@ -259,6 +317,7 @@ def test_therapist_can_delete_clinical_documents(api_client, therapist, patient)
         f'/api/v1/patients/{patient.id}/recepta-na-ruch/{recepta.id}/',
     ).status_code == 204
 
+    # Act
     api_client.force_authenticate(user=patient.user)
     inbox = api_client.get('/api/v1/me/clinical-documents/')
     assert inbox.status_code == 200
@@ -267,8 +326,13 @@ def test_therapist_can_delete_clinical_documents(api_client, therapist, patient)
 
 @pytest.mark.django_db
 def test_other_therapist_cannot_delete_clinical_document(
-    api_client, therapist, therapist_b, patient,
-):
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    therapist_b: 'TherapistProfile',
+    patient: 'PatientProfile',
+) -> None:
+    """Sprawdza blokadę usunięcia dokumentu klinicznego przez innego fizjoterapeutę."""
+    # Arrange
     episode = TreatmentEpisode.objects.create(patient=patient)
     rec = DiagnosticRecommendation.objects.create(
         episode=episode,
@@ -277,15 +341,23 @@ def test_other_therapist_cannot_delete_clinical_document(
         justification='Cudze.',
     )
     api_client.force_authenticate(user=therapist_b.user)
+    # Act
     response = api_client.delete(
         f'/api/v1/episodes/{episode.id}/diagnostic-recommendations/{rec.id}/',
     )
+    # Assert
     assert response.status_code == 404
     assert DiagnosticRecommendation.objects.filter(pk=rec.id).exists()
 
 
 @pytest.mark.django_db
-def test_therapist_can_update_clinical_documents(api_client, therapist, patient):
+def test_therapist_can_update_clinical_documents(
+    api_client: 'APIClient',
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+) -> None:
+    """Sprawdza możliwość aktualizacji danych w dokumentach klinicznych przez ich autora."""
+    # Arrange
     therapist.qualification_level = 'MAGISTER'
     therapist.experience_years = 5
     therapist.save()
@@ -329,6 +401,7 @@ def test_therapist_can_update_clinical_documents(api_client, therapist, patient)
 
     api_client.force_authenticate(user=therapist.user)
 
+    # Act
     rec_resp = api_client.patch(
         f'/api/v1/episodes/{episode.id}/diagnostic-recommendations/{rec.id}/',
         {
@@ -338,6 +411,7 @@ def test_therapist_can_update_clinical_documents(api_client, therapist, patient)
         },
         format='json',
     )
+    # Assert
     assert rec_resp.status_code == 200
     assert rec_resp.data['justification'] == 'Zaktualizowane uzasadnienie.'
     assert rec_resp.data['target_specialty'] == 'Neurolog'
@@ -380,3 +454,4 @@ def test_therapist_can_update_clinical_documents(api_client, therapist, patient)
     )
     assert 'Zaktualizowane uzasadnienie' in titles_and_summaries or 'Neurolog' in titles_and_summaries
     assert 'Nowa aktywność' in titles_and_summaries
+

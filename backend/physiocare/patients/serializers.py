@@ -19,7 +19,7 @@ from privacy.models import Consent
 
 from .models import PatientProfile
 
-_FIRST_NAME_FIELD_ERRORS = {
+_FIRST_NAME_FIELD_ERRORS: dict[str, str] = {
     'blank': NAME_REQUIRED,
     'required': NAME_REQUIRED,
     'null': NAME_REQUIRED,
@@ -28,7 +28,7 @@ _FIRST_NAME_FIELD_ERRORS = {
     'invalid': NAME_INVALID,
 }
 
-_LAST_NAME_FIELD_ERRORS = {
+_LAST_NAME_FIELD_ERRORS: dict[str, str] = {
     'blank': LAST_NAME_REQUIRED,
     'required': LAST_NAME_REQUIRED,
     'null': LAST_NAME_REQUIRED,
@@ -38,7 +38,10 @@ _LAST_NAME_FIELD_ERRORS = {
 }
 
 
+
 class PatientListSerializer(serializers.ModelSerializer):
+    """Serializer dla listy pacjentów widocznej dla fizjoterapeuty."""
+
     email = serializers.EmailField(source='user.email', read_only=True)
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
@@ -49,6 +52,8 @@ class PatientListSerializer(serializers.ModelSerializer):
 
 
 class PatientDetailSerializer(serializers.ModelSerializer):
+    """Serializer dla szczegółowych danych profilu pacjenta."""
+
     email = serializers.EmailField(source='user.email', read_only=True)
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
@@ -62,13 +67,25 @@ class PatientDetailSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'therapists', 'created_at']
 
-    def get_therapists(self, obj):
+    def get_therapists(self, obj: PatientProfile) -> list[dict[str, object]]:
+        """Pobiera zserializowaną listę aktywnych fizjoterapeutów pacjenta.
+
+        Args:
+            obj (PatientProfile): Instancja profilu pacjenta.
+
+        Returns:
+            list[dict[str, object]]: Lista słowników reprezentujących fizjoterapeutów.
+        """
+        if not isinstance(obj, PatientProfile):
+            return []
         from therapists.serializers import TherapistPublicSerializer
         active_therapists = obj.therapists.filter(patient_links__status='ACTIVE')
         return TherapistPublicSerializer(active_therapists, many=True).data
 
 
 class MeProfileSerializer(serializers.ModelSerializer):
+    """Serializer dla profilu własnego pacjenta (widok /me)."""
+
     email = serializers.EmailField(source='user.email', read_only=True)
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
@@ -82,13 +99,25 @@ class MeProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'therapists']
 
-    def get_therapists(self, obj):
+    def get_therapists(self, obj: PatientProfile) -> list[dict[str, object]]:
+        """Pobiera zserializowaną listę aktywnych fizjoterapeutów dla własnego profilu.
+
+        Args:
+            obj (PatientProfile): Instancja profilu pacjenta.
+
+        Returns:
+            list[dict[str, object]]: Lista słowników reprezentujących fizjoterapeutów.
+        """
+        if not isinstance(obj, PatientProfile):
+            return []
         from therapists.serializers import TherapistPublicSerializer
         active_therapists = obj.therapists.filter(patient_links__status='ACTIVE')
         return TherapistPublicSerializer(active_therapists, many=True).data
 
 
 class MeProfileUpdateSerializer(serializers.ModelSerializer):
+    """Serializer służący do edycji profilu własnego pacjenta."""
+
     first_name = serializers.CharField(
         max_length=100,
         required=False,
@@ -117,31 +146,94 @@ class MeProfileUpdateSerializer(serializers.ModelSerializer):
         model = PatientProfile
         fields = ['first_name', 'last_name', 'pesel', 'phone']
 
-    def validate_first_name(self, value):
+    def validate_first_name(self, value: str) -> str:
+        """Waliduje oraz normalizuje imię pacjenta.
+
+        Args:
+            value (str): Wprowadzone imię.
+
+        Returns:
+            str: Znormalizowane imię pacjenta.
+
+        Raises:
+            serializers.ValidationError: Gdy imię jest nieprawidłowe.
+        """
+        if not isinstance(value, str):
+            raise serializers.ValidationError('Imię musi być ciągiem znaków.')
         try:
             return normalize_and_validate_first_name(value)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
-    def validate_last_name(self, value):
+    def validate_last_name(self, value: str) -> str:
+        """Waliduje oraz normalizuje nazwisko pacjenta.
+
+        Args:
+            value (str): Wprowadzone nazwisko.
+
+        Returns:
+            str: Znormalizowane nazwisko pacjenta.
+
+        Raises:
+            serializers.ValidationError: Gdy nazwisko jest nieprawidłowe.
+        """
+        if not isinstance(value, str):
+            raise serializers.ValidationError('Nazwisko musi być ciągiem znaków.')
         try:
             return normalize_and_validate_last_name(value)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
-    def validate_phone(self, value):
+    def validate_phone(self, value: str) -> str:
+        """Waliduje oraz normalizuje numer telefonu pacjenta.
+
+        Args:
+            value (str): Wprowadzony numer telefonu.
+
+        Returns:
+            str: Znormalizowany numer telefonu.
+
+        Raises:
+            serializers.ValidationError: Gdy numer telefonu jest nieprawidłowy.
+        """
+        if not isinstance(value, str):
+            raise serializers.ValidationError('Numer telefonu musi być ciągiem znaków.')
         try:
             return normalize_and_validate_phone(value, allow_blank=True)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
-    def validate_pesel(self, value):
+    def validate_pesel(self, value: str | None) -> str | None:
+        """Waliduje oraz normalizuje numer PESEL pacjenta.
+
+        Args:
+            value (str | None): Wprowadzony numer PESEL lub None.
+
+        Returns:
+            str | None: Znormalizowany numer PESEL lub None.
+
+        Raises:
+            serializers.ValidationError: Gdy numer PESEL jest nieprawidłowy.
+        """
+        if value is not None and not isinstance(value, str):
+            raise serializers.ValidationError('PESEL musi być ciągiem znaków.')
         try:
             return normalize_and_validate_pesel(value, allow_blank=True)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
-    def update(self, instance, validated_data):
+    def update(self, instance: PatientProfile, validated_data: dict[str, object]) -> PatientProfile:
+        """Aktualizuje dane w profilu pacjenta i obiekcie User.
+
+        Args:
+            instance (PatientProfile): Zmieniany profil pacjenta.
+            validated_data (dict[str, object]): Zweryfikowane dane wejściowe.
+
+        Returns:
+            PatientProfile: Zaktualizowana instancja profilu pacjenta.
+        """
+        if not isinstance(instance, PatientProfile) or not isinstance(validated_data, dict):
+            raise serializers.ValidationError('Nieprawidłowe dane wejściowe.')
         user = instance.user
         user_updated = False
         if 'first_name' in validated_data:
@@ -156,6 +248,8 @@ class MeProfileUpdateSerializer(serializers.ModelSerializer):
 
 
 class ConsentSerializer(serializers.ModelSerializer):
+    """Serializer dla zgód RODO pacjenta."""
+
     class Meta:
         model = Consent
         fields = ['consent_type', 'granted', 'granted_at']
@@ -163,5 +257,24 @@ class ConsentSerializer(serializers.ModelSerializer):
 
 
 class OptionalConsentsUpdateSerializer(serializers.Serializer):
+    """Serializer do aktualizacji zgód opcjonalnych pacjenta."""
+
     marketing = serializers.BooleanField(required=False)
     research = serializers.BooleanField(required=False)
+
+    def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Waliduje dane wejściowe zgód opcjonalnych.
+
+        Args:
+            attrs (dict[str, object]): Slownik przekazanych zgód.
+
+        Returns:
+            dict[str, object]: Zwalidowany słownik ze zgodami.
+
+        Raises:
+            TypeError: Gdy attrs nie jest słownikiem.
+        """
+        if not isinstance(attrs, dict):
+            raise TypeError('Dane wejściowe muszą być słownikiem.')
+        return attrs
+

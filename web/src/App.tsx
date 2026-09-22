@@ -23,6 +23,9 @@ import { SettingsPage } from '@/pages/SettingsPage'
 import { ToastContainer } from '@/components/ui/ToastContainer'
 import { ToastProvider } from '@/components/ui/ToastContext'
 
+/**
+ * Główny komponent widoku z konfiguracją trasowania React Router v6 i dostawców kontekstu (AuthProvider, ToastProvider).
+ */
 export default function App() {
   return (
     <ToastProvider>

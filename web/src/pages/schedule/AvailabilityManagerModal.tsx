@@ -13,6 +13,9 @@ interface AvailabilityManagerModalProps {
 
 const DAY_NAMES = ['Poniedziałek', 'Wtorek', 'Środa', 'Czwartek', 'Piątek', 'Sobota', 'Niedziela']
 
+/**
+ * Modal zarządzania godzinami dostępności fizjoterapeuty (stałe reguły tygodniowe i konkretne daty).
+ */
 export function AvailabilityManagerModal({
   isOpen,
   onClose,
@@ -24,12 +27,10 @@ export function AvailabilityManagerModal({
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<'RECURRING' | 'SPECIFIC'>('RECURRING')
 
-  // Form state - Recurring
   const [dayOfWeek, setDayOfWeek] = useState(0)
   const [startTime, setStartTime] = useState('08:00')
   const [endTime, setEndTime] = useState('16:00')
 
-  // Form state - Specific date
   const [dateIso, setDateIso] = useState('')
   const [specStartTime, setSpecStartTime] = useState('09:00')
   const [specEndTime, setSpecEndTime] = useState('17:00')

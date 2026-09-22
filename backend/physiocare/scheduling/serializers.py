@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework import serializers
@@ -20,13 +22,28 @@ from .holidays import is_polish_holiday
 from .models import TherapistAvailabilitySlot, TherapyType, Visit, VisitStatus
 
 
-def is_visit_within_therapist_availability(therapist, start_at, end_at):
-    """
-    Sprawdza, czy odcinek czasu [start_at, end_at] w całości mieści się w przynajmniej jednym
-    aktywnym slocie dostępności fizjoterapeuty (zarówno jednorazowym, jak i cyklicznym).
+def is_visit_within_therapist_availability(therapist: object, start_at: datetime, end_at: datetime) -> bool:
+    """Sprawdza, czy odcinek czasu mieści się w dostępności fizjoterapeuty.
+
     Uwzględnia polskie święta państwowe: domyślnie blokują dostępność cykliczną,
     chyba że fizjoterapeuta utworzy dedykowany jednorazowy slot pracy w dane święto.
+
+    Args:
+        therapist (object): Profil fizjoterapeuty.
+        start_at (datetime): Data i godzina rozpoczęcia wizyty.
+        end_at (datetime): Data i godzina zakończenia wizyty.
+
+    Returns:
+        bool: True, jeśli termin mieści się w dostępności terapeuty, w przeciwnym razie False.
+
+    Raises:
+        TypeError: Gdy parametr therapist jest None lub start_at/end_at nie są instancjami datetime.
     """
+    if therapist is None:
+        raise TypeError('Parametr therapist nie może być None.')
+    if not isinstance(start_at, datetime) or not isinstance(end_at, datetime):
+        raise TypeError('Parametry start_at oraz end_at muszą być instancjami datetime.')
+
     slots = TherapistAvailabilitySlot.objects.filter(therapist=therapist, is_active=True)
     if not slots.exists():
         return False
@@ -42,7 +59,6 @@ def is_visit_within_therapist_availability(therapist, start_at, end_at):
         return True
 
     if is_holiday:
-        # W święto państwowe cykliczne sloty nie obowiązują (wymagany jawny slot jednorazowy)
         return False
 
     dow = start_at.weekday()
@@ -59,7 +75,11 @@ def is_visit_within_therapist_availability(therapist, start_at, end_at):
 
 
 class TherapistAvailabilitySlotSerializer(serializers.ModelSerializer):
+    """Serializator dla slotów dostępności fizjoterapeuty."""
+
     class Meta:
+        """Metadane serializatora TherapistAvailabilitySlotSerializer."""
+
         model = TherapistAvailabilitySlot
         fields = [
             'id', 'therapist', 'start_at', 'end_at',
@@ -68,7 +88,20 @@ class TherapistAvailabilitySlotSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'therapist', 'created_at']
 
-    def validate(self, attrs):
+    def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Waliduje poprawność zakreślonego slotu dostępności.
+
+        Args:
+            attrs (dict[str, object]): Słownik z danymi slotu dostępności.
+
+        Returns:
+            dict[str, object]: Zwalidowany słownik atrybutów.
+
+        Raises:
+            serializers.ValidationError: Gdy podane parametry slotu są nieprawidłowe.
+        """
+        if not isinstance(attrs, dict):
+            raise serializers.ValidationError('Dane wejściowe muszą być słownikiem.')
         is_recurring = attrs.get('is_recurring', False)
         if not is_recurring:
             start_at = attrs.get('start_at')
@@ -101,24 +134,61 @@ class TherapistAvailabilitySlotSerializer(serializers.ModelSerializer):
 
 
 class TherapyTypeSerializer(serializers.ModelSerializer):
+    """Serializator dla typów terapii oferowanych przez fizjoterapeutę."""
+
     class Meta:
+        """Metadane serializatora TherapyTypeSerializer."""
+
         model = TherapyType
         fields = ['id', 'name', 'color_hex', 'duration_min', 'created_at']
         read_only_fields = ['id', 'created_at']
 
-    def validate_name(self, value):
+    def validate_name(self, value: str) -> str:
+        """Waliduje nazwę typu terapii.
+
+        Args:
+            value (str): Wprowadzona nazwa typu terapii.
+
+        Returns:
+            str: Znormalizowana nazwa terapii.
+
+        Raises:
+            serializers.ValidationError: Gdy nazwa jest nieprawidłowa.
+        """
         try:
             return normalize_and_validate_therapy_name(value)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
-    def validate_color_hex(self, value):
+    def validate_color_hex(self, value: str) -> str:
+        """Waliduje kod koloru w formacie HEX.
+
+        Args:
+            value (str): Kod koloru HEX.
+
+        Returns:
+            str: Znormalizowany kod koloru HEX.
+
+        Raises:
+            serializers.ValidationError: Gdy kod HEX jest nieprawidłowy.
+        """
         try:
             return normalize_and_validate_color_hex(value)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
-    def validate_duration_min(self, value):
+    def validate_duration_min(self, value: int) -> int:
+        """Waliduje czas trwania terapii w minutach.
+
+        Args:
+            value (int): Czas trwania terapii w minutach.
+
+        Returns:
+            int: Zwalidowany czas trwania w minutach.
+
+        Raises:
+            serializers.ValidationError: Gdy czas trwania jest nieprawidłowy.
+        """
         try:
             return normalize_and_validate_duration_min(value)
         except DjangoValidationError as exc:
@@ -126,6 +196,8 @@ class TherapyTypeSerializer(serializers.ModelSerializer):
 
 
 class VisitSerializer(serializers.ModelSerializer):
+    """Serializator dla obiektu wizyty fizjoterapeutycznej."""
+
     patient_first_name = serializers.CharField(
         source='patient.user.first_name',
         read_only=True,
@@ -166,6 +238,8 @@ class VisitSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
+        """Metadane serializatora VisitSerializer."""
+
         model = Visit
         fields = [
             'id', 'patient', 'therapist', 'episode', 'therapy_type', 'therapy_type_id',
@@ -184,20 +258,55 @@ class VisitSerializer(serializers.ModelSerializer):
             'patient_note', 'created_at',
         ]
 
-    def validate_therapy_type_id(self, therapy_type):
+    def validate_therapy_type_id(self, therapy_type: TherapyType) -> TherapyType:
+        """Waliduje czy podany typ terapii należy do danego terapeuty.
+
+        Args:
+            therapy_type (TherapyType): Obiekt typu terapii.
+
+        Returns:
+            TherapyType: Zwalidowany obiekt typu terapii.
+
+        Raises:
+            serializers.ValidationError: Gdy typ terapii nie należy do danego terapeuty lub typ obiektu jest niepoprawny.
+        """
+        if not isinstance(therapy_type, TherapyType):
+            raise serializers.ValidationError('Typ terapii musi być instancją TherapyType.')
         if self.instance is None:
             return therapy_type
         if therapy_type.therapist_id != self.instance.therapist_id:
             raise serializers.ValidationError('Typ terapii nie należy do tego terapeuty.')
         return therapy_type
 
-    def validate_location_address(self, value):
+    def validate_location_address(self, value: str) -> str:
+        """Waliduje adres lokalizacji wizyty.
+
+        Args:
+            value (str): Adres wizyty.
+
+        Returns:
+            str: Znormalizowany adres.
+
+        Raises:
+            serializers.ValidationError: Gdy adres jest nieprawidłowy lub za długi.
+        """
         try:
             return normalize_and_validate_address(value, allow_blank=True)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
-    def validate_prep_instructions(self, value):
+    def validate_prep_instructions(self, value: str) -> str:
+        """Waliduje instrukcje przygotowawcze do wizyty.
+
+        Args:
+            value (str): Treść instrukcji.
+
+        Returns:
+            str: Znormalizowana treść instrukcji.
+
+        Raises:
+            serializers.ValidationError: Gdy tekst jest za długi.
+        """
         try:
             return normalize_optional_text(
                 value,
@@ -207,7 +316,18 @@ class VisitSerializer(serializers.ModelSerializer):
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
-    def validate_patient_summary(self, value):
+    def validate_patient_summary(self, value: str) -> str:
+        """Waliduje podsumowanie wizyty dla pacjenta.
+
+        Args:
+            value (str): Podsumowanie dla pacjenta.
+
+        Returns:
+            str: Znormalizowana treść podsumowania.
+
+        Raises:
+            serializers.ValidationError: Gdy podsumowanie jest za długie.
+        """
         try:
             return normalize_optional_text(
                 value,
@@ -217,16 +337,44 @@ class VisitSerializer(serializers.ModelSerializer):
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
-    def validate(self, attrs):
-        start_at = attrs.get('start_at', getattr(self.instance, 'start_at', None))
-        end_at = attrs.get('end_at', getattr(self.instance, 'end_at', None))
+    def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Waliduje poprawność czasową wizyty (koniec po rozpoczęciu).
+
+        Args:
+            attrs (dict[str, object]): Slownik walidowanych atrybutów.
+
+        Returns:
+            dict[str, object]: Zwalidowany słownik atrybutów.
+
+        Raises:
+            serializers.ValidationError: Gdy czas zakończenia wyprzedza lub jest równy czasowi rozpoczęcia.
+        """
+        if not isinstance(attrs, dict):
+            raise serializers.ValidationError('Dane wejściowe muszą być słownikiem.')
+        instance_start = self.instance.start_at if self.instance and hasattr(self.instance, 'start_at') else None
+        instance_end = self.instance.end_at if self.instance and hasattr(self.instance, 'end_at') else None
+        start_at = attrs.get('start_at', instance_start)
+        end_at = attrs.get('end_at', instance_end)
         if start_at is not None and end_at is not None and end_at <= start_at:
             raise serializers.ValidationError(
                 {'end_at': 'Koniec wizyty musi być po rozpoczęciu.'}
             )
         return attrs
 
-    def to_representation(self, instance):
+    def to_representation(self, instance: Visit) -> dict[str, object]:
+        """Przekształca instancję wizyty na reprezentację słownikową z domyślnym adresem.
+
+        Args:
+            instance (Visit): Instancja wizyty.
+
+        Returns:
+            dict[str, object]: Reprezentacja słownikowa wizyty.
+
+        Raises:
+            TypeError: Gdy parametr instance nie jest instancją Visit.
+        """
+        if not isinstance(instance, Visit):
+            raise TypeError('Parametr instance musi być instancją Visit.')
         data = super().to_representation(instance)
         if not (data.get('location_address') or '').strip():
             data['location_address'] = instance.therapist.location_address or ''
@@ -234,6 +382,8 @@ class VisitSerializer(serializers.ModelSerializer):
 
 
 class VisitCreateSerializer(serializers.ModelSerializer):
+    """Serializator do tworzenia nowej wizyty przez fizjoterapeutę."""
+
     patient_id = serializers.UUIDField(write_only=True)
     episode_id = serializers.UUIDField(required=False, allow_null=True, write_only=True)
     therapy_type_id = serializers.UUIDField(write_only=True)
@@ -244,13 +394,26 @@ class VisitCreateSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
+        """Metadane serializatora VisitCreateSerializer."""
+
         model = Visit
         fields = [
             'patient_id', 'episode_id', 'therapy_type_id',
             'start_at', 'end_at', 'prep_instructions',
         ]
 
-    def validate_prep_instructions(self, value):
+    def validate_prep_instructions(self, value: str) -> str:
+        """Waliduje instrukcje przygotowawcze do wizyty.
+
+        Args:
+            value (str): Instrukcje przygotowawcze.
+
+        Returns:
+            str: Znormalizowane instrukcje.
+
+        Raises:
+            serializers.ValidationError: Gdy tekst instrukcji przekracza dozwolony limit.
+        """
         try:
             return normalize_optional_text(
                 value,
@@ -260,7 +423,20 @@ class VisitCreateSerializer(serializers.ModelSerializer):
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
-    def validate(self, attrs):
+    def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Waliduje relacje z pacjentem, typem terapii, epizodem i poprawność czasową.
+
+        Args:
+            attrs (dict[str, object]): Walidowane atrybuty.
+
+        Returns:
+            dict[str, object]: Zwalidowane atrybuty wizyty.
+
+        Raises:
+            serializers.ValidationError: Gdy wybrane obiekty są nieprawidłowe lub niedostępne.
+        """
+        if not isinstance(attrs, dict):
+            raise serializers.ValidationError('Dane wejściowe muszą być słownikiem.')
         therapist = self.context['therapist']
         patient_id = attrs['patient_id']
         therapy_type_id = attrs['therapy_type_id']
@@ -297,7 +473,20 @@ class VisitCreateSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict[str, object]) -> Visit:
+        """Tworzy nową wizytę oraz upewnia się o aktywnym połączeniu terapeuty z pacjentem.
+
+        Args:
+            validated_data (dict[str, object]): Zwalidowane dane wizyty.
+
+        Returns:
+            Visit: Utworzony obiekt wizyty.
+
+        Raises:
+            TypeError: Gdy parametr validated_data nie jest słownikiem.
+        """
+        if not isinstance(validated_data, dict):
+            raise TypeError('Parametr validated_data musi być słownikiem.')
         patient_id = validated_data.pop('patient_id')
         episode_id = validated_data.pop('episode_id', None)
         therapy_type_id = validated_data.pop('therapy_type_id')
@@ -321,6 +510,8 @@ class VisitCreateSerializer(serializers.ModelSerializer):
 
 
 class PatientVisitRequestSerializer(serializers.ModelSerializer):
+    """Serializator do tworzenia zgłoszenia rezerwacji wizyty przez pacjenta."""
+
     therapist_id = serializers.UUIDField(required=False, write_only=True)
     therapy_type_id = serializers.UUIDField(write_only=True)
     patient_note = serializers.CharField(
@@ -330,10 +521,23 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
+        """Metadane serializatora PatientVisitRequestSerializer."""
+
         model = Visit
         fields = ['therapist_id', 'therapy_type_id', 'start_at', 'end_at', 'patient_note']
 
-    def validate_patient_note(self, value):
+    def validate_patient_note(self, value: str) -> str:
+        """Waliduje notatkę dodaną przez pacjenta do zgłoszenia.
+
+        Args:
+            value (str): Notatka od pacjenta.
+
+        Returns:
+            str: Znormalizowany tekst notatki.
+
+        Raises:
+            serializers.ValidationError: Gdy treść przekracza dozwolony limit.
+        """
         try:
             return normalize_optional_text(
                 value,
@@ -343,7 +547,20 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
-    def validate(self, attrs):
+    def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Waliduje dostępność wybranego terminu wizyty, terapeutę i brak nakładania się wizyt.
+
+        Args:
+            attrs (dict[str, object]): Dane zgłoszenia wizyty.
+
+        Returns:
+            dict[str, object]: Zwalidowany słownik atrybutów.
+
+        Raises:
+            serializers.ValidationError: Gdy wybrany termin jest zeszły, nieaktywny lub nakłada się z inną wizytą.
+        """
+        if not isinstance(attrs, dict):
+            raise serializers.ValidationError('Dane wejściowe muszą być słownikiem.')
         therapy_type_id = attrs['therapy_type_id']
         therapy_type = TherapyType.objects.filter(pk=therapy_type_id).first()
         if not therapy_type:
@@ -420,7 +637,20 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
         attrs['therapist'] = therapist
         return attrs
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict[str, object]) -> Visit:
+        """Tworzy zgłoszenie wizyty ze statusem PENDING_APPROVAL.
+
+        Args:
+            validated_data (dict[str, object]): Zwalidowane dane zgłoszenia.
+
+        Returns:
+            Visit: Utworzona instancja wizyty.
+
+        Raises:
+            TypeError: Gdy parametr validated_data nie jest słownikiem.
+        """
+        if not isinstance(validated_data, dict):
+            raise TypeError('Parametr validated_data musi być słownikiem.')
         patient = self.context['patient']
         therapist = validated_data.pop('therapist')
         therapy_type_id = validated_data.pop('therapy_type_id')
@@ -443,6 +673,8 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
 
 
 class VisitApproveSerializer(serializers.Serializer):
+    """Serializator do zatwierdzania zgłoszenia wizyty przez fizjoterapeutę."""
+
     therapy_type_id = serializers.UUIDField(required=False)
     start_at = serializers.DateTimeField(required=False)
     end_at = serializers.DateTimeField(required=False)
@@ -457,7 +689,18 @@ class VisitApproveSerializer(serializers.Serializer):
         error_messages={'max_length': ADDRESS_TOO_LONG},
     )
 
-    def validate_prep_instructions(self, value):
+    def validate_prep_instructions(self, value: str) -> str:
+        """Waliduje instrukcje przygotowawcze.
+
+        Args:
+            value (str): Treść instrukcji.
+
+        Returns:
+            str: Znormalizowany tekst instrukcji.
+
+        Raises:
+            serializers.ValidationError: Gdy przekroczono dopuszczalny limit długości.
+        """
         try:
             return normalize_optional_text(
                 value,
@@ -467,13 +710,37 @@ class VisitApproveSerializer(serializers.Serializer):
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
-    def validate_location_address(self, value):
+    def validate_location_address(self, value: str) -> str:
+        """Waliduje adres lokalizacji wizyty.
+
+        Args:
+            value (str): Wprowadzony adres.
+
+        Returns:
+            str: Znormalizowany adres.
+
+        Raises:
+            serializers.ValidationError: Gdy adres jest za długi.
+        """
         try:
             return normalize_and_validate_address(value, allow_blank=True)
         except DjangoValidationError as exc:
             raise serializers.ValidationError(list(exc.messages)) from exc
 
-    def validate(self, attrs):
+    def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Waliduje typ terapii i poprawność ram czasowych przy zatwierdzaniu wizyty.
+
+        Args:
+            attrs (dict[str, object]): Dane do aktualizacji przy zatwierdzeniu.
+
+        Returns:
+            dict[str, object]: Zwalidowane dane.
+
+        Raises:
+            serializers.ValidationError: Gdy typ terapii jest błędny lub czas zakończenia przed rozpoczęciem.
+        """
+        if not isinstance(attrs, dict):
+            raise serializers.ValidationError('Dane wejściowe muszą być słownikiem.')
         visit = self.context['visit']
         therapy_type_id = attrs.get('therapy_type_id')
         if therapy_type_id is not None and not TherapyType.objects.filter(
@@ -494,11 +761,28 @@ class VisitApproveSerializer(serializers.Serializer):
 
 
 class VisitRescheduleSerializer(serializers.ModelSerializer):
+    """Serializator do zmiany terminu wizyty przez pacjenta."""
+
     class Meta:
+        """Metadane serializatora VisitRescheduleSerializer."""
+
         model = Visit
         fields = ['start_at', 'end_at']
 
-    def validate(self, attrs):
+    def validate(self, attrs: dict[str, object]) -> dict[str, object]:
+        """Waliduje status wizyty, dostępność terminu oraz brak nakładania się na inne wizyty.
+
+        Args:
+            attrs (dict[str, object]): Proponowane nowe godziny wizyty.
+
+        Returns:
+            dict[str, object]: Zwalidowane atrybuty.
+
+        Raises:
+            serializers.ValidationError: Gdy status wizyty zabrania zmiany terminu lub termin jest zajęty.
+        """
+        if not isinstance(attrs, dict):
+            raise serializers.ValidationError('Dane wejściowe muszą być słownikiem.')
         visit = self.instance
         if visit.status not in (VisitStatus.SCHEDULED, VisitStatus.PENDING_APPROVAL):
             raise serializers.ValidationError(
@@ -540,13 +824,26 @@ class VisitRescheduleSerializer(serializers.ModelSerializer):
 
 
 class VisitCancelSerializer(serializers.Serializer):
+    """Serializator dla operacji odwoływania wizyty."""
+
     cancel_reason = serializers.CharField(
         required=False,
         allow_blank=True,
         error_messages={'max_length': CANCEL_REASON_TOO_LONG},
     )
 
-    def validate_cancel_reason(self, value):
+    def validate_cancel_reason(self, value: str) -> str:
+        """Waliduje podany powód odwołania wizyty.
+
+        Args:
+            value (str): Powód anulowania.
+
+        Returns:
+            str: Znormalizowany powód anulowania.
+
+        Raises:
+            serializers.ValidationError: Gdy podana treść przekracza dopuszczalny limit długości.
+        """
         try:
             return normalize_optional_text(
                 value,

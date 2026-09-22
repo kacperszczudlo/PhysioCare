@@ -1,56 +1,71 @@
-# PhysioCare Web - panel fizjoterapeuty
+# PhysioCare Web - Panel Fizjoterapeuty
 
-React 19 + Vite + TypeScript. Komunikacja z backendem przez REST (`/api/v1`) i cookies JWT (`credentials: 'include'`). Live odświeżanie Harmonogramu / Pulpitu: SSE `GET /api/v1/me/events/` (proxy Vite, cookie auth).
+Aplikacja webowa dla fizjoterapeuty w systemie PhysioCare, zbudowana w oparciu o **React 19**, **Vite** oraz **TypeScript**.
 
-## Uruchomienie
+Komunikacja z backendem odbywa się poprzez REST API (`/api/v1`) przy użyciu bezpiecznych ciasteczek JWT (`credentials: 'include'`). Aplikacja obsługuje odświeżanie w czasie rzeczywistym (Server-Sent Events: `GET /api/v1/me/events/` z automatycznym proxy Vite) dla live aktualizacji Harmonogramu i Pulpitu.
+
+---
+
+## Uruchomienie lokalne
 
 ```powershell
 cd web
-npm install
+npm.cmd install
 npm.cmd run dev
 ```
 
-Aplikacja: http://localhost:5173  
-API (osobny terminal): `python manage.py runserver` w `backend/physiocare` (SSE działa też na runserver; przy wielu streamach: uvicorn - patrz root README).
+- **Adres aplikacji:** `http://localhost:5173`
+- **Wymagany backend:** Uruchomione API na porcie 8000 (`python manage.py runserver` w katalogu `backend/physiocare`).
 
-W dev Vite proxy przekierowuje `/api` i `/media` -> `http://localhost:8000` (stream SSE bez timeoutu). Opcjonalnie ustaw `VITE_API_BASE_URL` w `.env.local` (szablon: `.env.example`). Preferuj pusty / względny base URL, żeby EventSource szedł same-origin przez proxy.
+### Konfiguracja środowiska (`.env.local`)
 
-Logowanie Google: ustaw `VITE_GOOGLE_CLIENT_ID` (Web Client ID) oraz `GOOGLE_CLIENT_IDS` na backendzie - bez tego przycisk Google jest ukryty.
+W środowisku deweloperskim proxy Vite automatycznie przekierowuje zapytania `/api` oraz `/media` na `http://localhost:8000`.
 
-Weryfikacja e-mail / reset hasła: kody 6 cyfr przez SMTP (lokalnie `EMAIL_BACKEND=console` albo Gmail App Password - patrz root `.env.example` / `docs/deployment.md`).
+W przypadku logowania przez Google należy ustawić zmienną:
+
+```env
+VITE_GOOGLE_CLIENT_ID=<Web Client ID>
+```
+
+Ten sam klient musi być skonfigurowany w `GOOGLE_CLIENT_IDS` na backendzie.
+
+---
+
+## Funkcjonalności Panelu WWW
+
+- **Autoryzacja i Profil Terapeuty:** Logowanie z weryfikacją numeru PWZFz, rejestracja, reset hasła kodem e-mail oraz zarządzenie profilem gabinetu.
+- **Harmonogram Dzienny:** Interaktywny kalendarz wizyt z obsługą przeciągnij i upuść (drag & drop), zmianami statusów i filtrowaniem.
+- **Kartoteka Pacjenta:** Pełna historia leczenia, wpisy epizodów, mapa bólów (skala VAS), dokumenty kliniczne i zgody RODO.
+- **Baza Ćwiczeń i Zalecenia:** Katalog ćwiczeń fizjoterapeutycznych oraz moduł przypisywania spersonalizowanych planów domowych pacjentom.
+- **Realtime UI (SSE):** Automatyczne odświeżanie interfejsu przy zmianie statusu wizyty lub dodaniu dokumentu bez konieczności przeładowywania strony.
+- **Standard UI/UX:** Obsługa stanów ładowania (loading skeletons), pustych danych (empty states) oraz ponawiania próby (retry) w przypadkach błędów sieciowych.
+
+---
 
 ## Skrypty
 
-| Komenda                | Opis              |
-| ---------------------- | ----------------- |
-| `npm run dev`          | Dev server        |
-| `npm test`             | Testy Vitest      |
-| `npm run build`        | Build produkcyjny |
-| `npm run preview`      | Podgląd builda    |
-| `npm run lint`         | ESLint + Oxlint   |
-| `npm run lint:fix`     | Autofix ESLint    |
-| `npm run format`       | Prettier (write)  |
-| `npm run format:check` | Prettier (check)  |
+| Komenda                    | Opis                                                        |
+| :------------------------- | :---------------------------------------------------------- |
+| `npm.cmd run dev`          | Uruchomienie serwera deweloperskiego Vite                   |
+| `npm.cmd test`             | Uruchomienie testów jednostkowych i komponentowych (Vitest) |
+| `npm.cmd run build`        | Budowanie wersji produkcyjnej (`dist/`)                     |
+| `npm.cmd run preview`      | Podgląd wygenerowanego builda produkcyjnego                 |
+| `npm.cmd run lint`         | Kontrola jakości kodu (ESLint + Oxlint)                     |
+| `npm.cmd run lint:fix`     | Automatyczna naprawa błędów lintera                         |
+| `npm.cmd run format`       | Formatowanie kodu (Prettier write)                          |
+| `npm.cmd run format:check` | Weryfikacja formatowania kodu (Prettier check)              |
 
-## Struktura
+---
+
+## Struktura projektu
 
 ```
 src/
-  api/          # apiClient + endpointy
-  auth/         # AuthProvider, ProtectedRoute
-  components/   # UI współdzielone (AsyncState, Modal, Field…)
-  layouts/      # App shell + auth shell
-  pages/        # Widoki (route'y)
-  realtime/     # SSE client + bus (live wizyty)
-  styles/       # Tokeny OKLCH + global CSS
+  api/          # Klient HTTP (apiClient) oraz definicje endpointów
+  auth/         # Kontekst autoryzacji (AuthProvider) oraz ochrona ścieżek (ProtectedRoute)
+  components/   # Współdzielone komponenty UI (AsyncState, Modal, Field, BodyMap...)
+  layouts/      # Szablony układu strony (App shell + Auth shell)
+  pages/        # Widoki aplikacji (Harmonogram, Pacjenci, Ćwiczenia, Profil...)
+  realtime/     # Obsługa Server-Sent Events (SSE client + event bus)
+  styles/       # Przestrzeń barwna OKLCH oraz style globalne CSS
 ```
-
-## Status (Faza 4 - domknięta)
-
-- **4.1** Szkielet + routing + apiClient
-- **4.2** Auth (login / rejestracja PWZFz / reset)
-- **4.3** Harmonogram dzienny + drag & drop
-- **4.4** Karta pacjenta + Diagnostic Mapper
-- **4.5** Baza ćwiczeń + przypisywanie
-- **4.6** Profil fizjoterapeuty
-- **4.7** Loading / error / empty + retry we wszystkich modułach

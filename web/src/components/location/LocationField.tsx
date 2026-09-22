@@ -3,18 +3,34 @@ import { LocationPickerModal } from './LocationPickerModal'
 import { searchAddress, type LocationAddressResult } from './locationServices'
 import './LocationField.css'
 
+/** Właściwości komponentu wyboru lokalizacji gabinetu. */
 export interface LocationFieldProps {
+  /** Etykieta formularza. */
   label?: string
+  /** Nazwa atrybutu name dla pola input. */
   name?: string
+  /** Aktualny opisowy adres lub lokalizacja. */
   value: string
+  /** Callback wywoływany przy zmianie tekstu adresu lub wyborze z mapy. */
   onChange: (value: string) => void
+  /** Tekst zastępczy (placeholder). */
   placeholder?: string
+  /** Wskazówka pomocnicza umieszczona pod polem formularza. */
   hint?: string
+  /** Komunikat błędu walidacji. */
   error?: string
+  /** Czy pole jest wymagane. */
   required?: boolean
+  /** Dodatkowa klasa CSS. */
   className?: string
 }
 
+/**
+ * Komponent wyboru lokalizacji z automatycznym podpowiadaniem adresów oraz opcją otwarcia mapy.
+ *
+ * @example
+ * <LocationField label="Adres gabinetu" value={address} onChange={setAddress} />
+ */
 export const LocationField: React.FC<LocationFieldProps> = ({
   label = 'Adres / lokalizacja gabinetu',
   name = 'location_address',
@@ -31,7 +47,6 @@ export const LocationField: React.FC<LocationFieldProps> = ({
   const [showDropdown, setShowDropdown] = useState(false)
   const wrapperRef = useRef<HTMLDivElement | null>(null)
 
-  // Handle outside click to hide inline suggestions
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
@@ -44,7 +59,6 @@ export const LocationField: React.FC<LocationFieldProps> = ({
     }
   }, [])
 
-  // Auto-search inline suggestions when typing
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value
     onChange(newValue)

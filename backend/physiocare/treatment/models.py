@@ -5,6 +5,8 @@ from core.models import TimestampedModel, UUIDModel
 
 
 class EpisodeStatus(models.TextChoices):
+    """Statusy epizodu leczenia fizjoterapeutycznego."""
+
     IN_PROGRESS = 'IN_PROGRESS', 'W trakcie'
     COMPLETED_SUCCESS = 'COMPLETED_SUCCESS', 'Zakończony sukcesem'
     REFERRED = 'REFERRED', 'Skierowany'
@@ -12,11 +14,15 @@ class EpisodeStatus(models.TextChoices):
 
 
 class BodyViewSide(models.TextChoices):
+    """Strony widoku ciała na diagramie bólu."""
+
     FRONT = 'FRONT', 'Przód'
     BACK = 'BACK', 'Tył'
 
 
 class RecommendationType(models.TextChoices):
+    """Typy rekomendacji diagnostycznych wystawianych przez fizjoterapeutę."""
+
     SPECIALIST_CONSULTATION = 'SPECIALIST_CONSULTATION', 'Konsultacja lekarza specjalisty'
     IMAGING_MRI = 'IMAGING_MRI', 'Sugestia MRI'
     IMAGING_CT = 'IMAGING_CT', 'Sugestia TK'
@@ -26,31 +32,36 @@ class RecommendationType(models.TextChoices):
 
 
 class FundingHint(models.TextChoices):
+    """Wskazówki dotyczące finansowania zalecanego badania lub konsultacji."""
+
     NFZ_VIA_DOCTOR = 'NFZ_VIA_DOCTOR', 'NFZ - formalne skierowanie wystawia lekarz'
     PRIVATE = 'PRIVATE', 'Ścieżka prywatna'
     NOT_APPLICABLE = 'NOT_APPLICABLE', 'Nie dotyczy'
 
 
 class DeviceOrderStatus(models.TextChoices):
+    """Statusy zlecenia na wyroby medyczne."""
+
     DRAFT = 'DRAFT', 'Szkic'
     ISSUED = 'ISSUED', 'Wystawione'
     CANCELLED = 'CANCELLED', 'Anulowane'
 
 
-# Tekst prawny / produktowy - wspólny dla katalogu, API pacjenta i UI.
-DEVICE_ORDER_DISCLAIMER = (
+DEVICE_ORDER_DISCLAIMER: str = (
     'PhysioCare modeluje uprawnienia ordynacyjne wyrobów medycznych. '
     'Nie służy do wystawiania recept na leki ani maści farmaceutyczne. '
     'Formalne e-ZWM wymaga podpisu i weryfikacji w systemie P1/NFZ.'
 )
 
-DEVICE_PICKUP_HINT = (
+DEVICE_PICKUP_HINT: str = (
     'W aptece lub sklepie medycznym z umową NFZ podaj PESEL oraz ten 4-cyfrowy kod dostępu. '
     'Kod pochodzi z systemu NFZ (SMS, e-mail, druk lub IKP) - PhysioCare go tylko pokazuje.'
 )
 
 
 class BodySide(models.TextChoices):
+    """Strony ciała dotyczące zlecenia na wyrób medyczny."""
+
     LEFT = 'LEFT', 'Lewa'
     RIGHT = 'RIGHT', 'Prawa'
     BOTH = 'BOTH', 'Obustronnie'
@@ -58,6 +69,8 @@ class BodySide(models.TextChoices):
 
 
 class TreatmentEpisode(TimestampedModel):
+    """Reprezentuje epizod leczenia pacjenta pod opieką fizjoterapeuty."""
+
     patient = models.ForeignKey(
         'patients.PatientProfile',
         on_delete=models.CASCADE,
@@ -70,9 +83,7 @@ class TreatmentEpisode(TimestampedModel):
         blank=True,
         related_name='episodes',
     )
-    # Kod roboczy / z dokumentacji lekarskiej - nie jest samodzielną diagnozą nozologiczną.
     icd10_code = models.CharField(max_length=10, blank=True, default='')
-    # Diagnoza funkcjonalna - domena fizjoterapeuty (art. 4 u.o.z.f.).
     functional_diagnosis = EncryptedTextField(blank=True, default='')
     status = models.CharField(
         max_length=30,
@@ -84,19 +95,29 @@ class TreatmentEpisode(TimestampedModel):
     ended_at = models.DateField(null=True, blank=True)
 
     class Meta:
-        db_table = 'treatment_episodes'
-        indexes = [
+        """Metadane modelu epizodu leczenia."""
+
+        db_table: str = 'treatment_episodes'
+        indexes: list[object] = [
             models.Index(
                 fields=['patient', 'status'],
                 name='idx_episodes_patient_status',
             ),
         ]
 
-    def __str__(self):
+
+    def __str__(self) -> str:
+        """Zwraca reprezentację tekstową epizodu leczenia.
+
+        Returns:
+            str: Tekstowa reprezentacja epizodu leczenia.
+        """
         return f'Epizod {self.id} - {self.patient}'
 
 
 class BodyAreaPain(UUIDModel):
+    """Reprezentuje ocenę bólu i cele terapeutyczne dla określonego obszaru ciała."""
+
     episode = models.ForeignKey(
         TreatmentEpisode,
         on_delete=models.CASCADE,
@@ -110,8 +131,10 @@ class BodyAreaPain(UUIDModel):
     recorded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = 'body_area_pain'
-        constraints = [
+        """Metadane modelu wpisu o bólu obszaru ciała."""
+
+        db_table: str = 'body_area_pain'
+        constraints: list[object] = [
             models.UniqueConstraint(
                 fields=['episode', 'body_region', 'view_side'],
                 name='uniq_body_pain_episode_region_side',
@@ -122,11 +145,18 @@ class BodyAreaPain(UUIDModel):
             ),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """Zwraca reprezentację tekstową wpisu o bólach w danym obszarze ciała.
+
+        Returns:
+            str: Tekstowa reprezentacja poziomu bólu VAS i obszaru.
+        """
         return f'{self.body_region} ({self.view_side}) VAS={self.vas_score}'
 
 
 class VisitNote(TimestampedModel):
+    """Reprezentuje wpis notatki medycznej z wizyty w ramach epizodu leczenia."""
+
     episode = models.ForeignKey(
         TreatmentEpisode,
         on_delete=models.CASCADE,
@@ -149,15 +179,22 @@ class VisitNote(TimestampedModel):
     content = EncryptedTextField()
 
     class Meta:
-        db_table = 'visit_notes'
+        """Metadane modelu notatki z wizyty."""
 
-    def __str__(self):
+        db_table: str = 'visit_notes'
+
+    def __str__(self) -> str:
+        """Zwraca reprezentację tekstową notatki z wizyty.
+
+        Returns:
+            str: Tekstowa reprezentacja notatki z wizyty.
+        """
         return f'Notatka epizodu {self.episode_id}'
 
 
 class DiagnosticRecommendation(TimestampedModel):
-    """
-    Kierowanie pośrednie: opinia fizjoterapeuty ułatwiająca diagnostykę lekarską.
+    """Kierowanie pośrednie: opinia fizjoterapeuty ułatwiająca diagnostykę lekarską.
+
     Nie jest formalnym e-skierowaniem NFZ na badania obrazowe.
     """
 
@@ -186,10 +223,17 @@ class DiagnosticRecommendation(TimestampedModel):
     )
 
     class Meta:
-        db_table = 'diagnostic_recommendations'
-        ordering = ['-created_at']
+        """Metadane modelu rekomendacji diagnostycznej."""
 
-    def __str__(self):
+        db_table: str = 'diagnostic_recommendations'
+        ordering: list[str] = ['-created_at']
+
+    def __str__(self) -> str:
+        """Zwraca reprezentację tekstową rekomendacji diagnostycznej.
+
+        Returns:
+            str: Tekstowa reprezentacja rekomendacji diagnostycznej.
+        """
         return f'{self.recommendation_type} @ {self.episode_id}'
 
 
@@ -235,10 +279,17 @@ class MedicalDeviceOrder(TimestampedModel):
     notes = EncryptedTextField(blank=True, default='')
 
     class Meta:
-        db_table = 'medical_device_orders'
-        ordering = ['-created_at']
+        """Metadane modelu zlecenia na wyrób medyczny."""
 
-    def __str__(self):
+        db_table: str = 'medical_device_orders'
+        ordering: list[str] = ['-created_at']
+
+    def __str__(self) -> str:
+        """Zwraca reprezentację tekstową zlecenia na wyrób medyczny.
+
+        Returns:
+            str: Tekstowa reprezentacja zlecenia na wyrób medyczny.
+        """
         return f'{self.device_code} → {self.patient_id}'
 
 
@@ -260,10 +311,17 @@ class PhysicianOrderRefusal(TimestampedModel):
     physician_notified = models.BooleanField(default=False)
 
     class Meta:
-        db_table = 'physician_order_refusals'
-        ordering = ['-created_at']
+        """Metadane modelu odmowy wykonania zlecenia lekarskiego."""
 
-    def __str__(self):
+        db_table: str = 'physician_order_refusals'
+        ordering: list[str] = ['-created_at']
+
+    def __str__(self) -> str:
+        """Zwraca reprezentację tekstową odmowa wykonania zlecenia lekarskiego.
+
+        Returns:
+            str: Tekstowa reprezentacja odmowy wykonania zlecenia.
+        """
         return f'Odmowa @ {self.episode_id}'
 
 
@@ -296,8 +354,16 @@ class ReceptaNaRuchReferral(TimestampedModel):
     )
 
     class Meta:
-        db_table = 'recepta_na_ruch_referrals'
-        ordering = ['-created_at']
+        """Metadane modelu skierowania Recepta na Ruch."""
 
-    def __str__(self):
+        db_table: str = 'recepta_na_ruch_referrals'
+        ordering: list[str] = ['-created_at']
+
+
+    def __str__(self) -> str:
+        """Zwraca reprezentację tekstową skierowania Recepta na Ruch.
+
+        Returns:
+            str: Tekstowa reprezentacja skierowania.
+        """
         return f'Recepta na Ruch → {self.patient_id}'

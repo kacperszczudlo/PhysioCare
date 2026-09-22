@@ -1,6 +1,6 @@
 # Testowanie API w Postmanie - PhysioCare
 
-> Deliverable Faz 2.6: pełna kolekcja kontraktu REST + macierz przypadków użycia.
+> Specyfikacja kolekcji testowej REST API oraz macierzy przypadków użycia.
 > Kolekcja: [`postman/PhysioCare.json`](postman/PhysioCare.json) · środowisko: [`postman/PhysioCare.postman_environment.json`](postman/PhysioCare.postman_environment.json)
 
 Dokument łączy **zamysł projektu** (UC-01-UC-18) z **konkretnymi requestami** do uruchomienia na lokalnym backendzie. Celem jest sprawdzenie każdego happy pathu i typowych wyjątków zanim web/mobile zaczną konsumować API.
@@ -305,7 +305,6 @@ Kolekcja w `docs/postman/` jest artefaktem w repo - edytuj ją w Postmanie (Expo
 | [use-cases.md](use-cases.md) | Specyfikacja UC (aktorzy, wyjątki) |
 | [api.md](api.md) | Kontrakt REST (body, kody) |
 | [architecture.md](architecture.md) | Moduły Django, przepływy |
-| [development-plan.md](development-plan.md) | Faza 2.6 / Faza 3 testy |
 
 ---
 

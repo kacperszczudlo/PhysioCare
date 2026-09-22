@@ -13,6 +13,9 @@ const DEV_DJANGO_PORT = 8000
  * http-proxy często buforuje SSE i UI „nie żyje”.
  * Cookies JWT są host-only dla localhost (port nieistotny).
  */
+/**
+ * Tworzy i zwraca adres URL dla strumienia powiadomień w czasie rzeczywistym SSE (`/me/events/`).
+ */
 function eventsUrl(): string {
   if (import.meta.env.DEV && API_BASE_URL.startsWith('/')) {
     return `http://localhost:${DEV_DJANGO_PORT}/api/v1/me/events/`
@@ -37,7 +40,16 @@ function parseEvent(raw: string): RealtimeEvent | null {
   }
 }
 
-/** Opens SSE to `/me/events/`. Returns disposer. Cookie auth (withCredentials). */
+/**
+ * Nawiązuje połączenie Server-Sent Events (SSE) z backendem z automatyczną renegocjacją sesji i reconnectem.
+ *
+ * @returns Funkcję sprzątającą (disposer) zamykającą połączenie i wyczyszczającą timery.
+ *
+ * @example
+ * const cleanup = connectTherapistRealtime();
+ * // ... przy odmontowaniu:
+ * cleanup();
+ */
 export function connectTherapistRealtime(): () => void {
   let closed = false
   let source: EventSource | null = null

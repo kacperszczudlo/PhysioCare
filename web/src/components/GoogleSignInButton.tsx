@@ -7,6 +7,9 @@ import './GoogleSignInButton.css'
 
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ?? ''
 
+/**
+ * Sprawdza czy klient Google Identity Services został skonfigurowany w zmiennych środowiskowych.
+ */
 // eslint-disable-next-line react-refresh/only-export-components
 export function isWebGoogleSignInConfigured(): boolean {
   return Boolean(googleClientId)
@@ -20,6 +23,9 @@ type GoogleSignInButtonProps = {
   onError: (message: string) => void
 }
 
+/**
+ * Przycisk logowania i rejestracji z kontem Google wykorzystujący popup Google GIS ID Token.
+ */
 export function GoogleSignInButton({
   disabled = false,
   title = 'Kontynuuj z Google',

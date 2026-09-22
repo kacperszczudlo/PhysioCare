@@ -1,5 +1,3 @@
-"""Structured log formatters for PhysioCare monitoring."""
-
 from __future__ import annotations
 
 import json
@@ -8,9 +6,9 @@ from datetime import UTC, datetime
 
 
 class StructuredJsonFormatter(logging.Formatter):
-    """Emit one JSON object per log line for aggregation-friendly logs."""
+    """Formatator logów generujący pojedynczy obiekt JSON dla każdej linii logów w celach agregacji i analizy."""
 
-    _EXTRA_FIELDS = (
+    _EXTRA_FIELDS: tuple[str, ...] = (
         'request_id',
         'method',
         'path',
@@ -22,6 +20,20 @@ class StructuredJsonFormatter(logging.Formatter):
     )
 
     def format(self, record: logging.LogRecord) -> str:
+        """Formatuje wpis logu do postaci ciągu JSON.
+
+        Args:
+            record (logging.LogRecord): Obiekt rekordu logowania.
+
+        Returns:
+            str: Ciąg JSON reprezentujący sformatowany rekord.
+
+        Raises:
+            TypeError: Gdy record nie jest instancją logging.LogRecord.
+        """
+        if not isinstance(record, logging.LogRecord):
+            raise TypeError("Argument 'record' musi być instancją logging.LogRecord.")
+
         payload: dict[str, object] = {
             'timestamp': datetime.now(UTC).isoformat(),
             'level': record.levelname,
@@ -29,8 +41,9 @@ class StructuredJsonFormatter(logging.Formatter):
             'message': record.getMessage(),
         }
 
+        record_dict = record.__dict__
         for field in self._EXTRA_FIELDS:
-            value = getattr(record, field, None)
+            value = record_dict.get(field, None)
             if value is not None:
                 payload[field] = value
 
@@ -38,3 +51,5 @@ class StructuredJsonFormatter(logging.Formatter):
             payload['exception'] = self.formatException(record.exc_info)
 
         return json.dumps(payload, ensure_ascii=False)
+
+

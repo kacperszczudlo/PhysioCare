@@ -22,6 +22,9 @@ const createCustomPinIcon = () =>
     iconAnchor: [16, 42],
   })
 
+/**
+ * Modal wyświetlający podgląd lokalizacji gabinetu lub wizyty na interaktywnej mapie OpenStreetMap / Leaflet.
+ */
 export const LocationMapModal: React.FC<LocationMapModalProps> = ({
   isOpen,
   onClose,
@@ -37,7 +40,6 @@ export const LocationMapModal: React.FC<LocationMapModalProps> = ({
     lon: DEFAULT_CENTER.lon,
   })
 
-  // Geocode address when modal opens
   useEffect(() => {
     if (isOpen && address.trim()) {
       searchAddress(address).then((results) => {
@@ -48,7 +50,6 @@ export const LocationMapModal: React.FC<LocationMapModalProps> = ({
     }
   }, [isOpen, address])
 
-  // Initialize/Update Map
   useEffect(() => {
     if (!isOpen || !mapContainerRef.current) return
 

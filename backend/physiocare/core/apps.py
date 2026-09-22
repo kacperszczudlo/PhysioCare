@@ -2,4 +2,7 @@ from django.apps import AppConfig
 
 
 class CoreConfig(AppConfig):
-    name = 'core'
+    """Konfiguracja aplikacji Django core."""
+
+    name: str = 'core'
+

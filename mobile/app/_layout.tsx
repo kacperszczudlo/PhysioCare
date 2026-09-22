@@ -1,3 +1,8 @@
+/**
+ * @file _layout.tsx
+ * @description Główny (korzenny) nawigator aplikacji PhysioCare ze wszystkimi dostawcami kontekstów (Auth, Network, Toast, Realtime).
+ */
+
 import 'react-native-reanimated'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
@@ -18,6 +23,11 @@ import { ToastProvider } from '@/components/ToastContext'
 
 configureNotificationHandler()
 
+/**
+ * Wewnętrzny nawigator stosu (Stack) zarządcy ekranów po załadowaniu kontekstu uwierzytelniania.
+ *
+ * @returns Element React Native prezentujący ekrany aplikacji lub ekran ładowania.
+ */
 function RootNavigator() {
   const { isLoading } = useAuth()
 
@@ -71,6 +81,11 @@ function RootNavigator() {
   )
 }
 
+/**
+ * Korzenny komponent układu aplikacji (Root Layout) owijający całe drzewo w dostawców powiadomień, sieci i autoryzacji.
+ *
+ * @returns Główny element układu aplikacji.
+ */
 export default function RootLayout() {
   return (
     <SafeAreaProvider>

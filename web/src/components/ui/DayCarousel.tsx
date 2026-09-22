@@ -30,6 +30,9 @@ function monthShort(date: Date): string {
   return new Intl.DateTimeFormat('pl-PL', { month: 'short' }).format(date)
 }
 
+/**
+ * Karuzela dni dla grafiku pracy fizjoterapeuty z oznaczeniami dni świątecznych i wolnych.
+ */
 export function DayCarousel({
   value,
   onChange,

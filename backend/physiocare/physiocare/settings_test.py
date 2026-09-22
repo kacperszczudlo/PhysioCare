@@ -1,19 +1,19 @@
 from .settings import *  # noqa: F401,F403
 
-DEBUG = True
-SECURE_SSL_REDIRECT = False
+DEBUG: bool = True
+SECURE_SSL_REDIRECT: bool = False
 
-DATABASES = {
+DATABASES: dict[str, object] = {
     'default': postgres_database(),  # noqa: F405
 }
 
-CACHES = {
+CACHES: dict[str, object] = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
 
-PASSWORD_HASHERS = [
+PASSWORD_HASHERS: list[str] = [
     'django.contrib.auth.hashers.MD5PasswordHasher',
 ]
 
@@ -25,4 +25,4 @@ REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {  # noqa: F405
     'password_reset': '3/hour',
 }
 
-SSE_BUS_ENGINE = 'inmemory'
+SSE_BUS_ENGINE: str = 'inmemory'

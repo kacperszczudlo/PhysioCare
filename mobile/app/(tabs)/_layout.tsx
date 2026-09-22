@@ -1,9 +1,19 @@
+/**
+ * @file _layout.tsx
+ * @description Układ nawigacji dolnego paska zakładek (Tab Bar) dla zalogowanego pacjenta.
+ */
+
 import { Redirect, Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 
 import { useAuth } from '@/auth/AuthContext'
 import { colors } from '@/theme/tokens'
 
+/**
+ * Główny nawigator zakładek aplikacji (Pulpit, Wizyty, Dokumentacja, Specjaliści, Profil, Ustawienia).
+ *
+ * @returns Element React Native typu Tabs lub Przekierowanie Redirect.
+ */
 export default function TabsLayout() {
   const { isAuthenticated } = useAuth()
 

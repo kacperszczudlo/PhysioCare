@@ -3,6 +3,9 @@ type GoogleMarkProps = {
   size?: number
 }
 
+/**
+ * Sygnet/logo Google SVG zgodne z oficjalnymi wytycznymi brandingowymi Google OAuth.
+ */
 export function GoogleMark({ className, size = 18 }: GoogleMarkProps) {
   return (
     <svg

@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import URLPattern, URLResolver, path
 
 from .views import (
     MeExerciseCompletionCreateView,
@@ -11,7 +11,7 @@ from .views import (
     TherapistExerciseListCreateView,
 )
 
-urlpatterns = [
+urlpatterns: list[URLPattern | URLResolver] = [
     path(
         'therapist/exercises/',
         TherapistExerciseListCreateView.as_view(),
@@ -39,7 +39,7 @@ urlpatterns = [
     ),
 ]
 
-me_urlpatterns = [
+me_urlpatterns: list[URLPattern | URLResolver] = [
     path('exercises/', MeExercisesListView.as_view(), name='me-exercises'),
     path('exercises/today/', MeExercisesTodayView.as_view(), name='me-exercises-today'),
     path(

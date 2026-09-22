@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/ToastContext'
 
+/**
+ * Komponent sekcji ustawień dwuskładnikowej weryfikacji tożsamości (MFA / TOTP) z obsługą kodów zapasowych.
+ */
 export function MFASection() {
   const [status, setStatus] = useState<MFAStatusResponse | null>(null)
   const [loadingStatus, setLoadingStatus] = useState(true)

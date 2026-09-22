@@ -28,6 +28,9 @@ const createCustomPinIcon = () =>
     iconAnchor: [16, 42],
   })
 
+/**
+ * Modal z interaktywnym wybierakiem lokalizacji geograficznej (geokodowanie odwrotne, przeciąganie pinezki).
+ */
 export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
   isOpen,
   onClose,
@@ -48,7 +51,6 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
   })
   const [isGpsLoading, setIsGpsLoading] = useState(false)
 
-  // Reset/sync on modal open
   useEffect(() => {
     if (isOpen) {
       setSelectedAddress(initialAddress)
@@ -65,7 +67,6 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
     }
   }, [isOpen, initialAddress])
 
-  // Map Initialization & Lifecycle
   useEffect(() => {
     if (!isOpen || !mapContainerRef.current) return
 
@@ -86,7 +87,6 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
         icon: createCustomPinIcon(),
       }).addTo(map)
 
-      // Handle map clicks
       map.on('click', async (e: L.LeafletMouseEvent) => {
         const { lat, lng } = e.latlng
         marker.setLatLng([lat, lng])
@@ -98,7 +98,6 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
         }
       })
 
-      // Handle marker dragend
       marker.on('dragend', async () => {
         const position = marker.getLatLng()
         setSelectedCoords({ lat: position.lat, lon: position.lng })
@@ -128,11 +127,9 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
         markerRef.current = null
       }
     }
-    // Initial map setup on modal open
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
-  // Update map view when selectedCoords changes
   useEffect(() => {
     if (mapRef.current && markerRef.current && isOpen) {
       mapRef.current.setView([selectedCoords.lat, selectedCoords.lon], 15)
@@ -140,7 +137,6 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
     }
   }, [selectedCoords, isOpen])
 
-  // Handle Search Input Change with Debounce
   useEffect(() => {
     if (!searchQuery.trim() || searchQuery.trim().length < 3) {
       setSuggestions([])

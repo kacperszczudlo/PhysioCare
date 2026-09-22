@@ -1,3 +1,8 @@
+/**
+ * @file index.tsx
+ * @description Główny ekran pulpitu pacjenta prezentujący postęp, nadchodzące wizyty i zalecenia na dziś.
+ */
+
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -23,6 +28,11 @@ import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
 import { useSilentPoll } from '@/realtime/useSilentPoll'
 import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
+/**
+ * Ekran pulpitu nawigacyjnego pacjenta ze stanem wykonania ćwiczeń i najbliższą wizytą.
+ *
+ * @returns Element React Native prezentujący pulpit główny.
+ */
 export default function DashboardScreen() {
   const { user } = useAuth()
   const router = useRouter()

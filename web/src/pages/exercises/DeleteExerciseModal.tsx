@@ -13,6 +13,9 @@ interface DeleteExerciseModalProps {
   onDeleted: () => void
 }
 
+/**
+ * Modal potwierdzenia usunięcia ćwiczenia z bazy z informacją o wyczyszczeniu powiązanych zaleceń.
+ */
 export function DeleteExerciseModal({
   open,
   exercise,

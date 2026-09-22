@@ -2,6 +2,9 @@ import type { RealtimeEvent } from './types'
 
 type Listener = (event: RealtimeEvent) => void
 
+/**
+ * Szyna zdarzeń czasu rzeczywistego (Pub/Sub Event Bus) obsługująca komunikację SSE wewnątrz aplikacji frontendowej.
+ */
 class RealtimeBus {
   private readonly listeners = new Set<Listener>()
 

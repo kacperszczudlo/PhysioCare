@@ -1,8 +1,3 @@
-"""
-Katalog wyrobów medycznych (skrócony, do e-ZWM w PhysioCare).
-Kody / grupy zgodne z rozporządzeniem MZ (interpretacja 2024 z raportu KIF).
-"""
-
 from __future__ import annotations
 
 from therapists.competence import (
@@ -11,9 +6,7 @@ from therapists.competence import (
     QualificationLevel,
 )
 
-# min_qualification: MAGISTER | FIZJO_SPEC
 DEVICE_CATALOG: tuple[dict, ...] = (
-    # --- Magister: ortezy seryjne kończyn dolnych (J) ---
     {
         'code': 'J.ANKLE',
         'group': 'J',
@@ -35,7 +28,6 @@ DEVICE_CATALOG: tuple[dict, ...] = (
         'min_qualification': QualificationLevel.MAGISTER,
         'usage_hint': 'W tym ortezy w dysplazji stawów biodrowych u niemowląt.',
     },
-    # --- Magister: kończyna górna (L) ---
     {
         'code': 'L.WRIST',
         'group': 'L',
@@ -57,7 +49,6 @@ DEVICE_CATALOG: tuple[dict, ...] = (
         'min_qualification': QualificationLevel.MAGISTER,
         'usage_hint': 'Seryjna.',
     },
-    # --- Magister: tułów / szyja (M) ---
     {
         'code': 'M.LUMBAR',
         'group': 'M',
@@ -72,7 +63,6 @@ DEVICE_CATALOG: tuple[dict, ...] = (
         'min_qualification': QualificationLevel.MAGISTER,
         'usage_hint': 'Seryjny.',
     },
-    # --- Magister: kompresja (O) ---
     {
         'code': 'O.ARM',
         'group': 'O',
@@ -87,7 +77,6 @@ DEVICE_CATALOG: tuple[dict, ...] = (
         'min_qualification': QualificationLevel.MAGISTER,
         'usage_hint': 'Obrzęki limfatyczne.',
     },
-    # --- Magister: sprzęt pomocniczy (S) ---
     {
         'code': 'S.07.01',
         'group': 'S',
@@ -116,7 +105,6 @@ DEVICE_CATALOG: tuple[dict, ...] = (
         'min_qualification': QualificationLevel.MAGISTER,
         'usage_hint': 'Z wyłączeniem niektórych wariantów piankowych wg limitu NFZ.',
     },
-    # --- FIZJO SPEC: protezy / na miarę / W ---
     {
         'code': 'A.PROST.TEMP',
         'group': 'A',
@@ -183,7 +171,18 @@ DEVICE_CATALOG: tuple[dict, ...] = (
 )
 
 
-def catalog_as_list(*, qualification_level: str | None = None) -> list[dict]:
+def catalog_as_list(*, qualification_level: str | None = None) -> list[dict[str, object]]:
+    """Zwraca katalog wyrobów medycznych w postaci listy słowników z informacją o dostępności.
+
+    Args:
+        qualification_level (str | None): Poziom kwalifikacji do filtrowania uprawnień.
+
+    Returns:
+        list[dict[str, object]]: Lista słowników reprezentujących wyroby medyczne z flagą dozwolenia.
+    """
+    if qualification_level is not None and not isinstance(qualification_level, str):
+        qualification_level = None
+
     from therapists.competence import can_order_device_group
 
     items = []
@@ -192,8 +191,6 @@ def catalog_as_list(*, qualification_level: str | None = None) -> list[dict]:
         allowed = True
         if qualification_level:
             allowed = can_order_device_group(qualification_level, entry['group'])
-            # Standardowy wózek S jest w grupie S - magister może S pomocniczy,
-            # ale S.18.01 jest oznaczony min FIZJO_SPEC - sprawdź min_qualification.
             if entry['min_qualification'] == QualificationLevel.FIZJO_SPEC:
                 allowed = qualification_level == QualificationLevel.FIZJO_SPEC
             elif entry['min_qualification'] == QualificationLevel.MAGISTER:
@@ -206,14 +203,29 @@ def catalog_as_list(*, qualification_level: str | None = None) -> list[dict]:
     return items
 
 
-def get_device(code: str) -> dict | None:
+def get_device(code: str) -> dict[str, object] | None:
+    """Wyszukuje wyrób medyczny w katalogu po jego kodzie.
+
+    Args:
+        code (str): Kod wyrobu medycznego.
+
+    Returns:
+        dict[str, object] | None: Słownik zawierający dane wyrobu medycznego lub None.
+    """
+    if not isinstance(code, str):
+        return None
     for entry in DEVICE_CATALOG:
         if entry['code'] == code:
             return dict(entry)
     return None
 
 
-def groups_summary() -> dict:
+def groups_summary() -> dict[str, list[str]]:
+    """Generuje podsumowanie dostępnych grup wyrobów medycznych według poziomów kwalifikacji.
+
+    Returns:
+        dict[str, list[str]]: Słownik z podziałem na grupy dla magistrów i specjalistów.
+    """
     return {
         'magister_groups': sorted(MAGISTER_DEVICE_GROUPS),
         'fizjo_spec_extra_groups': sorted(FIZJO_SPEC_EXTRA_GROUPS, key=lambda g: (g != 'Ł', g)),

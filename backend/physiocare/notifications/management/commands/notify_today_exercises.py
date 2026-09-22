@@ -10,9 +10,17 @@ User = get_user_model()
 
 
 class Command(BaseCommand):
+    """Polecenie zarządcze Django wysyłające dzienne przypomnienia o ćwiczeniach do pacjentów."""
+
     help = 'Wyślij dzienne przypomnienie o ćwiczeniach.'
 
-    def handle(self, *args, **options):
+    def handle(self, *args, **options) -> None:
+        """Główna logika wykonania polecenia wysyłającego przypomnienia.
+
+        Args:
+            *args: Argumenty pozycyjne.
+            **options: Opcje wiersza poleceń.
+        """
         today = timezone.localdate()
         rows = list(
             ExerciseAssignment.objects.filter(

@@ -1,3 +1,8 @@
+/**
+ * @file [id].tsx
+ * @description Ekran szczegółów ćwiczenia rehabilitacyjnego (odtwarzacz wideo, instrukcja, załączniki PDF i kategorie).
+ */
+
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -43,6 +48,11 @@ function tagTextForKind(kind: CategoryKind) {
   }
 }
 
+/**
+ * Ekran prezentujący pełne instrukcje, materiały wideo i pliki PDF dla konkretnego ćwiczenia.
+ *
+ * @returns Element React Native prezentujący szczegóły ćwiczenia.
+ */
 export default function ExerciseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()

@@ -1,13 +1,24 @@
+/**
+ * @file countries.ts
+ * @description Słownik państw oraz prefiksów telefonicznych ze wsparciem dla wyszukiwania i formatowania opcji kierunkowych.
+ */
+
+/**
+ * Struktura danych o kraju i jego kodzie telefonicznym.
+ */
 export interface CountryDial {
-  /** ISO 3166-1 alpha-2 */
+  /** Kod ISO 3166-1 alpha-2 kraju (np. 'PL') */
   code: string
+  /** Polskojęzyczna nazwa kraju */
   name: string
-  /** Digits only, without leading + */
+  /** Cyfry kodu kierunkowego bez znaku + (np. '48') */
   dial: string
 }
 
+/** Domyślny kod kraju stosowany w aplikacji (Polska) */
 export const DEFAULT_COUNTRY_CODE = 'PL'
 
+/** Lista państw wraz z polskimi nazwami i prefiksami kierunkowymi */
 export const COUNTRIES: CountryDial[] = [
   { code: 'AF', name: 'Afganistan', dial: '93' },
   { code: 'AL', name: 'Albania', dial: '355' },
@@ -247,11 +258,22 @@ export const COUNTRIES: CountryDial[] = [
 
 const BY_CODE = new Map(COUNTRIES.map((c) => [c.code, c]))
 
+/**
+ * Zwraca informacje o państwie na podstawie dwuliterowego kodu ISO.
+ *
+ * @param code - Kod ISO kraju (np. 'PL', 'DE').
+ * @returns Obiekt CountryDial lub undefined.
+ */
 export function getCountryByCode(code: string): CountryDial | undefined {
   return BY_CODE.get(code)
 }
 
-/** Prefer longer dial matches; PL preferred for +48. */
+/**
+ * Odnajduje kraj odpowiadający wpisanym cyfrom numeru kierunkowego.
+ *
+ * @param dialDigits - Cyfry kodu kierunkowego.
+ * @returns Najlepiej dopasowany kraj.
+ */
 export function findCountryByDial(dialDigits: string): CountryDial | undefined {
   if (dialDigits.startsWith('48')) {
     return BY_CODE.get('PL')
@@ -266,6 +288,12 @@ export function findCountryByDial(dialDigits: string): CountryDial | undefined {
   return best
 }
 
+/**
+ * Formatuje reprezentację kraju do wyboru na liście rozwijanej.
+ *
+ * @param country - Obiekt z danymi kraju.
+ * @returns Sformatowany napis, np. "Polska (+48)".
+ */
 export function formatCountryOption(country: CountryDial): string {
   return `${country.name} (+${country.dial})`
 }

@@ -2,6 +2,7 @@ export const MIN_PASSWORD_LENGTH = 8
 
 const SPECIAL_CHAR_PATTERN = /[^A-Za-z0-9_]/
 
+/** Słownik komunikatów błędów polityki haseł. */
 export const PASSWORD_MESSAGES = {
   tooShort: `Hasło musi mieć co najmniej ${MIN_PASSWORD_LENGTH} znaków.`,
   entirelyNumeric: 'Hasło nie może składać się wyłącznie z cyfr.',
@@ -13,12 +14,14 @@ export const PASSWORD_MESSAGES = {
 
 export type PasswordRequirementId = 'minLength' | 'notNumeric' | 'hasSpecial' | 'notSimilar'
 
+/** Struktura kryterium wymogu bezpieczeństwa hasła. */
 export interface PasswordRequirement {
   id: PasswordRequirementId
   label: string
   met: boolean
 }
 
+/** Dane pomocnicze użytkownika służące do wykrywania zbyt łatwych/podobnych haseł. */
 export interface PasswordUserHints {
   email?: string
   firstName?: string
@@ -48,6 +51,7 @@ function attributeFragments(hints: PasswordUserHints): string[] {
   return fragments
 }
 
+/** Sprawdza, czy hasło zawiera przynajmniej jeden znak specjalny. */
 export function hasSpecialCharacter(password: string): boolean {
   return SPECIAL_CHAR_PATTERN.test(password)
 }

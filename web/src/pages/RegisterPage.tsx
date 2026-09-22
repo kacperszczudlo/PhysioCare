@@ -57,6 +57,9 @@ const QUALIFICATION_TILES: ReadonlyArray<{
   },
 ]
 
+/**
+ * Widok formularza rejestracji konta fizjoterapeuty z walidacją numeru PWZF, oświadczeniem prawnym i weryfikacją e-mail.
+ */
 export function RegisterPage() {
   const { register } = useAuth()
   const { executeRecaptcha } = useRecaptcha()

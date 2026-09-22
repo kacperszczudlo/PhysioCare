@@ -1,3 +1,8 @@
+/**
+ * @file therapists.tsx
+ * @description Ekran listy powiązanych fizjoterapeutów z możliwością ich wyszukiwania w bazie i dodawania do pacjenta.
+ */
+
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
 import {
@@ -20,6 +25,7 @@ import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
 import { useToast } from '@/components/ToastContext'
 import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
+/** Obiekt opisujący fizjoterapeutę w katalogu/liście pacjenta. */
 interface Therapist {
   id: string
   first_name: string
@@ -33,6 +39,11 @@ interface Therapist {
   pwzf_number?: string
 }
 
+/**
+ * Ekran prezentujący listę przypisanych fizjoterapeutów z wyszukiwarką w ogólnej bazie kliniki.
+ *
+ * @returns Element React Native zawierający listę specjalistów.
+ */
 export default function TherapistsTabScreen() {
   const router = useRouter()
   const { toast } = useToast()

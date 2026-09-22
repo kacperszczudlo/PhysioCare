@@ -2,11 +2,20 @@ from datetime import date, timedelta
 
 
 def get_easter_date(year: int) -> date:
+    """Oblicza datę Niedzieli Wielkanocnej w kalendarzu gregoriańskim za pomocą algorytmu Meeusa/Jonesa/Butchera.
+
+    Args:
+        year (int): Rok, dla którego ma zostać wyliczona data Wielkanocy.
+
+    Returns:
+        date: Wyliczona data Niedzieli Wielkanocnej.
+
+    Raises:
+        TypeError: Gdy parametr year nie jest liczbą całkowitą.
     """
-    Oblicza datę Niedzieli Wielkanocnej w kalendarzu gregoriańskim za pomocą
-    algorytmu Meeusa/Jonesa/Butchera.
-    Działa poprawnie dla dowolnego roku (uwzględniając lata przestępne).
-    """
+    if not isinstance(year, int):
+        raise TypeError('Parametr year musi być liczbą całkowitą.')
+
     a = year % 19
     b = year // 100
     c = year % 100
@@ -25,16 +34,26 @@ def get_easter_date(year: int) -> date:
 
 
 def get_polish_holidays(year: int) -> dict[date, str]:
+    """Zwraca słownik polskich świąt państwowych ustawowo wolnych od pracy dla podanego roku.
+
+    Args:
+        year (int): Rok, dla którego zwracane są święta.
+
+    Returns:
+        dict[date, str]: Słownik gdzie kluczem jest obiekt daty, a wartością nazwa święta.
+
+    Raises:
+        TypeError: Gdy parametr year nie jest liczbą całkowitą.
     """
-    Zwraca słownik polskich świąt państwowych ustawowo wolnych od pracy dla podanego roku.
-    Klucz: date, Wartość: oficjalna nazwa święta.
-    """
+    if not isinstance(year, int):
+        raise TypeError('Parametr year musi być liczbą całkowitą.')
+
     easter = get_easter_date(year)
     easter_monday = easter + timedelta(days=1)
-    zielone_swiatki = easter + timedelta(days=49)  # 7. niedziela po Wielkanocy
-    boze_cialo = easter + timedelta(days=60)  # czwartek, 60 dni po Wielkanocy
+    zielone_swiatki = easter + timedelta(days=49)
+    boze_cialo = easter + timedelta(days=60)
 
-    holidays = {
+    holidays: dict[date, str] = {
         date(year, 1, 1): 'Nowy Rok',
         date(year, 1, 6): 'Święto Trzech Króli',
         easter: 'Wielkanoc (Pierwszy Dzień)',
@@ -53,11 +72,22 @@ def get_polish_holidays(year: int) -> dict[date, str]:
 
 
 def is_polish_holiday(target_date: date) -> tuple[bool, str | None]:
+    """Sprawdza, czy podana data jest polskim świętem państwowym wolnym od pracy.
+
+    Args:
+        target_date (date): Weryfikowana data.
+
+    Returns:
+        tuple[bool, str | None]: Krotka (True, nazwa_święta) lub (False, None).
+
+    Raises:
+        TypeError: Gdy parametr target_date nie jest instancją date.
     """
-    Sprawdza, czy podana data jest polskim świętem państwowym wolnym od pracy.
-    Zwraca (True, nazwa_święta) lub (False, None).
-    """
+    if not isinstance(target_date, date):
+        raise TypeError('Parametr target_date musi być instancją date.')
+
     holidays = get_polish_holidays(target_date.year)
     if target_date in holidays:
         return True, holidays[target_date]
     return False, None
+

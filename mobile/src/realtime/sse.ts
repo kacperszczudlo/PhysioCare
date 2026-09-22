@@ -1,3 +1,8 @@
+/**
+ * @file sse.ts
+ * @description Nawiązywanie i zarządzanie połączeniem Server-Sent Events (SSE) z serwerem API do obierania powiadomień w czasie rzeczywistym.
+ */
+
 import EventSource from 'react-native-sse'
 
 import { API_BASE_URL, refreshAccessToken } from '@/api/client'
@@ -11,10 +16,12 @@ const MAX_RETRY_MS = 30_000
 /** Android XHR często buforuje SSE - cykliczny timeout zmusza do odczytu bufora. */
 const SSE_CYCLE_MS = 12_000
 
+/** Generuje pełny adres URL punktu końcowego zdarzeń SSE */
 function eventsUrl(): string {
   return `${API_BASE_URL.replace(/\/$/, '')}/me/events/`
 }
 
+/** Parsuje ciąg JSON z treścią zdarzenia SSE na obiekt `RealtimeEvent` */
 function parsePayload(raw: string): RealtimeEvent | null {
   try {
     const data = JSON.parse(raw) as Partial<RealtimeEvent>
@@ -32,7 +39,10 @@ function parsePayload(raw: string): RealtimeEvent | null {
 }
 
 /**
- * Best-effort SSE (Bearer). Na Androidzie uzupełnione przez `useSilentPoll` na ekranach.
+ * Nawiązuje połączenie Server-Sent Events (SSE) z serwerem dla zalogowanego pacjenta.
+ * Obsługuje automatyczne ponawianie połączenia z wykładniczym opóźnieniem (exponential backoff) oraz odświeżaniem tokenów JWT.
+ *
+ * @returns Funkcja zamykająca strumień SSE i anulująca timery ponownych prób.
  */
 export function connectPatientRealtime(): () => void {
   let closed = false
@@ -133,7 +143,6 @@ export function connectPatientRealtime(): () => void {
       if (__DEV__) {
         console.warn('[sse] error', err)
       }
-      // timeout → biblioteka robi close() bez auto-reconnect - wznawiamy my
       if (err.type === 'timeout') {
         tearDownSource()
         retryDelay = MIN_RETRY_MS

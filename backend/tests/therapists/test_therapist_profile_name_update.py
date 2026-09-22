@@ -1,10 +1,17 @@
+from typing import TYPE_CHECKING
+
 import pytest
 
 from therapists.serializers import TherapistProfileUpdateSerializer
 
+if TYPE_CHECKING:
+    from therapists.models import TherapistProfile
+
 
 @pytest.mark.django_db
-def test_therapist_update_serializer_name_update(therapist):
+def test_therapist_update_serializer_name_update(therapist: 'TherapistProfile') -> None:
+    """Sprawdza pomyślną aktualizację imienia i nazwiska fizjoterapeuty za pomocą serializatora."""
+    # Arrange
     serializer = TherapistProfileUpdateSerializer(
         instance=therapist,
         data={
@@ -14,6 +21,7 @@ def test_therapist_update_serializer_name_update(therapist):
         },
         partial=True,
     )
+    # Assert
     assert serializer.is_valid(), serializer.errors
     updated_profile = serializer.save()
     assert updated_profile.user.first_name == 'Marta'
@@ -22,11 +30,15 @@ def test_therapist_update_serializer_name_update(therapist):
 
 
 @pytest.mark.django_db
-def test_therapist_update_serializer_invalid_last_name(therapist):
+def test_therapist_update_serializer_invalid_last_name(therapist: 'TherapistProfile') -> None:
+    """Sprawdza odrzucenie nieprawidłowego nazwiska zawierającego cyfry."""
+    # Arrange
     serializer = TherapistProfileUpdateSerializer(
         instance=therapist,
         data={'last_name': '1234'},
         partial=True,
     )
+    # Assert
     assert not serializer.is_valid()
     assert 'last_name' in serializer.errors
+

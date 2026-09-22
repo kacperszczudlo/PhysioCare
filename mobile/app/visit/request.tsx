@@ -1,3 +1,8 @@
+/**
+ * @file request.tsx
+ * @description Ekran składania nowego zgłoszenia wizyty u wybranego fizjoterapeuty z cennikiem i datą.
+ */
+
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
 import { useEffect, useMemo, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
@@ -32,6 +37,11 @@ function defaultStart(): Date {
   return date
 }
 
+/**
+ * Ekran formularza rezerwacji/zgłoszenia terminu nowej wizyty fizjoterapeutycznej.
+ *
+ * @returns Element React Native prezentujący formularz umówienia wizyty.
+ */
 export default function VisitRequestScreen() {
   const router = useRouter()
   const { toast } = useToast()

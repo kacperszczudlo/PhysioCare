@@ -2,4 +2,10 @@ from django.apps import AppConfig
 
 
 class SchedulingConfig(AppConfig):
-    name = 'scheduling'
+    """Konfiguracja aplikacji scheduling w Django.
+
+    Przechowuje konfigurację modułu harmonogramu i wizyt.
+    """
+
+    name: str = 'scheduling'
+

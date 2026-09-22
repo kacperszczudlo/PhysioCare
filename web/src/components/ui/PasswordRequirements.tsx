@@ -7,6 +7,9 @@ interface PasswordRequirementsProps {
   showErrors?: boolean
 }
 
+/**
+ * Komponent wizualnej listy wymagań siły hasła z dynamicznymi wskaźnikami spełnienia zasad.
+ */
 export function PasswordRequirements({
   requirements,
   showErrors = false,

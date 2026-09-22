@@ -2,6 +2,11 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { PageHeader } from '../PageHeader'
 
+/**
+ * @file PageHeader.test.tsx
+ * @description Zestaw testów jednostkowych dla nagłówka stron (PageHeader).
+ */
+
 describe('PageHeader Component', () => {
   it('renders title, description and actions correctly', () => {
     render(

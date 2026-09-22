@@ -6,6 +6,9 @@ import {
   PRIVACY_SUMMARY_ROWS,
 } from '@/content/privacyPolicy'
 
+/**
+ * Strona z warstwową treścią Polityki Prywatności (RODO / RODO Medyczne / PKE) systemu PhysioCare.
+ */
 export function PrivacyPolicyPage() {
   return (
     <article className="legal-doc">

@@ -1,17 +1,32 @@
 import { useRef, type ChangeEvent } from 'react'
 import './FileInput.css'
 
+/** Właściwości komponentu wczytywania pliku (PDF, wideo, dokumentacja medyczna). */
 export interface FileInputProps {
+  /** Etykieta formularza. */
   label?: string
+  /** Dozwolone typy plików (MIME lub rozszerzenia, np. 'application/pdf'). */
   accept?: string
+  /** Wybrany plik lub null. */
   file: File | null
+  /** Callback zmiany pliku. */
   onChange: (file: File | null) => void
+  /** Identyfikator pola. */
   id?: string
+  /** Wskazówka pomocnicza. */
   hint?: string
+  /** Błąd walidacji pliku. */
   error?: string
+  /** Dodatkowa klasa CSS. */
   className?: string
 }
 
+/**
+ * Komponent wczytywania i przeciągania plików (Dropzone) z podglądem rozmiaru i możliwością usunięcia.
+ *
+ * @example
+ * <FileInput label="Załącz skan RTG" file={file} onChange={setFile} accept="image/*" />
+ */
 export function FileInput({
   label = 'Plik PDF',
   accept = 'application/pdf,.pdf',

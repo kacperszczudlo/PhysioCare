@@ -8,7 +8,8 @@ from exercises.models import Exercise, ExerciseAssignment, ExerciseCompletion, M
 
 
 @pytest.fixture
-def exercise(therapist):
+def exercise(therapist: object) -> Exercise:
+    """Tworzy testowe ćwiczenie dla fizjoterapeuty."""
     return Exercise.objects.create(
         therapist=therapist,
         title='Mostek',
@@ -19,8 +20,9 @@ def exercise(therapist):
 
 
 @pytest.fixture
-def assignment(exercise, patient):
-    today = timezone.localdate()
+def assignment(exercise: Exercise, patient: object) -> ExerciseAssignment:
+    """Tworzy testowe przypisanie ćwiczenia dla pacjenta."""
+    today: object = timezone.localdate()
     return ExerciseAssignment.objects.create(
         exercise=exercise,
         patient=patient,
@@ -31,10 +33,15 @@ def assignment(exercise, patient):
 
 
 @pytest.mark.django_db
-def test_patient_completes_assigned_exercise(api_client, patient, assignment):
+def test_patient_completes_assigned_exercise(
+    api_client: object, patient: object, assignment: ExerciseAssignment,
+) -> None:
+    """Sprawdza oznaczanie wykonania przypisanego ćwiczenia przez pacjenta."""
+    # Arrange
     api_client.force_authenticate(user=patient.user)
 
-    today_response = api_client.get('/api/v1/me/exercises/today/')
+    today_response: object = api_client.get('/api/v1/me/exercises/today/')
+    # Assert
     assert today_response.status_code == status.HTTP_200_OK
     assert today_response.data['count'] == 1
     assert today_response.data['results'][0]['id'] == str(assignment.id)
@@ -42,7 +49,7 @@ def test_patient_completes_assigned_exercise(api_client, patient, assignment):
     assert 'categories' in today_response.data['results'][0]
     assert today_response.data['results'][0]['categories'] == []
 
-    complete_response = api_client.post(
+    complete_response: object = api_client.post(
         '/api/v1/me/exercise-completions/',
         {'assignment_id': str(assignment.id), 'done': True},
         format='json',
@@ -52,22 +59,27 @@ def test_patient_completes_assigned_exercise(api_client, patient, assignment):
     assert complete_response.data['done'] is True
     assert ExerciseCompletion.objects.filter(assignment=assignment, done=True).count() == 1
 
-    today_after = api_client.get('/api/v1/me/exercises/today/')
+    today_after: object = api_client.get('/api/v1/me/exercises/today/')
     assert today_after.data['results'][0]['completed_today'] is True
 
 
 @pytest.mark.django_db
-def test_patient_can_uncheck_exercise_completion(api_client, patient, assignment):
+def test_patient_can_uncheck_exercise_completion(
+    api_client: object, patient: object, assignment: ExerciseAssignment,
+) -> None:
+    """Sprawdza możliwość cofnięcia wykonania ćwiczenia przez pacjenta."""
+    # Arrange
     api_client.force_authenticate(user=patient.user)
 
-    first = api_client.post(
+    first: object = api_client.post(
         '/api/v1/me/exercise-completions/',
         {'assignment_id': str(assignment.id), 'done': True},
         format='json',
     )
+    # Assert
     assert first.status_code == status.HTTP_201_CREATED
 
-    uncheck = api_client.post(
+    uncheck: object = api_client.post(
         '/api/v1/me/exercise-completions/',
         {'assignment_id': str(assignment.id), 'done': False},
         format='json',
@@ -77,22 +89,26 @@ def test_patient_can_uncheck_exercise_completion(api_client, patient, assignment
     assert ExerciseCompletion.objects.filter(assignment=assignment).count() == 1
     assert ExerciseCompletion.objects.get(assignment=assignment).done is False
 
-    today_response = api_client.get('/api/v1/me/exercises/today/')
+    today_response: object = api_client.get('/api/v1/me/exercises/today/')
     assert today_response.data['results'][0]['completed_today'] is False
 
 
 @pytest.mark.django_db
-def test_completion_uses_server_local_date_not_client_clock(api_client, patient, assignment):
-    """Client completed_on must not desync from MeExercisesToday (clinic TZ)."""
+def test_completion_uses_server_local_date_not_client_clock(
+    api_client: object, patient: object, assignment: ExerciseAssignment,
+) -> None:
+    """Sprawdza, czy data wykonania ćwiczenia bazuje na czasie serwera, a nie zegarze klienta."""
+    # Arrange
     api_client.force_authenticate(user=patient.user)
-    today = timezone.localdate()
-    client_skewed = (today - timedelta(days=1)).isoformat()
+    today: object = timezone.localdate()
+    client_skewed: str = (today - timedelta(days=1)).isoformat()
 
-    response = api_client.post(
+    response: object = api_client.post(
         '/api/v1/me/exercise-completions/',
         {'assignment_id': str(assignment.id), 'completed_on': client_skewed, 'done': True},
         format='json',
     )
+    # Assert
     assert response.status_code == status.HTTP_201_CREATED
     assert response.data['completed_on'] == today.isoformat()
     assert ExerciseCompletion.objects.filter(
@@ -101,22 +117,27 @@ def test_completion_uses_server_local_date_not_client_clock(api_client, patient,
         done=True,
     ).exists()
 
-    today_after = api_client.get('/api/v1/me/exercises/today/')
+    today_after: object = api_client.get('/api/v1/me/exercises/today/')
     assert today_after.data['results'][0]['completed_today'] is True
 
 
 @pytest.mark.django_db
-def test_duplicate_exercise_completion_updates_existing(api_client, patient, assignment):
+def test_duplicate_exercise_completion_updates_existing(
+    api_client: object, patient: object, assignment: ExerciseAssignment,
+) -> None:
+    """Sprawdza, czy powtórny wpis wykonania ćwiczenia aktualizuje istniejący rekord zamiast go duplikować."""
+    # Arrange
     api_client.force_authenticate(user=patient.user)
 
-    first = api_client.post(
+    first: object = api_client.post(
         '/api/v1/me/exercise-completions/',
         {'assignment_id': str(assignment.id), 'done': True},
         format='json',
     )
+    # Assert
     assert first.status_code == status.HTTP_201_CREATED
 
-    second = api_client.post(
+    second: object = api_client.post(
         '/api/v1/me/exercise-completions/',
         {'assignment_id': str(assignment.id), 'done': True},
         format='json',
@@ -127,9 +148,13 @@ def test_duplicate_exercise_completion_updates_existing(api_client, patient, ass
 
 
 @pytest.mark.django_db
-def test_patient_lists_full_exercise_plan_with_history(api_client, patient, assignment, exercise):
-    today = timezone.localdate()
-    past = ExerciseAssignment.objects.create(
+def test_patient_lists_full_exercise_plan_with_history(
+    api_client: object, patient: object, assignment: ExerciseAssignment, exercise: Exercise,
+) -> None:
+    """Sprawdza pobieranie pełnego planu ćwiczeń pacjenta z filtrowaniem wg scope (active/past)."""
+    # Arrange
+    today: object = timezone.localdate()
+    past: ExerciseAssignment = ExerciseAssignment.objects.create(
         exercise=exercise,
         patient=patient,
         dosage='2x8',
@@ -143,18 +168,19 @@ def test_patient_lists_full_exercise_plan_with_history(api_client, patient, assi
     )
 
     api_client.force_authenticate(user=patient.user)
-    all_resp = api_client.get('/api/v1/me/exercises/')
+    all_resp: object = api_client.get('/api/v1/me/exercises/')
+    # Assert
     assert all_resp.status_code == status.HTTP_200_OK
     assert all_resp.data['count'] == 2
-    active_row = next(r for r in all_resp.data['results'] if r['id'] == str(assignment.id))
+    active_row: dict[str, object] = next(r for r in all_resp.data['results'] if r['id'] == str(assignment.id))
     assert active_row['is_active'] is True
     assert active_row['completed_today'] is True
     assert len(active_row['completions']) == 1
 
-    active_resp = api_client.get('/api/v1/me/exercises/?scope=active')
+    active_resp: object = api_client.get('/api/v1/me/exercises/?scope=active')
     assert active_resp.data['count'] == 1
     assert active_resp.data['results'][0]['id'] == str(assignment.id)
 
-    past_resp = api_client.get('/api/v1/me/exercises/?scope=past')
+    past_resp: object = api_client.get('/api/v1/me/exercises/?scope=past')
     assert past_resp.data['count'] == 1
     assert past_resp.data['results'][0]['id'] == str(past.id)

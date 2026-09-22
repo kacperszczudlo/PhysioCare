@@ -1,16 +1,14 @@
-"""International phone validation (E.164) with user-facing messages."""
-
 from __future__ import annotations
 
 import re
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 
-PHONE_REQUIRED = 'Podaj numer telefonu.'
-PHONE_INVALID = 'Podaj prawidłowy numer telefonu w formacie międzynarodowym (np. +48123456789).'
-PHONE_TOO_LONG = 'Numer telefonu może mieć co najwyżej 20 znaków.'
+PHONE_REQUIRED: str = 'Podaj numer telefonu.'
+PHONE_INVALID: str = 'Podaj prawidłowy numer telefonu w formacie międzynarodowym (np. +48123456789).'
+PHONE_TOO_LONG: str = 'Numer telefonu może mieć co najwyżej 20 znaków.'
 
-PHONE_FIELD_ERRORS = {
+PHONE_FIELD_ERRORS: dict[str, str] = {
     'blank': PHONE_REQUIRED,
     'required': PHONE_REQUIRED,
     'null': PHONE_REQUIRED,
@@ -18,18 +16,32 @@ PHONE_FIELD_ERRORS = {
     'invalid': PHONE_INVALID,
 }
 
-_NON_DIGIT = re.compile(r'\D+')
-_E164 = re.compile(r'^\+[1-9]\d{7,14}$')
+_NON_DIGIT: re.Pattern[str] = re.compile(r'\D+')
+_E164: re.Pattern[str] = re.compile(r'^\+[1-9]\d{7,14}$')
 
 
 def normalize_and_validate_phone(value: str | None, *, allow_blank: bool = True) -> str:
-    """Normalize phone to E.164 (+XXXXXXXX...). Blank allowed when allow_blank=True."""
+    """Normalizuje oraz waliduje numer telefonu do formatu E.164 (+XXXXXXXX...).
+
+    Args:
+        value (str | None): Numer telefonu do walidacji.
+        allow_blank (bool): Czy pusty numer jest dozwolony.
+
+    Returns:
+        str: Znormalizowany numer telefonu w formacie E.164 lub pusty napis.
+
+    Raises:
+        DjangoValidationError: Gdy numer telefonu ma nieprawidłowy format lub jest wymagany.
+    """
+    if value is not None and not isinstance(value, str):
+        raise DjangoValidationError(PHONE_INVALID, code='invalid')
+
     if value is None:
         if allow_blank:
             return ''
         raise DjangoValidationError(PHONE_REQUIRED, code='required')
 
-    raw = str(value).strip()
+    raw = value.strip()
     if raw == '':
         if allow_blank:
             return ''
@@ -45,10 +57,8 @@ def normalize_and_validate_phone(value: str | None, *, allow_blank: bool = True)
     if digits.startswith('00'):
         digits = digits[2:]
     elif digits.startswith('0') and len(digits) == 10:
-        # Legacy Polish trunk prefix: 0XXXXXXXXX
         digits = digits[1:]
 
-    # Bare 9-digit Polish mobile/landline without country code.
     if not raw.startswith('+') and not raw.startswith('00') and len(digits) == 9:
         digits = f'48{digits}'
 

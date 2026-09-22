@@ -1,13 +1,6 @@
-"""Proponowane typy wizyt - katalog startowy dla terapeuty.
-
-Grupy:
-- kind: główny typ wizyty (czas / charakter spotkania)
-- profile: specjalizacja / profil wizyty
-"""
-
 from .models import TherapyType
 
-THERAPY_TYPE_PRESETS = [
+THERAPY_TYPE_PRESETS: list[tuple[str, str, str, int, str]] = [
     (
         'kind',
         'Wizyta konsultacyjna',
@@ -74,7 +67,12 @@ THERAPY_TYPE_PRESETS = [
 ]
 
 
-def preset_payloads():
+def preset_payloads() -> list[dict[str, object]]:
+    """Zwraca listę słowników reprezentujących proponowane typy wizyt.
+
+    Returns:
+        list[dict[str, object]]: Lista definicji typów wizyt.
+    """
     return [
         {
             'group': group,
@@ -87,8 +85,20 @@ def preset_payloads():
     ]
 
 
-def ensure_therapy_type_presets(therapist) -> list[TherapyType]:
-    """Idempotentnie dopisz brakujące typy z katalogu proponowanego."""
+def ensure_therapy_type_presets(therapist: object) -> list[TherapyType]:
+    """Idempotentnie tworzy domyślny katalog typów wizyt dla fizjoterapeuty.
+
+    Args:
+        therapist (object): Obiekt profilu fizjoterapeuty.
+
+    Returns:
+        list[TherapyType]: Lista utworzonych lub istniejących typów terapii.
+
+    Raises:
+        TypeError: Gdy parametr therapist jest None.
+    """
+    if therapist is None:
+        raise TypeError('Parametr therapist nie może być None.')
     existing = set(
         TherapyType.objects.filter(therapist=therapist).values_list('name', flat=True),
     )

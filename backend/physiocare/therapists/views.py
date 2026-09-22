@@ -1,6 +1,8 @@
+from django.db.models import QuerySet
 from django.utils import timezone
-from rest_framework import generics
+from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -17,17 +19,45 @@ from .serializers import (
 
 
 class TherapistProfileView(generics.RetrieveUpdateAPIView):
+    """Widok pobierania i edycji własnego profilu fizjoterapeuty."""
+
     permission_classes = [IsAuthenticated, IsTherapist]
 
-    def get_object(self):
+    def get_object(self) -> TherapistProfile:
+        """Pobiera profil fizjoterapeuty przypisany do zalogowanego użytkownika.
+
+        Returns:
+            TherapistProfile: Obiekt profilu fizjoterapeuty.
+        """
         return self.request.user.therapist_profile
 
-    def get_serializer_class(self):
+    def get_serializer_class(self) -> type[serializers.Serializer]:
+        """Zwraca odpowiednią klasę serializera zależnie od metody żądania.
+
+        Returns:
+            type[serializers.Serializer]: Klasa serializera do użycia.
+        """
         if self.request.method in ('PUT', 'PATCH'):
             return TherapistProfileUpdateSerializer
         return TherapistProfileSerializer
 
-    def update(self, request, *args, **kwargs):
+    def update(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Aktualizuje dane profilu fizjoterapeuty.
+
+        Args:
+            request (Request): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty pozycyjne.
+            **kwargs (object): Dodatkowe argumenty słownikowe.
+
+        Returns:
+            Response: Odpowiedź zawierająca zaktualizowane dane profilu.
+
+        Raises:
+            TypeError: Gdy parametr request nie jest instancją Request.
+        """
+        if not isinstance(request, Request):
+            raise TypeError('Argument request musi być instancją Request.')
+
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -37,18 +67,49 @@ class TherapistProfileView(generics.RetrieveUpdateAPIView):
 
 
 class TherapistCompetencesView(APIView):
+    """Widok pobierania kompetencji zalogowanego fizjoterapeuty."""
+
     permission_classes = [IsAuthenticated, IsTherapist]
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
+        """Pobiera migawkę kompetencji zawodowych fizjoterapeuty.
+
+        Args:
+            request (Request): Obiekt żądania HTTP.
+
+        Returns:
+            Response: Słownik reprezentujący migawkę kompetencji.
+
+        Raises:
+            TypeError: Gdy parametr request nie jest instancją Request.
+        """
+        if not isinstance(request, Request):
+            raise TypeError('Argument request musi być instancją Request.')
+
         therapist = request.user.therapist_profile
         return Response(therapist.competence_snapshot().to_dict())
 
 
-
 class TherapistDashboardStatsView(APIView):
+    """Widok statystyk pulpitów fizjoterapeuty."""
+
     permission_classes = [IsAuthenticated, IsTherapist]
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
+        """Pobiera zbiorcze statystyki wizyt, pacjentów i aktywnych zadań dla fizjoterapeuty.
+
+        Args:
+            request (Request): Obiekt żądania HTTP.
+
+        Returns:
+            Response: Słownik zawierający zagregowane statystyki.
+
+        Raises:
+            TypeError: Gdy parametr request nie jest instancją Request.
+        """
+        if not isinstance(request, Request):
+            raise TypeError('Argument request musi być instancją Request.')
+
         therapist = request.user.therapist_profile
         today = timezone.localdate()
         upcoming = Visit.objects.filter(
@@ -72,16 +133,25 @@ class TherapistDashboardStatsView(APIView):
 
 
 class TherapistPublicView(generics.RetrieveAPIView):
+    """Widok szczegółowy publicznego profilu fizjoterapeuty."""
+
     serializer_class = TherapistPublicSerializer
     permission_classes = [IsAuthenticated]
     queryset = TherapistProfile.objects.select_related('user')
 
 
 class TherapistPublicListView(generics.ListAPIView):
+    """Widok wyszukiwania i pobierania publicznej listy fizjoterapeutów."""
+
     serializer_class = TherapistPublicSerializer
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[TherapistProfile]:
+        """Pobiera przefiltrowaną listę aktywnych profilów fizjoterapeutów.
+
+        Returns:
+            QuerySet[TherapistProfile]: Zestaw przefiltrowanych obiektów TherapistProfile.
+        """
         qs = TherapistProfile.objects.select_related('user').filter(user__is_active=True)
         search = self.request.query_params.get('search', '').strip()
         if search:

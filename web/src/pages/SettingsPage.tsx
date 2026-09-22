@@ -26,6 +26,9 @@ function initials(first?: string, last?: string): string {
   return value || '?'
 }
 
+/**
+ * Strona ustawień konta (zmiana hasła, bezpieczne sesje, weryfikacja MFA/TOTP).
+ */
 export function SettingsPage() {
   const { user, logout } = useAuth()
   const { toast } = useToast()

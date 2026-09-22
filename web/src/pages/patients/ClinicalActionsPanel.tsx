@@ -74,6 +74,9 @@ interface ClinicalActionsPanelProps {
   onEpisodePossiblyUpdated?: () => void
 }
 
+/**
+ * Panel akcji klinicznych fizjoterapeuty z obsługą wyrobów medycznych NFZ, sugerowanych badań RTG/USG/MRI i skierowań "Recepta na Ruch".
+ */
 export function ClinicalActionsPanel({
   patientId,
   episodeId,

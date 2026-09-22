@@ -1,13 +1,27 @@
+/**
+ * @file ScreenHeader.tsx
+ * @description Nagłówek ekranów aplikacji mobilnej oraz uniwersalny kontener karty sekcji (SectionCard).
+ */
+
 import type { ReactNode } from 'react'
 import { StyleSheet, Text, View, type ViewProps } from 'react-native'
 
 import { colors, radius, space, typography } from '@/theme/tokens'
 
+/** Właściwości komponentu {@link ScreenHeader}. */
 interface ScreenHeaderProps extends ViewProps {
+  /** Główny tytuł ekranu. */
   title: string
+  /** Opcjonalny podtytuł lub opis ekranu. */
   subtitle?: string
 }
 
+/**
+ * Standardowy nagłówek ekranu prezentujący tytuł oraz opcjonalny podtytuł.
+ *
+ * @param props Właściwości nagłówka ekranu.
+ * @returns Element React Native prezentujący nagłówek.
+ */
 export function ScreenHeader({ title, subtitle, style, ...rest }: ScreenHeaderProps) {
   return (
     <View style={[styles.wrap, style]} {...rest}>
@@ -17,6 +31,12 @@ export function ScreenHeader({ title, subtitle, style, ...rest }: ScreenHeaderPr
   )
 }
 
+/**
+ * Kartowy kontener sekcji ze spójnymi odstępami i obramowaniem.
+ *
+ * @param props Właściwości kontenera sekcji.
+ * @returns Element React Native będący kartą widoku.
+ */
 export function SectionCard({ children, style, ...rest }: ViewProps & { children: ReactNode }) {
   return (
     <View style={[styles.card, style]} {...rest}>

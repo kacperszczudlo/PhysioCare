@@ -2,14 +2,20 @@ import type { BodyPartSlug } from 'simple-body-highlighter-react'
 
 import type { BodyViewSide } from '@/api/types'
 
+/** Rodzaj struktury anatomicznej poddawanej terapii. */
 export type StructureKind = 'JOINT' | 'MUSCLE' | 'BONE' | 'SOFT'
 
+/** Definicja celu terapeutycznego (struktury anatomicznej). */
 export interface TreatmentTargetDef {
+  /** Identyfikator celu. */
   id: string
+  /** Czytelna polska nazwa struktury (np. "Staw kolanowy"). */
   label: string
+  /** Typ struktury anatomicznej. */
   kind: StructureKind
 }
 
+/** Słownik polskich etykiet rodzajów struktur anatomicznych. */
 export const STRUCTURE_KIND_LABELS: Record<StructureKind, string> = {
   JOINT: 'Stawy',
   MUSCLE: 'Mięśnie',
@@ -17,6 +23,7 @@ export const STRUCTURE_KIND_LABELS: Record<StructureKind, string> = {
   SOFT: 'Tkanki miękkie',
 }
 
+/** Słownik charakterów i typów odczuwanego bólu pacjenta. */
 export const PAIN_CHARACTERS = [
   { id: 'SHARP', label: 'Ostry' },
   { id: 'DULL', label: 'Tępy' },
@@ -27,6 +34,7 @@ export const PAIN_CHARACTERS = [
   { id: 'NUMBNESS', label: 'Drętwienie' },
 ] as const
 
+/** Słownik etykiet statusów epizodu leczenia. */
 export const EPISODE_STATUS_LABELS: Record<string, string> = {
   IN_PROGRESS: 'W trakcie',
   COMPLETED_SUCCESS: 'Zakończony sukcesem',

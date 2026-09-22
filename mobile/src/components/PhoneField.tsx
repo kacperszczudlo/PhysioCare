@@ -1,3 +1,8 @@
+/**
+ * @file PhoneField.tsx
+ * @description Komponent pola wprowadzania numeru telefonu z wyborem prefiksu i nazwy kraju z listy modalnej.
+ */
+
 import { useMemo, useState } from 'react'
 import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 
@@ -9,16 +14,30 @@ import {
 } from '@/lib/countries'
 import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
+/** Właściwości komponentu {@link PhoneField}. */
 interface PhoneFieldProps {
+  /** Etykieta pola formularza (domyślnie "Telefon"). */
   label?: string
+  /** Kod wybranego kraju (np. "PL", "DE"). */
   countryCode: string
+  /** Krajowy numer telefonu. */
   nationalNumber: string
+  /** Callback przy zmianie wybranego kraju. */
   onCountryChange: (countryCode: string) => void
+  /** Callback przy zmianie krajowego numeru telefonu. */
   onNationalNumberChange: (nationalNumber: string) => void
+  /** Opcjonalny komunikat błędu. */
   error?: string | null
+  /** Opcjonalny tekst pomocniczy. */
   hint?: string
 }
 
+/**
+ * Pole wyboru numeru telefonu z możliwością wyszukiwania i wyboru kraju oraz prefiksu kierunkowego.
+ *
+ * @param props Właściwości pola telefonu.
+ * @returns Element React Native prezentujący pole numeryczne i picker kraju.
+ */
 export function PhoneField({
   label = 'Telefon',
   countryCode,

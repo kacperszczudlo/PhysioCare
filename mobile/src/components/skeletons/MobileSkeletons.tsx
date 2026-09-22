@@ -1,9 +1,19 @@
+/**
+ * @file MobileSkeletons.tsx
+ * @description Zestaw zaawansowanych makiety szkieletowych (skeletons) dedykowanych dla poszczególnych ekranów aplikacji mobilnej.
+ */
+
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 
 import { colors, radius, space } from '@/theme/tokens'
 import { Skeleton, SkeletonAvatar, SkeletonText, SkeletonWrapper } from '@/components/Skeleton'
 
+/**
+ * Szablon szkieletu dla pulpitu głównego pacjenta.
+ *
+ * @returns Element React Native prezentujący skeleton pulpitu.
+ */
 export function MobileDashboardSkeleton() {
   return (
     <SkeletonWrapper label="Ładowanie pulpitu…" style={styles.container}>
@@ -61,6 +71,11 @@ export function MobileDashboardSkeleton() {
   )
 }
 
+/**
+ * Szablon szkieletu dla ekranu listy wizyt.
+ *
+ * @returns Element React Native.
+ */
 export function MobileVisitsSkeleton() {
   return (
     <SkeletonWrapper label="Ładowanie wizyt…" style={styles.container}>
@@ -91,6 +106,11 @@ export function MobileVisitsSkeleton() {
   )
 }
 
+/**
+ * Szablon szkieletu dla ekranu dokumentów medycznych.
+ *
+ * @returns Element React Native.
+ */
 export function MobileDocumentsSkeleton() {
   return (
     <SkeletonWrapper label="Ładowanie dokumentów…" style={styles.container}>
@@ -113,6 +133,11 @@ export function MobileDocumentsSkeleton() {
   )
 }
 
+/**
+ * Szablon szkieletu dla ekranu profilu użytkownika.
+ *
+ * @returns Element React Native.
+ */
 export function MobileProfileSkeleton() {
   return (
     <SkeletonWrapper label="Ładowanie profilu…" style={styles.container}>
@@ -130,6 +155,11 @@ export function MobileProfileSkeleton() {
   )
 }
 
+/**
+ * Szablon szkieletu dla ekranu szczegółów wizyty.
+ *
+ * @returns Element React Native.
+ */
 export function MobileVisitDetailSkeleton() {
   return (
     <SkeletonWrapper label="Ładowanie szczegółów wizyty…" style={styles.container}>
@@ -146,6 +176,11 @@ export function MobileVisitDetailSkeleton() {
   )
 }
 
+/**
+ * Szablon szkieletu dla ekranu szczegółów ćwiczenia.
+ *
+ * @returns Element React Native.
+ */
 export function MobileExerciseDetailSkeleton() {
   return (
     <SkeletonWrapper label="Ładowanie szczegółów ćwiczenia…" style={styles.container}>
@@ -163,6 +198,11 @@ export function MobileExerciseDetailSkeleton() {
   )
 }
 
+/**
+ * Szablon szkieletu dla ekranu listy fizjoterapeutów.
+ *
+ * @returns Element React Native.
+ */
 export function MobileTherapistsSkeleton() {
   return (
     <SkeletonWrapper label="Ładowanie listy fizjoterapeutów…" style={styles.container}>
@@ -181,6 +221,11 @@ export function MobileTherapistsSkeleton() {
   )
 }
 
+/**
+ * Szablon szkieletu dla ekranu szczegółów fizjoterapeuty.
+ *
+ * @returns Element React Native.
+ */
 export function MobileTherapistDetailSkeleton() {
   return (
     <SkeletonWrapper label="Ładowanie profilu fizjoterapeuty…" style={styles.container}>
@@ -204,6 +249,11 @@ export function MobileTherapistDetailSkeleton() {
   )
 }
 
+/**
+ * Szablon szkieletu dla ekranu ustawień konta.
+ *
+ * @returns Element React Native.
+ */
 export function MobileSettingsSkeleton() {
   return (
     <SkeletonWrapper label="Ładowanie ustawień…" style={styles.container}>
@@ -235,6 +285,11 @@ export function MobileSettingsSkeleton() {
   )
 }
 
+/**
+ * Szablon szkieletu dla ekranu rezerwacji wizyty.
+ *
+ * @returns Element React Native.
+ */
 export function MobileVisitRequestSkeleton() {
   return (
     <SkeletonWrapper label="Ładowanie formularza wizyty…" style={styles.container}>

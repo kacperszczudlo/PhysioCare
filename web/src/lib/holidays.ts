@@ -1,3 +1,9 @@
+/**
+ * Wylicza datę Niedzieli Wielkanocnej dla podanego roku przy użyciu algorytmu Meeusa/Jonesa/Butchera.
+ *
+ * @param year - Rok kalendarzowy.
+ * @returns Obiekt Date reprezentujący Niedzielę Wielkanocną.
+ */
 export function getEasterDate(year: number): Date {
   const a = year % 19
   const b = Math.floor(year / 100)
@@ -16,6 +22,12 @@ export function getEasterDate(year: number): Date {
   return new Date(year, month - 1, day)
 }
 
+/**
+ * Zwraca polską nazwę święta państwowego lub kościelnego ustawowo wolnego od pracy dla danej daty.
+ *
+ * @param date - Sprawdzana data.
+ * @returns Nazwę święta (np. "Święto Pracy", "Boże Ciało") lub null, jeśli dzień jest zwykłym dniem roboczym.
+ */
 export function getPolishHolidayName(date: Date): string | null {
   const year = date.getFullYear()
   const month = date.getMonth() + 1

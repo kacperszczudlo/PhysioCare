@@ -11,7 +11,8 @@ from accounts.models import UserMFA
 
 
 @pytest.mark.django_db
-def test_mfa_setup_returns_secret_and_qr_svg(api_client, therapist):
+def test_mfa_setup_returns_secret_and_qr_svg(api_client: object, therapist: object) -> None:
+    """Sprawdza, czy konfiguracja 2FA zwraca sekret TOTP oraz kod QR w formacie SVG."""
     # Arrange
     api_client.force_authenticate(user=therapist.user)
 
@@ -28,7 +29,8 @@ def test_mfa_setup_returns_secret_and_qr_svg(api_client, therapist):
 
 
 @pytest.mark.django_db
-def test_mfa_setup_already_enabled_returns_400(api_client, therapist):
+def test_mfa_setup_already_enabled_returns_400(api_client: object, therapist: object) -> None:
+    """Sprawdza, czy próba ponownej konfiguracji 2FA dla aktywnej usługi zwraca błąd 400."""
     # Arrange
     UserMFA.objects.create(
         user=therapist.user,
@@ -47,8 +49,9 @@ def test_mfa_setup_already_enabled_returns_400(api_client, therapist):
 
 @pytest.mark.django_db
 def test_mfa_enable_with_valid_totp_activates_2fa_and_returns_backup_codes(
-    api_client, therapist,
-):
+    api_client: object, therapist: object,
+) -> None:
+    """Sprawdza aktywację 2FA za pomocą poprawnego kodu TOTP i generowanie kodów zapasowych."""
     # Arrange
     secret = generate_totp_secret()
     UserMFA.objects.create(user=therapist.user, secret_key=secret, is_enabled=False)
@@ -75,7 +78,8 @@ def test_mfa_enable_with_valid_totp_activates_2fa_and_returns_backup_codes(
 
 
 @pytest.mark.django_db
-def test_mfa_enable_with_invalid_totp_returns_400(api_client, therapist):
+def test_mfa_enable_with_invalid_totp_returns_400(api_client: object, therapist: object) -> None:
+    """Sprawdza odrzucenie włączenia 2FA przy podaniu nieprawidłowego kodu TOTP."""
     # Arrange
     secret = generate_totp_secret()
     UserMFA.objects.create(user=therapist.user, secret_key=secret, is_enabled=False)
@@ -97,7 +101,8 @@ def test_mfa_enable_with_invalid_totp_returns_400(api_client, therapist):
 
 
 @pytest.mark.django_db
-def test_mfa_login_flow_step1_requires_2fa_token(api_client, therapist):
+def test_mfa_login_flow_step1_requires_2fa_token(api_client: object, therapist: object) -> None:
+    """Sprawdza krok 1 logowania: żądanie drugiego składnika 2FA przy włączonej usłudze."""
     # Arrange
     secret = generate_totp_secret()
     UserMFA.objects.create(user=therapist.user, secret_key=secret, is_enabled=True)
@@ -109,7 +114,6 @@ def test_mfa_login_flow_step1_requires_2fa_token(api_client, therapist):
         format='json',
     )
 
-
     # Assert
     assert response.status_code == status.HTTP_200_OK
     assert response.data.get('mfa_required') is True
@@ -118,7 +122,8 @@ def test_mfa_login_flow_step1_requires_2fa_token(api_client, therapist):
 
 
 @pytest.mark.django_db
-def test_mfa_login_flow_step2_with_valid_totp(api_client, therapist):
+def test_mfa_login_flow_step2_with_valid_totp(api_client: object, therapist: object) -> None:
+    """Sprawdza krok 2 logowania: pomyślne uwierzytelnienie kodem TOTP."""
     # Arrange
     secret = generate_totp_secret()
     UserMFA.objects.create(user=therapist.user, secret_key=secret, is_enabled=True)
@@ -141,9 +146,11 @@ def test_mfa_login_flow_step2_with_valid_totp(api_client, therapist):
 
 
 @pytest.mark.django_db
-def test_mfa_login_flow_step2_with_backup_code(api_client, therapist):
+def test_mfa_login_flow_step2_with_backup_code(api_client: object, therapist: object) -> None:
+    """Sprawdza krok 2 logowania: logowanie za pomocą kodu zapasowego."""
     # Arrange
     secret = generate_totp_secret()
+    # Act
     raw_codes, hashed_codes = generate_backup_codes(8)
     UserMFA.objects.create(
         user=therapist.user,
@@ -154,7 +161,6 @@ def test_mfa_login_flow_step2_with_backup_code(api_client, therapist):
     mfa_token = issue_mfa_preauth_token(therapist.user)
     backup_code = raw_codes[0]
 
-    # Act
     response = api_client.post(
         '/api/v1/auth/2fa/login/',
         data={'mfa_token': mfa_token, 'code': backup_code},
@@ -170,9 +176,11 @@ def test_mfa_login_flow_step2_with_backup_code(api_client, therapist):
 
 
 @pytest.mark.django_db
-def test_mfa_login_flow_step2_backup_code_is_single_use(api_client, therapist):
+def test_mfa_login_flow_step2_backup_code_is_single_use(api_client: object, therapist: object) -> None:
+    """Sprawdza jednorazowość kodu zapasowego i blokadę przy ponownej próbie."""
     # Arrange
     secret = generate_totp_secret()
+    # Act
     raw_codes, hashed_codes = generate_backup_codes(8)
     UserMFA.objects.create(
         user=therapist.user,
@@ -182,16 +190,15 @@ def test_mfa_login_flow_step2_backup_code_is_single_use(api_client, therapist):
     )
     backup_code = raw_codes[0]
 
-    # First attempt (uses code)
     mfa_token1 = issue_mfa_preauth_token(therapist.user)
     resp1 = api_client.post(
         '/api/v1/auth/2fa/login/',
         data={'mfa_token': mfa_token1, 'code': backup_code},
         format='json',
     )
+    # Assert
     assert resp1.status_code == status.HTTP_200_OK
 
-    # Second attempt (same backup code)
     mfa_token2 = issue_mfa_preauth_token(therapist.user)
     resp2 = api_client.post(
         '/api/v1/auth/2fa/login/',
@@ -199,13 +206,13 @@ def test_mfa_login_flow_step2_backup_code_is_single_use(api_client, therapist):
         format='json',
     )
 
-    # Assert second attempt failed
     assert resp2.status_code == status.HTTP_401_UNAUTHORIZED
     assert resp2.data['error']['code'] == 'AUTH_MFA_INVALID_CODE'
 
 
 @pytest.mark.django_db
-def test_mfa_login_flow_step2_invalid_code_returns_401(api_client, therapist):
+def test_mfa_login_flow_step2_invalid_code_returns_401(api_client: object, therapist: object) -> None:
+    """Sprawdza błąd 401 przy podaniu błędnego kodu w kroku 2 logowania."""
     # Arrange
     secret = generate_totp_secret()
     UserMFA.objects.create(user=therapist.user, secret_key=secret, is_enabled=True)
@@ -224,7 +231,8 @@ def test_mfa_login_flow_step2_invalid_code_returns_401(api_client, therapist):
 
 
 @pytest.mark.django_db
-def test_mfa_disable_with_valid_password(api_client, therapist):
+def test_mfa_disable_with_valid_password(api_client: object, therapist: object) -> None:
+    """Sprawdza wyłączenie 2FA przy podaniu poprawnego hasła użytkownika."""
     # Arrange
     secret = generate_totp_secret()
     UserMFA.objects.create(user=therapist.user, secret_key=secret, is_enabled=True)
@@ -237,7 +245,6 @@ def test_mfa_disable_with_valid_password(api_client, therapist):
         format='json',
     )
 
-
     # Assert
     assert response.status_code == status.HTTP_200_OK
     mfa = UserMFA.objects.get(user=therapist.user)
@@ -245,7 +252,8 @@ def test_mfa_disable_with_valid_password(api_client, therapist):
 
 
 @pytest.mark.django_db
-def test_mfa_disable_wrong_password_returns_401(api_client, therapist):
+def test_mfa_disable_wrong_password_returns_401(api_client: object, therapist: object) -> None:
+    """Sprawdza odrzucenie próby wyłączenia 2FA przy podaniu błędnego hasła."""
     # Arrange
     secret = generate_totp_secret()
     UserMFA.objects.create(user=therapist.user, secret_key=secret, is_enabled=True)
@@ -265,15 +273,17 @@ def test_mfa_disable_wrong_password_returns_401(api_client, therapist):
 
 
 @pytest.mark.django_db
-def test_mfa_status_endpoint(api_client, therapist, patient):
-    # Test therapist with 2FA disabled
+def test_mfa_status_endpoint(api_client: object, therapist: object, patient: object) -> None:
+    """Sprawdza działanie punktu końcowego statusu usługi 2FA dla fizjoterapeuty i pacjenta."""
+    # Arrange
     api_client.force_authenticate(user=therapist.user)
+    # Act
     res_therapist = api_client.get('/api/v1/auth/2fa/status/')
+    # Assert
     assert res_therapist.status_code == status.HTTP_200_OK
     assert res_therapist.data['is_enabled'] is False
     assert res_therapist.data['mfa_required_for_role'] is True
 
-    # Enable 2FA for therapist
     UserMFA.objects.create(
         user=therapist.user,
         secret_key=generate_totp_secret(),
@@ -282,9 +292,9 @@ def test_mfa_status_endpoint(api_client, therapist, patient):
     res_therapist_enabled = api_client.get('/api/v1/auth/2fa/status/')
     assert res_therapist_enabled.data['is_enabled'] is True
 
-    # Test patient status
     api_client.force_authenticate(user=patient.user)
     res_patient = api_client.get('/api/v1/auth/2fa/status/')
     assert res_patient.status_code == status.HTTP_200_OK
     assert res_patient.data['is_enabled'] is False
     assert res_patient.data['mfa_required_for_role'] is False
+

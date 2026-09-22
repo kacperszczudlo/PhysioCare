@@ -1,3 +1,8 @@
+/**
+ * @file RealtimeObserver.tsx
+ * @description Niewidoczny komponent obserwatora połączenia SSE w czasie rzeczywistym (RealtimeObserver), zarządzający życiem strumienia SSE zależnie od autoryzacji i pierwszego/drugiego planu aplikacji (`AppState`).
+ */
+
 import { useEffect, useRef } from 'react'
 import { AppState, type AppStateStatus } from 'react-native'
 
@@ -5,7 +10,11 @@ import { useAuth } from '@/auth/AuthContext'
 
 import { connectPatientRealtime } from './sse'
 
-/** One SSE connection while the patient is authenticated and app is active. */
+/**
+ * Utrzymuje pojedyncze połączenie SSE z serwerem, gdy pacjent jest zalogowany, a aplikacja znajduje się w stanie aktywnym.
+ *
+ * @returns Komponent bezwarunkowo zwraca null (brak elementów UI).
+ */
 export function RealtimeObserver() {
   const { isAuthenticated, isLoading } = useAuth()
   const disposeRef = useRef<(() => void) | null>(null)

@@ -1,3 +1,6 @@
+/**
+ * Stałe określające kody statusów HTTP stosowane w zapytaniach sieciowych API.
+ */
 export const HTTP_STATUS = {
   OK: 200,
   NO_CONTENT: 204,
