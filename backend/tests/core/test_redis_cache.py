@@ -30,6 +30,7 @@ def test_therapist_exercise_category_list_caching(therapist: object) -> None:
     """Sprawdza buforowanie odpowiedzi w widoku listy kategorii ćwiczeń."""
     # Arrange
     cache.clear()
+    ExerciseCategory.objects.all().delete()
     ExerciseCategory.objects.create(name="Rozciąganie kręgosłupa", kind=CategoryKind.REGION, slug="rozciaganie-kregoslupa")
     ExerciseCategory.objects.create(name="Trening siłowy", kind=CategoryKind.TYPE, slug="trening-silowy")
 
