@@ -43,4 +43,3 @@ class RealtimeBus {
 
 /** Instancja magistrali zdarzeń czasu rzeczywistego w aplikacji */
 export const realtimeBus = new RealtimeBus()
-

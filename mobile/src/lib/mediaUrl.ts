@@ -25,4 +25,3 @@ export function resolveMediaUrl(path: string | null | undefined): string | null 
   }
   return `${origin}/${path}`
 }
-

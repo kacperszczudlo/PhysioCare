@@ -87,4 +87,3 @@ export function getPeselError(pesel: string, { allowBlank = true } = {}): string
   }
   return null
 }
-

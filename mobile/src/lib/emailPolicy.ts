@@ -41,4 +41,3 @@ export function getEmailError(email: string): string | null {
 export function isValidEmail(email: string): boolean {
   return getEmailError(email) === null
 }
-

@@ -408,4 +408,3 @@ export const api = {
   delete: <T>(path: string, options?: RequestOptions) =>
     apiRequest<T>(path, { ...options, method: 'DELETE' }),
 }
-

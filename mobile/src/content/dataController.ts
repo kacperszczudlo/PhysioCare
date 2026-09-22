@@ -22,4 +22,3 @@ export const DATA_CONTROLLER = {
 
 /** Link mailto przygotowany do bezpośredniego wysłania zgłoszenia usunięcia konta pacjenta */
 export const ACCOUNT_DELETION_MAILTO = `mailto:${DATA_CONTROLLER.email}?subject=${encodeURIComponent('Usunięcie konta PhysioCare')}`
-

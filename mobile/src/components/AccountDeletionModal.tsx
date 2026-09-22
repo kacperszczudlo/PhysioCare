@@ -286,4 +286,3 @@ const styles = StyleSheet.create({
     marginTop: space.sm,
   },
 })
-

@@ -26,4 +26,3 @@ export const HTTP_STATUS = {
   /** 500 Internal Server Error - Wewnętrzny błąd serwera */
   INTERNAL_SERVER_ERROR: 500,
 } as const
-

@@ -8,9 +8,9 @@ Komunikacja z backendem odbywa się poprzez REST API (`/api/v1`) z autoryzacją 
 
 ## Sposoby uruchomienia
 
-| Cel | Sposób uruchomienia | Push Notifications | Google Sign-In |
-| :--- | :--- | :--- | :--- |
-| **Szybki podgląd UI** (logowanie hasłem) | Expo Go: `npm.cmd run start:go` | Brak | Wyłączony (wymaga modułu natywnego) |
+| Cel                                      | Sposób uruchomienia                 | Push Notifications    | Google Sign-In                      |
+| :--------------------------------------- | :---------------------------------- | :-------------------- | :---------------------------------- |
+| **Szybki podgląd UI** (logowanie hasłem) | Expo Go: `npm.cmd run start:go`     | Brak                  | Wyłączony (wymaga modułu natywnego) |
 | **Pełna funkcjonalność** (Push + Google) | Native Build: `npm.cmd run android` | Tak (po zgodzie w OS) | Tak (`@react-native-google-signin`) |
 
 Wszystkie tryby wymagają uruchomionego backendu (`python manage.py runserver 0.0.0.0:8000` w `backend/physiocare`).
@@ -23,11 +23,11 @@ Skopiuj plik `.env.example` do `.env` i skonfiguruj adres API:
 EXPO_PUBLIC_API_BASE_URL=http://<IP-LAN-LUB-LOCALHOST>:8000/api/v1
 ```
 
-| Środowisko | Wartość `EXPO_PUBLIC_API_BASE_URL` |
-| :--- | :--- |
-| Expo Web / iOS Simulator | `http://localhost:8000/api/v1` |
-| Android Emulator | `http://10.0.2.2:8000/api/v1` |
-| Telefon fizyczny (Go / Native) | `http://<IP-LAN-PC>:8000/api/v1` |
+| Środowisko                     | Wartość `EXPO_PUBLIC_API_BASE_URL` |
+| :----------------------------- | :--------------------------------- |
+| Expo Web / iOS Simulator       | `http://localhost:8000/api/v1`     |
+| Android Emulator               | `http://10.0.2.2:8000/api/v1`      |
+| Telefon fizyczny (Go / Native) | `http://<IP-LAN-PC>:8000/api/v1`   |
 
 ---
 
@@ -89,15 +89,15 @@ npm.cmd run android
 
 ### Dostępne skrypty
 
-| Komenda | Opis |
-| :--- | :--- |
-| `npm.cmd start` | Uruchomienie serwera Metro (Development Build) |
-| `npm.cmd run start:go` | Uruchomienie pod aplikację Expo Go |
-| `npm.cmd run android` | Kompilacja i uruchomienie na emulatorze/urządzeniu Android |
-| `npm.cmd run ios` | Uruchomienie na symulatorze iOS (macOS) |
-| `npm.cmd test` | Uruchomienie testów jednostkowych i komponentowych (Vitest) |
-| `npm.cmd run lint` | Weryfikacja kodu (ESLint + TypeScript check) |
-| `npm.cmd run format:check` | Weryfikacja formatowania (Prettier) |
+| Komenda                    | Opis                                                        |
+| :------------------------- | :---------------------------------------------------------- |
+| `npm.cmd start`            | Uruchomienie serwera Metro (Development Build)              |
+| `npm.cmd run start:go`     | Uruchomienie pod aplikację Expo Go                          |
+| `npm.cmd run android`      | Kompilacja i uruchomienie na emulatorze/urządzeniu Android  |
+| `npm.cmd run ios`          | Uruchomienie na symulatorze iOS (macOS)                     |
+| `npm.cmd test`             | Uruchomienie testów jednostkowych i komponentowych (Vitest) |
+| `npm.cmd run lint`         | Weryfikacja kodu (ESLint + TypeScript check)                |
+| `npm.cmd run format:check` | Weryfikacja formatowania (Prettier)                         |
 
 ### Struktura projektu
 
@@ -121,5 +121,6 @@ src/
 ## Rozwiązywanie problemów (Troubleshooting - Windows)
 
 W przypadku problemów z długimi ścieżkami CMake (>260 znaków) w środowisku Windows podczas kompilacji natywnej Androida, zaleca się:
+
 1. Ustawienie zmiennych środowiskowych `JAVA_HOME` i `ANDROID_HOME`.
 2. Budowanie projektu w katalogu o krótkiej ścieżce (np. `%USERPROFILE%\p`) poprzez synchronizację plików źródłowych przy użyciu narzędzia `robocopy` (z wyłączeniem katalogu `android/` i `node_modules/`).

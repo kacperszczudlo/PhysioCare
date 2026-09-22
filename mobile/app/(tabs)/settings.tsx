@@ -5,15 +5,7 @@
 
 import { Link, useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useMemo, useState } from 'react'
-import {
-  Linking,
-  Platform,
-  RefreshControl,
-  StyleSheet,
-  Switch,
-  Text,
-  View,
-} from 'react-native'
+import { Linking, Platform, RefreshControl, StyleSheet, Switch, Text, View } from 'react-native'
 
 import { authApi } from '@/api/auth'
 import { getErrorMessage } from '@/api/client'

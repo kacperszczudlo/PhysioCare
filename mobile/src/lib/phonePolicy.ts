@@ -107,4 +107,3 @@ export function formatPhoneForApi(nationalNumber: string, countryCode: string): 
   const country = getCountryByCode(countryCode) ?? getDefaultCountry()
   return `+${country.dial}${national}`
 }
-

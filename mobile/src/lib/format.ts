@@ -149,4 +149,3 @@ export const DEFAULT_NOTIFICATION_PREFS: Record<string, string> = {
   exercise_reminder: 'Przypomnienia o ćwiczeniach',
   new_document: 'Nowe dokumenty',
 }
-

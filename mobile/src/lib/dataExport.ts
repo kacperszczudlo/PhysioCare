@@ -130,4 +130,3 @@ export async function sharePatientDataExport(
 
   return { delivered: false, uri, fileName }
 }
-

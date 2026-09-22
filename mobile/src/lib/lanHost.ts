@@ -25,4 +25,3 @@ export function rewriteLocalhostToLan(url: string): string {
   }
   return url.replace(/localhost|127\.0\.0\.1/gi, lanHost)
 }
-

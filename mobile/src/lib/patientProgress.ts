@@ -111,4 +111,3 @@ export function countCompletedVisits(visits: Visit[]): number {
 export function countUpcomingVisits(visits: Visit[]): number {
   return visits.filter((v) => v.status === 'SCHEDULED' || v.status === 'PENDING_APPROVAL').length
 }
-

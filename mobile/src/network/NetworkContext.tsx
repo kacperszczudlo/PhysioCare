@@ -118,4 +118,3 @@ export function useNetwork(): NetworkStatus {
 export function useNetworkOptional(): NetworkStatus | null {
   return useContext(NetworkContext)
 }
-

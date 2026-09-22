@@ -220,4 +220,3 @@ export function useAuthenticatedCachedUri(path: string | null | undefined): {
 
   return { uri, loading, error }
 }
-

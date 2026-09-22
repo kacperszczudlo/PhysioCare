@@ -47,4 +47,3 @@ export function takeGoogleRegistrationDraft(): GoogleRegistrationDraft | null {
 export function peekGoogleRegistrationDraft(): GoogleRegistrationDraft | null {
   return draft
 }
-

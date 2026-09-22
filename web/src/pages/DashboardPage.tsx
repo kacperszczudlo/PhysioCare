@@ -12,7 +12,7 @@ import { DashboardSkeleton } from '@/components/skeletons/WebSkeletons'
 import { CreateExerciseModal } from '@/pages/exercises/CreateExerciseModal'
 import { VisitFormModal } from '@/pages/schedule/VisitFormModal'
 import { AuthMediaImg } from '@/components/AuthMedia'
-import { addDays, formatTime, startOfDay, toDateInputValue } from '@/lib/scheduleTime'
+import { addDays, formatTime, startOfDay } from '@/lib/scheduleTime'
 import { isVisitRealtimeEvent } from '@/realtime/types'
 import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
 import './DashboardPage.css'
@@ -74,15 +74,6 @@ function DateBadge({ now }: { now: Date }) {
       <span className="dash-date-badge__date">{dateStr}</span>
     </div>
   )
-}
-
-function formatFullDate(date: Date): string {
-  return new Intl.DateTimeFormat('pl-PL', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(date)
 }
 
 function IconVisits() {

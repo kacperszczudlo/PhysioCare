@@ -43,4 +43,3 @@ export function getPwzfError(pwzf: string): string | null {
   }
   return null
 }
-

@@ -69,4 +69,3 @@ export function parseGoogleIdTokenClaims(credential: string): GoogleIdTokenClaim
     last_name: typeof payload.family_name === 'string' ? payload.family_name : undefined,
   }
 }
-

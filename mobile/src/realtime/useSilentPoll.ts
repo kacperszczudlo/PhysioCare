@@ -22,4 +22,3 @@ export function useSilentPoll(onTick: () => void, intervalMs = 7000): void {
     }, [onTick, intervalMs]),
   )
 }
-

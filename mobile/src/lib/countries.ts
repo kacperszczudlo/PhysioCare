@@ -297,4 +297,3 @@ export function findCountryByDial(dialDigits: string): CountryDial | undefined {
 export function formatCountryOption(country: CountryDial): string {
   return `${country.name} (+${country.dial})`
 }
-

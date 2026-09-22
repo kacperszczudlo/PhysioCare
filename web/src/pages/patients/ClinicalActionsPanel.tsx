@@ -80,7 +80,7 @@ interface ClinicalActionsPanelProps {
 export function ClinicalActionsPanel({
   patientId,
   episodeId,
-  patientName = 'Pacjent',
+  _patientName = 'Pacjent',
 }: ClinicalActionsPanelProps) {
   const baseId = useId()
   const [tab, setTab] = useState<ClinicalTab>('recommend')

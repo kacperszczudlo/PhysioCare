@@ -208,11 +208,7 @@ export interface MedicalDocument {
 
 /** Kategoria generowanego pliku lub dokumentu klinicznego */
 export type ClinicalDocumentKind =
-  | 'recommendation'
-  | 'device_order'
-  | 'refusal'
-  | 'recepta_na_ruch'
-  | 'pdf'
+  'recommendation' | 'device_order' | 'refusal' | 'recepta_na_ruch' | 'pdf'
 
 /** Pozycja dokumentu klinicznego wystawionego przez fizjoterapeutę */
 export interface ClinicalDocumentItem {
@@ -269,11 +265,7 @@ export interface TherapistPublic {
 
 /** Klucz preferencji powiadomień Push */
 export type NotificationPrefKey =
-  | 'visit_reminder'
-  | 'visit_change'
-  | 'waitlist'
-  | 'exercise_reminder'
-  | 'new_document'
+  'visit_reminder' | 'visit_change' | 'waitlist' | 'exercise_reminder' | 'new_document'
 
 /** Wpis pojedynczej preferencji powiadomień */
 export interface NotificationPreference {
@@ -380,4 +372,3 @@ export interface PatientDataExport {
     created_at: string
   }[]
 }
-

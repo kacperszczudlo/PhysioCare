@@ -283,4 +283,3 @@ export function openFromNotificationData(
     router.push('/(tabs)')
   }
 }
-

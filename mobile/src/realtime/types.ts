@@ -55,4 +55,3 @@ export function isExerciseRealtimeEvent(event: RealtimeEvent): boolean {
 export function isDashboardRealtimeEvent(event: RealtimeEvent): boolean {
   return isVisitRealtimeEvent(event) || isExerciseRealtimeEvent(event)
 }
-

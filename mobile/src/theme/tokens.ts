@@ -94,4 +94,3 @@ export const motion = {
   medium: 300,
   large: 400,
 } as const
-

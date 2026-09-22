@@ -112,4 +112,3 @@ export const COOKIE_SECTIONS: LegalSection[] = [
     ],
   },
 ]
-

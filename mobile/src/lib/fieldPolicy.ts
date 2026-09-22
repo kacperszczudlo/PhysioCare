@@ -157,4 +157,3 @@ export function getExerciseTitleError(value: string): string | null {
   }
   return null
 }
-
