@@ -19,6 +19,12 @@ function initials(first?: string, last?: string): string {
   return value || '?'
 }
 
+/**
+ * Główny szablon ramowy (Layout Shell) aplikacji webowej PhysioCare dla zalogowanych fizjoterapeutów.
+ *
+ * Zawiera boczny pasek nawigacji (Sidebar), nagłówek profilu, połączenie w czasie rzeczywistym SSE
+ * oraz kontener renderujący podrzędne widoki tras (`<Outlet />`).
+ */
 export function AppLayout() {
   const { user } = useAuth()
   useTherapistRealtimeConnection()

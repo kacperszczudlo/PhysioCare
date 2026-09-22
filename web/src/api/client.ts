@@ -5,12 +5,26 @@ const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)
 
 export const API_BASE_URL = configuredBase && configuredBase.length > 0 ? configuredBase : '/api/v1'
 
+/**
+ * Błąd odpowiedzi API reprezentujący niepowodzenie żądania HTTP (status != 2xx).
+ */
 export class ApiError extends Error {
+  /** Kod statusu HTTP odpowiedzi (np. 400, 401, 403, 404, 500). */
   readonly status: number
+  /** Unikalny kod błędu zwracany przez backend (domyślnie 'UNKNOWN'). */
   readonly code: string
+  /** Szczegółowy słownik błędów walidacji pól formularza. */
   readonly details: Record<string, unknown>
+  /** Surowy obiekt odpowiedzi błędu z backendu. */
   readonly body: ApiErrorBody | null
 
+  /**
+   * Tworzy instancję błędu ApiError.
+   *
+   * @param status - Kod statusu HTTP.
+   * @param message - Czytelny opis błędu dla użytkownika lub logów.
+   * @param options - Opcjonalne szczegóły błędu (kod, pole walidacji, ciało odpowiedzi).
+   */
   constructor(
     status: number,
     message: string,
@@ -170,6 +184,18 @@ async function parseJson(response: Response): Promise<ApiErrorBody | null> {
   }
 }
 
+/**
+ * Wykonuje żądanie HTTP do backendu PhysioCare przy użyciu natywnego fetch.
+ *
+ * Automatycznie dołącza ciasteczka sesji (`credentials: 'include'`), nagłówki JSON
+ * oraz obsługuje odświeżanie tokena JWT przy braku autoryzacji (status 401).
+ *
+ * @template T - Oczekiwany typ danych zwracanych z API.
+ * @param path - Ścieżka endpointu (np. `/auth/me/`) lub pełny URL.
+ * @param options - Opcje konfiguracji żądania fetch oraz payload danych.
+ * @returns Obietnica parsująca odpowiedź JSON na oczekiwany typ T.
+ * @throws {ApiError} Gdy odpowiedź serwera zawiera status błędu ( status >= 400 ).
+ */
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, skipAuthRefresh, headers: customHeaders, ...rest } = options
   const headers = new Headers(customHeaders)
@@ -220,10 +246,23 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   return data as T
 }
 
+/**
+ * Zwraca czytelny komunikat błędu z instancji ApiError lub podany tekst alternatywny.
+ *
+ * @param err - Obiekt błędu przechwycony w bloku catch.
+ * @param fallback - Domyślna wiadomość w przypadku braku komunikatu w ApiError.
+ */
 export function getErrorMessage(err: unknown, fallback: string): string {
   return err instanceof ApiError ? err.message : fallback
 }
 
+/**
+ * Pobiera komunikat błędu walidacji przypisany do konkretnego pola formularza z błędu API.
+ *
+ * @param err - Obiekt błędu przechwycony z apiRequest.
+ * @param field - Nazwa pola walidacji (np. 'email', 'pwzf_number').
+ * @returns Pierwsza wiadomość błędu dla danego pola lub null.
+ */
 export function getFieldError(err: unknown, field: string): string | null {
   if (!(err instanceof ApiError)) {
     return null
@@ -238,19 +277,27 @@ export function getFieldError(err: unknown, field: string): string | null {
   return null
 }
 
+/**
+ * Wygodny klient API udostępniający skrótowe metody HTTP (GET, POST, PATCH, PUT, DELETE).
+ */
 export const api = {
+  /** Wykonuje żądanie GET. */
   get: <T>(path: string, options?: RequestOptions) =>
     apiRequest<T>(path, { ...options, method: 'GET' }),
 
+  /** Wykonuje żądanie POST z ciałkiem danych JSON lub FormData. */
   post: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     apiRequest<T>(path, { ...options, method: 'POST', body }),
 
+  /** Wykonuje częściową aktualizację zasobu metodą PATCH. */
   patch: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     apiRequest<T>(path, { ...options, method: 'PATCH', body }),
 
+  /** Wykonuje pełną podmianę zasobu metodą PUT. */
   put: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     apiRequest<T>(path, { ...options, method: 'PUT', body }),
 
+  /** Wykonuje usunięcie zasobu metodą DELETE. */
   delete: <T>(path: string, options?: RequestOptions) =>
     apiRequest<T>(path, { ...options, method: 'DELETE' }),
 }

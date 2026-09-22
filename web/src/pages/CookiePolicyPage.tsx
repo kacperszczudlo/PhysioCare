@@ -2,6 +2,9 @@ import { Link } from 'react-router-dom'
 
 import { COOKIE_POLICY_META, COOKIE_SECTIONS } from '@/content/cookiePolicy'
 
+/**
+ * Strona z treścią Polityki Plików Cookie oraz informacji o lokalnym przechowywaniu danych sesji.
+ */
 export function CookiePolicyPage() {
   return (
     <article className="legal-doc">

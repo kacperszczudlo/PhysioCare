@@ -11,6 +11,11 @@ import {
   PatientsSkeleton,
 } from '../skeletons/WebSkeletons'
 
+/**
+ * @file Skeleton.test.tsx
+ * @description Zestaw testów jednostkowych dla komponentów ładowania szkieletowego (Skeleton primitives i WebSkeletons domenowe).
+ */
+
 describe('Web Skeleton Components', () => {
   it('renders base Skeleton primitive with custom dimensions', () => {
     const { container } = render(<Skeleton width="100px" height="20px" circle />)

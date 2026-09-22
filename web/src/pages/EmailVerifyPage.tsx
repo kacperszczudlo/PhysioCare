@@ -9,6 +9,9 @@ import { Field } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/ToastContext'
 import './auth-forms.css'
 
+/**
+ * Strona weryfikacji adresu e-mail kodem jednorazowym po rejestracji.
+ */
 export function EmailVerifyPage() {
   const { verifyEmail, resendEmailCode } = useAuth()
   const { toast } = useToast()

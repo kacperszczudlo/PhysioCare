@@ -1,3 +1,8 @@
+/**
+ * @file types.ts
+ * @description Główny plik definicji typów TypeScript dla warstwy komunikacji API systemu PhysioCare (DTO, modele danych, interfejsy).
+ */
+
 export type UserRole = 'PATIENT' | 'THERAPIST'
 
 export type VisitStatus = 'PENDING_APPROVAL' | 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
@@ -8,7 +13,6 @@ export interface User {
   role: UserRole
   first_name: string
   last_name: string
-  /** Present after session restore / profile refresh; login payload may omit it. */
   avatar_url?: string | null
 }
 

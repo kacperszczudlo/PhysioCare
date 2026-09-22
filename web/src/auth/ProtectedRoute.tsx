@@ -3,6 +3,13 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '@/auth/AuthContext'
 import { Skeleton, SkeletonWrapper } from '@/components/ui/Skeleton'
 
+/**
+ * Strażnik tras chronionych autoryzacją w React Router.
+ *
+ * Przepuszcza zalogowanych fizjoterapeutów do podrzędnego widoku (`<Outlet />`),
+ * wyświetla stan ładowania `Skeleton` podczas weryfikacji sesji lub przekierowuje
+ * niezalogowanych użytkowników do formularza logowania (`/login`).
+ */
 export function ProtectedRoute() {
   const { isAuthenticated, isLoading } = useAuth()
   const location = useLocation()
@@ -27,6 +34,12 @@ export function ProtectedRoute() {
   return <Outlet />
 }
 
+/**
+ * Strażnik tras przeznaczonych dla niezalogowanych gości (np. /login, /register).
+ *
+ * Automatycznie przekierowuje zalogowanych użytkowników do pulpitu głównego (`/`),
+ * uniemożliwiając ponowne wyświetlenie formularza logowania.
+ */
 export function GuestRoute() {
   const { isAuthenticated, isLoading } = useAuth()
   const location = useLocation()

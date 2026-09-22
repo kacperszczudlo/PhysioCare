@@ -45,6 +45,9 @@ const QUALIFICATION_TILES: ReadonlyArray<{
   },
 ]
 
+/**
+ * Strona zarządzania profilem fizjoterapeuty (dane osobowe, stopień kwalifikacji, PWZF, certyfikaty, zdjęcie profilowe).
+ */
 export function ProfilePage() {
   const { refreshSession } = useAuth()
   const { toast } = useToast()

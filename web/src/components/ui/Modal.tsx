@@ -3,15 +3,32 @@ import { useEffect, useId, useRef, type FormEvent, type ReactNode } from 'react'
 import { Button } from '@/components/ui/Button'
 import './Modal.css'
 
+/** Właściwości komponentu okna dialogowego Modal. */
 interface ModalProps {
+  /** Czy okno modalne jest widoczne. */
   open: boolean
+  /** Tytuł nagłówkowy okna dialogowego. */
   title: string
+  /** Opcjonalny opis pomocniczy dialogu. */
   description?: string
+  /** Szerokość/rozmiar panelu (md, lg). */
   size?: 'md' | 'lg'
+  /** Callback zamknij okno. */
   onClose: () => void
+  /** Treść widoku lub formularza umieszczona w ciele dialogu. */
   children: ReactNode
 }
 
+/**
+ * Komponent okna dialogowego/modalnego oparty o natywny znacznik `<dialog>` HTML5.
+ *
+ * Wspiera zamknięcie klawiszem ESC, kliknięciem w tło (backdrop) oraz pełną dostępność WCAG (`aria-labelledby`).
+ *
+ * @example
+ * <Modal open={isOpen} title="Dodaj wizytę" onClose={closeModal}>
+ *   <VisitForm />
+ * </Modal>
+ */
 export function Modal({ open, title, description, size = 'md', onClose, children }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()

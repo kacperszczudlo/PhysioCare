@@ -3,6 +3,11 @@ import { describe, it, expect, vi } from 'vitest'
 import { StatusSelect } from '../ui/StatusSelect'
 import type { EpisodeStatus } from '@/api/types'
 
+/**
+ * @file StatusSelect.test.tsx
+ * @description Zestaw testów dla komponentu wyboru statusu leczenia/epizodu terapeutycznego.
+ */
+
 describe('StatusSelect Component', () => {
   it('renders selected status label correctly', () => {
     render(<StatusSelect value="IN_PROGRESS" onChange={vi.fn()} />)

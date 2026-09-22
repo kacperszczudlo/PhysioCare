@@ -2,6 +2,9 @@ import { Link, Outlet } from 'react-router-dom'
 
 import './LegalLayout.css'
 
+/**
+ * Szablon widoków prawno-informacyjnych (Polityka Prywatności, Pliki Cookie, Usuwanie Konta) z nawigacją nagłówkową.
+ */
 export function LegalLayout() {
   return (
     <div className="legal-layout">

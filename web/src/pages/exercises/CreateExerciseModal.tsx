@@ -72,6 +72,9 @@ function fileNameFromUrl(url: string): string {
   return parts[parts.length - 1] || 'obecny-plik'
 }
 
+/**
+ * Modal tworzenia lub edycji ćwiczenia w bazie wraz ze zbiorem tagów (kategorii) i załącznikiem multimedialnym.
+ */
 export function CreateExerciseModal({
   open,
   categories,

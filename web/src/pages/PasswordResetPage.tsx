@@ -19,6 +19,9 @@ import './auth-forms.css'
 
 type Step = 'request' | 'code' | 'password'
 
+/**
+ * Widok procedury resetowania hasła (z żądaniem kodu, weryfikacją i ustawieniem nowego hasła).
+ */
 export function PasswordResetPage() {
   const {
     requestPasswordReset,

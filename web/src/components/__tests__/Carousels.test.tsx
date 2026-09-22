@@ -4,6 +4,11 @@ import { DateCarousel } from '../ui/DateCarousel'
 import { DayCarousel } from '../ui/DayCarousel'
 import { TimeCarousel } from '../ui/TimeCarousel'
 
+/**
+ * @file Carousels.test.tsx
+ * @description Zestaw testów jednostkowych dla komponentów karuzeli wyboru daty i godziny (TimeCarousel, DayCarousel, DateCarousel).
+ */
+
 describe('Web Carousel Components', () => {
   describe('TimeCarousel', () => {
     it('renders label and current time readout', () => {

@@ -19,6 +19,9 @@ import './DashboardPage.css'
 
 const UPCOMING_VISITS_PREVIEW = 5
 
+/**
+ * Generuje powitanie w zależności od pory dnia i imienia użytkownika.
+ */
 function greetingForHour(hour: number, firstName?: string): string {
   const name = firstName?.trim()
   const base = hour < 12 ? 'Dzień dobry' : hour < 18 ? 'Cześć' : 'Dobry wieczór'
@@ -58,19 +61,18 @@ function formatVisitWhen(start: Date, today: Date): string {
 }
 
 function DateBadge({ now }: { now: Date }) {
-  const weekday = new Intl.DateTimeFormat('pl-PL', { weekday: 'long' }).format(now)
-  const day = new Intl.DateTimeFormat('pl-PL', { day: 'numeric' }).format(now)
-  const monthYear = new Intl.DateTimeFormat('pl-PL', {
+  const dayName = new Intl.DateTimeFormat('pl-PL', { weekday: 'long' }).format(now)
+  const dateStr = new Intl.DateTimeFormat('pl-PL', {
+    day: 'numeric',
     month: 'long',
     year: 'numeric',
   }).format(now)
 
   return (
-    <time className="dash-date" dateTime={toDateInputValue(now)} aria-label={formatFullDate(now)}>
-      <span className="dash-date__weekday">{weekday}</span>
-      <span className="dash-date__day">{day}</span>
-      <span className="dash-date__month">{monthYear}</span>
-    </time>
+    <div className="dash-date-badge" aria-label={`Dzisiejsza data: ${dayName}, ${dateStr}`}>
+      <span className="dash-date-badge__weekday">{dayName}</span>
+      <span className="dash-date-badge__date">{dateStr}</span>
+    </div>
   )
 }
 

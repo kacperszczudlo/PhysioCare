@@ -24,6 +24,9 @@ const KIND_LABELS: Record<CategoryKind, string> = {
   INJURY: 'Kontuzja',
 }
 
+/**
+ * Zwraca czytelną etykietę typu multimediów (Wideo / PDF).
+ */
 function mediaLabel(type: MediaType): string {
   return type === 'VIDEO' ? 'Wideo' : 'PDF'
 }

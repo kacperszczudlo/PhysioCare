@@ -26,6 +26,9 @@ function formatPeriod(start: string, end: string): string {
   return `${fmt.format(parseDateInput(start))} - ${fmt.format(parseDateInput(end))}`
 }
 
+/**
+ * Komponent sekcji zalecanych ćwiczeń w karcie pacjenta z podglądem mediów, edycją dawkowania i przedłużaniem czasu zaleceń.
+ */
 export function PatientAssignments({ patientId, episodeId = null }: PatientAssignmentsProps) {
   const { toast } = useToast()
   const [items, setItems] = useState<ExerciseAssignment[]>([])

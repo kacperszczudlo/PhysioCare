@@ -1,3 +1,7 @@
+/**
+ * @file cookiePolicy.ts
+ * @description Treść i metadane prawne Polityki Plików Cookie oraz technologii przechowywania sesji w aplikacji PhysioCare.
+ */
 export const COOKIE_POLICY_META = {
   title: 'Polityka cookies',
   version: '1.0',

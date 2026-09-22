@@ -2,6 +2,9 @@ import { Link } from 'react-router-dom'
 
 import { ACCOUNT_DELETION_MAILTO, DATA_CONTROLLER } from '@/content/dataController'
 
+/**
+ * Strona procedury usuwania konta i danych osobowych użytkownika (zgodność z Google Play & Apple App Store).
+ */
 export function AccountDeletionPage() {
   return (
     <article className="legal-doc">

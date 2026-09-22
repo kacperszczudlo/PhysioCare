@@ -57,6 +57,9 @@ function lineKind(minutes: number): 'hour' | 'half' | 'quarter' {
   return 'quarter'
 }
 
+/**
+ * Komponent kalendarza dziennego wizyt z osią czasu, podglądem na żywo i przeciąganiem bloków czasowych.
+ */
 export function DayCalendar({
   day,
   visits,

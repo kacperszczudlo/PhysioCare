@@ -1,3 +1,6 @@
+/**
+ * Typy zdarzeń czasu rzeczywistego powiązanych ze zmianami statusu wizyt fizjoterapeutycznych.
+ */
 export const VISIT_REALTIME_TYPES = [
   'visit.scheduled',
   'visit.rescheduled',

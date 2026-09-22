@@ -8,9 +8,14 @@ import {
   dayBounds,
 } from '../lib/scheduleTime'
 
+/**
+ * @file scheduleTime.test.ts
+ * @description Zestaw testów jednostkowych dla operacji na czasach i datach w grafiku wizyt (web).
+ */
+
 describe('scheduleTime (Web)', () => {
   it('converts date to YYYY-MM-DD input string and back', () => {
-    const date = new Date(2026, 8, 14) // Sep 14, 2026
+    const date = new Date(2026, 8, 14)
     const str = toDateInputValue(date)
     expect(str).toBe('2026-09-14')
 
@@ -42,6 +47,6 @@ describe('scheduleTime (Web)', () => {
     const bounds = dayBounds(new Date(2026, 8, 14))
     expect(bounds.start.getHours()).toBe(7)
     expect(bounds.end.getHours()).toBe(20)
-    expect(bounds.minutes).toBe(13 * 60) // 780 minutes
+    expect(bounds.minutes).toBe(13 * 60)
   })
 })

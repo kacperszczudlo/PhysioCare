@@ -1,3 +1,4 @@
+/** Słownik komunikatów błędów walidacji imion i nazwisk (w tym znaki diakrytyczne i łączniki). */
 export const NAME_MESSAGES = {
   firstRequired: 'Podaj imię.',
   lastRequired: 'Podaj nazwisko.',
@@ -18,6 +19,12 @@ function normalizeName(value: string): string {
   return value.trim().replace(/\s+/g, ' ')
 }
 
+/**
+ * Waliduje wprowadzone imię pod kątem długości i obecności dozwolonych znaków diakrytycznych.
+ *
+ * @param value - Wprowadzony tekst imienia.
+ * @returns Wiadomość błędu lub null przy prawidłowym imieniu.
+ */
 export function getFirstNameError(value: string): string | null {
   const name = normalizeName(value)
   if (!name) {
@@ -35,6 +42,12 @@ export function getFirstNameError(value: string): string | null {
   return null
 }
 
+/**
+ * Waliduje wprowadzone nazwisko pod kątem długości, nazwisk dwuczłonowych i polskich znaków.
+ *
+ * @param value - Wprowadzony tekst nazwiska.
+ * @returns Wiadomość błędu lub null przy prawidłowym nazwisku.
+ */
 export function getLastNameError(value: string): string | null {
   const name = normalizeName(value)
   if (!name) {

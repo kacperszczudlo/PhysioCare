@@ -70,14 +70,17 @@ type EditTarget =
 
 interface ClinicalActionsPanelProps {
   patientId: string
-  episodeId: string
-  onEpisodePossiblyUpdated?: () => void
+  episodeId: string | null
+  patientName?: string
 }
 
+/**
+ * Panel akcji klinicznych fizjoterapeuty z obsługą wyrobów medycznych NFZ, sugerowanych badań RTG/USG/MRI i skierowań "Recepta na Ruch".
+ */
 export function ClinicalActionsPanel({
   patientId,
   episodeId,
-  onEpisodePossiblyUpdated,
+  patientName = 'Pacjent',
 }: ClinicalActionsPanelProps) {
   const baseId = useId()
   const [tab, setTab] = useState<ClinicalTab>('recommend')

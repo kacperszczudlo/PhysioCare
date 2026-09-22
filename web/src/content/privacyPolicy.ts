@@ -1,5 +1,10 @@
 import { DATA_CONTROLLER } from '@/content/dataController'
 
+/**
+ * @file privacyPolicy.ts
+ * @description Treść i struktura prawna Polityki Prywatności systemu PhysioCare (zgodność z RODO/RODO Medycznym).
+ */
+
 export type LegalSection = {
   id: string
   title: string

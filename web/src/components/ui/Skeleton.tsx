@@ -15,6 +15,9 @@ function formatDimension(value?: string | number): string | undefined {
   return typeof value === 'number' ? `${value}px` : value
 }
 
+/**
+ * Primityw ładowania szkieletowego z płynną animacją pulsującą.
+ */
 export function Skeleton({
   width,
   height,

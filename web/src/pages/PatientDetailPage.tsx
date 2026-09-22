@@ -18,6 +18,9 @@ import { ClinicalActionsPanel } from '@/pages/patients/ClinicalActionsPanel'
 import { PatientAssignments } from '@/pages/patients/PatientAssignments'
 import './PatientDetailPage.css'
 
+/**
+ * Główna strona karty pacjenta z historią epizodów leczenia, dokumentacją medyczną i mapowaniem objawów.
+ */
 export function PatientDetailPage() {
   const { patientId = '' } = useParams()
   const [patient, setPatient] = useState<PatientDetail | null>(null)

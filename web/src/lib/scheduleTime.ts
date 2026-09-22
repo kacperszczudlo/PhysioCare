@@ -3,6 +3,7 @@ const DAY_END_HOUR = 20
 const SNAP_MINUTES = 15
 export const PX_PER_MINUTE = 1.2
 
+/** Konwertuje obiekt Date do formatu YYYY-MM-DD dla pola `<input type="date">`. */
 export function toDateInputValue(date: Date): string {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
@@ -10,21 +11,25 @@ export function toDateInputValue(date: Date): string {
   return `${y}-${m}-${d}`
 }
 
+/** Parsuje ciąg znaków YYYY-MM-DD na lokalny obiekt Date. */
 export function parseDateInput(value: string): Date {
   const [y, m, d] = value.split('-').map(Number)
   return new Date(y, m - 1, d)
 }
 
+/** Dodaje określoną liczbę dni do podanej daty. */
 export function addDays(date: Date, days: number): Date {
   const next = new Date(date)
   next.setDate(next.getDate() + days)
   return next
 }
 
+/** Zwraca datę ustawioną na godzinę 00:00:00.000 (początek dnia). */
 export function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate())
 }
 
+/** Formatuj datę na czytelną polską etykietę (np. "poniedziałek, 12 maja 2026"). */
 export function formatDayLabel(date: Date): string {
   return new Intl.DateTimeFormat('pl-PL', {
     weekday: 'long',
@@ -34,6 +39,7 @@ export function formatDayLabel(date: Date): string {
   }).format(date)
 }
 
+/** Formatuj czas na postać HH:MM w języku polskim. */
 export function formatTime(date: Date): string {
   return new Intl.DateTimeFormat('pl-PL', {
     hour: '2-digit',
@@ -41,6 +47,7 @@ export function formatTime(date: Date): string {
   }).format(date)
 }
 
+/** Oblicza granice dnia pracy w kalendarzu (od 07:00 do 20:00) i łączny czas w minutach. */
 export function dayBounds(date: Date): { start: Date; end: Date; minutes: number } {
   const start = new Date(
     date.getFullYear(),
@@ -56,6 +63,7 @@ export function dayBounds(date: Date): { start: Date; end: Date; minutes: number
   return { start, end, minutes }
 }
 
+/** Oblicza liczbę minut od godziny rozpoczęcia dnia w kalendarzu do wybranego czasu. */
 export function minutesFromDayStart(date: Date, day: Date): number {
   const { start } = dayBounds(day)
   return (date.getTime() - start.getTime()) / 60_000

@@ -2,6 +2,11 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { Select } from '../ui/Select'
 
+/**
+ * @file Select.test.tsx
+ * @description Zestaw testów dostępności i nawigacji klawiaturą dla spersonalizowanego komponentu rozwijalnego Select.
+ */
+
 describe('Select Component', () => {
   const options = [
     { value: 'MRI', label: 'Sugestia MRI' },

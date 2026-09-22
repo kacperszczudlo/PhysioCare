@@ -2,6 +2,11 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { FileInput } from '../ui/FileInput'
 
+/**
+ * @file FileInput.test.tsx
+ * @description Zestaw testów dla komponentu wyboru i wgrywania plików z obsługą przeciągnij-i-upuść.
+ */
+
 describe('FileInput Component', () => {
   it('renders placeholder when no file is selected', () => {
     render(<FileInput file={null} onChange={vi.fn()} />)

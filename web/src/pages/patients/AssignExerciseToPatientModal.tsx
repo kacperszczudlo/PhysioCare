@@ -46,6 +46,9 @@ interface AssignExerciseToPatientModalProps {
   onAssigned: () => void
 }
 
+/**
+ * Modal wyboru ćwiczenia z bazy i przypisywania go bezpośrednio w karcie konkretnego pacjenta.
+ */
 export function AssignExerciseToPatientModal({
   open,
   patientId,

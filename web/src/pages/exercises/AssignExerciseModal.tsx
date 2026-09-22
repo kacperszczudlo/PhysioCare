@@ -20,6 +20,9 @@ interface AssignExerciseModalProps {
   onAssigned: () => void
 }
 
+/**
+ * Modal przypisywania ćwiczenia fizjoterapeutycznego do konkretnego pacjenta i epizodu terapeutycznego z dawkowaniem.
+ */
 export function AssignExerciseModal({
   open,
   exercise,

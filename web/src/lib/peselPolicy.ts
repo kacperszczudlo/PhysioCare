@@ -1,3 +1,4 @@
+/** Słownik komunikatów błędów walidacji numeru PESEL pacjenta. */
 export const PESEL_MESSAGES = {
   required: 'Podaj numer PESEL.',
   invalidFormat: 'PESEL musi składać się z dokładnie 11 cyfr.',
@@ -53,6 +54,13 @@ function hasValidChecksum(digits: string): boolean {
   return control === Number(digits[10])
 }
 
+/**
+ * Waliduje numer PESEL pacjenta pod kątem długości (11 cyfr), sumy kontrolnej z wagami oraz poprawnego zakodowania daty urodzenia.
+ *
+ * @param pesel - Wprowadzony ciąg znaków numeru PESEL.
+ * @param options - Opcja pozwalająca na puste pole (allowBlank).
+ * @returns Wiadomość błędu lub null, jeśli PESEL jest prawidłowy.
+ */
 export function getPeselError(pesel: string, { allowBlank = true } = {}): string | null {
   const value = pesel.trim()
   if (!value) {

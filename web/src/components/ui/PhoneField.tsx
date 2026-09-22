@@ -10,20 +10,38 @@ import {
 import './Field.css'
 import './PhoneField.css'
 
+/** Właściwości dwuczłonowego komponentu wprowadzania numeru telefonu (kod kraju + numer krajowy). */
 interface PhoneFieldProps {
+  /** Etykieta formularza. */
   label?: string
+  /** Kod kraju ISO 3166-1 alpha-2 (np. 'PL', 'DE', 'GB'). */
   countryCode: string
+  /** Numer krajowy (np. '123456789'). */
   nationalNumber: string
+  /** Callback przy zmianie wybranego kraju. */
   onCountryChange: (countryCode: string) => void
+  /** Callback przy zmianie cyfr numeru. */
   onNationalNumberChange: (nationalNumber: string) => void
+  /** Komunikat błędu walidacji. */
   error?: string
+  /** Wskazówka pomocnicza. */
   hint?: string
+  /** Czy pole jest wymagane. */
   required?: boolean
+  /** Czy pole jest zablokowane. */
   disabled?: boolean
+  /** Nazwa pola formularza. */
   name?: string
+  /** Identyfikator pola. */
   id?: string
 }
 
+/**
+ * Dwuczłonowy komponent wprowadzania numeru telefonu z wyborem prefiksu międzynarodowego i podpowiedzią E.164.
+ *
+ * @example
+ * <PhoneField countryCode={country} nationalNumber={phone} onCountryChange={setCountry} onNationalNumberChange={setPhone} />
+ */
 export function PhoneField({
   label = 'Telefon',
   countryCode,

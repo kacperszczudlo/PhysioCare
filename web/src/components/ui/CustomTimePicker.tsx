@@ -7,9 +7,12 @@ interface CustomTimePickerProps {
   ariaLabel?: string
 }
 
-const HOURS = Array.from({ length: 17 }, (_, i) => String(i + 6).padStart(2, '0')) // 06..22
+const HOURS = Array.from({ length: 17 }, (_, i) => String(i + 6).padStart(2, '0'))
 const MINUTES = ['00', '15', '30', '45']
 
+/**
+ * Komponent wyboru godziny wizyty z ułatwieniami dostępu i siatką minut w krokach 15-minutowych.
+ */
 export function CustomTimePicker({ value, onChange, ariaLabel }: CustomTimePickerProps) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)

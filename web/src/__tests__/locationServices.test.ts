@@ -5,6 +5,11 @@ import {
   searchAddress,
 } from '../components/location/locationServices'
 
+/**
+ * @file locationServices.test.ts
+ * @description Zestaw testów jednostkowych dla modułu pomocniczego geolokalizacji i integracji z Nominatim.
+ */
+
 describe('locationServices', () => {
   it('formats Polish address cleanly from Nominatim details', () => {
     const details = {

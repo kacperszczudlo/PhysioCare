@@ -1,3 +1,4 @@
+/** Struktura wybranego wyniku geokodowania adresu. */
 export interface LocationAddressResult {
   place_id: number
   display_name: string
@@ -9,6 +10,7 @@ export interface LocationAddressResult {
   postcode?: string
 }
 
+/** Odpowiedź ze szczegółami adresu z API Nominatim (OpenStreetMap). */
 export interface NominatimAddressDetails {
   road?: string
   pedestrian?: string
@@ -31,11 +33,18 @@ export interface NominatimItem {
   address?: NominatimAddressDetails
 }
 
+/** Domyślny punkt środkowy mapy (Warszawa Centrum). */
 export const DEFAULT_CENTER = {
-  lat: 52.2297, // Warszawa
+  lat: 52.2297,
   lon: 21.0122,
 }
 
+/**
+ * Formatuj surowe szczegóły adresu OpenStreetMap/Nominatim na czytelny polski adres (np. "ul. Kwiatowa 12, 00-001 Warszawa").
+ *
+ * @param details - Szczegóły obiektu adresu z API OpenStreetMap.
+ * @returns Sformatowany ciąg znaków adresu.
+ */
 export function formatAddressFromNominatim(details: {
   address?: NominatimAddressDetails
   display_name?: string

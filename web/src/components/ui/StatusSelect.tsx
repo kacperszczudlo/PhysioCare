@@ -3,11 +3,17 @@ import type { EpisodeStatus } from '@/api/types'
 import { EPISODE_STATUS_LABELS } from '@/lib/bodyMap'
 import './StatusSelect.css'
 
+/** Właściwości komponentu wyboru statusu epizodu leczenia. */
 export interface StatusSelectProps {
+  /** Aktualnie wybrany status epizodu terapeutycznego. */
   value: EpisodeStatus
+  /** Callback zmiany statusu. */
   onChange: (value: EpisodeStatus) => void
+  /** Czy pole jest zablokowane. */
   disabled?: boolean
+  /** Dodatkowa klasa CSS. */
   className?: string
+  /** Identyfikator pola. */
   id?: string
 }
 
@@ -17,6 +23,7 @@ interface StatusOptionMeta {
   pillClass: string
 }
 
+/** Meta dane opcji statusów wraz z odpowiednimi klasami etykiet (Pills). */
 export const STATUS_OPTIONS_META: StatusOptionMeta[] = [
   {
     value: 'IN_PROGRESS',
@@ -40,6 +47,12 @@ export const STATUS_OPTIONS_META: StatusOptionMeta[] = [
   },
 ]
 
+/**
+ * Komponent wyboru statusu epizodu leczenia z kolorowymi pigułkami wizualnymi (Pills).
+ *
+ * @example
+ * <StatusSelect value={status} onChange={setStatus} />
+ */
 export function StatusSelect({
   value,
   onChange,
