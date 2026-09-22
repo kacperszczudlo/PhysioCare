@@ -70,8 +70,8 @@ type EditTarget =
 
 interface ClinicalActionsPanelProps {
   patientId: string
-  episodeId: string | null
-  patientName?: string
+  episodeId: string
+  onEpisodePossiblyUpdated?: () => void
 }
 
 /**
@@ -80,7 +80,7 @@ interface ClinicalActionsPanelProps {
 export function ClinicalActionsPanel({
   patientId,
   episodeId,
-  _patientName = 'Pacjent',
+  onEpisodePossiblyUpdated,
 }: ClinicalActionsPanelProps) {
   const baseId = useId()
   const [tab, setTab] = useState<ClinicalTab>('recommend')

@@ -19,12 +19,14 @@ npm.cmd run dev
 
 ### Konfiguracja środowiska (`.env.local`)
 
-W środowisku deweloperskim proxy Vite automatycznie przekierowuje zapytania `/api` oraz `/media` na `http://localhost:8000`. 
+W środowisku deweloperskim proxy Vite automatycznie przekierowuje zapytania `/api` oraz `/media` na `http://localhost:8000`.
 
 W przypadku logowania przez Google należy ustawić zmienną:
+
 ```env
 VITE_GOOGLE_CLIENT_ID=<Web Client ID>
 ```
+
 Ten sam klient musi być skonfigurowany w `GOOGLE_CLIENT_IDS` na backendzie.
 
 ---
@@ -42,16 +44,16 @@ Ten sam klient musi być skonfigurowany w `GOOGLE_CLIENT_IDS` na backendzie.
 
 ## Skrypty
 
-| Komenda | Opis |
-| :--- | :--- |
-| `npm.cmd run dev` | Uruchomienie serwera deweloperskiego Vite |
-| `npm.cmd test` | Uruchomienie testów jednostkowych i komponentowych (Vitest) |
-| `npm.cmd run build` | Budowanie wersji produkcyjnej (`dist/`) |
-| `npm.cmd run preview` | Podgląd wygenerowanego builda produkcyjnego |
-| `npm.cmd run lint` | Kontrola jakości kodu (ESLint + Oxlint) |
-| `npm.cmd run lint:fix` | Automatyczna naprawa błędów lintera |
-| `npm.cmd run format` | Formatowanie kodu (Prettier write) |
-| `npm.cmd run format:check` | Weryfikacja formatowania kodu (Prettier check) |
+| Komenda                    | Opis                                                        |
+| :------------------------- | :---------------------------------------------------------- |
+| `npm.cmd run dev`          | Uruchomienie serwera deweloperskiego Vite                   |
+| `npm.cmd test`             | Uruchomienie testów jednostkowych i komponentowych (Vitest) |
+| `npm.cmd run build`        | Budowanie wersji produkcyjnej (`dist/`)                     |
+| `npm.cmd run preview`      | Podgląd wygenerowanego builda produkcyjnego                 |
+| `npm.cmd run lint`         | Kontrola jakości kodu (ESLint + Oxlint)                     |
+| `npm.cmd run lint:fix`     | Automatyczna naprawa błędów lintera                         |
+| `npm.cmd run format`       | Formatowanie kodu (Prettier write)                          |
+| `npm.cmd run format:check` | Weryfikacja formatowania kodu (Prettier check)              |
 
 ---
 

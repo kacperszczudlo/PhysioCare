@@ -186,13 +186,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return res.reset_token
   }, [])
 
-  const confirmPasswordReset = useCallback(
-    async (payload: PasswordResetConfirmPayload) => {
-      const res = await authApi.confirmPasswordReset(payload)
-      return res.detail
-    },
-    [],
-  )
+  const confirmPasswordReset = useCallback(async (payload: PasswordResetConfirmPayload) => {
+    const res = await authApi.confirmPasswordReset(payload)
+    return res.detail
+  }, [])
 
   const value = useMemo<AuthContextValue>(
     () => ({
