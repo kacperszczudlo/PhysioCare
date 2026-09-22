@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 import pytest
 from django.utils import timezone
@@ -10,11 +11,9 @@ from notifications.keys import NotificationPreferenceKey
 from notifications.models import DeviceToken, NotificationPreference
 from scheduling.models import Visit, VisitStatus
 
-
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     from rest_framework.test import APIClient
+
     from patients.models import PatientProfile
     from scheduling.models import TherapyType
     from therapists.models import TherapistProfile

@@ -2,7 +2,6 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework import serializers
 
-
 from core.field_policies import (
     DOSAGE_TOO_LONG,
     INSTRUCTION_TOO_LONG,

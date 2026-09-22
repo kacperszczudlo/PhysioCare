@@ -10,6 +10,7 @@ from scheduling.models import Visit, VisitStatus
 
 if TYPE_CHECKING:
     from rest_framework.test import APIClient
+
     from patients.models import PatientProfile
     from scheduling.models import TherapyType
     from therapists.models import TherapistProfile

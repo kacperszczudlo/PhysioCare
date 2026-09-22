@@ -1,7 +1,6 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
-
 from core.field_policies import (
     NOTE_REQUIRED,
     NOTE_TOO_LONG,

@@ -3,7 +3,6 @@ from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory
 from rest_framework.test import APIRequestFactory
 
-from accounts.models import CustomUser
 from core.throttling import LoginRateThrottle, PasswordResetRateThrottle, RegisterRateThrottle
 
 

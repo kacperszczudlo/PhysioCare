@@ -10,6 +10,7 @@ from privacy.models import AccountDeletionRequest
 
 if TYPE_CHECKING:
     from rest_framework.test import APIClient
+
     from patients.models import PatientProfile
     from therapists.models import TherapistProfile
 
@@ -128,6 +129,7 @@ def test_privacy_models_helpers(patient: 'PatientProfile') -> None:
     """Sprawdza działanie metod pomocniczych reprezentacji i statusu w modelach prywatności."""
     # Arrange
     from django.utils import timezone
+
     from privacy.models import Consent, ConsentType
 
     consent = Consent.objects.create(

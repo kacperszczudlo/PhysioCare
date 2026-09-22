@@ -1,6 +1,6 @@
-from typing import TYPE_CHECKING
 import uuid
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 import pytest
 from django.utils import timezone

@@ -1,12 +1,3 @@
-import pytest
-from django.core.exceptions import ValidationError as DjangoValidationError
-from rest_framework import status
-
-from core.field_policies import normalize_and_validate_icd10
-from treatment.models import EpisodeStatus, TreatmentEpisode
-from treatment.serializers import TreatmentEpisodeSerializer
-
-
 from typing import TYPE_CHECKING
 
 import pytest
@@ -19,6 +10,7 @@ from treatment.serializers import TreatmentEpisodeSerializer
 
 if TYPE_CHECKING:
     from rest_framework.test import APIClient
+
     from patients.models import PatientProfile
     from therapists.models import TherapistProfile
 

@@ -1,6 +1,11 @@
 import pytest
 
-from notifications.models import DevicePlatform, DeviceToken, NotificationDelivery, NotificationPreference
+from notifications.models import (
+    DevicePlatform,
+    DeviceToken,
+    NotificationDelivery,
+    NotificationPreference,
+)
 
 
 @pytest.mark.django_db

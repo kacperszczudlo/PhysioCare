@@ -1,4 +1,3 @@
-import uuid
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import models, transaction

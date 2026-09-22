@@ -1,6 +1,10 @@
 import pytest
 
-from exercises.category_seed import CATEGORY_SEED, LEGACY_CATEGORY_MAP, get_category_seed, resolve_legacy_category
+from exercises.category_seed import (
+    CATEGORY_SEED,
+    get_category_seed,
+    resolve_legacy_category,
+)
 
 
 def test_get_category_seed() -> None:

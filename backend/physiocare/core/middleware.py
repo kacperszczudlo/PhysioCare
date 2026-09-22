@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import time
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse, HttpResponseNotFound
@@ -12,9 +12,6 @@ logger = logging.getLogger('physiocare.api')
 
 _SKIP_PREFIXES: tuple[str, ...] = ('/static/', '/media/', '/favicon.ico')
 
-
-class AdminAccessMiddleware:
-    """Ogranicza dostęp do panelu administracyjnego Django na podstawie flagi konfiguracyjnej oraz białej listy IP."""
 
 class AdminAccessMiddleware:
     """Ogranicza dostęp do panelu administracyjnego Django na podstawie flagi konfiguracyjnej oraz białej listy IP."""

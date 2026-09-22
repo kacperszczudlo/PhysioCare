@@ -167,7 +167,12 @@ def test_search_includes_instruction(
 def test_filters_type_errors() -> None:
     """Sprawdza rzucanie TypeError w funkcjach pomocniczych filters.py."""
     # Arrange
-    from exercises.filters import _category_token_q, _param_values, _split_ids_and_slugs, filter_exercises_queryset
+    from exercises.filters import (
+        _category_token_q,
+        _param_values,
+        _split_ids_and_slugs,
+        filter_exercises_queryset,
+    )
 
     # Act
     with pytest.raises(TypeError, match="Argument 'key' musi być typu str."):

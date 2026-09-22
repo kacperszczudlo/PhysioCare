@@ -427,7 +427,14 @@ def test_notification_copy_has_no_clinical_detail() -> None:
 def test_delivery_type_errors():
     """Sprawdza rzucanie TypeError przy podaniu niepoprawnych typów argumentów w delivery.py."""
     # Arrange
-    from notifications.delivery import _send_email, _send_push, already_delivered, is_pref_enabled, notify_user, schedule_notify
+    from notifications.delivery import (
+        _send_email,
+        _send_push,
+        already_delivered,
+        is_pref_enabled,
+        notify_user,
+        schedule_notify,
+    )
 
     # Act
     with pytest.raises(TypeError, match="Argument 'user' nie może być None."):

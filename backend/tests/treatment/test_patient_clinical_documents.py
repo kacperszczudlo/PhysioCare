@@ -14,6 +14,7 @@ from treatment.models import (
 
 if TYPE_CHECKING:
     from rest_framework.test import APIClient
+
     from patients.models import PatientProfile
     from therapists.models import TherapistProfile
 

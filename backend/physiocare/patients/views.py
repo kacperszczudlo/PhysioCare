@@ -1,7 +1,6 @@
 from uuid import UUID
 
 from django.db.models import QuerySet
-
 from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request

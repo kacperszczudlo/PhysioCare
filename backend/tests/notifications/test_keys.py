@@ -1,6 +1,10 @@
 import pytest
 
-from notifications.keys import CANONICAL_PREF_KEYS, NotificationPreferenceKey, get_canonical_pref_keys, is_valid_pref_key
+from notifications.keys import (
+    NotificationPreferenceKey,
+    get_canonical_pref_keys,
+    is_valid_pref_key,
+)
 
 
 def test_get_canonical_pref_keys() -> None:

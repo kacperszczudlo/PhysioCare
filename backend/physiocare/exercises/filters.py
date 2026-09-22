@@ -155,18 +155,14 @@ def filter_exercises_queryset(qs: QuerySet, query_params: object) -> QuerySet:
         qs = qs.filter(categories__in=matched_ids).distinct()
 
     media_type: object = None
-    if hasattr(query_params, 'get'):
-        media_type = query_params.get('media_type')
-    elif isinstance(query_params, dict):
+    if hasattr(query_params, 'get') or isinstance(query_params, dict):
         media_type = query_params.get('media_type')
 
     if media_type:
         qs = qs.filter(media_type=media_type)
 
     search: object = None
-    if hasattr(query_params, 'get'):
-        search = query_params.get('q')
-    elif isinstance(query_params, dict):
+    if hasattr(query_params, 'get') or isinstance(query_params, dict):
         search = query_params.get('q')
 
     if search:

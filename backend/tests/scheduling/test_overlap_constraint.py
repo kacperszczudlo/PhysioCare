@@ -1,7 +1,7 @@
 import concurrent.futures
+import uuid
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
-import uuid
 
 import pytest
 from django.db import connections, transaction

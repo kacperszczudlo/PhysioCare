@@ -7,6 +7,7 @@ from rest_framework.test import APIClient
 
 if TYPE_CHECKING:
     from pytest_django.fixtures import SettingsWrapper
+
     from patients.models import PatientProfile
     from therapists.models import TherapistProfile
 

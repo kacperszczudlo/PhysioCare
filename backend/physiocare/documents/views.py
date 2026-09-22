@@ -11,7 +11,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-
 from core.field_policies import (
     DOCUMENT_TITLE_REQUIRED,
     DOCUMENT_TITLE_TOO_LONG,

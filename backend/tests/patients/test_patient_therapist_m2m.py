@@ -174,6 +174,7 @@ class TestPatientTherapistM2M:
         )
 
         import datetime
+
         from django.utils import timezone
 
         start: object = timezone.now() + datetime.timedelta(days=2)
