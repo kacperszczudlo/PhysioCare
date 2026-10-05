@@ -41,26 +41,18 @@ async function getOrCreateKeyString(): Promise<string> {
   if (inMemoryRawKey) {
     return inMemoryRawKey
   }
-  try {
-    let key = await SecureStore.getItemAsync(STORAGE_KEY_ALIAS)
-    if (!key) {
-      const rawBytes = new Uint8Array(32)
-      if (globalThis.crypto?.getRandomValues) {
-        globalThis.crypto.getRandomValues(rawBytes)
-      } else {
-        for (let i = 0; i < 32; i++) rawBytes[i] = Math.floor(Math.random() * 256)
-      }
-      key = bytesToHex(rawBytes)
-      await SecureStore.setItemAsync(STORAGE_KEY_ALIAS, key)
+  let key = await SecureStore.getItemAsync(STORAGE_KEY_ALIAS)
+  if (!key) {
+    if (!globalThis.crypto?.getRandomValues) {
+      throw new Error('Bezpieczne generowanie klucza cache offline jest niedostępne.')
     }
-    inMemoryRawKey = key
-    return key
-  } catch {
-    if (!inMemoryRawKey) {
-      inMemoryRawKey = 'physiocare_default_fallback_storage_key_32bytes!'
-    }
-    return inMemoryRawKey
+    const rawBytes = new Uint8Array(32)
+    globalThis.crypto.getRandomValues(rawBytes)
+    key = bytesToHex(rawBytes)
+    await SecureStore.setItemAsync(STORAGE_KEY_ALIAS, key)
   }
+  inMemoryRawKey = key
+  return key
 }
 
 async function getSubtleKey(): Promise<CryptoKey | null> {
@@ -70,54 +62,39 @@ async function getSubtleKey(): Promise<CryptoKey | null> {
   if (!globalThis.crypto?.subtle) {
     return null
   }
-  try {
-    const rawHex = await getOrCreateKeyString()
-    const keyBytes = hexToBytes(rawHex.padEnd(64, '0').slice(0, 64))
-    const cryptoKey = await globalThis.crypto.subtle.importKey(
-      'raw',
-      keyBytes as unknown as BufferSource,
-      { name: 'AES-GCM' },
-      false,
-      ['encrypt', 'decrypt'],
-    )
-    inMemoryCryptoKey = cryptoKey
-    return cryptoKey
-  } catch {
-    return null
-  }
+  const rawHex = await getOrCreateKeyString()
+  const keyBytes = hexToBytes(rawHex)
+  const cryptoKey = await globalThis.crypto.subtle.importKey(
+    'raw',
+    keyBytes as unknown as BufferSource,
+    { name: 'AES-GCM' },
+    false,
+    ['encrypt', 'decrypt'],
+  )
+  inMemoryCryptoKey = cryptoKey
+  return cryptoKey
 }
 
 async function encryptData(plainText: string): Promise<string> {
-  try {
-    const subtleKey = await getSubtleKey()
-    if (subtleKey && globalThis.crypto?.subtle) {
-      const iv = new Uint8Array(12)
-      globalThis.crypto.getRandomValues(iv)
-      const encoded = new TextEncoder().encode(plainText)
-      const cipherBuffer = await globalThis.crypto.subtle.encrypt(
-        { name: 'AES-GCM', iv: iv as unknown as BufferSource },
-        subtleKey,
-        encoded as unknown as BufferSource,
-      )
-      const cipherBytes = new Uint8Array(cipherBuffer)
-      return `enc:gcm:${bytesToHex(iv)}:${bytesToHex(cipherBytes)}`
-    }
-  } catch {}
-
-  // Fallback szyfrowania strumieniowego
-  const keyStr = await getOrCreateKeyString()
-  const encoded = new TextEncoder().encode(plainText)
-  const xored = new Uint8Array(encoded.length)
-  for (let i = 0; i < encoded.length; i++) {
-    xored[i] = encoded[i] ^ keyStr.charCodeAt(i % keyStr.length)
+  const subtleKey = await getSubtleKey()
+  if (!subtleKey || !globalThis.crypto?.subtle || !globalThis.crypto.getRandomValues) {
+    throw new Error('Bezpieczne szyfrowanie cache offline jest niedostępne.')
   }
-  return `enc:v1:${bytesToHex(xored)}`
+  const iv = new Uint8Array(12)
+  globalThis.crypto.getRandomValues(iv)
+  const encoded = new TextEncoder().encode(plainText)
+  const cipherBuffer = await globalThis.crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: iv as unknown as BufferSource },
+    subtleKey,
+    encoded as unknown as BufferSource,
+  )
+  const cipherBytes = new Uint8Array(cipherBuffer)
+  return `enc:gcm:${bytesToHex(iv)}:${bytesToHex(cipherBytes)}`
 }
 
 async function decryptData(cipherText: string): Promise<string> {
   if (!cipherText.startsWith('enc:')) {
-    // Plaintext wsteczna kompatybilność podczas migracji
-    return cipherText
+    throw new Error('Odrzucono nieszyfrowany wpis cache offline.')
   }
 
   if (cipherText.startsWith('enc:gcm:')) {
@@ -137,20 +114,7 @@ async function decryptData(cipherText: string): Promise<string> {
     }
   }
 
-  if (cipherText.startsWith('enc:v1:')) {
-    const parts = cipherText.split(':')
-    if (parts.length === 3) {
-      const cipherBytes = hexToBytes(parts[2])
-      const keyStr = await getOrCreateKeyString()
-      const decrypted = new Uint8Array(cipherBytes.length)
-      for (let i = 0; i < cipherBytes.length; i++) {
-        decrypted[i] = cipherBytes[i] ^ keyStr.charCodeAt(i % keyStr.length)
-      }
-      return new TextDecoder().decode(decrypted)
-    }
-  }
-
-  throw new Error('Nieobsługiwany format szyfrowania cache.')
+  throw new Error('Nieobsługiwany lub nieprawidłowy format szyfrowania cache.')
 }
 
 function getCacheDir(): string | null {
@@ -271,6 +235,7 @@ export async function getOfflineItem<T>(key: string): Promise<T | null> {
     // Wsteczna kompatybilność ze starymi wpisami bez envelope
     return parsed as T
   } catch {
+    await removeOfflineItem(key)
     return null
   }
 }
