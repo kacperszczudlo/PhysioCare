@@ -9,7 +9,11 @@ logger = logging.getLogger('physiocare.auth')
 VERIFY_URL: str = 'https://www.google.com/recaptcha/api/siteverify'
 
 
-def verify_recaptcha_token(token: str | None, remote_ip: str | None = None) -> None:
+def verify_recaptcha_token(
+    token: str | None,
+    remote_ip: str | None = None,
+    client: str | None = None,
+) -> None:
     """Weryfikuje token Google reCAPTCHA v2/v3 w API siteverify Google.
 
     Jeśli flaga RECAPTCHA_ENABLED wynosi False lub klucz prywatny jest pusty, pomija weryfikację.
@@ -25,7 +29,17 @@ def verify_recaptcha_token(token: str | None, remote_ip: str | None = None) -> N
     if not recaptcha_enabled:
         return
 
-    secret_key = (settings.RECAPTCHA_SECRET_KEY if hasattr(settings, 'RECAPTCHA_SECRET_KEY') else '').strip()
+    legacy_secret = getattr(settings, 'RECAPTCHA_SECRET_KEY', '').strip()
+    if client == 'web':
+        secret_key = getattr(settings, 'RECAPTCHA_V3_SECRET_KEY', '').strip()
+    elif client == 'mobile':
+        secret_key = getattr(settings, 'RECAPTCHA_V2_SECRET_KEY', '').strip()
+    elif legacy_secret:
+        secret_key = legacy_secret
+    else:
+        raise serializers.ValidationError(
+            'Weryfikacja CAPTCHA nie jest poprawnie skonfigurowana.'
+        )
     if not secret_key:
         return
 
@@ -67,4 +81,3 @@ def verify_recaptcha_token(token: str | None, remote_ip: str | None = None) -> N
         raise serializers.ValidationError(
             'Weryfikacja bota zwróciła niski wynik zaufania. Spróbuj ponownie.'
         )
-

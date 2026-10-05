@@ -6,7 +6,10 @@ from accounts.mfa import (
     generate_backup_codes,
     generate_totp_secret,
     issue_mfa_preauth_token,
+    issue_mfa_setup_token,
 )
+from accounts.email_codes import issue_email_code
+from accounts.models import EmailCodePurpose
 from accounts.models import UserMFA
 
 
@@ -342,6 +345,51 @@ def test_password_login_therapist_without_mfa_returns_403(api_client: object, th
 
 
 @pytest.mark.django_db
+def test_mfa_setup_token_allows_configuration_without_authenticated_session(
+    api_client: object, therapist: object,
+) -> None:
+    """Sprawdza ograniczoną konfigurację MFA po logowaniu bez tworzenia sesji panelu."""
+    setup_token = issue_mfa_setup_token(therapist.user)
+    email_code = issue_email_code(
+        user=therapist.user,
+        purpose=EmailCodePurpose.MFA_SETUP,
+    )
+
+    setup_response = api_client.post(
+        '/api/v1/auth/2fa/setup/',
+        data={'mfa_setup_token': setup_token, 'email_code': email_code},
+        format='json',
+    )
+
+    assert setup_response.status_code == status.HTTP_200_OK
+    assert 'access' not in setup_response.data
+    secret = setup_response.data['secret_key']
+
+    enable_response = api_client.post(
+        '/api/v1/auth/2fa/enable/',
+        data={'mfa_setup_token': setup_token, 'code': pyotp.TOTP(secret).now()},
+        format='json',
+    )
+
+    assert enable_response.status_code == status.HTTP_200_OK
+    assert UserMFA.objects.get(user=therapist.user).is_enabled is True
+    assert not api_client.cookies.get('access_token')
+
+
+@pytest.mark.django_db
+def test_expired_or_invalid_mfa_setup_token_is_rejected(api_client: object) -> None:
+    """Sprawdza, że konfiguracja MFA wymaga ważnego tokenu setup."""
+    response = api_client.post(
+        '/api/v1/auth/2fa/setup/',
+        data={'mfa_setup_token': 'invalid-token'},
+        format='json',
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.data['error']['code'] == 'AUTH_MFA_SETUP_TOKEN_INVALID'
+
+
+@pytest.mark.django_db
 def test_password_login_staff_admin_without_mfa_returns_403(api_client: object) -> None:
     """Sprawdza zablokowanie logowania hasłem dla konta administratora/staff bez MFA (F-03)."""
     from django.contrib.auth import get_user_model
@@ -382,5 +430,3 @@ def test_password_login_patient_without_mfa_succeeds(api_client: object, patient
     assert 'access' in response.data
     assert 'refresh' in response.data
     assert response.data.get('mfa_required') is not True
-
-

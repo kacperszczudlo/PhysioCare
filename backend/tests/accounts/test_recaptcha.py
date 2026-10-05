@@ -51,6 +51,31 @@ class TestRecaptchaVerification:
         assert mock_post.call_args[1]['data']['response'] == 'valid_token_123'
         assert mock_post.call_args[1]['data']['secret'] == 'secret_key_test'
 
+    @pytest.mark.parametrize(
+        ('client', 'expected_secret'),
+        [('web', 'v3_secret'), ('mobile', 'v2_secret')],
+    )
+    @override_settings(
+        RECAPTCHA_ENABLED=True,
+        RECAPTCHA_SECRET_KEY='',
+        RECAPTCHA_V2_SECRET_KEY='v2_secret',
+        RECAPTCHA_V3_SECRET_KEY='v3_secret',
+    )
+    @patch('accounts.recaptcha.requests.post')
+    def test_client_selects_matching_secret(
+        self,
+        mock_post: MagicMock,
+        client: str,
+        expected_secret: str,
+    ) -> None:
+        mock_response = MagicMock()
+        mock_response.json.return_value = {'success': True, 'score': 0.9}
+        mock_post.return_value = mock_response
+
+        verify_recaptcha_token('valid_token', client=client)
+
+        assert mock_post.call_args[1]['data']['secret'] == expected_secret
+
     @override_settings(RECAPTCHA_ENABLED=True, RECAPTCHA_SECRET_KEY='secret_key_test')
     @patch('accounts.recaptcha.requests.post')
     def test_failed_recaptcha_verification(self, mock_post: MagicMock) -> None:
@@ -154,4 +179,3 @@ class TestRecaptchaVerification:
 
         mock_verify.assert_called_once()
         assert mock_verify.call_args.args[0] == 'login-token'
-

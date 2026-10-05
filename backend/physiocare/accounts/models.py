@@ -89,6 +89,7 @@ class EmailCodePurpose(models.TextChoices):
 
     VERIFY_EMAIL = 'VERIFY_EMAIL', 'Weryfikacja e-mail'
     PASSWORD_RESET = 'PASSWORD_RESET', 'Reset hasła'
+    MFA_SETUP = 'MFA_SETUP', 'Konfiguracja MFA'
 
 
 class EmailCode(models.Model):
@@ -158,6 +159,7 @@ class UserMFA(models.Model):
         related_name='mfa',
     )
     secret_key = EncryptedCharField(max_length=255)
+    setup_token_hash: models.CharField = models.CharField(max_length=64, blank=True, default='')
     is_enabled: models.BooleanField = models.BooleanField(default=False)
     backup_codes: models.JSONField = models.JSONField(default=list, blank=True)
     created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True)
@@ -176,4 +178,3 @@ class UserMFA(models.Model):
         """
         status_str = 'enabled' if self.is_enabled else 'disabled'
         return f'MFA ({status_str}) for {self.user.email}'
-

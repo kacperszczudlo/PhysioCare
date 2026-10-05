@@ -420,6 +420,8 @@ SSE_REDIS_CHANNEL_PREFIX = os.environ.get('SSE_REDIS_CHANNEL_PREFIX', 'physiocar
 
 RECAPTCHA_ENABLED = env_bool('RECAPTCHA_ENABLED', 'true' if not DEBUG else 'false')
 RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
+RECAPTCHA_V2_SECRET_KEY = os.environ.get('RECAPTCHA_V2_SECRET_KEY', '')
+RECAPTCHA_V3_SECRET_KEY = os.environ.get('RECAPTCHA_V3_SECRET_KEY', '')
 RECAPTCHA_SCORE_THRESHOLD = float(os.environ.get('RECAPTCHA_SCORE_THRESHOLD', '0.5'))
 
 if not DEBUG:
@@ -427,9 +429,13 @@ if not DEBUG:
         raise ImproperlyConfigured(
             'RECAPTCHA_ENABLED musi być ustawione na true przy DJANGO_DEBUG=false.'
         )
-    if not RECAPTCHA_SECRET_KEY.strip():
+    if not (
+        RECAPTCHA_SECRET_KEY.strip()
+        or (RECAPTCHA_V2_SECRET_KEY.strip() and RECAPTCHA_V3_SECRET_KEY.strip())
+    ):
         raise ImproperlyConfigured(
-            'RECAPTCHA_SECRET_KEY jest wymagany przy DJANGO_DEBUG=false.'
+            'RECAPTCHA_SECRET_KEY albo komplet RECAPTCHA_V2_SECRET_KEY i '
+            'RECAPTCHA_V3_SECRET_KEY jest wymagany przy DJANGO_DEBUG=false.'
         )
 
 _SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()

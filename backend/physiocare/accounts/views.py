@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -25,6 +26,7 @@ from .email_codes import (
     issue_password_reset_token,
     lookup_password_reset_token,
     send_password_reset_code,
+    send_mfa_setup_code,
     send_verify_email_code,
 )
 from .google_auth import GoogleAuthError, verify_google_id_token
@@ -33,9 +35,12 @@ from .mfa import (
     generate_qr_code_svg,
     generate_totp_secret,
     get_totp_uri,
+    hash_mfa_setup_token,
     issue_mfa_preauth_token,
+    issue_mfa_setup_token,
     verify_and_consume_backup_code,
     verify_mfa_preauth_token,
+    verify_mfa_setup_token,
     verify_totp_code,
 )
 from .models import EmailCodePurpose, RoleChoices, UserMFA
@@ -312,9 +317,11 @@ class LoginView(APIView):
         email = data.get('email')
         password = data.get('password')
         recaptcha_token = data.get('recaptcha_token')
+        recaptcha_client = data.get('recaptcha_client')
         verify_recaptcha_token(
             str(recaptcha_token) if recaptcha_token else None,
             request.META.get('REMOTE_ADDR') if hasattr(request, 'META') else None,
+            str(recaptcha_client) if recaptcha_client in {'web', 'mobile'} else None,
         )
 
         user = authenticate(request, email=email, password=password)
@@ -339,6 +346,18 @@ class LoginView(APIView):
                 )
 
             if is_mfa_required_for_user(user) and not (hasattr(user, 'mfa') and user.mfa.is_enabled):
+                setup_token = issue_mfa_setup_token(user)
+                if not send_mfa_setup_code(user=user):
+                    return Response(
+                        {
+                            'error': {
+                                'code': 'AUTH_MFA_SETUP_EMAIL_FAILED',
+                                'message': 'Nie udało się wysłać kodu konfiguracji MFA. Spróbuj ponownie.',
+                                'details': {},
+                            }
+                        },
+                        status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    )
                 return Response(
                     {
                         'error': {
@@ -350,6 +369,7 @@ class LoginView(APIView):
                             'details': {
                                 'mfa_required': True,
                                 'email': user.email,
+                                'mfa_setup_token': setup_token,
                             },
                         }
                     },
@@ -501,7 +521,8 @@ class MFALoginView(APIView):
 class MFASetupView(APIView):
     """Widok inicjalizacji konfiguracji 2FA (generowanie sekretu TOTP oraz kodu QR)."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
+    throttle_classes = [LoginRateThrottle]
 
     def post(self, request: object, *args: object, **kwargs: object) -> Response:
         """Generuje nowy sekret TOTP i kod QR w formacie SVG dla zalogowanego użytkownika.
@@ -520,10 +541,72 @@ class MFASetupView(APIView):
         if request is None:
             raise TypeError("Argument 'request' nie może być None.")
 
+        data = request.data if hasattr(request, 'data') else {}
+        setup_token = data.get('mfa_setup_token')
         user = request.user if hasattr(request, 'user') else None
+        if not getattr(user, 'is_authenticated', False):
+            user = verify_mfa_setup_token(str(setup_token) if setup_token else '')
+        if user is None:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_MFA_SETUP_TOKEN_INVALID',
+                        'message': 'Sesja konfiguracji MFA wygasła. Zaloguj się ponownie.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        if setup_token:
+            email_code = str(data.get('email_code') or '').strip()
+            if not email_code:
+                return Response(
+                    {
+                        'error': {
+                            'code': 'AUTH_MFA_EMAIL_CODE_REQUIRED',
+                            'message': 'Podaj kod wysłany na adres e-mail.',
+                            'details': {},
+                        }
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            try:
+                consume_email_code(
+                    user=user,
+                    purpose=EmailCodePurpose.MFA_SETUP,
+                    raw_code=email_code,
+                )
+            except EmailCodeError as exc:
+                return Response(
+                    {
+                        'error': {
+                            'code': exc.code,
+                            'message': exc.message,
+                            'details': {},
+                        }
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        if hasattr(user, 'mfa') and user.mfa.is_enabled:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_MFA_ALREADY_ENABLED',
+                        'message': 'Dwuskładnikowa autentykacja jest już włączona.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         user_mfa, created = UserMFA.objects.get_or_create(
             user=user,
-            defaults={'secret_key': generate_totp_secret(), 'is_enabled': False},
+            defaults={
+                'secret_key': generate_totp_secret(),
+                'is_enabled': False,
+                'setup_token_hash': (
+                    hash_mfa_setup_token(str(setup_token)) if setup_token else ''
+                ),
+            },
         )
 
         if user_mfa.is_enabled:
@@ -536,6 +619,17 @@ class MFASetupView(APIView):
                     }
                 },
                 status=status.HTTP_400_BAD_REQUEST,
+            )
+        if setup_token and user_mfa.setup_token_hash != hash_mfa_setup_token(str(setup_token)):
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_MFA_SETUP_TOKEN_INVALID',
+                        'message': 'Sesja konfiguracji MFA wygasła. Zaloguj się ponownie.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
             )
 
         if not user_mfa.secret_key:
@@ -558,7 +652,8 @@ class MFASetupView(APIView):
 class MFAEnableView(APIView):
     """Widok aktywacji 2FA po zweryfikowaniu pierwszego kodu z aplikacji autoryzującej."""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
+    throttle_classes = [LoginRateThrottle]
 
     def post(self, request: object, *args: object, **kwargs: object) -> Response:
         """Weryfikuje podany kod TOTP, włącza 2FA i zwraca kody zapasowe.
@@ -578,6 +673,21 @@ class MFAEnableView(APIView):
             raise TypeError("Argument 'request' nie może być None.")
 
         user = request.user if hasattr(request, 'user') else None
+        data = request.data if hasattr(request, 'data') else {}
+        setup_token = data.get('mfa_setup_token')
+        if not getattr(user, 'is_authenticated', False):
+            user = verify_mfa_setup_token(str(setup_token) if setup_token else '')
+        if user is None:
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_MFA_SETUP_TOKEN_INVALID',
+                        'message': 'Sesja konfiguracji MFA wygasła. Zaloguj się ponownie.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
         if not hasattr(user, 'mfa') or not user.mfa.secret_key:
             return Response(
                 {
@@ -591,6 +701,17 @@ class MFAEnableView(APIView):
             )
 
         user_mfa = user.mfa
+        if setup_token and user_mfa.setup_token_hash != hash_mfa_setup_token(str(setup_token)):
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_MFA_SETUP_TOKEN_INVALID',
+                        'message': 'Sesja konfiguracji MFA wygasła. Zaloguj się ponownie.',
+                        'details': {},
+                    }
+                },
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
         if user_mfa.is_enabled:
             return Response(
                 {
@@ -603,7 +724,6 @@ class MFAEnableView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        data = request.data if hasattr(request, 'data') else {}
         serializer = MFAEnableSerializer(data=data)
         if not serializer.is_valid():
             return Response(
@@ -631,9 +751,26 @@ class MFAEnableView(APIView):
             )
 
         raw_codes, hashed_codes = generate_backup_codes(8)
-        user_mfa.is_enabled = True
-        user_mfa.backup_codes = hashed_codes
-        user_mfa.save(update_fields=['is_enabled', 'backup_codes', 'updated_at'])
+        with transaction.atomic():
+            locked_mfa = UserMFA.objects.select_for_update().get(pk=user_mfa.pk)
+            if locked_mfa.is_enabled or (
+                setup_token
+                and locked_mfa.setup_token_hash != hash_mfa_setup_token(str(setup_token))
+            ):
+                return Response(
+                    {
+                        'error': {
+                            'code': 'AUTH_MFA_SETUP_TOKEN_INVALID',
+                            'message': 'Sesja konfiguracji MFA wygasła. Zaloguj się ponownie.',
+                            'details': {},
+                        }
+                    },
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+            locked_mfa.is_enabled = True
+            locked_mfa.setup_token_hash = ''
+            locked_mfa.backup_codes = hashed_codes
+            locked_mfa.save(update_fields=['is_enabled', 'setup_token_hash', 'backup_codes', 'updated_at'])
 
         user_email = user.email if hasattr(user, 'email') else 'unknown'
         logger.info(
@@ -1498,4 +1635,3 @@ class ChangePasswordView(APIView):
         blacklist_user_refresh_tokens(user)
         response = Response({'detail': 'Hasło zostało zmienione. Zaloguj się ponownie.'})
         return _clear_auth_cookies(response)
-

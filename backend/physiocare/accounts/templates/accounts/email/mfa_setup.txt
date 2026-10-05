@@ -1,0 +1,10 @@
+{% if first_name %}Dzień dobry {{ first_name }},{% else %}Dzień dobry,{% endif %}
+
+Otrzymaliśmy prośbę o pierwszą konfigurację uwierzytelniania dwuskładnikowego (MFA) w PhysioCare.
+
+Kod potwierdzający: {{ code }}
+
+Kod jest ważny przez {{ validity_minutes }} minut. Jeśli to nie Ty inicjowałeś konfigurację MFA, zmień hasło i skontaktuj się z administratorem.
+
+Pozdrawiamy
+Zespół PhysioCare

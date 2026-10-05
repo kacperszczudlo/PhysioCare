@@ -1,4 +1,4 @@
-import { api } from './client'
+import { ApiError, api } from './client'
 import type {
   CompetenceSnapshot,
   DashboardStats,
@@ -53,7 +53,9 @@ export interface PasswordResetConfirmPayload {
 
 /** Wynik logowania – zrealizowane lub wymagające weryfikacji składnika 2FA. */
 export type LoginResult =
-  { kind: 'authenticated'; user: User } | { kind: 'mfa_required'; mfa_token: string; email: string }
+  | { kind: 'authenticated'; user: User }
+  | { kind: 'mfa_required'; mfa_token: string; email: string }
+  | { kind: 'mfa_setup_required'; mfa_setup_token: string; email: string }
 
 /** Odpowiedź z danymi konfiguracyjnymi uwierzytelniania dwuskładnikowego 2FA/TOTP. */
 export interface MFASetupResponse {
@@ -84,14 +86,55 @@ export interface MFAStatusResponse {
 /** Usługi API uwierzytelniania, rejestracji, resetu hasła oraz 2FA/MFA. */
 export const authApi = {
   async login(email: string, password: string, recaptcha_token?: string): Promise<LoginResult> {
-    const data = await api.post<
-      AuthResponse | { mfa_required?: boolean; mfa_token?: string; email?: string }
-    >(
-      '/auth/login/',
-      { email, password, recaptcha_token, token_delivery: 'cookie' },
-      { skipAuthRefresh: true },
-    )
+    let data:
+      | AuthResponse
+      | {
+          mfa_required?: boolean
+          mfa_setup_token?: string
+          mfa_token?: string
+          email?: string
+        }
+    try {
+      data = await api.post<
+        | AuthResponse
+        | {
+            mfa_required?: boolean
+            mfa_setup_token?: string
+            mfa_token?: string
+            email?: string
+          }
+      >(
+        '/auth/login/',
+        { email, password, recaptcha_token, recaptcha_client: 'web', token_delivery: 'cookie' },
+        { skipAuthRefresh: true },
+      )
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.code === 'AUTH_MFA_SETUP_REQUIRED' &&
+        typeof error.details.mfa_setup_token === 'string'
+      ) {
+        return {
+          kind: 'mfa_setup_required',
+          mfa_setup_token: error.details.mfa_setup_token,
+          email:
+            typeof error.details.email === 'string' ? error.details.email : email,
+        }
+      }
+      throw error
+    }
     if (data && 'mfa_required' in data && data.mfa_required) {
+      if (
+        'mfa_setup_token' in data &&
+        typeof data.mfa_setup_token === 'string' &&
+        data.mfa_setup_token
+      ) {
+        return {
+          kind: 'mfa_setup_required',
+          mfa_setup_token: data.mfa_setup_token,
+          email: typeof data.email === 'string' ? data.email : email,
+        }
+      }
       return {
         kind: 'mfa_required',
         mfa_token: typeof data.mfa_token === 'string' ? data.mfa_token : '',
@@ -112,12 +155,18 @@ export const authApi = {
     )
   },
 
-  setupMFA() {
-    return api.post<MFASetupResponse>('/auth/2fa/setup/')
+  setupMFA(mfa_setup_token?: string, email_code?: string) {
+    return api.post<MFASetupResponse>('/auth/2fa/setup/', {
+      ...(mfa_setup_token ? { mfa_setup_token } : {}),
+      ...(email_code ? { email_code } : {}),
+    })
   },
 
-  enableMFA(code: string) {
-    return api.post<MFAEnableResponse>('/auth/2fa/enable/', { code })
+  enableMFA(code: string, mfa_setup_token?: string) {
+    return api.post<MFAEnableResponse>('/auth/2fa/enable/', {
+      code,
+      ...(mfa_setup_token ? { mfa_setup_token } : {}),
+    })
   },
 
   disableMFA(password: string, code?: string) {

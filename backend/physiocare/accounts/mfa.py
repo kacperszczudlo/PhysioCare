@@ -1,6 +1,8 @@
 import hashlib
 import io
+import hashlib
 import logging
+import secrets
 import secrets
 import string
 
@@ -17,6 +19,8 @@ logger: logging.Logger = logging.getLogger('physiocare.auth')
 
 MFA_PREAUTH_SALT: str = 'physiocare.2fa.preauth'
 MFA_PREAUTH_MAX_AGE: int = 300
+MFA_SETUP_SALT: str = 'physiocare.2fa.setup'
+MFA_SETUP_MAX_AGE: int = 600
 
 TOTP_CODE_LENGTH: int = 6
 TOTP_VALID_WINDOW: int = 1
@@ -225,3 +229,39 @@ def verify_mfa_preauth_token(token: str, max_age: int = MFA_PREAUTH_MAX_AGE) -> 
     except (SignatureExpired, BadSignature, ValueError):
         return None
 
+
+def issue_mfa_setup_token(user: object) -> str:
+    """Generuje krótkotrwały token ograniczony do pierwszej konfiguracji MFA."""
+    if user is None:
+        raise TypeError("Argument 'user' nie może być None.")
+
+    signer = TimestampSigner(salt=MFA_SETUP_SALT)
+    user_id = user.id if hasattr(user, 'id') else user
+    return signer.sign(f'{user_id}:{secrets.token_urlsafe(32)}')
+
+
+def verify_mfa_setup_token(token: str, max_age: int = MFA_SETUP_MAX_AGE) -> object | None:
+    """Weryfikuje token konfiguracji MFA i zwraca aktywnego użytkownika."""
+    if not isinstance(token, str):
+        raise TypeError("Argument 'token' musi być typu str.")
+    if not isinstance(max_age, int):
+        raise TypeError("Argument 'max_age' musi być typu int.")
+
+    if not token:
+        return None
+    signer = TimestampSigner(salt=MFA_SETUP_SALT)
+    try:
+        signed_value = signer.unsign(token, max_age=max_age)
+        user_id_str, _, nonce = signed_value.partition(':')
+        if not user_id_str or not nonce:
+            return None
+        return User.objects.filter(id=user_id_str, is_active=True).first()
+    except (SignatureExpired, BadSignature, ValueError):
+        return None
+
+
+def hash_mfa_setup_token(token: str) -> str:
+    """Zwraca jednokierunkowy skrót tokenu konfiguracji MFA do zapisania w bazie."""
+    if not isinstance(token, str):
+        raise TypeError("Argument 'token' musi być typu str.")
+    return hashlib.sha256(token.encode('utf-8')).hexdigest()
