@@ -86,3 +86,7 @@ id_rsa.pub
 *.tmp
 .direnv/
 .python-version.local
+
+docs/cheat-sheet.md
+cheat-sheet.md
+*cheat-sheet*.md
