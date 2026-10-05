@@ -173,4 +173,4 @@ class TherapistPublicListView(generics.ListAPIView):
                 query |= Q(user__first_name__icontains=term)
                 query |= Q(user__last_name__icontains=term)
             qs = qs.filter(query)
-        return qs
+        return qs.order_by('user__last_name', 'user__first_name', 'pk')
