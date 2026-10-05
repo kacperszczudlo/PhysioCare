@@ -27,7 +27,7 @@ import type { User } from '@/api/types'
 import { useNetworkOptional } from '@/network/NetworkContext'
 import { unregisterPushToken } from '@/notifications/push'
 import { clearAllOfflineData } from '@/offline/offlineStorage'
-import { clearOfflineQueue } from '@/offline/offlineQueue'
+import { clearOfflineQueue, flushOfflineQueue } from '@/offline/offlineQueue'
 
 /**
  * Interfejs udostępniający wartości i metody kontekstu autoryzacji.
@@ -97,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const next = profileToUser(profile)
       setUser(next)
       await tokenStorage.setCachedUser(next)
+      void flushOfflineQueue().catch(() => undefined)
     } catch (error) {
       if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
         setUser(null)
@@ -181,6 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const next = profileToUser(profile)
         setUser(next)
         await tokenStorage.setCachedUser(next)
+        void flushOfflineQueue().catch(() => undefined)
       } catch (error) {
         if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
           setUser(null)
@@ -200,6 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(nextUser)
     await tokenStorage.setCachedUser(nextUser)
+    void flushOfflineQueue().catch(() => undefined)
   }, [])
 
   const loginWithGoogle = useCallback(async (credential: string) => {
@@ -210,6 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(nextUser)
     await tokenStorage.setCachedUser(nextUser)
+    void flushOfflineQueue().catch(() => undefined)
   }, [])
 
   const register = useCallback(async (payload: PatientRegisterPayload) => {
@@ -221,6 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setUser(result.user)
       await tokenStorage.setCachedUser(result.user)
+      void flushOfflineQueue().catch(() => undefined)
     }
     return result
   }, [])
@@ -233,6 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(nextUser)
     await tokenStorage.setCachedUser(nextUser)
+    void flushOfflineQueue().catch(() => undefined)
   }, [])
 
   const resendEmailCode = useCallback(async (email: string) => {

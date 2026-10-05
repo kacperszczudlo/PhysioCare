@@ -222,4 +222,85 @@ describe('offlineQueue (Outbox)', () => {
     expect(await getPendingToggles()).toEqual([])
     expect(await getCachedVisits('upcoming')).toBeNull()
   })
+
+  it('eliminuje wyścig przy równoległych operacjach enqueue (AsyncMutex)', async () => {
+    // 3 równoległe operacje zapisu bez await pomiędzy nimi
+    await Promise.all([
+      enqueueExerciseToggle(1, '2026-10-05', true),
+      enqueueExerciseToggle(2, '2026-10-05', true),
+      enqueueExerciseToggle(3, '2026-10-05', true),
+    ])
+
+    const queue = await getPendingToggles()
+    expect(queue).toHaveLength(3)
+    const assignmentIds = queue.map((i) => i.assignmentId)
+    expect(assignmentIds).toContain(1)
+    expect(assignmentIds).toContain(2)
+    expect(assignmentIds).toContain(3)
+  })
+
+  it('eliminuje wyścig przy enqueue wywołanym w trakcie flushOfflineQueue', async () => {
+    let resolveComplete!: () => void
+    const slowApiPromise = new Promise<{ id: number; assignment: number; completed_on: string; done: boolean; completed_at: string }>((resolve) => {
+      resolveComplete = () =>
+        resolve({
+          id: 50,
+          assignment: 10,
+          completed_on: '2026-10-05',
+          done: true,
+          completed_at: new Date().toISOString(),
+        })
+    })
+
+    vi.spyOn(patientApi, 'completeExercise').mockImplementation(async (assignmentId) => {
+      if (String(assignmentId) === '10') {
+        return slowApiPromise as any
+      }
+      return {
+        id: 51,
+        assignment: Number(assignmentId),
+        completed_on: '2026-10-05',
+        done: true,
+        completed_at: new Date().toISOString(),
+      } as any
+    })
+
+    // W kolejce jest zadanie 10
+    await enqueueExerciseToggle(10, '2026-10-05', true)
+
+    // Uruchamiamy flush w tle (czeka na slowApiPromise)
+    const flushPromise = flushOfflineQueue()
+
+    // W tym samym czasie pacjent klika i dodaje zadanie 20
+    const enqueuePromise = enqueueExerciseToggle(20, '2026-10-05', true)
+
+    // Odblokowujemy API dla zadania 10
+    resolveComplete()
+
+    const [flushResult] = await Promise.all([flushPromise, enqueuePromise])
+    expect(flushResult.synced).toBe(1)
+
+    // Po zakończeniu obu operacji w kolejce MUSI znajdować się zadanie 20 (nie zostało nadpisane ani utracone)
+    const remaining = await getPendingToggles()
+    expect(remaining).toHaveLength(1)
+    expect(remaining[0].assignmentId).toBe(20)
+  })
+
+  it('zapobiega równoległym flushom dublującym wysyłkę z kolejki', async () => {
+    let callCount = 0
+    vi.spyOn(patientApi, 'completeExercise').mockImplementation(async () => {
+      callCount++
+      await new Promise((r) => setTimeout(r, 10))
+      return { id: 1 } as any
+    })
+
+    await enqueueExerciseToggle(30, '2026-10-05', true)
+
+    // Dwa współbieżne wywołania flush
+    const [res1, res2] = await Promise.all([flushOfflineQueue(), flushOfflineQueue()])
+
+    expect(callCount).toBe(1)
+    expect(res1.synced + res2.synced).toBe(1)
+    expect(await getPendingToggles()).toHaveLength(0)
+  })
 })
