@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { schedulingApi } from '@/api/scheduling'
 import type { AvailabilitySlot, Holiday } from '@/api/types'
 import { getErrorMessage } from '@/api/client'
@@ -77,10 +77,14 @@ interface DayConfig {
   blocks: { startTime: string; endTime: string }[]
 }
 
+interface AvailabilityTabViewProps {
+  onScheduleSaved?: () => void
+}
+
 /**
  * Widok zakładek konfiguracji dostępności gabinetu (grafik powtarzalny, jednorazowy i dni wolne).
  */
-export function AvailabilityTabView() {
+export function AvailabilityTabView({ onScheduleSaved }: AvailabilityTabViewProps = {}) {
   const { toast } = useToast()
   const [slots, setSlots] = useState<AvailabilitySlot[]>([])
   const [holidays, setHolidays] = useState<Holiday[]>([])
@@ -99,6 +103,8 @@ export function AvailabilityTabView() {
     return initial
   })
 
+  const [hasSavedSchedule, setHasSavedSchedule] = useState<boolean | null>(null)
+  const [savedWeeklyConfig, setSavedWeeklyConfig] = useState<Record<number, DayConfig> | null>(null)
   const [overrideDate, setOverrideDate] = useState<string>(() => toDateInputValue(new Date()))
   const [overrideStart, setOverrideStart] = useState('09:00')
   const [overrideEnd, setOverrideEnd] = useState('17:00')
@@ -119,7 +125,10 @@ export function AvailabilityTabView() {
       setHolidays(holidayList)
 
       const recurring = data.filter((s) => s.is_recurring && s.is_active)
-      if (recurring.length > 0) {
+      const hasRecurring = recurring.length > 0
+      setHasSavedSchedule(hasRecurring)
+
+      if (hasRecurring) {
         const updated: Record<number, DayConfig> = {}
         for (let i = 0; i < 7; i++) {
           const daySlots = recurring.filter((s) => s.day_of_week === i)
@@ -136,12 +145,43 @@ export function AvailabilityTabView() {
           }
         }
         setWeeklyConfig(updated)
+        setSavedWeeklyConfig(updated)
+      } else {
+        setSavedWeeklyConfig(null)
       }
     } catch (err) {
       setError(getErrorMessage(err, 'Nie udało się pobrać grafiku dostępności.'))
     } finally {
       setLoading(false)
     }
+  }
+
+  const isDirty = useMemo(() => {
+    if (!hasSavedSchedule) return true
+    if (!savedWeeklyConfig) return false
+    return JSON.stringify(weeklyConfig) !== JSON.stringify(savedWeeklyConfig)
+  }, [hasSavedSchedule, savedWeeklyConfig, weeklyConfig])
+
+  const applyDefaultTemplate = () => {
+    const template: Record<number, DayConfig> = {}
+    for (let i = 0; i < 7; i++) {
+      template[i] = {
+        enabled: i < 5,
+        blocks: [{ startTime: '08:00', endTime: '16:00' }],
+      }
+    }
+    setWeeklyConfig(template)
+  }
+
+  const clearAllDays = () => {
+    const cleared: Record<number, DayConfig> = {}
+    for (let i = 0; i < 7; i++) {
+      cleared[i] = {
+        enabled: false,
+        blocks: [{ startTime: '08:00', endTime: '16:00' }],
+      }
+    }
+    setWeeklyConfig(cleared)
   }
 
   const toggleDayEnabled = (dayIdx: number) => {
@@ -227,8 +267,14 @@ export function AvailabilityTabView() {
         }
       }
 
+      const wasPreviouslySaved = hasSavedSchedule
       await loadData()
-      toast.success('Tygodniowy grafik pracy został pomyślnie zapisany!')
+      toast.success(
+        wasPreviouslySaved
+          ? 'Tygodniowy grafik pracy został pomyślnie zaktualizowany.'
+          : 'Tygodniowy grafik pracy został pomyślnie zapisany i aktywowany!',
+      )
+      onScheduleSaved?.()
     } catch (err) {
       const errMsg = getErrorMessage(err, 'Błąd podczas zapisywania tygodniowego grafiku.')
       setError(errMsg)
@@ -302,7 +348,28 @@ export function AvailabilityTabView() {
         <section className="avail-card avail-weekly-card">
           <div className="avail-card-header">
             <div>
-              <h2 className="avail-card-title">Tygodniowy grafik pracy</h2>
+              <div className="avail-title-row">
+                <h2 className="avail-card-title">Tygodniowy grafik pracy</h2>
+                {hasSavedSchedule !== null && (
+                  <span
+                    className={`avail-status-pill ${
+                      !hasSavedSchedule
+                        ? 'is-unconfigured'
+                        : isDirty
+                          ? 'is-dirty'
+                          : 'is-active'
+                    }`}
+                    role="status"
+                  >
+                    <span className="avail-status-dot" aria-hidden="true" />
+                    {!hasSavedSchedule
+                      ? 'Wymaga ustalenia i zapisu'
+                      : isDirty
+                        ? 'Niezapisane zmiany'
+                        : 'Grafik aktywny'}
+                  </span>
+                )}
+              </div>
               <p className="avail-card-subtitle">
                 Zdefiniuj stałe godziny przyjęć pacjentów w poszczególnych dniach tygodnia.
               </p>
@@ -310,14 +377,71 @@ export function AvailabilityTabView() {
             <div className="avail-card-actions">
               <Button
                 type="button"
-                variant="primary"
+                variant={hasSavedSchedule && !isDirty ? 'secondary' : 'primary'}
                 size="sm"
                 onClick={handleSaveWeeklySchedule}
-                disabled={saving}
+                disabled={saving || (hasSavedSchedule === true && !isDirty)}
               >
-                {saving ? 'Zapisywanie...' : 'Zapisz grafik'}
+                {saving
+                  ? 'Zapisywanie...'
+                  : !hasSavedSchedule
+                    ? 'Zapisz i aktywuj grafik'
+                    : isDirty
+                      ? 'Zapisz zmiany'
+                      : 'Zapisano'}
               </Button>
             </div>
+          </div>
+
+          {hasSavedSchedule === false && (
+            <div className="avail-unconfigured-banner" role="status">
+              <div className="avail-unconfigured-banner__icon" aria-hidden="true">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+              </div>
+              <div className="avail-unconfigured-banner__copy">
+                <p className="avail-unconfigured-banner__title">
+                  Harmonogram pracy nie został jeszcze zapisany
+                </p>
+                <p className="avail-unconfigured-banner__desc">
+                  Poniższy rozkład to sugerowany wzorzec godzin (Pn–Pt 08:00–16:00). Dopasuj godziny
+                  przyjęć do swojego gabinetu i kliknij <strong>„Zapisz i aktywuj grafik”</strong>,
+                  aby pacjenci mogli rezerwować wizyty.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="avail-preset-bar">
+            <span className="avail-preset-label">Szybki szablon:</span>
+            <button
+              type="button"
+              className="avail-preset-btn"
+              onClick={applyDefaultTemplate}
+              title="Włącz Pn–Pt 08:00–16:00"
+            >
+              Pn–Pt 08:00–16:00
+            </button>
+            <button
+              type="button"
+              className="avail-preset-btn"
+              onClick={clearAllDays}
+              title="Wyłącz wszystkie dni"
+            >
+              Wyczyść dni
+            </button>
           </div>
 
           <div className="avail-weekly-rows">
