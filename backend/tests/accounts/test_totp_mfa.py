@@ -298,3 +298,30 @@ def test_mfa_status_endpoint(api_client: object, therapist: object, patient: obj
     assert res_patient.data['is_enabled'] is False
     assert res_patient.data['mfa_required_for_role'] is False
 
+
+@pytest.mark.django_db
+def test_mfa_secret_key_is_encrypted_in_db(therapist: object) -> None:
+    """Sprawdza, że sekret TOTP jest szyfrowany w bazie danych (F-02)."""
+    from django.db import connection
+
+    plain_secret = generate_totp_secret()
+    mfa = UserMFA.objects.create(
+        user=therapist.user,
+        secret_key=plain_secret,
+        is_enabled=True,
+    )
+
+    # Odczyt bezpośrednio przez raw SQL w bazie danych
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT secret_key FROM user_mfa WHERE id = %s', [str(mfa.id)])
+        db_raw_value = cursor.fetchone()[0]
+
+    # Wartość w bazie danych MUSI być zaszyfrowana (Fernet ciphertext zaczynający się od gAAAAA)
+    assert db_raw_value.startswith('gAAAAA')
+    assert db_raw_value != plain_secret
+
+    # Odczyt przez model Django MUSI automatycznie odszyfrować wartość
+    loaded = UserMFA.objects.get(id=mfa.id)
+    assert loaded.secret_key == plain_secret
+
+

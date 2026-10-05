@@ -3,6 +3,8 @@ import uuid
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 
+from core.fields import EncryptedCharField
+
 from .managers import CustomUserManager
 
 
@@ -148,7 +150,7 @@ class UserMFA(models.Model):
         on_delete=models.CASCADE,
         related_name='mfa',
     )
-    secret_key: models.CharField = models.CharField(max_length=64)
+    secret_key = EncryptedCharField(max_length=255)
     is_enabled: models.BooleanField = models.BooleanField(default=False)
     backup_codes: models.JSONField = models.JSONField(default=list, blank=True)
     created_at: models.DateTimeField = models.DateTimeField(auto_now_add=True)

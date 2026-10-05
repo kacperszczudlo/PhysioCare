@@ -1,12 +1,12 @@
 -- PhysioCare - auto-generated from Django migrations
--- Generated: 2026-10-05T12:26:14Z
+-- Generated: 2026-10-05T12:46:29Z
 -- Do not edit manually. Run: python scripts/sync_schema_sql.py
 
 --
 -- PostgreSQL database dump
 --
 
-\restrict xFxo0TtFjYgdaTeRJAz4h06nwEgvooyJwHcbJgQf4sR53cDAMP3dWTg0txy32EB
+\restrict XogIW6U40kbctJOpCLoYdDgbXMP6kGmlfiEtf8QozGtZR4mxkIhfrarLowT0cGF
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -686,7 +686,7 @@ CREATE TABLE public.treatment_episodes (
 
 CREATE TABLE public.user_mfa (
     id uuid NOT NULL,
-    secret_key character varying(64) NOT NULL,
+    secret_key character varying(255) NOT NULL,
     is_enabled boolean NOT NULL,
     backup_codes jsonb NOT NULL,
     created_at timestamp with time zone NOT NULL,
@@ -2414,5 +2414,5 @@ ALTER TABLE ONLY public.visits
 -- PostgreSQL database dump complete
 --
 
-\unrestrict xFxo0TtFjYgdaTeRJAz4h06nwEgvooyJwHcbJgQf4sR53cDAMP3dWTg0txy32EB
+\unrestrict XogIW6U40kbctJOpCLoYdDgbXMP6kGmlfiEtf8QozGtZR4mxkIhfrarLowT0cGF
 
