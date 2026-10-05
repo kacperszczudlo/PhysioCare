@@ -118,7 +118,7 @@ export default function VisitRequestScreen() {
     return () => {
       cancelled = true
     }
-  }, [initialTherapistId])
+  }, [initialTherapistId, toast])
 
   // Handle changing therapist
   const handleSelectTherapist = async (therapistId: string) => {

@@ -3,14 +3,13 @@
  * @description Ekran profilu publicznego fizjoterapeuty (biogram, kwalifikacje, uprawnienia, kursy, mapa i kontakt).
  */
 
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
+import { Stack, useLocalSearchParams } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 
 import { api, getErrorMessage } from '@/api/client'
 import { patientApi } from '@/api/patient'
-import { Alert } from 'react-native'
 import type { RatingSummary, ReviewItem, TherapistPublic } from '@/api/types'
 import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { MobileTherapistDetailSkeleton } from '@/components/skeletons/MobileSkeletons'
@@ -81,7 +80,6 @@ function ReviewAuthorAvatar({ item }: { item: ReviewItem }) {
  * @returns Element React Native prezentujący profil specjalisty.
  */
 export default function TherapistPublicScreen() {
-  const router = useRouter()
   const { toast } = useToast()
   const { id } = useLocalSearchParams<{ id: string }>()
 
