@@ -94,7 +94,7 @@ export async function enqueueExerciseToggle(
     }
 
     const key = await getQueueKey()
-    await setOfflineItem(key, updated)
+    await setOfflineItem(key, updated, null)
   })
 }
 
@@ -106,7 +106,7 @@ export async function removeQueueItem(id: string): Promise<void> {
     const current = await getPendingToggles()
     const next = current.filter((item) => item.id !== id)
     const key = await getQueueKey()
-    await setOfflineItem(key, next)
+    await setOfflineItem(key, next, null)
   })
 }
 
@@ -116,7 +116,7 @@ export async function removeQueueItem(id: string): Promise<void> {
 export async function clearOfflineQueue(): Promise<void> {
   return offlineQueueMutex.runExclusive(async () => {
     const key = await getQueueKey()
-    await setOfflineItem(key, [])
+    await setOfflineItem(key, [], null)
   })
 }
 
@@ -159,7 +159,7 @@ export async function flushOfflineQueue(): Promise<{ synced: number; failed: num
     }
 
     const key = await getQueueKey()
-    await setOfflineItem(key, remaining)
+    await setOfflineItem(key, remaining, null)
     return { synced, failed }
   })
 }

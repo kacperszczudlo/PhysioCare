@@ -8,7 +8,7 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   define: {
-    __DEV__: true,
+    __DEV__: process.env.NODE_ENV !== 'production',
   },
   resolve: {
     alias: {

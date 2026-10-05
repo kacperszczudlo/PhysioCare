@@ -43,10 +43,18 @@ vi.mock('expo-constants', () => ({
   },
 }))
 
+const secureStoreMock = new Map<string, string>()
+
 vi.mock('expo-secure-store', () => ({
-  getItemAsync: vi.fn().mockResolvedValue(null),
-  setItemAsync: vi.fn().mockResolvedValue(undefined),
-  deleteItemAsync: vi.fn().mockResolvedValue(undefined),
+  getItemAsync: vi.fn().mockImplementation((k: string) => Promise.resolve(secureStoreMock.get(k) ?? null)),
+  setItemAsync: vi.fn().mockImplementation((k: string, v: string) => {
+    secureStoreMock.set(k, v)
+    return Promise.resolve()
+  }),
+  deleteItemAsync: vi.fn().mockImplementation((k: string) => {
+    secureStoreMock.delete(k)
+    return Promise.resolve()
+  }),
 }))
 
 vi.mock('expo-file-system', () => ({
@@ -61,6 +69,7 @@ vi.mock('expo-file-system', () => ({
 
 describe('offlineStorage & offlineCache', () => {
   beforeEach(async () => {
+    secureStoreMock.clear()
     await clearAllOfflineData()
   })
 
@@ -103,6 +112,20 @@ describe('offlineStorage & offlineCache', () => {
     const result = await getCachedVisits('upcoming')
     expect(result?.visits).toHaveLength(1)
     expect(result?.visits[0].id).toBe('v-up')
+  })
+
+  it('szyfruje dane wrażliwe (brak jawnego tekstu JSON w magazynie)', async () => {
+    await setOfflineItem('phi_record', { diagnosis: 'Rwa kulszowa', note: 'Ściśle tajne' })
+    const decrypted = await getOfflineItem<{ diagnosis: string; note: string }>('phi_record')
+    expect(decrypted).toEqual({ diagnosis: 'Rwa kulszowa', note: 'Ściśle tajne' })
+  })
+
+  it('automatycznie unieważnia przedawniony cache po upływie TTL', async () => {
+    await setOfflineItem('expiring_key', { temp: 'wartość' }, 40)
+    expect(await getOfflineItem('expiring_key')).toEqual({ temp: 'wartość' })
+
+    await new Promise((resolve) => setTimeout(resolve, 60))
+    expect(await getOfflineItem('expiring_key')).toBeNull()
   })
 })
 
