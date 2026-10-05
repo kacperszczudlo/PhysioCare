@@ -274,6 +274,16 @@ def _mark_email_verified(user: object) -> None:
             user.save(update_fields=['email_verified_at', 'updated_at'])
 
 
+def is_mfa_required_for_user(user: object | None) -> bool:
+    """Sprawdza, czy rola użytkownika obliguje do aktywnego posiadania 2FA (terapeuci i admini)."""
+    if not user:
+        return False
+    user_role = getattr(user, 'role', None)
+    is_staff = getattr(user, 'is_staff', False)
+    is_superuser = getattr(user, 'is_superuser', False)
+    return user_role == RoleChoices.THERAPIST or is_staff or is_superuser
+
+
 class LoginView(APIView):
     """Widok logowania przy użyciu adresu e-mail i hasła."""
 
@@ -315,6 +325,24 @@ class LoginView(APIView):
                             ),
                             'details': {
                                 'needs_email_verification': True,
+                                'email': user.email,
+                            },
+                        }
+                    },
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            if is_mfa_required_for_user(user) and not (hasattr(user, 'mfa') and user.mfa.is_enabled):
+                return Response(
+                    {
+                        'error': {
+                            'code': 'AUTH_MFA_SETUP_REQUIRED',
+                            'message': (
+                                'Dla Twojej roli wymagane jest aktywne uwierzytelnianie dwuskładnikowe (MFA). '
+                                'Skonfiguruj MFA, aby uzyskać dostęp do konta.'
+                            ),
+                            'details': {
+                                'mfa_required': True,
                                 'email': user.email,
                             },
                         }
@@ -743,9 +771,7 @@ class MFAStatusView(APIView):
 
         user = request.user if hasattr(request, 'user') else None
         is_enabled = hasattr(user, 'mfa') and user.mfa.is_enabled
-        user_role = user.role if hasattr(user, 'role') else None
-        is_staff = user.is_staff if hasattr(user, 'is_staff') else False
-        mfa_required_for_role = user_role == RoleChoices.THERAPIST or is_staff
+        mfa_required_for_role = is_mfa_required_for_user(user)
 
         return Response(
             {
@@ -852,6 +878,35 @@ class GoogleLoginView(APIView):
             )
 
         _mark_email_verified(user)
+        if is_mfa_required_for_user(user) and not (hasattr(user, 'mfa') and user.mfa.is_enabled):
+            return Response(
+                {
+                    'error': {
+                        'code': 'AUTH_MFA_SETUP_REQUIRED',
+                        'message': (
+                            'Dla Twojej roli wymagane jest aktywne uwierzytelnianie dwuskładnikowe (MFA). '
+                            'Skonfiguruj MFA, aby uzyskać dostęp do konta.'
+                        ),
+                        'details': {
+                            'mfa_required': True,
+                            'email': user.email,
+                        },
+                    }
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if hasattr(user, 'mfa') and user.mfa.is_enabled:
+            mfa_token = issue_mfa_preauth_token(user)
+            return Response(
+                {
+                    'mfa_required': True,
+                    'mfa_token': mfa_token,
+                    'email': user.email,
+                },
+                status=status.HTTP_200_OK,
+            )
+
         refresh = RefreshToken.for_user(user)
         return _auth_response(request, user, refresh)
 

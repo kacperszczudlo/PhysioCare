@@ -35,13 +35,13 @@ def test_login_includes_tokens_by_default(api_client: object, patient: object) -
 
 
 @pytest.mark.django_db
-def test_login_cookie_delivery_omits_body_tokens(api_client: object, therapist: object) -> None:
+def test_login_cookie_delivery_omits_body_tokens(api_client: object, patient: object) -> None:
     """Sprawdza, czy wybór trybu cookie pomija tokeny w ciele odpowiedzi HTTP."""
     # Act
     response = api_client.post(
         '/api/v1/auth/login/',
         {
-            'email': therapist.user.email,
+            'email': patient.user.email,
             'password': 'test-pass',
             'token_delivery': 'cookie',
         },

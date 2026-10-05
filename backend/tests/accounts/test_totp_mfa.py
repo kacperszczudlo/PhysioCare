@@ -325,3 +325,62 @@ def test_mfa_secret_key_is_encrypted_in_db(therapist: object) -> None:
     assert loaded.secret_key == plain_secret
 
 
+@pytest.mark.django_db
+def test_password_login_therapist_without_mfa_returns_403(api_client: object, therapist: object) -> None:
+    """Sprawdza zablokowanie logowania hasłem dla fizjoterapeuty bez włączonego MFA (F-03)."""
+    from django.core.cache import cache
+
+    cache.clear()
+    response = api_client.post(
+        '/api/v1/auth/login/',
+        data={'email': therapist.user.email, 'password': 'test-pass'},
+        format='json',
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.data['error']['code'] == 'AUTH_MFA_SETUP_REQUIRED'
+    assert response.data['error']['details']['mfa_required'] is True
+
+
+@pytest.mark.django_db
+def test_password_login_staff_admin_without_mfa_returns_403(api_client: object) -> None:
+    """Sprawdza zablokowanie logowania hasłem dla konta administratora/staff bez MFA (F-03)."""
+    from django.contrib.auth import get_user_model
+    from django.core.cache import cache
+    from django.utils import timezone
+
+    cache.clear()
+    user_model = get_user_model()
+    admin_user = user_model.objects.create_user(
+        email='admin@physiocare.test',
+        password='AdminPassword123!',
+        is_staff=True,
+        email_verified_at=timezone.now(),
+    )
+
+    response = api_client.post(
+        '/api/v1/auth/login/',
+        data={'email': admin_user.email, 'password': 'AdminPassword123!'},
+        format='json',
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.data['error']['code'] == 'AUTH_MFA_SETUP_REQUIRED'
+    assert response.data['error']['details']['mfa_required'] is True
+
+
+@pytest.mark.django_db
+def test_password_login_patient_without_mfa_succeeds(api_client: object, patient: object) -> None:
+    """Sprawdza, że pacjent bez MFA może logować się standardowo hasłem."""
+    from django.core.cache import cache
+
+    cache.clear()
+    response = api_client.post(
+        '/api/v1/auth/login/',
+        data={'email': patient.user.email, 'password': 'test-pass'},
+        format='json',
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert 'access' in response.data
+    assert 'refresh' in response.data
+    assert response.data.get('mfa_required') is not True
+
+
