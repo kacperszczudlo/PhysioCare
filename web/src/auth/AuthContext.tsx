@@ -28,7 +28,7 @@ interface AuthContextValue {
   /** Czy użytkownik jest obecnie zalogowany. */
   isAuthenticated: boolean
   /** Loguje użytkownika adresem e-mail i hasłem. */
-  login: (email: string, password: string) => Promise<LoginResult>
+  login: (email: string, password: string, recaptcha_token?: string) => Promise<LoginResult>
   /** Loguje użytkownika drugim składnikiem 2FA/TOTP. */
   loginMFA: (mfa_token: string, code: string) => Promise<void>
   /** Loguje użytkownika tokenem Google ID Token. */
@@ -123,13 +123,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const login = useCallback(async (email: string, password: string): Promise<LoginResult> => {
-    const result = await authApi.login(email, password)
-    if (result.kind === 'authenticated') {
-      await establishTherapistSession(setUser, result.user)
-    }
-    return result
-  }, [])
+  const login = useCallback(
+    async (email: string, password: string, recaptcha_token?: string): Promise<LoginResult> => {
+      const result = await authApi.login(email, password, recaptcha_token)
+      if (result.kind === 'authenticated') {
+        await establishTherapistSession(setUser, result.user)
+      }
+      return result
+    },
+    [],
+  )
 
   const loginMFA = useCallback(async (mfa_token: string, code: string) => {
     const { user: nextUser } = await authApi.loginMFA(mfa_token, code)

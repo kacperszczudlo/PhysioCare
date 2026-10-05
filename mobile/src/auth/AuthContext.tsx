@@ -40,7 +40,7 @@ interface AuthContextValue {
   /** Czy użytkownik jest uwierzytelniony */
   isAuthenticated: boolean
   /** Loguje pacjenta za pomocą adresu e-mail i hasła */
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string, recaptchaToken?: string) => Promise<void>
   /** Loguje pacjenta za pomocą tokena Google */
   loginWithGoogle: (credential: string) => Promise<void>
   /** Rejestruje konto nowego pacjenta */
@@ -194,8 +194,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })()
   }, [network?.isOffline, network?.isResolved])
 
-  const login = useCallback(async (email: string, password: string) => {
-    const nextUser = await authApi.login(email, password)
+  const login = useCallback(async (email: string, password: string, recaptchaToken?: string) => {
+    const nextUser = await authApi.login(email, password, recaptchaToken)
     if (nextUser.role !== 'PATIENT') {
       await authApi.logout().catch(() => undefined)
       throw new ApiError(403, 'Aplikacja mobilna jest dostępna tylko dla pacjentów.')

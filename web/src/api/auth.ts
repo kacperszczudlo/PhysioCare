@@ -83,10 +83,14 @@ export interface MFAStatusResponse {
 
 /** Usługi API uwierzytelniania, rejestracji, resetu hasła oraz 2FA/MFA. */
 export const authApi = {
-  async login(email: string, password: string): Promise<LoginResult> {
+  async login(email: string, password: string, recaptcha_token?: string): Promise<LoginResult> {
     const data = await api.post<
       AuthResponse | { mfa_required?: boolean; mfa_token?: string; email?: string }
-    >('/auth/login/', { email, password, token_delivery: 'cookie' }, { skipAuthRefresh: true })
+    >(
+      '/auth/login/',
+      { email, password, recaptcha_token, token_delivery: 'cookie' },
+      { skipAuthRefresh: true },
+    )
     if (data && 'mfa_required' in data && data.mfa_required) {
       return {
         kind: 'mfa_required',

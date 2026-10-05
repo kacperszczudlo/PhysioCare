@@ -2,7 +2,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from django.test import override_settings
+from django.urls import reverse
 from rest_framework import serializers
+from rest_framework import status
 
 from accounts.recaptcha import verify_recaptcha_token
 
@@ -119,4 +121,38 @@ class TestRecaptchaVerification:
                 )
         assert 'RECAPTCHA_SECRET_KEY jest wymagany' in str(exc_info.value)
 
+    @pytest.mark.django_db
+    @override_settings(RECAPTCHA_ENABLED=True, RECAPTCHA_SECRET_KEY='secret_key_test')
+    def test_login_rejects_missing_recaptcha_token(self, api_client: object) -> None:
+        """Logowanie wymaga tokena CAPTCHA, gdy ochrona jest aktywna."""
+        response = api_client.post(
+            reverse('login'),
+            {'email': 'user@example.com', 'password': 'Anything1!'},
+            format='json',
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert 'CAPTCHA' in str(response.data)
+
+    @pytest.mark.django_db
+    @override_settings(RECAPTCHA_ENABLED=True, RECAPTCHA_SECRET_KEY='secret_key_test')
+    @patch('accounts.views.verify_recaptcha_token')
+    def test_login_verifies_recaptcha_before_authentication(
+        self,
+        mock_verify: MagicMock,
+        api_client: object,
+    ) -> None:
+        """Logowanie przekazuje token CAPTCHA do weryfikacji przed uwierzytelnieniem."""
+        api_client.post(
+            reverse('login'),
+            {
+                'email': 'user@example.com',
+                'password': 'Anything1!',
+                'recaptcha_token': 'login-token',
+            },
+            format='json',
+        )
+
+        mock_verify.assert_called_once()
+        assert mock_verify.call_args.args[0] == 'login-token'
 

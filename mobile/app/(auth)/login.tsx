@@ -4,8 +4,9 @@
  */
 
 import { Link, useLocalSearchParams, useRouter, type Href } from 'expo-router'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
+import Recaptcha, { type RecaptchaRef } from 'react-native-recaptcha-that-works'
 
 import { ApiError, getErrorMessage } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
@@ -44,8 +45,28 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const recaptchaRef = useRef<RecaptchaRef>(null)
+  const recaptchaSiteKey = process.env.EXPO_PUBLIC_RECAPTCHA_SITE_KEY?.trim() ?? ''
 
-  async function onSubmit() {
+  async function completeLogin(recaptchaToken: string) {
+    setLoading(true)
+    try {
+      await login(email.trim(), password, recaptchaToken)
+      router.replace('/(tabs)')
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'AUTH_027') {
+        const details = err.details as { email?: string }
+        const verifyEmailAddr = (typeof details.email === 'string' && details.email) || email.trim()
+        router.replace(`/(auth)/verify-email?email=${encodeURIComponent(verifyEmailAddr)}` as Href)
+        return
+      }
+      setError(getErrorMessage(err, 'Nie udało się zalogować.'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function onSubmit() {
     setError(null)
     const trimmedEmail = email.trim()
     if (!trimmedEmail) {
@@ -56,21 +77,11 @@ export default function LoginScreen() {
       setError('Podaj hasło.')
       return
     }
-    setLoading(true)
-    try {
-      await login(trimmedEmail, password)
-      router.replace('/(tabs)')
-    } catch (err) {
-      if (err instanceof ApiError && err.code === 'AUTH_027') {
-        const details = err.details as { email?: string }
-        const verifyEmailAddr = (typeof details.email === 'string' && details.email) || trimmedEmail
-        router.replace(`/(auth)/verify-email?email=${encodeURIComponent(verifyEmailAddr)}` as Href)
-        return
-      }
-      setError(getErrorMessage(err, 'Nie udało się zalogować.'))
-    } finally {
-      setLoading(false)
+    if (!recaptchaSiteKey) {
+      setError('Logowanie CAPTCHA nie jest skonfigurowane. Skontaktuj się z administratorem.')
+      return
     }
+    recaptchaRef.current?.open()
   }
 
   async function onGoogleSuccess(idToken: string) {
@@ -162,6 +173,18 @@ export default function LoginScreen() {
           loading={loading}
           disabled={!email.trim() || !password}
           onPress={onSubmit}
+        />
+        <Recaptcha
+          ref={recaptchaRef}
+          siteKey={recaptchaSiteKey}
+          baseUrl={process.env.EXPO_PUBLIC_RECAPTCHA_BASE_URL ?? 'http://localhost'}
+          size="invisible"
+          action="login"
+          onVerify={(token) => void completeLogin(token)}
+          onExpire={() => setError('Weryfikacja CAPTCHA wygasła. Spróbuj ponownie.')}
+          onError={() => {
+            setError('Nie udało się zweryfikować CAPTCHA. Spróbuj ponownie.')
+          }}
         />
 
         {isGoogleSignInConfigured ? (

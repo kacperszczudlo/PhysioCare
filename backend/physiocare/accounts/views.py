@@ -28,6 +28,7 @@ from .email_codes import (
     send_verify_email_code,
 )
 from .google_auth import GoogleAuthError, verify_google_id_token
+from .recaptcha import verify_recaptcha_token
 from .mfa import (
     generate_backup_codes,
     generate_qr_code_svg,
@@ -310,6 +311,11 @@ class LoginView(APIView):
         data = request.data if hasattr(request, 'data') else {}
         email = data.get('email')
         password = data.get('password')
+        recaptcha_token = data.get('recaptcha_token')
+        verify_recaptcha_token(
+            str(recaptcha_token) if recaptcha_token else None,
+            request.META.get('REMOTE_ADDR') if hasattr(request, 'META') else None,
+        )
 
         user = authenticate(request, email=email, password=password)
 
@@ -1492,5 +1498,4 @@ class ChangePasswordView(APIView):
         blacklist_user_refresh_tokens(user)
         response = Response({'detail': 'Hasło zostało zmienione. Zaloguj się ponownie.'})
         return _clear_auth_cookies(response)
-
 

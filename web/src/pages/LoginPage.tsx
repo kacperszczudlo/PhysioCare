@@ -9,6 +9,7 @@ import { GoogleSignInButton, isWebGoogleSignInConfigured } from '@/components/Go
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/ToastContext'
+import { useRecaptcha } from '@/hooks/useRecaptcha'
 import './auth-forms.css'
 
 /**
@@ -30,6 +31,7 @@ export function LoginPage() {
       : null
 
   const { toast } = useToast()
+  const { executeRecaptcha, isRecaptchaConfigured } = useRecaptcha()
   const [email, setEmail] = useState(
     typeof locationState?.email === 'string' ? locationState.email : '',
   )
@@ -59,7 +61,16 @@ export function LoginPage() {
     }
     setLoading(true)
     try {
-      const result = await login(trimmedEmail, password)
+      if (!isRecaptchaConfigured) {
+        setError('Logowanie CAPTCHA nie jest skonfigurowane. Skontaktuj się z administratorem.')
+        return
+      }
+      const recaptchaToken = await executeRecaptcha('login')
+      if (!recaptchaToken) {
+        setError('Nie udało się zweryfikować CAPTCHA. Spróbuj ponownie.')
+        return
+      }
+      const result = await login(trimmedEmail, password, recaptchaToken)
       if (result.kind === 'mfa_required') {
         setMfaStep({ mfa_token: result.mfa_token, email: result.email })
         return
