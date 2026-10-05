@@ -26,6 +26,8 @@ import { tokenStorage } from '@/api/tokenStorage'
 import type { User } from '@/api/types'
 import { useNetworkOptional } from '@/network/NetworkContext'
 import { unregisterPushToken } from '@/notifications/push'
+import { clearAllOfflineData } from '@/offline/offlineStorage'
+import { clearOfflineQueue } from '@/offline/offlineQueue'
 
 /**
  * Interfejs udostępniający wartości i metody kontekstu autoryzacji.
@@ -98,6 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
         setUser(null)
+        await clearOfflineQueue().catch(() => undefined)
+        await clearAllOfflineData().catch(() => undefined)
         await tokenStorage.clear()
         return
       }
@@ -180,6 +184,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
           setUser(null)
+          await clearOfflineQueue().catch(() => undefined)
+          await clearAllOfflineData().catch(() => undefined)
           await tokenStorage.clear()
         }
       }
@@ -243,6 +249,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authApi.logout()
     } finally {
+      await clearOfflineQueue().catch(() => undefined)
+      await clearAllOfflineData().catch(() => undefined)
       setUser(null)
     }
   }, [])

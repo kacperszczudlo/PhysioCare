@@ -23,6 +23,7 @@ import {
   clearOfflineQueue,
 } from '../offline/offlineQueue'
 import { patientApi } from '../api/patient'
+import { tokenStorage } from '../api/tokenStorage'
 import { NetworkError } from '../api/client'
 import type { Visit, TodayExercise, ExercisePlanItem } from '../api/types'
 
@@ -162,5 +163,63 @@ describe('offlineQueue (Outbox)', () => {
     const remaining = await getPendingToggles()
     expect(remaining).toHaveLength(1)
     expect(remaining[0].assignmentId).toBe(20)
+  })
+
+  it('izoluje cache i kolejkę per-user (brak wycieku danych między pacjentami)', async () => {
+    // Pacjent 1
+    await tokenStorage.setCachedUser({
+      id: 'patient-uuid-1',
+      email: 'pacjent1@physiocare.test',
+      role: 'PATIENT',
+      first_name: 'Jan',
+      last_name: 'Pierwszy',
+    })
+
+    const visitsUser1 = [{ id: 'v-user1', status: 'SCHEDULED' }] as Visit[]
+    await setCachedVisits('upcoming', visitsUser1)
+    await enqueueExerciseToggle(101, '2026-10-05', true)
+
+    expect((await getCachedVisits('upcoming'))?.visits[0].id).toBe('v-user1')
+    expect((await getPendingToggles())[0].assignmentId).toBe(101)
+
+    // Loguje się Pacjent 2
+    await tokenStorage.setCachedUser({
+      id: 'patient-uuid-2',
+      email: 'pacjent2@physiocare.test',
+      role: 'PATIENT',
+      first_name: 'Anna',
+      last_name: 'Druga',
+    })
+
+    // Pacjent 2 nie ma dostępu do cache ani kolejki Pacjenta 1
+    expect(await getCachedVisits('upcoming')).toBeNull()
+    expect(await getPendingToggles()).toEqual([])
+
+    // Pacjent 2 dodaje swoje operacje
+    await enqueueExerciseToggle(202, '2026-10-05', true)
+    expect((await getPendingToggles())[0].assignmentId).toBe(202)
+  })
+
+  it('tokenStorage.clear czyści tokeny, dane użytkownika oraz pamięć podręczną i kolejkę offline', async () => {
+    await tokenStorage.setCachedUser({
+      id: 'patient-uuid-clear',
+      email: 'clear@physiocare.test',
+      role: 'PATIENT',
+      first_name: 'Clear',
+      last_name: 'Test',
+    })
+
+    await enqueueExerciseToggle(999, '2026-10-05', true)
+    await setCachedVisits('upcoming', [{ id: 'v-clear', status: 'SCHEDULED' }] as Visit[])
+
+    expect(await getPendingToggles()).toHaveLength(1)
+    expect(await getCachedVisits('upcoming')).not.toBeNull()
+
+    // Wylogowanie / czyszczenie
+    await tokenStorage.clear()
+
+    expect(await tokenStorage.getCachedUser()).toBeNull()
+    expect(await getPendingToggles()).toEqual([])
+    expect(await getCachedVisits('upcoming')).toBeNull()
   })
 })

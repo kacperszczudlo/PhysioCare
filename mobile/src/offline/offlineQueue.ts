@@ -7,9 +7,20 @@
 
 import { isNetworkFailure } from '@/api/client'
 import { patientApi } from '@/api/patient'
+import { tokenStorage } from '@/api/tokenStorage'
 import { getOfflineItem, setOfflineItem } from './offlineStorage'
 
 const QUEUE_KEY = 'pending_exercise_toggles'
+
+async function getQueueKey(): Promise<string> {
+  try {
+    const user = await tokenStorage.getCachedUser()
+    if (user?.id) {
+      return `u_${user.id}_${QUEUE_KEY}`
+    }
+  } catch {}
+  return `u_anon_${QUEUE_KEY}`
+}
 
 export interface QueuedExerciseToggle {
   id: string
@@ -23,7 +34,8 @@ export interface QueuedExerciseToggle {
  * Pobiera listę operacji oczekujących w kolejce offline.
  */
 export async function getPendingToggles(): Promise<QueuedExerciseToggle[]> {
-  const items = await getOfflineItem<QueuedExerciseToggle[]>(QUEUE_KEY)
+  const key = await getQueueKey()
+  const items = await getOfflineItem<QueuedExerciseToggle[]>(key)
   return Array.isArray(items) ? items : []
 }
 
@@ -58,7 +70,8 @@ export async function enqueueExerciseToggle(
     updated = [...current, entry]
   }
 
-  await setOfflineItem(QUEUE_KEY, updated)
+  const key = await getQueueKey()
+  await setOfflineItem(key, updated)
 }
 
 /**
@@ -67,14 +80,16 @@ export async function enqueueExerciseToggle(
 export async function removeQueueItem(id: string): Promise<void> {
   const current = await getPendingToggles()
   const next = current.filter((item) => item.id !== id)
-  await setOfflineItem(QUEUE_KEY, next)
+  const key = await getQueueKey()
+  await setOfflineItem(key, next)
 }
 
 /**
  * Czyści całą kolejkę offline (np. przy wylogowaniu).
  */
 export async function clearOfflineQueue(): Promise<void> {
-  await setOfflineItem(QUEUE_KEY, [])
+  const key = await getQueueKey()
+  await setOfflineItem(key, [])
 }
 
 /**
@@ -114,6 +129,7 @@ export async function flushOfflineQueue(): Promise<{ synced: number; failed: num
     }
   }
 
-  await setOfflineItem(QUEUE_KEY, remaining)
+  const key = await getQueueKey()
+  await setOfflineItem(key, remaining)
   return { synced, failed }
 }

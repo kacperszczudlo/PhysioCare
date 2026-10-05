@@ -158,6 +158,10 @@ export const tokenStorage = {
   async clear(): Promise<void> {
     await deleteItem(ACCESS_KEY)
     await deleteItem(REFRESH_KEY)
+    try {
+      const { clearOfflineQueue } = await import('@/offline/offlineQueue')
+      await clearOfflineQueue()
+    } catch {}
     await deleteItem(USER_KEY)
     try {
       const { clearAllOfflineData } = await import('@/offline/offlineStorage')
