@@ -47,6 +47,7 @@ const expoConfig = {
     'expo-secure-store',
     'expo-sharing',
     'expo-status-bar',
+    'react-native-quick-crypto',
     'expo-font',
     [
       'expo-image-picker',

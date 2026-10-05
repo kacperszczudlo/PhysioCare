@@ -4,6 +4,7 @@
  */
 
 import 'react-native-reanimated'
+import { install as installQuickCrypto } from 'react-native-quick-crypto'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
@@ -22,6 +23,7 @@ import { NetworkProvider } from '@/network/NetworkContext'
 import { ToastContainer } from '@/components/ToastContainer'
 import { ToastProvider } from '@/components/ToastContext'
 
+installQuickCrypto()
 configureNotificationHandler()
 
 /**
