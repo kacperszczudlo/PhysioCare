@@ -2,6 +2,7 @@ import uuid
 
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
+from django.db.models.functions import Lower
 
 from core.fields import EncryptedCharField
 
@@ -58,6 +59,12 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         db_table: str = 'users'
         verbose_name: str = 'Użytkownik'
         verbose_name_plural: str = 'Użytkownicy'
+        constraints = [
+            models.UniqueConstraint(
+                Lower('email'),
+                name='uniq_users_email_lower',
+            ),
+        ]
 
     def __str__(self) -> str:
         """Zwraca reprezentację tekstową użytkownika.
@@ -169,6 +176,4 @@ class UserMFA(models.Model):
         """
         status_str = 'enabled' if self.is_enabled else 'disabled'
         return f'MFA ({status_str}) for {self.user.email}'
-
-
 

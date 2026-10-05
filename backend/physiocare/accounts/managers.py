@@ -29,7 +29,7 @@ class CustomUserManager(BaseUserManager):
         if not email:
             raise ValueError(_('Użytkownik musi posiadać adres e-mail.'))
 
-        email = self.normalize_email(email)
+        email = self.normalize_email(email).strip().lower()
         user = self.model(email=email, **extra_fields)
         if password is None:
             user.set_unusable_password()
@@ -72,5 +72,4 @@ class CustomUserManager(BaseUserManager):
             raise ValueError(_('Konto typu Superuser musi posiadać flagę is_superuser=True.'))
 
         return self.create_user(email, password, **extra_fields)
-
 

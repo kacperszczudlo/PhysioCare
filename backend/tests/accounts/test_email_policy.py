@@ -81,6 +81,39 @@ def test_patient_register_rejects_taken_email(patient: object, therapist: object
 
 
 @pytest.mark.django_db
+def test_email_normalization_is_case_insensitive(patient: object, therapist: object) -> None:
+    """Sprawdza, że adresy e-mail różniące się wielkością liter są traktowane jako ten sam adres."""
+    serializer = PatientRegistrationSerializer(
+        data={
+            'email': patient.user.email.upper(),
+            'password': 'SecurePass123!',
+            'first_name': 'Jan',
+            'last_name': 'Kowalski',
+            'therapist_id': str(therapist.id),
+            'consents': {'terms': True, 'medical_data': True},
+        }
+    )
+
+    assert not serializer.is_valid()
+    assert EMAIL_TAKEN in str(serializer.errors['email'])
+
+
+@pytest.mark.django_db
+def test_user_manager_stores_normalized_lowercase_email() -> None:
+    from django.contrib.auth import get_user_model
+
+    user = get_user_model().objects.create_user(
+        'UPPER.CASE@Example.COM',
+        'SecurePass123!',
+        role='PATIENT',
+        first_name='Jan',
+        last_name='Kowalski',
+    )
+
+    assert user.email == 'upper.case@example.com'
+
+
+@pytest.mark.django_db
 def test_therapist_register_rejects_invalid_email() -> None:
     """Sprawdza, czy rejestracja fizjoterapeuty odrzuca niepoprawny e-mail."""
     # Arrange
@@ -130,4 +163,3 @@ def test_therapist_register_pwzf_format_is_polish() -> None:
     message = str(serializer.errors['pwzf_number'])
     assert '5' in message
     assert 'Ensure this field' not in message
-
