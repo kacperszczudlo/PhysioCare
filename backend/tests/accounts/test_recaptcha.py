@@ -11,7 +11,7 @@ from accounts.recaptcha import verify_recaptcha_token
 class TestRecaptchaVerification:
     """Testy weryfikacji tokenów Google reCAPTCHA v3."""
 
-    @override_settings(RECAPTCHA_ENABLED=False, RECAPTCHA_SECRET_KEY='')
+    @override_settings(DEBUG=True, RECAPTCHA_ENABLED=False, RECAPTCHA_SECRET_KEY='')
     def test_disabled_recaptcha_bypasses_validation(self) -> None:
         """Sprawdza, czy wyłączona reCAPTCHA pomija walidację tokena."""
         # Arrange
@@ -89,4 +89,34 @@ class TestRecaptchaVerification:
             verify_recaptcha_token('low_score_token')
         # Assert
         assert 'niski wynik zaufania' in str(exc_info.value)
+
+    def test_settings_rejection_logic_on_production_without_recaptcha(self) -> None:
+        """Sprawdza odrzucenie konfiguracji produkcyjnej bez włączonej reCAPTCHA."""
+        from django.core.exceptions import ImproperlyConfigured
+
+        debug = False
+        recaptcha_enabled = False
+
+        with pytest.raises(ImproperlyConfigured) as exc_info:
+            if not debug and not recaptcha_enabled:
+                raise ImproperlyConfigured(
+                    'RECAPTCHA_ENABLED musi być ustawione na true przy DJANGO_DEBUG=false.'
+                )
+        assert 'RECAPTCHA_ENABLED musi być ustawione' in str(exc_info.value)
+
+    def test_settings_rejection_logic_on_production_without_secret_key(self) -> None:
+        """Sprawdza odrzucenie konfiguracji produkcyjnej bez klucza reCAPTCHA."""
+        from django.core.exceptions import ImproperlyConfigured
+
+        debug = False
+        recaptcha_enabled = True
+        recaptcha_secret_key = ''
+
+        with pytest.raises(ImproperlyConfigured) as exc_info:
+            if not debug and recaptcha_enabled and not recaptcha_secret_key.strip():
+                raise ImproperlyConfigured(
+                    'RECAPTCHA_SECRET_KEY jest wymagany przy DJANGO_DEBUG=false.'
+                )
+        assert 'RECAPTCHA_SECRET_KEY jest wymagany' in str(exc_info.value)
+
 

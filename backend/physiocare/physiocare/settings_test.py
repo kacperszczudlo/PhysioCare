@@ -26,3 +26,5 @@ REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {  # noqa: F405
 }
 
 SSE_BUS_ENGINE: str = 'inmemory'
+RECAPTCHA_ENABLED: bool = False
+RECAPTCHA_SECRET_KEY: str = ''

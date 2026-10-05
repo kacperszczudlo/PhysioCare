@@ -412,9 +412,19 @@ SSE_MAX_FRAMES = int(os.environ.get('SSE_MAX_FRAMES', '0'))
 SSE_BUS_ENGINE = os.environ.get('SSE_BUS_ENGINE', 'auto').lower()
 SSE_REDIS_CHANNEL_PREFIX = os.environ.get('SSE_REDIS_CHANNEL_PREFIX', 'physiocare:sse:')
 
-RECAPTCHA_ENABLED = env_bool('RECAPTCHA_ENABLED', 'false')
+RECAPTCHA_ENABLED = env_bool('RECAPTCHA_ENABLED', 'true' if not DEBUG else 'false')
 RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
 RECAPTCHA_SCORE_THRESHOLD = float(os.environ.get('RECAPTCHA_SCORE_THRESHOLD', '0.5'))
+
+if not DEBUG:
+    if not RECAPTCHA_ENABLED:
+        raise ImproperlyConfigured(
+            'RECAPTCHA_ENABLED musi być ustawione na true przy DJANGO_DEBUG=false.'
+        )
+    if not RECAPTCHA_SECRET_KEY.strip():
+        raise ImproperlyConfigured(
+            'RECAPTCHA_SECRET_KEY jest wymagany przy DJANGO_DEBUG=false.'
+        )
 
 _SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()
 if _SENTRY_DSN:
