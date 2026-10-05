@@ -532,7 +532,19 @@ class MeExerciseCompletionCreateView(PatientSelfMixin, APIView):
 
         serializer = ExerciseCompletionCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        completed_on = timezone.localdate()
+        completed_on = serializer.validated_data.get('completed_on') or timezone.localdate()
+        if not assignment.is_active_on(completed_on):
+            return Response(
+                {
+                    'error': {
+                        'code': 'VALIDATION',
+                        'message': 'Data wykonania wykracza poza okres przypisania ćwiczenia.',
+                        'details': {'completed_on': 'Data wykonania musi mieścić się w okresie przypisania.'},
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         done = serializer.validated_data.get('done', True)
 
         with transaction.atomic():
