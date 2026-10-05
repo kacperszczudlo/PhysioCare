@@ -230,14 +230,15 @@ def verify_mfa_preauth_token(token: str, max_age: int = MFA_PREAUTH_MAX_AGE) -> 
         return None
 
 
-def issue_mfa_setup_token(user: object) -> str:
+def issue_mfa_setup_token(user: object, email_verified: bool = False) -> str:
     """Generuje krótkotrwały token ograniczony do pierwszej konfiguracji MFA."""
     if user is None:
         raise TypeError("Argument 'user' nie może być None.")
 
     signer = TimestampSigner(salt=MFA_SETUP_SALT)
     user_id = user.id if hasattr(user, 'id') else user
-    return signer.sign(f'{user_id}:{secrets.token_urlsafe(32)}')
+    flag = 'ev' if email_verified else 'p'
+    return signer.sign(f'{user_id}:{secrets.token_urlsafe(32)}:{flag}')
 
 
 def verify_mfa_setup_token(token: str, max_age: int = MFA_SETUP_MAX_AGE) -> object | None:
@@ -252,12 +253,28 @@ def verify_mfa_setup_token(token: str, max_age: int = MFA_SETUP_MAX_AGE) -> obje
     signer = TimestampSigner(salt=MFA_SETUP_SALT)
     try:
         signed_value = signer.unsign(token, max_age=max_age)
-        user_id_str, _, nonce = signed_value.partition(':')
-        if not user_id_str or not nonce:
+        parts = signed_value.split(':')
+        if len(parts) < 2:
+            return None
+        user_id_str = parts[0]
+        if not user_id_str:
             return None
         return User.objects.filter(id=user_id_str, is_active=True).first()
     except (SignatureExpired, BadSignature, ValueError):
         return None
+
+
+def is_mfa_setup_token_email_verified(token: str, max_age: int = MFA_SETUP_MAX_AGE) -> bool:
+    """Sprawdza, czy token konfiguracji MFA został wystawiony po zweryfikowaniu e-maila."""
+    if not isinstance(token, str) or not isinstance(max_age, int) or not token:
+        return False
+    signer = TimestampSigner(salt=MFA_SETUP_SALT)
+    try:
+        signed_value = signer.unsign(token, max_age=max_age)
+        parts = signed_value.split(':')
+        return len(parts) >= 3 and parts[2] == 'ev'
+    except (SignatureExpired, BadSignature, ValueError):
+        return False
 
 
 def hash_mfa_setup_token(token: str) -> str:

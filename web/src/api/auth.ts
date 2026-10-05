@@ -41,6 +41,11 @@ export type RegisterResult =
   | { kind: 'authenticated'; user: User }
   | { kind: 'needs_email_verification'; email: string; detail: string }
 
+/** Wynik weryfikacji e-mail – zalogowanie lub wymagana konfiguracja 2FA. */
+export type VerifyEmailResult =
+  | { kind: 'authenticated'; user: User }
+  | { kind: 'mfa_setup_required'; email: string; mfa_setup_token: string }
+
 /** Payload potwierdzenia resetu hasła nowym hasłem. */
 export interface PasswordResetConfirmPayload {
   /** Jednorazowy token zweryfikowanego resetu hasła. */
@@ -211,12 +216,26 @@ export const authApi = {
     throw new Error('Nieoczekiwana odpowiedź rejestracji.')
   },
 
-  verifyEmail(email: string, code: string) {
-    return api.post<AuthResponse>(
+  async verifyEmail(email: string, code: string): Promise<VerifyEmailResult> {
+    const data = await api.post<
+      | AuthResponse
+      | { mfa_setup_required: true; email: string; mfa_setup_token: string }
+    >(
       '/auth/email/verify/',
       { email, code, token_delivery: 'cookie' },
       { skipAuthRefresh: true },
     )
+    if (data && 'mfa_setup_required' in data && data.mfa_setup_required) {
+      return {
+        kind: 'mfa_setup_required',
+        email: typeof data.email === 'string' ? data.email : email,
+        mfa_setup_token: typeof data.mfa_setup_token === 'string' ? data.mfa_setup_token : '',
+      }
+    }
+    if (data && 'user' in data && data.user) {
+      return { kind: 'authenticated', user: data.user }
+    }
+    throw new Error('Nieoczekiwana odpowiedź weryfikacji.')
   },
 
   resendEmailCode(email: string) {

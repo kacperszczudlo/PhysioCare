@@ -15,6 +15,7 @@ import {
   type PasswordResetConfirmPayload,
   type RegisterResult,
   type TherapistRegisterPayload,
+  type VerifyEmailResult,
 } from '@/api/auth'
 import { ApiError } from '@/api/client'
 import type { TherapistProfile, User } from '@/api/types'
@@ -36,7 +37,7 @@ interface AuthContextValue {
   /** Rejestruje nowego fizjoterapeutę w systemie. */
   register: (payload: TherapistRegisterPayload) => Promise<RegisterResult>
   /** Weryfikuje kod z e-maila aktywujący nowe konto. */
-  verifyEmail: (email: string, code: string) => Promise<void>
+  verifyEmail: (email: string, code: string) => Promise<VerifyEmailResult>
   /** Ponownie wysyła kod aktywacyjny na podany e-mail. */
   resendEmailCode: (email: string) => Promise<string>
   /** Wylogowuje fizjoterapeutę i czyści ciasteczka uwierzytelniające. */
@@ -152,9 +153,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result
   }, [])
 
-  const verifyEmail = useCallback(async (email: string, code: string) => {
-    const { user: nextUser } = await authApi.verifyEmail(email, code)
-    await establishTherapistSession(setUser, nextUser)
+  const verifyEmail = useCallback(async (email: string, code: string): Promise<VerifyEmailResult> => {
+    const result = await authApi.verifyEmail(email, code)
+    if (result.kind === 'authenticated') {
+      await establishTherapistSession(setUser, result.user)
+    }
+    return result
   }, [])
 
   const resendEmailCode = useCallback(async (email: string) => {

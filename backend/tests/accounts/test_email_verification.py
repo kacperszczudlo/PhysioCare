@@ -209,3 +209,56 @@ def test_email_verify_template_rendering_and_attachment(api_client: APIClient, t
     assert attached_img.get_filename() in ('sygnet.png', 'logo.png')
 
 
+@pytest.mark.django_db
+def test_therapist_email_verify_requires_mfa_setup_and_allows_direct_totp_setup(
+    api_client: APIClient, settings: object
+) -> None:
+    """Sprawdza, że po weryfikacji e-mail terapeuta musi skonfigurować MFA i nie dostaje sesji."""
+    import pyotp
+    from accounts.models import UserMFA
+
+    settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+    user = User.objects.create_user(
+        email='therapist.mfa@physiocare.test',
+        password='StrongPass1!',
+        role='THERAPIST',
+        first_name='Marek',
+        last_name='Zieliński',
+        email_verified_at=None,
+    )
+    TherapistProfile.objects.create(user=user, pwzf_number='99881')
+    raw_code = issue_email_code(user=user, purpose=EmailCodePurpose.VERIFY_EMAIL)
+
+    verify_resp = api_client.post(
+        '/api/v1/auth/email/verify/',
+        {'email': user.email, 'code': raw_code},
+        format='json',
+    )
+
+    assert verify_resp.status_code == status.HTTP_200_OK
+    assert verify_resp.data.get('mfa_setup_required') is True
+    assert 'mfa_setup_token' in verify_resp.data
+    assert 'access' not in verify_resp.data
+    assert not api_client.cookies.get('access_token')
+
+    user.refresh_from_db()
+    assert user.email_verified_at is not None
+
+    setup_token = verify_resp.data['mfa_setup_token']
+    setup_resp = api_client.post(
+        '/api/v1/auth/2fa/setup/',
+        {'mfa_setup_token': setup_token},
+        format='json',
+    )
+    assert setup_resp.status_code == status.HTTP_200_OK
+    secret = setup_resp.data['secret_key']
+
+    enable_resp = api_client.post(
+        '/api/v1/auth/2fa/enable/',
+        {'mfa_setup_token': setup_token, 'code': pyotp.TOTP(secret).now()},
+        format='json',
+    )
+    assert enable_resp.status_code == status.HTTP_200_OK
+    assert UserMFA.objects.get(user=user).is_enabled is True
+
+

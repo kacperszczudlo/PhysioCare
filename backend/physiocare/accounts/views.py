@@ -36,6 +36,7 @@ from .mfa import (
     generate_totp_secret,
     get_totp_uri,
     hash_mfa_setup_token,
+    is_mfa_setup_token_email_verified,
     issue_mfa_preauth_token,
     issue_mfa_setup_token,
     verify_and_consume_backup_code,
@@ -557,7 +558,10 @@ class MFASetupView(APIView):
                 },
                 status=status.HTTP_401_UNAUTHORIZED,
             )
-        if setup_token:
+        is_token_ev = (
+            is_mfa_setup_token_email_verified(str(setup_token)) if setup_token else False
+        )
+        if setup_token and not is_token_ev:
             email_code = str(data.get('email_code') or '').strip()
             if not email_code:
                 return Response(
@@ -608,6 +612,9 @@ class MFASetupView(APIView):
                 ),
             },
         )
+        if not created and setup_token and not user_mfa.is_enabled:
+            user_mfa.setup_token_hash = hash_mfa_setup_token(str(setup_token))
+            user_mfa.save(update_fields=['setup_token_hash', 'updated_at'])
 
         if user_mfa.is_enabled:
             return Response(
@@ -1196,6 +1203,16 @@ class EmailVerifyView(APIView):
             )
 
         if user.email_verified_at is not None:
+            if is_mfa_required_for_user(user) and not (hasattr(user, 'mfa') and user.mfa.is_enabled):
+                setup_token = issue_mfa_setup_token(user, email_verified=True)
+                return Response(
+                    {
+                        'mfa_setup_required': True,
+                        'email': user.email,
+                        'mfa_setup_token': setup_token,
+                    },
+                    status=status.HTTP_200_OK,
+                )
             refresh = RefreshToken.for_user(user)
             return _auth_response(request, user, refresh)
 
@@ -1218,6 +1235,16 @@ class EmailVerifyView(APIView):
             )
 
         _mark_email_verified(user)
+        if is_mfa_required_for_user(user) and not (hasattr(user, 'mfa') and user.mfa.is_enabled):
+            setup_token = issue_mfa_setup_token(user, email_verified=True)
+            return Response(
+                {
+                    'mfa_setup_required': True,
+                    'email': user.email,
+                    'mfa_setup_token': setup_token,
+                },
+                status=status.HTTP_200_OK,
+            )
         refresh = RefreshToken.for_user(user)
         return _auth_response(request, user, refresh)
 
