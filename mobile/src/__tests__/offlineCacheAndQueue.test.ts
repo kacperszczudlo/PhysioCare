@@ -67,6 +67,16 @@ vi.mock('expo-file-system', () => ({
   deleteAsync: vi.fn().mockResolvedValue(undefined),
 }))
 
+vi.mock('expo-file-system/legacy', () => ({
+  documentDirectory: null,
+  EncodingType: { UTF8: 'utf8' },
+  getInfoAsync: vi.fn().mockResolvedValue({ exists: false }),
+  makeDirectoryAsync: vi.fn().mockResolvedValue(undefined),
+  writeAsStringAsync: vi.fn().mockResolvedValue(undefined),
+  readAsStringAsync: vi.fn().mockResolvedValue(''),
+  deleteAsync: vi.fn().mockResolvedValue(undefined),
+}))
+
 describe('offlineStorage & offlineCache', () => {
   beforeEach(async () => {
     secureStoreMock.clear()

@@ -3,7 +3,7 @@
  * @description Funkcje pomocnicze do generowania, zapisywania i udostępniania pliku JSON z pełnym eksportem danych osobowych RODO (Art. 15 / 20 GDPR).
  */
 
-import * as FileSystem from 'expo-file-system'
+import * as FileSystem from 'expo-file-system/legacy'
 import { NativeModules, Platform, Share } from 'react-native'
 
 import type { PatientDataExport } from '@/api/types'

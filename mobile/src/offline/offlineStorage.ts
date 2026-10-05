@@ -5,7 +5,7 @@
  * oraz izolowany katalog aplikacji (expo-file-system) z obsługą wygasania (TTL) i wersjonowania danych.
  */
 
-import * as FileSystem from 'expo-file-system'
+import * as FileSystem from 'expo-file-system/legacy'
 import * as SecureStore from 'expo-secure-store'
 import { Platform } from 'react-native'
 

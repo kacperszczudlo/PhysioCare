@@ -90,7 +90,7 @@ export async function downloadAuthenticatedMediaToCache(
   }
 
   const url = mediaAbsoluteUrl(path)
-  const FileSystem = await import('expo-file-system')
+  const FileSystem = await import('expo-file-system/legacy')
   const cacheDir = FileSystem.cacheDirectory
   if (!cacheDir) {
     return null
