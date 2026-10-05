@@ -1,3 +1,4 @@
+import contextlib
 from decimal import Decimal
 
 from django.db.models import Count, QuerySet
@@ -49,10 +50,8 @@ class TherapistReviewListView(generics.ListAPIView):
         )
         rating = self.request.query_params.get('rating')
         if rating is not None:
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 qs = qs.filter(rating=int(rating))
-            except (ValueError, TypeError):
-                pass
         ordering = self.request.query_params.get('ordering', '-created_at')
         allowed_orderings = {'created_at', '-created_at', 'rating', '-rating'}
         if ordering in allowed_orderings:
@@ -206,7 +205,7 @@ class ReviewEditView(generics.UpdateAPIView):
             Response: Zaktualizowana opinia w pełnym formacie.
         """
         kwargs['partial'] = True
-        response = super().update(request, *args, **kwargs)
+        super().update(request, *args, **kwargs)
         instance = self.get_object()
         return Response(ReviewReadSerializer(instance).data, status=status.HTTP_200_OK)
 
