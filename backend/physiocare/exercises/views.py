@@ -282,10 +282,15 @@ class TherapistExerciseAssignmentListCreateView(generics.ListCreateAPIView):
         Returns:
             QuerySet[ExerciseAssignment]: Przefiltrowany zestaw przypisań.
         """
-        qs = ExerciseAssignment.objects.filter(
-            patient__therapist_links__therapist=self.request.user.therapist_profile,
-            patient__therapist_links__status='ACTIVE',
-        ).select_related('exercise', 'patient').distinct()
+        qs = (
+            ExerciseAssignment.objects.filter(
+                patient__therapist_links__therapist=self.request.user.therapist_profile,
+                patient__therapist_links__status='ACTIVE',
+            )
+            .select_related('exercise', 'patient', 'patient__user', 'episode')
+            .prefetch_related('exercise__categories')
+            .distinct()
+        )
         patient_id = self.request.query_params.get('patient')
         if patient_id:
             qs = qs.filter(patient_id=patient_id)
