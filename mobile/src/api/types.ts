@@ -101,6 +101,17 @@ export interface Consent {
   granted_at: string
 }
 
+/** Podsumowanie recenzji powiązanej z wizytą */
+export interface VisitReviewSummary {
+  id: string
+  rating: number
+  comment: string
+  is_anonymous: boolean
+  created_at: string | null
+  therapist_reply: string
+  therapist_replied_at: string | null
+}
+
 /** Obiekt pojedynczej wizyty pacjenta */
 export interface Visit {
   id: string
@@ -124,6 +135,7 @@ export interface Visit {
   patient_summary: string
   patient_note: string
   cancel_reason: string
+  review?: VisitReviewSummary | null
   created_at: string
 }
 
@@ -261,6 +273,37 @@ export interface TherapistPublic {
   qualification_label?: string
   experience_years?: number
   competences?: CompetenceSnapshot
+  rating_avg?: string | number
+  rating_count?: number
+}
+
+/** Opinia pacjenta o fizjoterapeucie */
+export interface ReviewItem {
+  id: string
+  rating: number
+  comment: string
+  author_name: string
+  author_avatar_url?: string | null
+  is_anonymous: boolean
+  is_verified: boolean
+  is_own?: boolean
+  created_at: string
+  therapist_reply: string
+  therapist_replied_at: string | null
+}
+
+/** Podsumowanie ocen fizjoterapeuty */
+export interface RatingSummary {
+  average_rating: string | number
+  total_reviews: number
+  rating_breakdown: Record<string, number>
+}
+
+/** Dane wejściowe do utworzenia opinii */
+export interface CreateReviewPayload {
+  rating: number
+  comment?: string
+  is_anonymous?: boolean
 }
 
 /** Klucz preferencji powiadomień Push */

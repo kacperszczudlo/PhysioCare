@@ -64,7 +64,7 @@
 
 .dash-metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-4);
 }
 
@@ -111,6 +111,13 @@
   background: linear-gradient(145deg, oklch(0.97 0.03 145), var(--color-surface-raised) 55%);
 }
 
+.dash-metric--reviews {
+  background: linear-gradient(145deg, oklch(0.97 0.035 85), var(--color-surface-raised) 55%);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
 .dash-metric__icon {
   display: grid;
   place-items: center;
@@ -127,6 +134,10 @@
 
 .dash-metric--exercises .dash-metric__icon {
   color: var(--color-success);
+}
+
+.dash-metric--reviews .dash-metric__icon {
+  color: oklch(0.68 0.18 75);
 }
 
 .dash-metric__glyph {
@@ -426,17 +437,23 @@ img.dash-visit__avatar {
   box-shadow: var(--focus-ring);
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
   .dash-metrics {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
+@media (max-width: 960px) {
   .dash-split {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 640px) {
+  .dash-metrics {
+    grid-template-columns: 1fr;
+  }
+
   .dash-hero {
     flex-direction: column;
   }

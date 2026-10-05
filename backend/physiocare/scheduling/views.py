@@ -121,6 +121,7 @@ def _visit_related() -> tuple[str, ...]:
         'therapist__user',
         'therapy_type',
         'episode',
+        'review',
     )
 
 

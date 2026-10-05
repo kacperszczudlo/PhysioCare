@@ -43,7 +43,7 @@ const expoConfig = {
     bundler: 'metro',
   },
   plugins: [
-    'expo-router',
+    ['expo-router', { asyncRoutes: false }],
     'expo-secure-store',
     'expo-font',
     [

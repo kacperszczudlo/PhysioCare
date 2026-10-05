@@ -21,7 +21,8 @@ import { LocationMapCard } from '@/components/LocationMapCard'
 import { useToast } from '@/components/ToastContext'
 import { addMinutesISO, formatDateTime, formatTimeRange } from '@/lib/format'
 import { VisitStatusBadge } from '@/components/VisitStatusBadge'
-import { colors, space, typography } from '@/theme/tokens'
+import { ReviewModal } from '@/components/ReviewModal'
+import { colors, radius, space, typography } from '@/theme/tokens'
 
 function defaultRescheduleStart(from?: string): Date {
   if (from) {
@@ -52,6 +53,8 @@ export default function VisitDetailScreen() {
   const [rescheduleOpen, setRescheduleOpen] = useState(false)
   const [newStart, setNewStart] = useState(() => defaultRescheduleStart())
   const [cancelReason, setCancelReason] = useState('')
+  const [reviewModalOpen, setReviewModalOpen] = useState(false)
+  const [isEditingReview, setIsEditingReview] = useState(false)
 
   const minimumDate = useMemo(() => {
     const now = new Date()
@@ -162,8 +165,41 @@ export default function VisitDetailScreen() {
     )
   }
 
+  const isCompleted = visit.status === 'COMPLETED'
   const isPending = visit.status === 'PENDING_APPROVAL'
   const canManage = visit.status === 'SCHEDULED' || isPending
+
+  async function handleReviewSubmit(data: { rating: number; comment: string; is_anonymous: boolean }) {
+    if (!visit) return
+    if (visit.review?.id) {
+      await patientApi.editReview(visit.review.id, data)
+      toast.success('Zaktualizowano opinię', 'Twoja opinia została pomyślnie zmieniona.')
+    } else {
+      await patientApi.createVisitReview(visit.id, data)
+      toast.success('Dziękujemy za opinię!', 'Twoja ocena została opublikowana.')
+    }
+    void load()
+  }
+
+  async function handleDeleteReview() {
+    if (!visit?.review?.id) return
+    Alert.alert('Usunąć opinię?', 'Czy na pewno chcesz usunąć swoją opinię dla tej wizyty?', [
+      { text: 'Anuluj', style: 'cancel' },
+      {
+        text: 'Usuń',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await patientApi.deleteReview(visit.review!.id)
+            toast.success('Opinia usunięta')
+            void load()
+          } catch (err) {
+            toast.error('Błąd usuwania', getErrorMessage(err, 'Nie udało się usunąć opinii.'))
+          }
+        },
+      },
+    ])
+  }
 
   return (
     <>
@@ -185,6 +221,62 @@ export default function VisitDetailScreen() {
           <Text style={styles.body}>{formatDateTime(visit.start_at)}</Text>
           <Text style={styles.muted}>{formatTimeRange(visit.start_at, visit.end_at)}</Text>
         </SectionCard>
+
+        {isCompleted ? (
+          <SectionCard>
+            <Text style={styles.section}>Twoja opinia o wizycie</Text>
+            {visit.review ? (
+              <View style={styles.reviewBox}>
+                <View style={styles.reviewHeader}>
+                  <Text style={styles.reviewStars}>
+                    {'★'.repeat(visit.review.rating)}{'☆'.repeat(5 - visit.review.rating)}
+                  </Text>
+                  <Text style={styles.reviewDate}>
+                    {visit.review.created_at ? formatDateTime(visit.review.created_at) : ''}
+                  </Text>
+                </View>
+                {visit.review.comment ? (
+                  <Text style={styles.reviewComment}>{visit.review.comment}</Text>
+                ) : null}
+                {visit.review.therapist_reply ? (
+                  <View style={styles.replyBox}>
+                    <Text style={styles.replyTitle}>Odpowiedź terapeuty:</Text>
+                    <Text style={styles.replyComment}>{visit.review.therapist_reply}</Text>
+                  </View>
+                ) : null}
+                <View style={styles.reviewActions}>
+                  <Button
+                    title="Edytuj opinię"
+                    variant="secondary"
+                    onPress={() => {
+                      setIsEditingReview(true)
+                      setReviewModalOpen(true)
+                    }}
+                  />
+                  <Button
+                    title="Usuń"
+                    variant="danger"
+                    onPress={handleDeleteReview}
+                  />
+                </View>
+              </View>
+            ) : (
+              <View style={styles.reviewPrompt}>
+                <Text style={styles.muted}>
+                  Wizyta dobiegła końca. Podziel się swoją opinią o przebiegu terapii i specjaliście!
+                </Text>
+                <Button
+                  title="★ Oceń tę wizytę"
+                  variant="primary"
+                  onPress={() => {
+                    setIsEditingReview(false)
+                    setReviewModalOpen(true)
+                  }}
+                />
+              </View>
+            )}
+          </SectionCard>
+        ) : null}
 
         <SectionCard>
           <Text style={styles.section}>Terapeuta</Text>
@@ -242,6 +334,17 @@ export default function VisitDetailScreen() {
           </SectionCard>
         ) : null}
       </KeyboardAwareForm>
+
+      <ReviewModal
+        visible={reviewModalOpen}
+        onClose={() => setReviewModalOpen(false)}
+        onSubmit={handleReviewSubmit}
+        initialRating={isEditingReview ? (visit.review?.rating ?? 0) : 0}
+        initialComment={visit.review?.comment ?? ''}
+        initialIsAnonymous={visit.review?.is_anonymous ?? false}
+        therapistName={`${visit.therapist_first_name} ${visit.therapist_last_name}`}
+        isEdit={isEditingReview}
+      />
 
       <Modal visible={rescheduleOpen} animationType="slide" transparent>
         <View style={styles.modalBackdrop}>
@@ -307,5 +410,57 @@ const styles = StyleSheet.create({
     padding: space.lg,
     gap: space.md,
     paddingBottom: space['3xl'],
+  },
+  reviewBox: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    padding: space.md,
+    gap: space.sm,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  reviewStars: {
+    fontSize: typography.lg,
+    color: colors.warning,
+    letterSpacing: 2,
+  },
+  reviewDate: {
+    fontSize: typography.xs,
+    color: colors.muted,
+  },
+  reviewComment: {
+    fontSize: typography.sm,
+    color: colors.ink,
+    lineHeight: 20,
+  },
+  replyBox: {
+    backgroundColor: colors.surface,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+    padding: space.sm,
+    borderRadius: radius.sm,
+    gap: 2,
+    marginTop: space.xs,
+  },
+  replyTitle: {
+    fontSize: typography.xs,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  replyComment: {
+    fontSize: typography.xs,
+    color: colors.ink,
+  },
+  reviewActions: {
+    flexDirection: 'row',
+    gap: space.sm,
+    marginTop: space.xs,
+  },
+  reviewPrompt: {
+    gap: space.md,
+    paddingVertical: space.xs,
   },
 })

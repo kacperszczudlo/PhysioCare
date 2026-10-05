@@ -109,6 +109,7 @@ INSTALLED_APPS = [
     'scheduling',
     'exercises',
     'documents',
+    'reviews',
 ]
 
 MIDDLEWARE = [

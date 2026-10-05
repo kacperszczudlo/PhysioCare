@@ -129,6 +129,8 @@ class TherapistDashboardStatsView(APIView):
             'visits_today': upcoming,
             'patients_total': patients_count,
             'assignments_active': assignments_active,
+            'rating_avg': float(therapist.rating_avg),
+            'rating_count': therapist.rating_count,
         })
 
 

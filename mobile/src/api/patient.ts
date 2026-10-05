@@ -8,6 +8,7 @@ import type {
   ClinicalDocumentItem,
   ClinicalDocumentKind,
   Consent,
+  CreateReviewPayload,
   DeviceToken,
   ExerciseCompletion,
   ExercisePlanItem,
@@ -16,6 +17,8 @@ import type {
   Paginated,
   PatientDataExport,
   PatientProfile,
+  RatingSummary,
+  ReviewItem,
   TherapistPublic,
   TherapyType,
   TodayExercise,
@@ -325,5 +328,71 @@ export const patientApi = {
     return api.delete<void>('/me/device-tokens/', {
       body: { expo_push_token: expoPushToken },
     })
+  },
+
+  /**
+   * Pobiera listę opinii dla danego fizjoterapeuty.
+   *
+   * @param therapistId - Identyfikator fizjoterapeuty.
+   * @param rating - Opcjonalny filtr oceny (1-5).
+   * @param ordering - Opcjonalny kierunek sortowania ('-created_at', '-rating', 'rating').
+   */
+  async getTherapistReviews(therapistId: string, rating?: number, ordering?: string) {
+    const params = new URLSearchParams()
+    if (rating) params.set('rating', String(rating))
+    if (ordering) params.set('ordering', ordering)
+    const query = params.toString() ? `?${params.toString()}` : ''
+    const data = await api.get<ReviewItem[] | Paginated<ReviewItem>>(
+      `/therapists/${therapistId}/reviews/${query}`,
+    )
+    return unwrapList(data)
+  },
+
+  /**
+   * Pobiera podsumowanie ocen fizjoterapeuty (średnia, liczba, rozkład).
+   *
+   * @param therapistId - Identyfikator fizjoterapeuty.
+   */
+  getTherapistRatingSummary(therapistId: string) {
+    return api.get<RatingSummary>(`/therapists/${therapistId}/rating-summary/`)
+  },
+
+  /**
+   * Wystawia opinię bezpośrednio powiązaną z zakończoną wizytą.
+   *
+   * @param visitId - Identyfikator wizyty.
+   * @param payload - Dane opinii (rating, comment, is_anonymous).
+   */
+  createVisitReview(visitId: string, payload: CreateReviewPayload) {
+    return api.post<ReviewItem>(`/visits/${visitId}/review/`, payload)
+  },
+
+  /**
+   * Wystawia opinię z profilu fizjoterapeuty (także poza wizytą lub z auto-powiązaniem).
+   *
+   * @param therapistId - Identyfikator fizjoterapeuty.
+   * @param payload - Dane opinii.
+   */
+  createTherapistReview(therapistId: string, payload: CreateReviewPayload) {
+    return api.post<ReviewItem>(`/therapists/${therapistId}/reviews/create/`, payload)
+  },
+
+  /**
+   * Edytuje własną opinię w oknie 14 dni.
+   *
+   * @param reviewId - Identyfikator opinii.
+   * @param payload - Nowe dane opinii.
+   */
+  editReview(reviewId: string, payload: CreateReviewPayload) {
+    return api.patch<ReviewItem>(`/reviews/${reviewId}/edit/`, payload)
+  },
+
+  /**
+   * Usuwa własną opinię.
+   *
+   * @param reviewId - Identyfikator opinii.
+   */
+  deleteReview(reviewId: string) {
+    return api.delete<void>(`/reviews/${reviewId}/delete/`)
   },
 }

@@ -11,8 +11,9 @@ import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { DashboardSkeleton } from '@/components/skeletons/WebSkeletons'
 import { CreateExerciseModal } from '@/pages/exercises/CreateExerciseModal'
 import { VisitFormModal } from '@/pages/schedule/VisitFormModal'
+import { TherapistReviewsModal } from './dashboard/TherapistReviewsModal'
 import { AuthMediaImg } from '@/components/AuthMedia'
-import { addDays, formatTime, startOfDay } from '@/lib/scheduleTime'
+import { addDays, formatTime, startOfDay, toDateInputValue } from '@/lib/scheduleTime'
 import { isVisitRealtimeEvent } from '@/realtime/types'
 import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
 import './DashboardPage.css'
@@ -60,19 +61,29 @@ function formatVisitWhen(start: Date, today: Date): string {
   return `${dayLabel} ${time}`
 }
 
-function DateBadge({ now }: { now: Date }) {
-  const dayName = new Intl.DateTimeFormat('pl-PL', { weekday: 'long' }).format(now)
-  const dateStr = new Intl.DateTimeFormat('pl-PL', {
+function formatFullDate(date: Date): string {
+  return new Intl.DateTimeFormat('pl-PL', {
+    weekday: 'long',
     day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date)
+}
+
+function DateBadge({ now }: { now: Date }) {
+  const weekday = new Intl.DateTimeFormat('pl-PL', { weekday: 'long' }).format(now)
+  const day = new Intl.DateTimeFormat('pl-PL', { day: 'numeric' }).format(now)
+  const monthYear = new Intl.DateTimeFormat('pl-PL', {
     month: 'long',
     year: 'numeric',
   }).format(now)
 
   return (
-    <div className="dash-date-badge" aria-label={`Dzisiejsza data: ${dayName}, ${dateStr}`}>
-      <span className="dash-date-badge__weekday">{dayName}</span>
-      <span className="dash-date-badge__date">{dateStr}</span>
-    </div>
+    <time className="dash-date" dateTime={toDateInputValue(now)} aria-label={formatFullDate(now)}>
+      <span className="dash-date__weekday">{weekday}</span>
+      <span className="dash-date__day">{day}</span>
+      <span className="dash-date__month">{monthYear}</span>
+    </time>
   )
 }
 
@@ -136,6 +147,28 @@ function IconExercises() {
   )
 }
 
+function IconStar() {
+  return (
+    <svg className="dash-metric__glyph" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="24" r="18" fill="currentColor" opacity="0.12" />
+      <path
+        d="M24 10l4.3 8.7 9.7 1.4-7 6.8 1.7 9.6-8.7-4.6-8.7 4.6 1.7-9.6-7-6.8 9.7-1.4L24 10z"
+        fill="currentColor"
+      />
+    </svg>
+  )
+}
+
+function polishReviewCount(count: number): string {
+  if (count === 1) return 'opinia pacjenta'
+  const mod10 = count % 10
+  const mod100 = count % 100
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) {
+    return 'opinie pacjentów'
+  }
+  return 'opinii pacjentów'
+}
+
 function IconClock() {
   return (
     <svg className="dash-visit__ico" viewBox="0 0 20 20" aria-hidden="true">
@@ -178,6 +211,7 @@ export function DashboardPage() {
   const [reloadToken, setReloadToken] = useState(0)
   const [createExerciseOpen, setCreateExerciseOpen] = useState(false)
   const [createVisitOpen, setCreateVisitOpen] = useState(false)
+  const [reviewsModalOpen, setReviewsModalOpen] = useState(false)
   const showLoadingRef = useRef(true)
   const softReloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -349,6 +383,31 @@ export function DashboardPage() {
                 </span>
               </span>
             </Link>
+
+            <button
+              type="button"
+              className="dash-metric dash-metric--reviews"
+              role="listitem"
+              onClick={() => setReviewsModalOpen(true)}
+              aria-label="Opinie i oceny pacjentów"
+            >
+              <span className="dash-metric__icon" aria-hidden="true">
+                <IconStar />
+              </span>
+              <span className="dash-metric__body">
+                <span className="dash-metric__value">
+                  {stats.rating_count && stats.rating_count > 0
+                    ? `★ ${Number(stats.rating_avg).toFixed(1)}`
+                    : '—'}
+                </span>
+                <span className="dash-metric__label">Opinie pacjentów</span>
+                <span className="dash-metric__hint">
+                  {stats.rating_count && stats.rating_count > 0
+                    ? `${stats.rating_count} ${polishReviewCount(stats.rating_count)}`
+                    : 'Czeka na pierwsze opinie'}
+                </span>
+              </span>
+            </button>
           </div>
 
           <div className="dash-split">
@@ -481,6 +540,22 @@ export function DashboardPage() {
                     <span className="dash-action__hint">Karty, epizody, zalecenia</span>
                   </span>
                 </Link>
+
+                <button
+                  type="button"
+                  className="dash-action"
+                  onClick={() => setReviewsModalOpen(true)}
+                >
+                  <span className="dash-action__mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  </span>
+                  <span className="dash-action__text">
+                    <span className="dash-action__label">Opinie pacjentów</span>
+                    <span className="dash-action__hint">Oceny, recenzje i odpowiedzi</span>
+                  </span>
+                </button>
               </div>
             </section>
           </div>
@@ -507,6 +582,15 @@ export function DashboardPage() {
           reload()
         }}
       />
+
+      {user?.id ? (
+        <TherapistReviewsModal
+          open={reviewsModalOpen}
+          therapistId={user.id}
+          onClose={() => setReviewsModalOpen(false)}
+          onReviewsUpdated={reload}
+        />
+      ) : null}
     </section>
   )
 }

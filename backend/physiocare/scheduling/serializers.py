@@ -236,6 +236,7 @@ class VisitSerializer(serializers.ModelSerializer):
         source='therapy_type.duration_min',
         read_only=True,
     )
+    review = serializers.SerializerMethodField()
 
     class Meta:
         """Metadane serializatora VisitSerializer."""
@@ -248,15 +249,30 @@ class VisitSerializer(serializers.ModelSerializer):
             'therapy_type_name', 'therapy_type_color', 'therapy_type_duration_min',
             'start_at', 'end_at', 'status', 'location_address',
             'prep_instructions', 'patient_summary', 'patient_note', 'cancel_reason',
-            'created_at',
+            'review', 'created_at',
         ]
         read_only_fields = [
             'id', 'patient', 'therapist', 'episode', 'therapy_type',
             'patient_first_name', 'patient_last_name', 'patient_avatar_url',
             'therapist_first_name', 'therapist_last_name',
             'therapy_type_name', 'therapy_type_color', 'therapy_type_duration_min',
-            'patient_note', 'created_at',
+            'patient_note', 'review', 'created_at',
         ]
+
+    def get_review(self, obj: Visit) -> dict | None:
+        """Zwraca skróconą recenzję powiązaną z wizytą."""
+        if not hasattr(obj, 'review') or obj.review is None:
+            return None
+        rev = obj.review
+        return {
+            'id': str(rev.id),
+            'rating': rev.rating,
+            'comment': rev.comment,
+            'is_anonymous': rev.is_anonymous,
+            'created_at': rev.created_at.isoformat() if rev.created_at else None,
+            'therapist_reply': rev.therapist_reply,
+            'therapist_replied_at': rev.therapist_replied_at.isoformat() if rev.therapist_replied_at else None,
+        }
 
     def validate_therapy_type_id(self, therapy_type: TherapyType) -> TherapyType:
         """Waliduje czy podany typ terapii należy do danego terapeuty.

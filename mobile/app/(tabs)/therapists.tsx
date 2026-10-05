@@ -37,6 +37,8 @@ interface Therapist {
   qualification_label?: string
   experience_years?: number
   pwzf_number?: string
+  rating_avg?: string | number
+  rating_count?: number
 }
 
 /**
@@ -271,6 +273,13 @@ export default function TherapistsTabScreen() {
                 <Text style={styles.therapistCardName}>
                   {item.first_name} {item.last_name}
                 </Text>
+                {Number(item.rating_count) > 0 ? (
+                  <View style={styles.starRow}>
+                    <Text style={styles.starIcon}>★</Text>
+                    <Text style={styles.starScore}>{Number(item.rating_avg).toFixed(1)}</Text>
+                    <Text style={styles.starCount}>({item.rating_count})</Text>
+                  </View>
+                ) : null}
                 {item.qualification_label ? (
                   <Text style={styles.therapistCardMeta}>{item.qualification_label}</Text>
                 ) : null}
@@ -452,6 +461,26 @@ const styles = StyleSheet.create({
     fontSize: typography.base,
     fontWeight: '700',
     color: colors.ink,
+  },
+  starRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginVertical: 1,
+  },
+  starIcon: {
+    fontSize: typography.xs,
+    color: colors.warning,
+    fontWeight: '700',
+  },
+  starScore: {
+    fontSize: typography.xs,
+    fontWeight: '700',
+    color: colors.ink,
+  },
+  starCount: {
+    fontSize: typography.xs,
+    color: colors.muted,
   },
   therapistCardMeta: {
     fontSize: typography.sm,

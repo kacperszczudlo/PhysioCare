@@ -83,6 +83,7 @@ def test_data_export_includes_notification_prefs_and_device_fingerprint(
         'waitlist',
         'exercise_reminder',
         'new_document',
+        'review_request',
     }
     assert prefs['waitlist'] is False
     devices = response.data['device_tokens']
