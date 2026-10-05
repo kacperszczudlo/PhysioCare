@@ -8,6 +8,10 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/ToastContext'
 
+function qrSvgDataUri(svg: string): string {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
+
 /**
  * Komponent sekcji ustawień dwuskładnikowej weryfikacji tożsamości (MFA / TOTP) z obsługą kodów zapasowych.
  */
@@ -167,9 +171,10 @@ export function MFASection() {
           </ol>
 
           <div className="mfa-qr-container">
-            <div
+            <img
               className="mfa-qr-svg"
-              dangerouslySetInnerHTML={{ __html: setupData.qr_code_svg }}
+              src={qrSvgDataUri(setupData.qr_code_svg)}
+              alt="Kod QR do konfiguracji aplikacji uwierzytelniającej"
             />
             <div className="mfa-secret-box">
               <span className="mfa-secret-label">Klucz konfiguracji Base32:</span>

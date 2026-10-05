@@ -168,7 +168,7 @@ class SecurityHeadersMiddleware:
         if 'Content-Security-Policy' not in response:
             response['Content-Security-Policy'] = (
                 "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
+                "script-src 'self' "
                 "https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ "
                 "https://accounts.google.com/gsi/ https://apis.google.com; "
                 "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style https://fonts.googleapis.com; "
@@ -193,6 +193,5 @@ class SecurityHeadersMiddleware:
             response['Cross-Origin-Opener-Policy'] = "same-origin-allow-popups"
 
         return response
-
 
 
