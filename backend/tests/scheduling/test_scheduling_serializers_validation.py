@@ -13,6 +13,7 @@ from scheduling.serializers import (
     VisitCreateSerializer,
     VisitRescheduleSerializer,
 )
+from treatment.models import TreatmentEpisode
 
 if TYPE_CHECKING:
     from patients.models import PatientProfile
@@ -97,6 +98,34 @@ def test_patient_visit_request_in_past_raises(
 
 
 @pytest.mark.django_db
+def test_visit_create_rejects_episode_owned_by_another_therapist(
+    therapist: 'TherapistProfile',
+    patient: 'PatientProfile',
+    therapist_b: 'TherapistProfile',
+    therapy_type: 'TherapyType',
+) -> None:
+    """Nie pozwala przypisać wizyty do epizodu prowadzonego przez innego terapeutę."""
+    episode = TreatmentEpisode.objects.create(
+        patient=patient,
+        therapist=therapist_b,
+    )
+    start_at = timezone.now() + timedelta(days=1)
+    serializer = VisitCreateSerializer(
+        data={
+            'patient_id': str(patient.id),
+            'episode_id': str(episode.id),
+            'therapy_type_id': str(therapy_type.id),
+            'start_at': start_at.isoformat(),
+            'end_at': (start_at + timedelta(minutes=45)).isoformat(),
+        },
+        context={'therapist': therapist},
+    )
+
+    assert serializer.is_valid() is False
+    assert serializer.errors['episode_id'][0] == 'Epizod należy do innego fizjoterapeuty.'
+
+
+@pytest.mark.django_db
 def test_visit_reschedule_completed_visit_raises(
     patient: 'PatientProfile',
     therapist: 'TherapistProfile',
@@ -132,4 +161,3 @@ def test_visit_cancel_serializer_reason_too_long() -> None:
     # Assert
     assert ser.is_valid() is False
     assert 'cancel_reason' in ser.errors
-

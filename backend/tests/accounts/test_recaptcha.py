@@ -3,8 +3,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from django.test import override_settings
 from django.urls import reverse
-from rest_framework import serializers
-from rest_framework import status
+from rest_framework import serializers, status
 
 from accounts.recaptcha import verify_recaptcha_token
 

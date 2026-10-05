@@ -104,6 +104,12 @@ class TreatmentEpisode(TimestampedModel):
                 name='idx_episodes_patient_status',
             ),
         ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(ended_at__isnull=True) | models.Q(ended_at__gte=models.F('started_at')),
+                name='chk_episode_end_on_or_after_start',
+            ),
+        ]
 
 
     def __str__(self) -> str:

@@ -28,7 +28,6 @@ from .email_codes import (
     send_verify_email_code,
 )
 from .google_auth import GoogleAuthError, verify_google_id_token
-from .recaptcha import verify_recaptcha_token
 from .mfa import (
     generate_backup_codes,
     generate_qr_code_svg,
@@ -40,6 +39,7 @@ from .mfa import (
     verify_totp_code,
 )
 from .models import EmailCodePurpose, RoleChoices, UserMFA
+from .recaptcha import verify_recaptcha_token
 from .serializers import (
     ChangePasswordSerializer,
     EmailResendSerializer,

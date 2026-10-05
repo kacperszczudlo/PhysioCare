@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -472,13 +473,16 @@ class VisitCreateSerializer(serializers.ModelSerializer):
                 {'therapy_type_id': 'Typ terapii nie należy do tego terapeuty.'}
             )
 
-        if episode_id is not None and not TreatmentEpisode.objects.filter(
-            pk=episode_id,
-            patient_id=patient_id,
-        ).exists():
-            raise serializers.ValidationError(
-                {'episode_id': 'Epizod nie należy do wskazanego pacjenta.'}
-            )
+        if episode_id is not None:
+            episode = TreatmentEpisode.objects.filter(pk=episode_id).first()
+            if episode is None or episode.patient_id != patient_id:
+                raise serializers.ValidationError(
+                    {'episode_id': 'Epizod nie należy do wskazanego pacjenta.'}
+                )
+            if episode.therapist_id is not None and episode.therapist_id != therapist.id:
+                raise serializers.ValidationError(
+                    {'episode_id': 'Epizod należy do innego fizjoterapeuty.'}
+                )
 
         start_at = attrs.get('start_at')
         end_at = attrs.get('end_at')
@@ -509,20 +513,20 @@ class VisitCreateSerializer(serializers.ModelSerializer):
         therapist = self.context['therapist']
 
         from patients.models import LinkStatus, PatientTherapistLink
-        PatientTherapistLink.objects.get_or_create(
-            patient_id=patient_id,
-            therapist=therapist,
-            defaults={'status': LinkStatus.ACTIVE},
-        )
-
-        return Visit.objects.create(
-            patient_id=patient_id,
-            therapist=therapist,
-            episode_id=episode_id,
-            therapy_type_id=therapy_type_id,
-            location_address=therapist.location_address or '',
-            **validated_data,
-        )
+        with transaction.atomic():
+            PatientTherapistLink.objects.get_or_create(
+                patient_id=patient_id,
+                therapist=therapist,
+                defaults={'status': LinkStatus.ACTIVE},
+            )
+            return Visit.objects.create(
+                patient_id=patient_id,
+                therapist=therapist,
+                episode_id=episode_id,
+                therapy_type_id=therapy_type_id,
+                location_address=therapist.location_address or '',
+                **validated_data,
+            )
 
 
 class PatientVisitRequestSerializer(serializers.ModelSerializer):
@@ -672,20 +676,20 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
         therapy_type_id = validated_data.pop('therapy_type_id')
 
         from patients.models import LinkStatus, PatientTherapistLink
-        PatientTherapistLink.objects.get_or_create(
-            patient=patient,
-            therapist=therapist,
-            defaults={'status': LinkStatus.ACTIVE},
-        )
-
-        return Visit.objects.create(
-            patient=patient,
-            therapist=therapist,
-            therapy_type_id=therapy_type_id,
-            status=VisitStatus.PENDING_APPROVAL,
-            location_address=therapist.location_address or '',
-            **validated_data,
-        )
+        with transaction.atomic():
+            PatientTherapistLink.objects.get_or_create(
+                patient=patient,
+                therapist=therapist,
+                defaults={'status': LinkStatus.ACTIVE},
+            )
+            return Visit.objects.create(
+                patient=patient,
+                therapist=therapist,
+                therapy_type_id=therapy_type_id,
+                status=VisitStatus.PENDING_APPROVAL,
+                location_address=therapist.location_address or '',
+                **validated_data,
+            )
 
 
 class VisitApproveSerializer(serializers.Serializer):
