@@ -10,6 +10,8 @@ from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
 
+from core.logging_formatters import mask_email_for_logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -102,14 +104,19 @@ def send_templated_mail(
         message.attach_alternative(html_body, 'text/html')
         _attach_brand_logo(message)
 
+    masked_to = (
+        [mask_email_for_logging(t) for t in to]
+        if isinstance(to, (list, tuple))
+        else mask_email_for_logging(str(to))
+    )
     try:
         message.send(fail_silently=False)
     except (OSError, SMTPException):
-        logger.exception('Templated e-mail failed subject=%s to=%s', subject, to)
+        logger.exception('Templated e-mail failed subject=%s to=%s', subject, masked_to)
         return False
 
     if hasattr(settings, 'DEBUG') and settings.DEBUG:
-        logger.info('E-mail sent subject=%s to=%s', subject, to)
+        logger.info('E-mail sent subject=%s to=%s', subject, masked_to)
     return True
 
 

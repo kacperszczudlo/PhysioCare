@@ -10,6 +10,8 @@ import qrcode.image.svg
 from django.contrib.auth import get_user_model
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 
+from core.logging_formatters import mask_email_for_logging
+
 User: type[object] = get_user_model()
 logger: logging.Logger = logging.getLogger('physiocare.auth')
 
@@ -166,7 +168,11 @@ def verify_and_consume_backup_code(user_mfa: object, code: str) -> bool:
             user_mfa.save(update_fields=['backup_codes', 'updated_at'])
         user_obj = user_mfa.user if hasattr(user_mfa, 'user') else None
         user_email = user_obj.email if user_obj and hasattr(user_obj, 'email') else 'unknown'
-        logger.info('Backup code consumed for user=%s', user_email)
+        logger.info(
+            'Backup code consumed for user_id=%s email=%s',
+            getattr(user_obj, 'id', None),
+            mask_email_for_logging(user_email),
+        )
         return True
 
     return False

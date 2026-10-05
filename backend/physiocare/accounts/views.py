@@ -11,6 +11,7 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
 
+from core.logging_formatters import mask_email_for_logging
 from core.throttling import (
     LoginRateThrottle,
     PasswordResetRateThrottle,
@@ -358,7 +359,7 @@ class LoginView(APIView):
                     status=status.HTTP_401_UNAUTHORIZED,
                 )
 
-        logger.info('Failed login attempt for email=%s', email)
+        logger.info('Failed login attempt for email=%s', mask_email_for_logging(str(email) if email else ''))
 
         return Response(
             {
@@ -443,7 +444,11 @@ class MFALoginView(APIView):
             is_backup_valid = verify_and_consume_backup_code(user.mfa, code)
 
         if not is_totp_valid and not is_backup_valid:
-            logger.info('Failed 2FA attempt for user=%s', user.email)
+            logger.info(
+                'Failed 2FA attempt for user_id=%s email=%s',
+                getattr(user, 'id', None),
+                mask_email_for_logging(getattr(user, 'email', None)),
+            )
             return Response(
                 {
                     'error': {
@@ -597,7 +602,11 @@ class MFAEnableView(APIView):
         user_mfa.save(update_fields=['is_enabled', 'backup_codes', 'updated_at'])
 
         user_email = user.email if hasattr(user, 'email') else 'unknown'
-        logger.info('2FA enabled for user=%s', user_email)
+        logger.info(
+            '2FA enabled for user_id=%s email=%s',
+            getattr(user, 'id', None),
+            mask_email_for_logging(user_email),
+        )
 
         return Response(
             {
@@ -695,7 +704,11 @@ class MFADisableView(APIView):
         user_mfa.save(update_fields=['is_enabled', 'backup_codes', 'updated_at'])
 
         user_email = user.email if hasattr(user, 'email') else 'unknown'
-        logger.info('2FA disabled for user=%s', user_email)
+        logger.info(
+            '2FA disabled for user_id=%s email=%s',
+            getattr(user, 'id', None),
+            mask_email_for_logging(user_email),
+        )
 
         return Response(
             {
