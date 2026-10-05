@@ -78,6 +78,12 @@ DEBUG = env_bool('DJANGO_DEBUG', 'false')
 ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
 if DEBUG and '*' not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append('*')
+
+FIELD_ENCRYPTION_KEY = os.environ.get('FIELD_ENCRYPTION_KEY', '').strip()
+if not DEBUG and not FIELD_ENCRYPTION_KEY:
+    raise ImproperlyConfigured(
+        'FIELD_ENCRYPTION_KEY jest wymagany przy DJANGO_DEBUG=false.'
+    )
 if not DEBUG and '*' in ALLOWED_HOSTS:
     raise ImproperlyConfigured(
         'Wildcard "*" w DJANGO_ALLOWED_HOSTS jest zabroniony przy DJANGO_DEBUG=false.'

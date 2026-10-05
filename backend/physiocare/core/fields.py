@@ -57,9 +57,9 @@ class EncryptedCharField(models.CharField):
         if value is None:
             return None
         if isinstance(value, str):
-            return decrypt_value(value)
+            return decrypt_value(value) if value.startswith('gAAAAA') else value
         converted = super().to_python(value)
-        return decrypt_value(converted) if isinstance(converted, str) else converted
+        return decrypt_value(converted) if isinstance(converted, str) and converted.startswith('gAAAAA') else converted
 
 
 class EncryptedTextField(models.TextField):
@@ -114,9 +114,9 @@ class EncryptedTextField(models.TextField):
         if value is None:
             return None
         if isinstance(value, str):
-            return decrypt_value(value)
+            return decrypt_value(value) if value.startswith('gAAAAA') else value
         converted = super().to_python(value)
-        return decrypt_value(converted) if isinstance(converted, str) else converted
+        return decrypt_value(converted) if isinstance(converted, str) and converted.startswith('gAAAAA') else converted
 
 
 class EncryptedJSONField(models.TextField):
@@ -155,7 +155,7 @@ class EncryptedJSONField(models.TextField):
         if isinstance(value, (dict, list)):
             return value
         if isinstance(value, str):
-            decrypted = decrypt_value(value)
+            decrypted = decrypt_value(value) if value.startswith('gAAAAA') else value
             if decrypted is None or decrypted == '':
                 return None
             try:
@@ -171,5 +171,4 @@ try:
     ModelSerializer.serializer_field_mapping[EncryptedJSONField] = JSONField
 except ImportError:
     pass
-
 

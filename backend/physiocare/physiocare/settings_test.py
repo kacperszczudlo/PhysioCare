@@ -1,6 +1,7 @@
 from .settings import *  # noqa: F401,F403
 
 DEBUG: bool = True
+FIELD_ENCRYPTION_KEY: str = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='
 SECURE_SSL_REDIRECT: bool = False
 
 DATABASES: dict[str, object] = {

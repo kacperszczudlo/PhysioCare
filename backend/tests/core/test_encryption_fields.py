@@ -1,5 +1,8 @@
 import pytest
+from cryptography.fernet import InvalidToken
+from django.core.exceptions import ImproperlyConfigured
 from django.db import connection
+from django.test import override_settings
 
 from core.crypto import decrypt_value, encrypt_value
 from treatment.models import TreatmentEpisode, VisitNote
@@ -34,6 +37,21 @@ def test_idempotent_encryption_does_not_double_encrypt() -> None:
     # Assert
     assert cipher_1 == cipher_2
     assert decrypt_value(cipher_2) == raw_text
+
+
+def test_encryption_requires_a_dedicated_key() -> None:
+    with override_settings(FIELD_ENCRYPTION_KEY=''):
+        from core.crypto import reset_fernet_cache
+
+        reset_fernet_cache()
+        with pytest.raises(ImproperlyConfigured):
+            encrypt_value('sensitive data')
+        reset_fernet_cache()
+
+
+def test_decryption_does_not_return_invalid_ciphertext_as_plaintext() -> None:
+    with pytest.raises(InvalidToken):
+        decrypt_value('gAAAAA-invalid-ciphertext')
 
 
 @pytest.mark.django_db
@@ -183,5 +201,4 @@ def test_phi_medical_data_fields_encryption_at_rest(patient: object, therapist: 
     assert loaded_visit.patient_summary == 'Poufne podsumowanie wizyty pacjenta.'
     assert loaded_visit.patient_note == 'Pacjent zgłasza ból kolana po urazie.'
     assert loaded_visit.cancel_reason == 'Pilne skierowanie do chirurga.'
-
 

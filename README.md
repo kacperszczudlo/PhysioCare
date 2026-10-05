@@ -83,7 +83,8 @@ Skopiuj szablon i uzupełnij sekrety oraz dane bazy:
 Copy-Item .env.example .env
 ```
 
-W `.env` ustaw co najmniej: `POSTGRES_*`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`.  
+W `.env` ustaw co najmniej: `POSTGRES_*`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS` oraz
+`FIELD_ENCRYPTION_KEY` (klucz Fernet przeznaczony wyłącznie do szyfrowania danych w bazie).
 Opcjonalnie: `EMAIL_*` (reset hasła), `GOOGLE_CLIENT_IDS` (logowanie Google).
 
 Jeśli PostgreSQL jest świeżo zainstalowany, utwórz użytkownika, bazę i `btree_gist`:
