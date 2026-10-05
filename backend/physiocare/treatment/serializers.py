@@ -350,6 +350,8 @@ class BodyAreaPainSerializer(serializers.ModelSerializer):
             'max_length': 'Nazwa obszaru ciała może mieć co najwyżej 50 znaków.',
         },
     )
+    pain_character = serializers.JSONField(required=False, default=list)
+    treatment_targets = serializers.JSONField(required=False, default=list)
 
     class Meta:
         """Metadane serializatora bólu obszarów ciała."""

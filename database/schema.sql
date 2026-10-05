@@ -1,12 +1,12 @@
 -- PhysioCare - auto-generated from Django migrations
--- Generated: 2026-10-05T12:46:29Z
+-- Generated: 2026-10-05T12:55:06Z
 -- Do not edit manually. Run: python scripts/sync_schema_sql.py
 
 --
 -- PostgreSQL database dump
 --
 
-\restrict XogIW6U40kbctJOpCLoYdDgbXMP6kGmlfiEtf8QozGtZR4mxkIhfrarLowT0cGF
+\restrict cuIaTm14nLMCHLhHPcxfiDt1dkG3s98DoTq40OYSsIj0j4b0Q4GYahW3UvgXOq2
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -139,10 +139,10 @@ CREATE TABLE public.body_area_pain (
     body_region character varying(50) NOT NULL,
     view_side character varying(10) NOT NULL,
     vas_score smallint NOT NULL,
-    pain_character jsonb NOT NULL,
+    pain_character text NOT NULL,
     recorded_at timestamp with time zone NOT NULL,
     episode_id uuid NOT NULL,
-    treatment_targets jsonb NOT NULL,
+    treatment_targets text NOT NULL,
     CONSTRAINT body_area_pain_vas_score_check CHECK ((vas_score >= 0)),
     CONSTRAINT chk_body_pain_vas_score CHECK (((vas_score >= 0) AND (vas_score <= 10)))
 );
@@ -2414,5 +2414,5 @@ ALTER TABLE ONLY public.visits
 -- PostgreSQL database dump complete
 --
 
-\unrestrict XogIW6U40kbctJOpCLoYdDgbXMP6kGmlfiEtf8QozGtZR4mxkIhfrarLowT0cGF
+\unrestrict cuIaTm14nLMCHLhHPcxfiDt1dkG3s98DoTq40OYSsIj0j4b0Q4GYahW3UvgXOq2
 

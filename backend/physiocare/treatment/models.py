@@ -1,6 +1,6 @@
 from django.db import models
 
-from core.fields import EncryptedTextField
+from core.fields import EncryptedJSONField, EncryptedTextField
 from core.models import TimestampedModel, UUIDModel
 
 
@@ -90,7 +90,7 @@ class TreatmentEpisode(TimestampedModel):
         choices=EpisodeStatus.choices,
         default=EpisodeStatus.IN_PROGRESS,
     )
-    summary_note = models.TextField(blank=True, default='')
+    summary_note = EncryptedTextField(blank=True, default='')
     started_at = models.DateField(auto_now_add=True)
     ended_at = models.DateField(null=True, blank=True)
 
@@ -126,8 +126,8 @@ class BodyAreaPain(UUIDModel):
     body_region = models.CharField(max_length=50)
     view_side = models.CharField(max_length=10, choices=BodyViewSide.choices)
     vas_score = models.PositiveSmallIntegerField()
-    pain_character = models.JSONField(default=list)
-    treatment_targets = models.JSONField(default=list, blank=True)
+    pain_character = EncryptedJSONField(default=list)
+    treatment_targets = EncryptedJSONField(default=list, blank=True)
     recorded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -346,7 +346,7 @@ class ReceptaNaRuchReferral(TimestampedModel):
         related_name='recepta_na_ruch_referrals',
     )
     readiness_confirmed = models.BooleanField(default=False)
-    activity_notes = models.TextField(blank=True, default='')
+    activity_notes = EncryptedTextField(blank=True, default='')
     status = models.CharField(
         max_length=20,
         choices=DeviceOrderStatus.choices,
