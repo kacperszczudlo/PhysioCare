@@ -4,13 +4,12 @@
  */
 
 import { Link, useRouter, type Href } from 'expo-router'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { getErrorMessage, getFieldError } from '@/api/client'
 import { useAuth } from '@/auth/AuthContext'
 import {
-  peekGoogleRegistrationDraft,
   takeGoogleRegistrationDraft,
   type GoogleRegistrationDraft,
 } from '@/auth/googleRegistrationDraft'
@@ -47,11 +46,11 @@ export default function RegisterScreen() {
   const { toast } = useToast()
 
   const [googleDraft, setGoogleDraft] = useState<GoogleRegistrationDraft | null>(() =>
-    peekGoogleRegistrationDraft(),
+    takeGoogleRegistrationDraft(),
   )
-  const [firstName, setFirstName] = useState(() => peekGoogleRegistrationDraft()?.first_name ?? '')
-  const [lastName, setLastName] = useState(() => peekGoogleRegistrationDraft()?.last_name ?? '')
-  const [email, setEmail] = useState(() => peekGoogleRegistrationDraft()?.email ?? '')
+  const [firstName, setFirstName] = useState(() => googleDraft?.first_name ?? '')
+  const [lastName, setLastName] = useState(() => googleDraft?.last_name ?? '')
+  const [email, setEmail] = useState(() => googleDraft?.email ?? '')
   const [countryCode, setCountryCode] = useState(DEFAULT_COUNTRY_CODE)
   const [phoneNational, setPhoneNational] = useState('')
   const [password, setPassword] = useState('')
@@ -60,7 +59,7 @@ export default function RegisterScreen() {
   const [medical, setMedical] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [infoMessage, setInfoMessage] = useState<string | null>(() =>
-    peekGoogleRegistrationDraft()
+    googleDraft
       ? 'Połączono z Google. Uzupełnij formularz, aby dokończyć rejestrację.'
       : null,
   )
@@ -80,24 +79,6 @@ export default function RegisterScreen() {
   const passwordHints = { email, firstName, lastName }
   const passwordRequirements = getPasswordRequirements(password, passwordHints)
   const showRequirementErrors = submitted || passwordTouched
-
-  useEffect(() => {
-    const draft = takeGoogleRegistrationDraft()
-    if (!draft) {
-      return
-    }
-    setGoogleDraft(draft)
-    if (draft.email) {
-      setEmail(draft.email)
-    }
-    if (draft.first_name) {
-      setFirstName(draft.first_name)
-    }
-    if (draft.last_name) {
-      setLastName(draft.last_name)
-    }
-    setInfoMessage('Połączono z Google. Uzupełnij formularz, aby utworzyć konto.')
-  }, [])
 
   const canSubmit = useMemo(() => {
     if (!(terms && medical)) {

@@ -33,7 +33,7 @@ export function ExerciseVideoPlayer({ source }: ExerciseVideoPlayerProps) {
         player={player}
         nativeControls
         contentFit="contain"
-        allowsFullscreen
+        fullscreenOptions={{ enable: true }}
         allowsPictureInPicture
       />
     </View>

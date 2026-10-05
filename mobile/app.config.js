@@ -45,6 +45,8 @@ const expoConfig = {
   plugins: [
     ['expo-router', { asyncRoutes: false }],
     'expo-secure-store',
+    'expo-sharing',
+    'expo-status-bar',
     'expo-font',
     [
       'expo-image-picker',
