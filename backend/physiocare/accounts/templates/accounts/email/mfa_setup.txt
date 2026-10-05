@@ -1,10 +1,14 @@
-{% if first_name %}Dzień dobry {{ first_name }},{% else %}Dzień dobry,{% endif %}
+Twój kod konfiguracji 2FA PhysioCare: {{ code }} (ważny {{ validity_minutes }} min)
 
-Otrzymaliśmy prośbę o pierwszą konfigurację uwierzytelniania dwuskładnikowego (MFA) w PhysioCare.
+{% if first_name %}Cześć {{ first_name }},{% else %}Cześć,{% endif %}
 
-Kod potwierdzający: {{ code }}
+Otrzymaliśmy prośbę o konfigurację uwierzytelniania dwuskładnikowego (2FA) w systemie PhysioCare.
 
-Kod jest ważny przez {{ validity_minutes }} minut. Jeśli to nie Ty inicjowałeś konfigurację MFA, zmień hasło i skontaktuj się z administratorem.
+Kod potwierdzający:
+  [ {{ code }} ]
 
-Pozdrawiamy
-Zespół PhysioCare
+Kod jest ważny przez {{ validity_minutes }} minut. Jeśli to nie Ty inicjowałeś konfigurację 2FA, zmień hasło i skontaktuj się z administratorem.
+
+----------------------------------------
+System Opieki Fizjoterapeutycznej PhysioCare
+https://physiocare.pl

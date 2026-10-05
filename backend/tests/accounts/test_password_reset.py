@@ -299,10 +299,7 @@ def test_password_reset_template_rendering_and_attachment(api_client: APIClient,
     assert mimetype == 'text/html'
     assert 'Cześć Test' in html_content
     assert 'Kod resetu hasła' in html_content
-    assert 'cid:physiocare_logo' in html_content
-
-    assert len(email_msg.attachments) == 1
-    attached_img = email_msg.attachments[0]
-    assert attached_img.get_filename() in ('sygnet.png', 'logo.png')
+    assert 'data:image/png;base64,' in html_content
+    assert len(email_msg.attachments) == 0
 
 

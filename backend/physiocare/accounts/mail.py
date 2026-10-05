@@ -1,7 +1,5 @@
-from __future__ import annotations
-
+import base64
 import logging
-from email.mime.image import MIMEImage
 from pathlib import Path
 from smtplib import SMTPException
 
@@ -14,18 +12,18 @@ from core.logging_formatters import mask_email_for_logging
 
 logger = logging.getLogger(__name__)
 
+_CACHED_BRAND_LOGO_DATA_URI: str | None = None
 
-def _attach_brand_logo(message: EmailMultiAlternatives) -> None:
-    """Załącza sygnet/logo PhysioCare jako osadzony załącznik inline CID.
 
-    Args:
-        message (EmailMultiAlternatives): Obiekt wiadomości e-mail.
+def get_brand_logo_data_uri() -> str:
+    """Zwraca sygnet PhysioCare jako ciąg Data URI (base64) osadzany bezpośrednio w HTML.
 
-    Raises:
-        TypeError: Gdy message nie jest instancją EmailMultiAlternatives.
+    Dzięki temu w e-mailach nie ma żadnych załączników fizycznych (brak pliku do pobrania),
+    a logo wyświetla się natychmiastowo we wszystkich klientach pocztowych.
     """
-    if not isinstance(message, EmailMultiAlternatives):
-        raise TypeError("Argument 'message' musi być instancją EmailMultiAlternatives.")
+    global _CACHED_BRAND_LOGO_DATA_URI
+    if _CACHED_BRAND_LOGO_DATA_URI is not None:
+        return _CACHED_BRAND_LOGO_DATA_URI
 
     root_dir = settings.ROOT_DIR if hasattr(settings, 'ROOT_DIR') else None
     if not root_dir:
@@ -37,24 +35,19 @@ def _attach_brand_logo(message: EmailMultiAlternatives) -> None:
         Path(settings.BASE_DIR) / 'accounts' / 'static' / 'accounts' / 'sygnet.png',
     ]
 
-    logo_path: Path | None = None
     for cand in candidates:
         if cand.exists() and cand.is_file():
-            logo_path = cand
-            break
+            try:
+                data = cand.read_bytes()
+                encoded = base64.b64encode(data).decode('ascii')
+                _CACHED_BRAND_LOGO_DATA_URI = f'data:image/png;base64,{encoded}'
+                return _CACHED_BRAND_LOGO_DATA_URI
+            except Exception:
+                logger.warning('Failed to encode brand logo as data URI', exc_info=True)
+                break
 
-    if not logo_path:
-        return
-
-    try:
-        with logo_path.open('rb') as f:
-            logo_data = f.read()
-        mime_img = MIMEImage(logo_data, _subtype='png')
-        mime_img.add_header('Content-ID', '<physiocare_logo>')
-        mime_img.add_header('Content-Disposition', 'inline', filename=logo_path.name)
-        message.attach(mime_img)
-    except Exception:
-        logger.warning('Failed to attach inline brand logo for email', exc_info=True)
+    _CACHED_BRAND_LOGO_DATA_URI = ''
+    return _CACHED_BRAND_LOGO_DATA_URI
 
 
 def send_templated_mail(
@@ -87,10 +80,14 @@ def send_templated_mail(
     if not isinstance(context, dict):
         raise TypeError("Argument 'context' musi być typu dict[str, object].")
 
-    text_body = render_to_string(f'{template_basename}.txt', context)
+    enriched_context = dict(context)
+    if 'brand_logo_data_uri' not in enriched_context:
+        enriched_context['brand_logo_data_uri'] = get_brand_logo_data_uri()
+
+    text_body = render_to_string(f'{template_basename}.txt', enriched_context)
     html_body: str | None
     try:
-        html_body = render_to_string(f'{template_basename}.html', context)
+        html_body = render_to_string(f'{template_basename}.html', enriched_context)
     except TemplateDoesNotExist:
         html_body = None
 
@@ -102,7 +99,6 @@ def send_templated_mail(
     )
     if html_body:
         message.attach_alternative(html_body, 'text/html')
-        _attach_brand_logo(message)
 
     masked_to = (
         [mask_email_for_logging(t) for t in to]

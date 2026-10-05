@@ -201,12 +201,10 @@ def test_email_verify_template_rendering_and_attachment(api_client: APIClient, t
     assert mimetype == 'text/html'
     assert 'Cześć Leszek' in html_content
     assert 'Kod weryfikacyjny PhysioCare' in html_content
-    assert 'cid:physiocare_logo' in html_content
+    assert 'data:image/png;base64,' in html_content
     assert 'Kod jest ważny przez' in html_content
 
-    assert len(email_msg.attachments) == 1
-    attached_img = email_msg.attachments[0]
-    assert attached_img.get_filename() in ('sygnet.png', 'logo.png')
+    assert len(email_msg.attachments) == 0
 
 
 @pytest.mark.django_db

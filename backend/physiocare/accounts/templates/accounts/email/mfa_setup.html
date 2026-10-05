@@ -1,0 +1,40 @@
+{% extends 'accounts/email/base_email.html' %}
+
+{% block title %}PhysioCare - Konfiguracja 2FA{% endblock %}
+
+{% block preheader %}Twój kod konfiguracji 2FA: {{ code }} (ważny {{ validity_minutes }} min){% endblock %}
+
+{% block greeting %}
+{% if first_name %}Cześć {{ first_name }},{% else %}Cześć,{% endif %}
+{% endblock %}
+
+{% block content %}
+<p style="font-size: 15px; line-height: 1.6; color: #2b301e; margin: 0 0 20px 0;">
+  Otrzymaliśmy prośbę o konfigurację uwierzytelniania dwuskładnikowego (2FA) w systemie <strong>PhysioCare</strong>. Twój jednorazowy kod bezpieczeństwa:
+</p>
+
+<!-- Verification Code Highlight Box -->
+<table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 24px 0;">
+  <tr>
+    <td align="center" style="background-color: #f4f7e8; border: 1px solid #d3dba1; border-left: 4px solid #505816; border-radius: 12px; padding: 24px;">
+      <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #505816; margin-bottom: 10px;">
+        Kod konfiguracji 2FA
+      </div>
+      <div style="font-family: 'IBM Plex Mono', 'Courier New', Consolas, Monaco, monospace; font-size: 34px; font-weight: 800; letter-spacing: 12px; color: #505816; background-color: #ffffff; padding: 14px 20px 14px 32px; border-radius: 10px; border: 1px dashed #d3dba1; display: inline-block; margin: 6px 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+        {{ code }}
+      </div>
+      <div style="font-size: 13px; color: #5a6245; margin-top: 14px; font-weight: 500;">
+        Kod jest ważny przez <strong>{{ validity_minutes }} min.</strong>
+      </div>
+    </td>
+  </tr>
+</table>
+
+<p style="font-size: 15px; line-height: 1.6; color: #2b301e; margin: 0 0 8px 0;">
+  Wpisz ten kod na ekranie logowania, aby wyświetlić kod QR i sparować aplikację Google Authenticator.
+</p>
+
+<p style="font-size: 13px; line-height: 1.5; color: #767d64; margin: 16px 0 0 0; border-top: 1px dashed #d3dba1; padding-top: 12px;">
+  Jeśli to nie Ty inicjowałeś konfigurację 2FA, natychmiast zmień hasło do swojego konta i powiadom administratora.
+</p>
+{% endblock %}

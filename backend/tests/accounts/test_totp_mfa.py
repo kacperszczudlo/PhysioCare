@@ -430,3 +430,33 @@ def test_password_login_patient_without_mfa_succeeds(api_client: object, patient
     assert 'access' in response.data
     assert 'refresh' in response.data
     assert response.data.get('mfa_required') is not True
+
+
+@pytest.mark.django_db
+def test_mfa_setup_email_template_rendering_and_attachment(
+    therapist: object, settings: object
+) -> None:
+    """Sprawdza renderowanie szablonu HTML wiadomości konfiguracji 2FA i załącznik logo."""
+    from django.core import mail
+    from accounts.email_codes import send_mfa_setup_code
+
+    settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+    mail.outbox.clear()
+
+    ok = send_mfa_setup_code(user=therapist.user)
+    assert ok is True
+    assert len(mail.outbox) == 1
+
+    email_msg = mail.outbox[0]
+    assert email_msg.subject == 'PhysioCare - potwierdź konfigurację MFA'
+    assert 'Jan' in email_msg.body
+    assert 'PhysioCare' in email_msg.body
+
+    assert len(email_msg.alternatives) == 1
+    html_content, mimetype = email_msg.alternatives[0]
+    assert mimetype == 'text/html'
+    assert 'Cześć Jan' in html_content
+    assert 'Kod konfiguracji 2FA' in html_content
+    assert 'data:image/png;base64,' in html_content
+    assert 'Twój kod konfiguracji 2FA:' in html_content
+    assert len(email_msg.attachments) == 0
