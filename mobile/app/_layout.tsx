@@ -13,6 +13,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { AuthProvider, useAuth } from '@/auth/AuthContext'
 import { BrandMark } from '@/components/BrandMark'
 import { OfflineBanner } from '@/components/OfflineBanner'
+import { OfflineSyncObserver } from '@/offline/OfflineSyncObserver'
 import { configureNotificationHandler } from '@/notifications/push'
 import { NotificationObserver } from '@/notifications/NotificationObserver'
 import { RealtimeObserver } from '@/realtime/RealtimeObserver'
@@ -95,6 +96,7 @@ export default function RootLayout() {
             <AuthProvider>
               <NotificationObserver />
               <RealtimeObserver />
+              <OfflineSyncObserver />
               <RootNavigator />
               <ToastContainer />
             </AuthProvider>

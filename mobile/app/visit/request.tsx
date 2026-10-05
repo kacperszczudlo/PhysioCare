@@ -19,6 +19,7 @@ import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { SectionCard } from '@/components/ScreenHeader'
 import { useToast } from '@/components/ToastContext'
+import { useNetwork } from '@/network/NetworkContext'
 import { addMinutesISO } from '@/lib/format'
 import { colors, radius, space, typography } from '@/theme/tokens'
 
@@ -45,6 +46,7 @@ function defaultStart(): Date {
 export default function VisitRequestScreen() {
   const router = useRouter()
   const { toast } = useToast()
+  const { isOffline } = useNetwork()
   const { therapist_id: initialTherapistId } = useLocalSearchParams<{ therapist_id?: string }>()
 
   const [therapists, setTherapists] = useState<Therapist[]>([])
@@ -138,6 +140,13 @@ export default function VisitRequestScreen() {
   }
 
   async function onSubmit() {
+    if (isOffline) {
+      toast.warning(
+        'Brak połączenia',
+        'Umawianie wizyty wymaga aktywnego połączenia z internetem.',
+      )
+      return
+    }
     if (!selectedTherapistId) {
       const msg = 'Wybierz fizjoterapeutę.'
       setError(msg)
@@ -335,9 +344,9 @@ export default function VisitRequestScreen() {
               </SectionCard>
 
               <Button
-                title="Wyślij zgłoszenie"
+                title={isOffline ? 'Wymagane połączenie z internetem' : 'Wyślij zgłoszenie'}
                 loading={busy}
-                disabled={!therapyTypeId || types.length === 0}
+                disabled={!therapyTypeId || types.length === 0 || isOffline}
                 onPress={() => void onSubmit()}
               />
             </>

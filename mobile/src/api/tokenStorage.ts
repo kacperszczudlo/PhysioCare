@@ -159,5 +159,9 @@ export const tokenStorage = {
     await deleteItem(ACCESS_KEY)
     await deleteItem(REFRESH_KEY)
     await deleteItem(USER_KEY)
+    try {
+      const { clearAllOfflineData } = await import('@/offline/offlineStorage')
+      await clearAllOfflineData()
+    } catch {}
   },
 }

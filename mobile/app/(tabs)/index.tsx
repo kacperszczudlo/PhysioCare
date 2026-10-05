@@ -7,7 +7,7 @@ import { useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 
-import { getErrorMessage } from '@/api/client'
+import { getErrorMessage, isNetworkFailure } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { ExercisePlanItem, TodayExercise, Visit } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
@@ -26,6 +26,9 @@ import {
 import { isDashboardRealtimeEvent } from '@/realtime/types'
 import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
 import { useSilentPoll } from '@/realtime/useSilentPoll'
+import { getCachedDashboard, setCachedDashboard } from '@/offline/offlineCache'
+import { enqueueExerciseToggle } from '@/offline/offlineQueue'
+import { useToast } from '@/components/ToastContext'
 import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
 /**
@@ -36,6 +39,7 @@ import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 export default function DashboardScreen() {
   const { user } = useAuth()
   const router = useRouter()
+  const { toast } = useToast()
   const [visits, setVisits] = useState<Visit[]>([])
   const [pastVisits, setPastVisits] = useState<Visit[]>([])
   const [exercises, setExercises] = useState<TodayExercise[]>([])
@@ -44,10 +48,30 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const hasCachedDataRef = useRef(false)
   const softReloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Przy montowaniu ekranu najpierw natychmiast odczytaj dane z pamięci trwałej offline
+  useEffect(() => {
+    let mounted = true
+    void getCachedDashboard().then((cached) => {
+      if (!mounted || !cached) {
+        return
+      }
+      hasCachedDataRef.current = true
+      setVisits(cached.upcoming)
+      setPastVisits(cached.past)
+      setExercises(cached.todayExercises)
+      setActivePlan(cached.activePlan)
+      setLoading(false)
+    })
+    return () => {
+      mounted = false
+    }
+  }, [])
+
   const load = useCallback(async (opts?: { silent?: boolean }) => {
-    if (!opts?.silent) {
+    if (!opts?.silent && !hasCachedDataRef.current) {
       setError(null)
     }
     try {
@@ -61,11 +85,21 @@ export default function DashboardScreen() {
       setPastVisits(past)
       setExercises(today)
       setActivePlan(plan)
-      if (opts?.silent) {
+      hasCachedDataRef.current = true
+      void setCachedDashboard({
+        upcoming,
+        past,
+        todayExercises: today,
+        activePlan: plan,
+      })
+      if (opts?.silent || hasCachedDataRef.current) {
         setError(null)
       }
     } catch (err) {
-      if (!opts?.silent) {
+      if (isNetworkFailure(err) && hasCachedDataRef.current) {
+        // Jeśli posiadamy dane z cache'u, nie blokujemy widoku błędem
+        setError(null)
+      } else if (!opts?.silent) {
         setError(getErrorMessage(err, 'Nie udało się pobrać pulpitu.'))
       }
     } finally {
@@ -76,7 +110,9 @@ export default function DashboardScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setLoading(true)
+      if (!hasCachedDataRef.current) {
+        setLoading(true)
+      }
       void load()
     }, [load]),
   )
@@ -120,45 +156,68 @@ export default function DashboardScreen() {
     const nextDone = !item.completed_today
     const completedOn = todayISODate()
     const previousPlan = activePlan
+    const previousExercises = exercises
+
+    const nextExercises = exercises.map((ex) =>
+      ex.id === item.id ? { ...ex, completed_today: nextDone } : ex,
+    )
+    const nextActivePlan = activePlan.map((ex) => {
+      if (ex.id !== item.id) {
+        return ex
+      }
+      const withoutToday = (ex.completions ?? []).filter((c) => c.completed_on !== completedOn)
+      return {
+        ...ex,
+        completed_today: nextDone,
+        completions: nextDone
+          ? [
+              ...withoutToday,
+              {
+                id: `local-${item.id}-${completedOn}`,
+                assignment: item.id,
+                completed_on: completedOn,
+                done: true,
+                completed_at: new Date().toISOString(),
+              },
+            ]
+          : withoutToday,
+      }
+    })
 
     setBusyId(item.id)
-    setExercises((prev) =>
-      prev.map((ex) => (ex.id === item.id ? { ...ex, completed_today: nextDone } : ex)),
-    )
-    setActivePlan((prev) =>
-      prev.map((ex) => {
-        if (ex.id !== item.id) {
-          return ex
-        }
-        const withoutToday = (ex.completions ?? []).filter((c) => c.completed_on !== completedOn)
-        return {
-          ...ex,
-          completed_today: nextDone,
-          completions: nextDone
-            ? [
-                ...withoutToday,
-                {
-                  id: `local-${item.id}-${completedOn}`,
-                  assignment: item.id,
-                  completed_on: completedOn,
-                  done: true,
-                  completed_at: new Date().toISOString(),
-                },
-              ]
-            : withoutToday,
-        }
-      }),
-    )
+    setExercises(nextExercises)
+    setActivePlan(nextActivePlan)
+
+    // Natychmiast zaktualizuj lokalny cache
+    void setCachedDashboard({
+      upcoming: visits,
+      past: pastVisits,
+      todayExercises: nextExercises,
+      activePlan: nextActivePlan,
+    })
+
     try {
       await patientApi.completeExercise(item.id, undefined, nextDone)
     } catch (err) {
-      setExercises((prev) =>
-        prev.map((ex) =>
-          ex.id === item.id ? { ...ex, completed_today: item.completed_today } : ex,
-        ),
-      )
-      setActivePlan(previousPlan)
-      setError(getErrorMessage(err, 'Nie udało się zaktualizować zalecenia.'))
+      if (isNetworkFailure(err)) {
+        // Zapisz operację w kolejce offline outbox i powiadom pacjenta
+        await enqueueExerciseToggle(item.id, undefined, nextDone)
+        toast.info(
+          'Zapisano offline',
+          'Oznaczenie ćwiczenia zsynchronizuje się z serwerem po powrocie internetu.',
+        )
+      } else {
+        // Prawdziwy błąd serwera (np. brak uprawnień) – przywróć stan
+        setExercises(previousExercises)
+        setActivePlan(previousPlan)
+        void setCachedDashboard({
+          upcoming: visits,
+          past: pastVisits,
+          todayExercises: previousExercises,
+          activePlan: previousPlan,
+        })
+        setError(getErrorMessage(err, 'Nie udało się zaktualizować zalecenia.'))
+      }
     } finally {
       setBusyId(null)
     }

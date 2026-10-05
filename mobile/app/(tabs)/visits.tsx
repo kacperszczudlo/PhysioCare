@@ -7,7 +7,7 @@ import { useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 
-import { getErrorMessage } from '@/api/client'
+import { getErrorMessage, isNetworkFailure } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { Visit } from '@/api/types'
 import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
@@ -19,6 +19,7 @@ import { VisitStatusBadge } from '@/components/VisitStatusBadge'
 import { isVisitRealtimeEvent } from '@/realtime/types'
 import { useRealtimeEvents } from '@/realtime/useRealtimeEvents'
 import { useSilentPoll } from '@/realtime/useSilentPoll'
+import { getCachedVisits, setCachedVisits } from '@/offline/offlineCache'
 import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
 type TabKey = 'upcoming' | 'past'
@@ -37,20 +38,41 @@ export default function VisitsScreen() {
   const [error, setError] = useState<string | null>(null)
   const tabRef = useRef(tab)
   tabRef.current = tab
+  const hasCachedRef = useRef(false)
   const softReloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Przy przełączeniu zakładki lub montowaniu natychmiast odczytaj z cache offline
+  useEffect(() => {
+    let mounted = true
+    void getCachedVisits(tab).then((cached) => {
+      if (!mounted || !cached) {
+        return
+      }
+      setVisits(cached.visits)
+      hasCachedRef.current = true
+      setLoading(false)
+    })
+    return () => {
+      mounted = false
+    }
+  }, [tab])
+
   const load = useCallback(async (status: TabKey, opts?: { silent?: boolean }) => {
-    if (!opts?.silent) {
+    if (!opts?.silent && !hasCachedRef.current) {
       setError(null)
     }
     try {
       const data = await patientApi.getVisits(status)
       setVisits(data)
-      if (opts?.silent) {
+      hasCachedRef.current = true
+      void setCachedVisits(status, data)
+      if (opts?.silent || hasCachedRef.current) {
         setError(null)
       }
     } catch (err) {
-      if (!opts?.silent) {
+      if (isNetworkFailure(err) && hasCachedRef.current) {
+        setError(null)
+      } else if (!opts?.silent) {
         setError(getErrorMessage(err, 'Nie udało się pobrać wizyt.'))
       }
     } finally {
@@ -61,7 +83,9 @@ export default function VisitsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setLoading(true)
+      if (!hasCachedRef.current) {
+        setLoading(true)
+      }
       void load(tab)
     }, [load, tab]),
   )
