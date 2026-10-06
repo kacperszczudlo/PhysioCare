@@ -231,3 +231,39 @@ def test_media_orphan_avatar_denied(api_client: object, tmp_path: object, settin
     # Assert
     assert api_client.get(orphan_url).status_code == status.HTTP_404_NOT_FOUND
 
+
+@pytest.mark.django_db
+def test_protected_media_and_documents_prevent_cdn_caching(
+    api_client: object, tmp_path: object, settings: object, therapist: object, patient: object,
+) -> None:
+    """Weryfikuje, czy pliki medyczne posiadają nagłówki zabraniające buforowania przez CDN i proxy."""
+    # Arrange
+    settings.MEDIA_ROOT = tmp_path
+    documents_dir: object = tmp_path / 'documents'
+    documents_dir.mkdir(exist_ok=True)
+    file_path: object = documents_dir / 'clinical_record.pdf'
+    file_path.write_bytes(b'%PDF-1.4 clinical')
+
+    document = MedicalDocument.objects.create(
+        patient=patient,
+        uploaded_by=therapist.user,
+        title='Clinical Record',
+        file_url='/media/documents/clinical_record.pdf',
+        mime_type='application/pdf',
+    )
+
+    _auth(api_client, patient.user)
+
+    # Act & Assert 1: Bezpośredni dostęp do chronionego /media/...
+    media_response = api_client.get('/media/documents/clinical_record.pdf')
+    assert media_response.status_code == status.HTTP_200_OK
+    assert media_response['Cache-Control'] == 'private, no-store'
+    assert media_response['X-Content-Type-Options'] == 'nosniff'
+
+    # Act & Assert 2: Endpoint pobierania dokumentu /api/v1/documents/<id>/download/
+    download_url: str = reverse('document-download', kwargs={'pk': document.id})
+    download_response = api_client.get(download_url)
+    assert download_response.status_code == status.HTTP_200_OK
+    assert download_response['Cache-Control'] == 'private, no-store'
+    assert download_response['X-Content-Type-Options'] == 'nosniff'
+

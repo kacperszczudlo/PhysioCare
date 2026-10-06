@@ -216,6 +216,8 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+_static_path = os.environ.get('STATIC_ROOT', 'backend/staticfiles')
+STATIC_ROOT = ROOT_DIR / _static_path if not os.path.isabs(_static_path) else Path(_static_path)
 
 _media_path = os.environ.get('MEDIA_ROOT', 'backend/media')
 MEDIA_ROOT = ROOT_DIR / _media_path if not os.path.isabs(_media_path) else Path(_media_path)
