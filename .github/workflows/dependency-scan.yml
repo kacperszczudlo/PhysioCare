@@ -76,4 +76,4 @@ jobs:
           cache-dependency-path: mobile/package-lock.json
 
       - name: Run npm audit
-        run: npm audit --audit-level=high
+        run: npm run audit

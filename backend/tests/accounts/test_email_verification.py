@@ -213,6 +213,7 @@ def test_therapist_email_verify_requires_mfa_setup_and_allows_direct_totp_setup(
 ) -> None:
     """Sprawdza, że po weryfikacji e-mail terapeuta musi skonfigurować MFA i nie dostaje sesji."""
     import pyotp
+
     from accounts.models import UserMFA
 
     settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'

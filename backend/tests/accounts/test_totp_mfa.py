@@ -2,15 +2,14 @@ import pyotp
 import pytest
 from rest_framework import status
 
+from accounts.email_codes import issue_email_code
 from accounts.mfa import (
     generate_backup_codes,
     generate_totp_secret,
     issue_mfa_preauth_token,
     issue_mfa_setup_token,
 )
-from accounts.email_codes import issue_email_code
-from accounts.models import EmailCodePurpose
-from accounts.models import UserMFA
+from accounts.models import EmailCodePurpose, UserMFA
 
 
 @pytest.mark.django_db
@@ -438,6 +437,7 @@ def test_mfa_setup_email_template_rendering_and_attachment(
 ) -> None:
     """Sprawdza renderowanie szablonu HTML wiadomości konfiguracji 2FA i załącznik logo."""
     from django.core import mail
+
     from accounts.email_codes import send_mfa_setup_code
 
     settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'

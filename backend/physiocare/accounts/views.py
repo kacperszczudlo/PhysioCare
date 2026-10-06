@@ -25,8 +25,8 @@ from .email_codes import (
     consume_password_reset_token,
     issue_password_reset_token,
     lookup_password_reset_token,
-    send_password_reset_code,
     send_mfa_setup_code,
+    send_password_reset_code,
     send_verify_email_code,
 )
 from .google_auth import GoogleAuthError, verify_google_id_token
