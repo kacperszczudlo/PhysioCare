@@ -114,7 +114,7 @@ class PatientEpisodeListCreateView(TherapistPatientQuerysetMixin, generics.ListC
         """
         return TreatmentEpisode.objects.filter(
             patient=self.get_patient(),
-        ).select_related('patient', 'therapist').order_by('-created_at')
+        ).select_related('patient', 'patient__user', 'therapist', 'therapist__user').order_by('-created_at')
 
     def get_serializer_class(self) -> type[serializers.Serializer]:
         """Dobiera odpowiednią klasę serializatora w zależności od metody HTTP.
@@ -169,7 +169,7 @@ class EpisodeDetailView(generics.RetrieveUpdateAPIView):
         return TreatmentEpisode.objects.filter(
             patient__therapist_links__therapist=self.request.user.therapist_profile,
             patient__therapist_links__status='ACTIVE',
-        ).select_related('patient', 'therapist').distinct()
+        ).select_related('patient', 'patient__user', 'therapist', 'therapist__user').distinct()
 
     def perform_update(self, serializer: object) -> None:
         """Zapisuje aktualizację epizodu po weryfikacji prawa własności fizjoterapeuty.
@@ -303,7 +303,7 @@ class EpisodeNoteListCreateView(generics.ListCreateAPIView):
         return VisitNote.objects.filter(
             episode=self.get_episode(),
             therapist=self.request.user.therapist_profile,
-        ).select_related('therapist').order_by('-created_at')
+        ).select_related('therapist', 'therapist__user').order_by('-created_at')
 
     def perform_create(self, serializer: object) -> None:
         """Zapisuje nową notatkę z wizyty.
@@ -354,7 +354,7 @@ class EpisodeDiagnosticRecommendationListCreateView(generics.ListCreateAPIView):
         """
         return DiagnosticRecommendation.objects.filter(
             episode=self.get_episode(),
-        ).select_related('therapist')
+        ).select_related('therapist', 'therapist__user')
 
     def perform_create(self, serializer: object) -> None:
         """Tworzy rekomendację diagnostyczną i publikuje powiadomienie w czasie rzeczywistym.
@@ -400,7 +400,7 @@ class EpisodeDeviceOrderListCreateView(generics.ListCreateAPIView):
         """
         return MedicalDeviceOrder.objects.filter(
             episode=self.get_episode(),
-        ).select_related('therapist')
+        ).select_related('therapist', 'therapist__user')
 
     def perform_create(self, serializer: object) -> None:
         """Wystawia zlecenie na wyrób medyczny i publikuje powiadomienie po wystawieniu.
@@ -445,7 +445,7 @@ class EpisodeOrderRefusalListCreateView(generics.ListCreateAPIView):
         """
         return PhysicianOrderRefusal.objects.filter(
             episode=self.get_episode(),
-        ).select_related('therapist')
+        ).select_related('therapist', 'therapist__user')
 
     def perform_create(self, serializer: object) -> None:
         """Tworzy wpis odmowy wykonania zlecenia lekarskiego.
@@ -483,7 +483,7 @@ class EpisodeDiagnosticRecommendationDetailView(generics.RetrieveUpdateDestroyAP
             episode_id=self.kwargs['episode_id'],
             episode__patient__therapist_links__therapist=self.request.user.therapist_profile,
             episode__patient__therapist_links__status='ACTIVE',
-        ).select_related('episode', 'therapist').distinct()
+        ).select_related('episode', 'therapist', 'therapist__user').distinct()
 
     def perform_update(self, serializer: object) -> None:
         """Aktualizuje rekomendację po sprawdzeniu prawa własności wpisu.
@@ -535,7 +535,7 @@ class EpisodeDeviceOrderDetailView(generics.RetrieveUpdateDestroyAPIView):
             episode_id=self.kwargs['episode_id'],
             episode__patient__therapist_links__therapist=self.request.user.therapist_profile,
             episode__patient__therapist_links__status='ACTIVE',
-        ).select_related('therapist').distinct()
+        ).select_related('therapist', 'therapist__user').distinct()
 
     def perform_update(self, serializer: object) -> None:
         """Aktualizuje zlecenie wyrobu medycznego po weryfikacji prawa własności.
@@ -583,7 +583,7 @@ class EpisodeOrderRefusalDetailView(generics.RetrieveUpdateDestroyAPIView):
             episode_id=self.kwargs['episode_id'],
             episode__patient__therapist_links__therapist=self.request.user.therapist_profile,
             episode__patient__therapist_links__status='ACTIVE',
-        ).select_related('therapist').distinct()
+        ).select_related('therapist', 'therapist__user').distinct()
 
     def perform_update(self, serializer: object) -> None:
         """Aktualizuje odmowę zlecenia po weryfikacji autorstwa.
@@ -642,7 +642,7 @@ class PatientReceptaNaRuchListCreateView(TherapistPatientQuerysetMixin, generics
         """
         return ReceptaNaRuchReferral.objects.filter(
             patient=self.get_patient(),
-        ).select_related('therapist', 'episode')
+        ).select_related('therapist', 'therapist__user', 'episode')
 
     def perform_create(self, serializer: object) -> None:
         """Tworzy nowe skierowanie Recepta na Ruch i publikuje zdarzenie powiadomienia.
@@ -686,7 +686,7 @@ class PatientReceptaNaRuchDetailView(TherapistPatientQuerysetMixin, generics.Ret
             patient__therapist_links__therapist=self.get_therapist_profile(),
             patient__therapist_links__status='ACTIVE',
             patient__user__is_active=True,
-        ).select_related('therapist').distinct()
+        ).select_related('therapist', 'therapist__user').distinct()
 
     def perform_update(self, serializer: object) -> None:
         """Aktualizuje skierowanie Recepta na Ruch.
@@ -801,7 +801,7 @@ class MeEpisodeListView(PatientSelfMixin, generics.ListAPIView):
         """
         return TreatmentEpisode.objects.filter(
             patient=self.get_patient_profile(),
-        ).order_by('-created_at')
+        ).select_related('patient', 'therapist', 'therapist__user').order_by('-created_at')
 
 
 class MeEpisodeDetailView(PatientSelfMixin, generics.RetrieveAPIView):
@@ -818,4 +818,4 @@ class MeEpisodeDetailView(PatientSelfMixin, generics.RetrieveAPIView):
         """
         return TreatmentEpisode.objects.filter(
             patient=self.get_patient_profile(),
-        )
+        ).select_related('patient', 'therapist', 'therapist__user')

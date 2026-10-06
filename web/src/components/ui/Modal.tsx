@@ -11,8 +11,12 @@ interface ModalProps {
   title: string
   /** Opcjonalny opis pomocniczy dialogu. */
   description?: string
-  /** Szerokość/rozmiar panelu (md, lg). */
-  size?: 'md' | 'lg'
+  /** Szerokość/rozmiar panelu (md, lg, xl). */
+  size?: 'md' | 'lg' | 'xl'
+  /** Opcjonalna klasa kontenera dialogu. */
+  className?: string
+  /** Opcjonalna klasa ciała modala. */
+  bodyClassName?: string
   /** Callback zamknij okno. */
   onClose: () => void
   /** Treść widoku lub formularza umieszczona w ciele dialogu. */
@@ -22,15 +26,26 @@ interface ModalProps {
 /**
  * Komponent okna dialogowego/modalnego oparty o natywny znacznik `<dialog>` HTML5.
  *
- * Wspiera zamknięcie klawiszem ESC, kliknięciem w tło (backdrop) oraz pełną dostępność WCAG (`aria-labelledby`).
+ * Wspiera zamknięcie klawiszem ESC, kliknięciem w tło (backdrop), powrót fokusu
+ * do elementu wywołującego oraz pełną dostępność WCAG (`aria-labelledby`, `aria-describedby`).
  *
  * @example
  * <Modal open={isOpen} title="Dodaj wizytę" onClose={closeModal}>
  *   <VisitForm />
  * </Modal>
  */
-export function Modal({ open, title, description, size = 'md', onClose, children }: ModalProps) {
+export function Modal({
+  open,
+  title,
+  description,
+  size = 'md',
+  className = '',
+  bodyClassName = '',
+  onClose,
+  children,
+}: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const previousActiveElement = useRef<HTMLElement | null>(null)
   const titleId = useId()
   const descriptionId = useId()
 
@@ -39,23 +54,38 @@ export function Modal({ open, title, description, size = 'md', onClose, children
     if (!dialog) {
       return
     }
-    if (open && !dialog.open) {
-      dialog.showModal()
+    if (open) {
+      if (document.activeElement instanceof HTMLElement) {
+        previousActiveElement.current = document.activeElement
+      }
+      if (!dialog.open) {
+        dialog.showModal()
+      }
     } else if (!open && dialog.open) {
       dialog.close()
+      previousActiveElement.current?.focus()
     }
   }, [open])
+
+  const handleClose = () => {
+    onClose()
+    previousActiveElement.current?.focus()
+  }
 
   return (
     <dialog
       ref={dialogRef}
-      className="ui-modal"
+      className={`ui-modal ${className}`.trim()}
       aria-labelledby={titleId}
       aria-describedby={description ? descriptionId : undefined}
-      onClose={onClose}
+      onCancel={(e) => {
+        e.preventDefault()
+        handleClose()
+      }}
+      onClose={handleClose}
       onClick={(event) => {
         if (event.target === dialogRef.current) {
-          onClose()
+          handleClose()
         }
       }}
     >
@@ -69,11 +99,16 @@ export function Modal({ open, title, description, size = 'md', onClose, children
               </p>
             ) : null}
           </div>
-          <button type="button" className="ui-modal__close" onClick={onClose} aria-label="Zamknij">
+          <button
+            type="button"
+            className="ui-modal__close"
+            onClick={handleClose}
+            aria-label="Zamknij okno"
+          >
             ×
           </button>
         </header>
-        <div className="ui-modal__body">{children}</div>
+        <div className={`ui-modal__body ${bodyClassName}`.trim()}>{children}</div>
       </div>
     </dialog>
   )

@@ -9,6 +9,7 @@ from rest_framework.test import APIClient
 
 from exercises.models import Exercise, ExerciseAssignment, ExerciseCompletion
 from patients.models import PatientProfile
+from reviews.models import Review
 from scheduling.models import TherapyType, Visit
 from therapists.models import TherapistProfile
 from treatment.models import (
@@ -40,6 +41,9 @@ def django_db_setup(
 def cleanup_test_data(db: object) -> Generator[None, None, None]:
     """Automatyczna czyszcząca fixture usuwająca dane testowe po zakończeniu każdego testu."""
     yield
+    Review.objects.filter(
+        patient__user__email__endswith='@physiocare.test',
+    ).delete()
     ExerciseCompletion.objects.filter(
         assignment__patient__user__email__endswith='@physiocare.test',
     ).delete()

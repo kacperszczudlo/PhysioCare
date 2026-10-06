@@ -118,7 +118,7 @@ export default function DocumentsScreen() {
     useCallback(() => {
       setLoading(true)
       void load()
-    }, [load, mainTab, docFilter]),
+    }, [load]),
   )
 
   useRealtimeEvents(

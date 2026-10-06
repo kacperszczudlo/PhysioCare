@@ -16,6 +16,9 @@ class TestSecurityHeaders:
         assert 'Content-Security-Policy' in response
         csp: str = response['Content-Security-Policy']
         assert "default-src 'self'" in csp
+        assert "unsafe-eval" not in csp
+        assert "script-src 'self' 'unsafe-inline'" not in csp
+        assert "script-src 'self' " in csp
         assert "connect-src 'self' https: wss:" in csp
         assert "https://www.google.com/recaptcha/" in csp
         assert "https://accounts.google.com/gsi/" in csp
@@ -55,7 +58,5 @@ class TestSecurityHeaders:
         ):
             assert settings.USE_X_FORWARDED_HOST is True
             assert settings.SECURE_PROXY_SSL_HEADER == ('HTTP_X_FORWARDED_PROTO', 'https')
-
-
 
 

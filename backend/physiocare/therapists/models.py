@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.conf import settings
 from django.core.validators import MaxValueValidator
 from django.db import models
@@ -28,6 +30,16 @@ class TherapistProfile(TimestampedModel):
     experience_years = models.PositiveSmallIntegerField(
         default=0,
         validators=[MaxValueValidator(60)],
+    )
+    rating_avg = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text='Denormalizowana średnia ocena (przeliczana przez sygnały reviews).',
+    )
+    rating_count = models.PositiveIntegerField(
+        default=0,
+        help_text='Denormalizowana liczba widocznych opinii (przeliczana przez sygnały reviews).',
     )
 
     class Meta:

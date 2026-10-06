@@ -277,6 +277,8 @@ class TherapistPublicSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(source='user.last_name', read_only=True)
     qualification_label = serializers.SerializerMethodField()
     competences = serializers.SerializerMethodField()
+    rating_avg = serializers.DecimalField(max_digits=3, decimal_places=2, read_only=True)
+    rating_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         """Metadane serializatora TherapistPublicSerializer."""
@@ -287,6 +289,7 @@ class TherapistPublicSerializer(serializers.ModelSerializer):
             'avatar_url', 'phone', 'location_address',
             'qualification_level', 'qualification_label', 'experience_years',
             'competences',
+            'rating_avg', 'rating_count',
         ]
 
 

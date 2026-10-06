@@ -64,6 +64,15 @@
   background-color: var(--color-surface-hover, #f1f5f9);
 }
 
+.location-view-modal-body {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 65vh;
+  min-height: 380px;
+  max-height: 540px;
+}
+
 .location-view-map-container {
   flex: 1;
   width: 100%;

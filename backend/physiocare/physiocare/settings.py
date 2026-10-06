@@ -78,6 +78,12 @@ DEBUG = env_bool('DJANGO_DEBUG', 'false')
 ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
 if DEBUG and '*' not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append('*')
+
+FIELD_ENCRYPTION_KEY = os.environ.get('FIELD_ENCRYPTION_KEY', '').strip()
+if not DEBUG and not FIELD_ENCRYPTION_KEY:
+    raise ImproperlyConfigured(
+        'FIELD_ENCRYPTION_KEY jest wymagany przy DJANGO_DEBUG=false.'
+    )
 if not DEBUG and '*' in ALLOWED_HOSTS:
     raise ImproperlyConfigured(
         'Wildcard "*" w DJANGO_ALLOWED_HOSTS jest zabroniony przy DJANGO_DEBUG=false.'
@@ -109,6 +115,7 @@ INSTALLED_APPS = [
     'scheduling',
     'exercises',
     'documents',
+    'reviews',
 ]
 
 MIDDLEWARE = [
@@ -176,7 +183,7 @@ def postgres_database(*, db_name: str | None = None, test_db_name: str | None = 
         'PASSWORD': require_env('POSTGRES_PASSWORD'),
         'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
-        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '0')),
+        'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '60')),
         'CONN_HEALTH_CHECKS': True,
     }
     if sslmode:
@@ -382,13 +389,18 @@ DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_FROM', 'noreply@example.com')
 
 EMAIL_BACKEND = os.environ.get(
     'EMAIL_BACKEND',
-    'django.core.mail.backends.console.EmailBackend',
+    'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend',
 )
 EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', 'true')
+
+if not DEBUG and EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend':
+    raise ImproperlyConfigured(
+        'Konfiguracja django.core.mail.backends.console.EmailBackend jest zabroniona przy DJANGO_DEBUG=false.'
+    )
 
 PASSWORD_RESET_TIMEOUT = int(os.environ.get('PASSWORD_RESET_TIMEOUT', '1800'))
 EMAIL_CODE_MAX_ATTEMPTS = int(os.environ.get('EMAIL_CODE_MAX_ATTEMPTS', '5'))
@@ -406,9 +418,25 @@ SSE_MAX_FRAMES = int(os.environ.get('SSE_MAX_FRAMES', '0'))
 SSE_BUS_ENGINE = os.environ.get('SSE_BUS_ENGINE', 'auto').lower()
 SSE_REDIS_CHANNEL_PREFIX = os.environ.get('SSE_REDIS_CHANNEL_PREFIX', 'physiocare:sse:')
 
-RECAPTCHA_ENABLED = env_bool('RECAPTCHA_ENABLED', 'false')
+RECAPTCHA_ENABLED = env_bool('RECAPTCHA_ENABLED', 'true' if not DEBUG else 'false')
 RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
+RECAPTCHA_V2_SECRET_KEY = os.environ.get('RECAPTCHA_V2_SECRET_KEY', '')
+RECAPTCHA_V3_SECRET_KEY = os.environ.get('RECAPTCHA_V3_SECRET_KEY', '')
 RECAPTCHA_SCORE_THRESHOLD = float(os.environ.get('RECAPTCHA_SCORE_THRESHOLD', '0.5'))
+
+if not DEBUG:
+    if not RECAPTCHA_ENABLED:
+        raise ImproperlyConfigured(
+            'RECAPTCHA_ENABLED musi być ustawione na true przy DJANGO_DEBUG=false.'
+        )
+    if not (
+        RECAPTCHA_SECRET_KEY.strip()
+        or (RECAPTCHA_V2_SECRET_KEY.strip() and RECAPTCHA_V3_SECRET_KEY.strip())
+    ):
+        raise ImproperlyConfigured(
+            'RECAPTCHA_SECRET_KEY albo komplet RECAPTCHA_V2_SECRET_KEY i '
+            'RECAPTCHA_V3_SECRET_KEY jest wymagany przy DJANGO_DEBUG=false.'
+        )
 
 _SENTRY_DSN = os.environ.get('SENTRY_DSN', '').strip()
 if _SENTRY_DSN:

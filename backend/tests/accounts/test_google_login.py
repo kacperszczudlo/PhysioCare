@@ -81,15 +81,15 @@ def test_google_login_links_existing_email_and_issues_tokens(api_client: object,
 
 
 @pytest.mark.django_db
-def test_google_login_cookie_delivery_omits_body_tokens(api_client: object, therapist: object, settings: object) -> None:
+def test_google_login_cookie_delivery_omits_body_tokens(api_client: object, patient: object, settings: object) -> None:
     """Sprawdza przesyłanie tokenów w ciasteczkach HTTP-only przy logowaniu Google."""
     # Arrange
     settings.GOOGLE_CLIENT_IDS = ['test-client-id.apps.googleusercontent.com']
-    therapist.user.google_sub = 'google-sub-therapist-1'
-    therapist.user.save(update_fields=['google_sub'])
+    patient.user.google_sub = 'google-sub-patient-cookies'
+    patient.user.save(update_fields=['google_sub'])
     identity = GoogleIdentity(
-        sub='google-sub-therapist-1',
-        email=therapist.user.email,
+        sub='google-sub-patient-cookies',
+        email=patient.user.email,
         email_verified=True,
         given_name='Jan',
         family_name='Kowalski',
@@ -109,6 +109,72 @@ def test_google_login_cookie_delivery_omits_body_tokens(api_client: object, ther
     assert 'refresh' not in response.data
     assert 'access_token' in response.cookies
     assert 'refresh_token' in response.cookies
+
+
+@pytest.mark.django_db
+def test_google_login_therapist_without_mfa_returns_403(api_client: object, therapist: object, settings: object) -> None:
+    """Sprawdza zablokowanie logowania Google dla personelu medycznego bez skonfigurowanego MFA (F-03)."""
+    # Arrange
+    settings.GOOGLE_CLIENT_IDS = ['test-client-id.apps.googleusercontent.com']
+    therapist.user.google_sub = 'google-sub-therapist-no-mfa'
+    therapist.user.save(update_fields=['google_sub'])
+    identity = GoogleIdentity(
+        sub='google-sub-therapist-no-mfa',
+        email=therapist.user.email,
+        email_verified=True,
+        given_name='Jan',
+        family_name='Kowalski',
+    )
+
+    # Act
+    with patch('accounts.views.verify_google_id_token', return_value=identity):
+        response = api_client.post(
+            _google_url(),
+            {'credential': 'fake-id-token'},
+            format='json',
+        )
+
+    # Assert
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.data['error']['code'] == 'AUTH_MFA_SETUP_REQUIRED'
+    assert response.data['error']['details']['mfa_required'] is True
+
+
+@pytest.mark.django_db
+def test_google_login_therapist_with_mfa_requires_step2(api_client: object, therapist: object, settings: object) -> None:
+    """Sprawdza, że logowanie Google dla personelu z MFA wymaga drugiego składnika TOTP."""
+    from accounts.mfa import generate_totp_secret
+    from accounts.models import UserMFA
+
+    # Arrange
+    settings.GOOGLE_CLIENT_IDS = ['test-client-id.apps.googleusercontent.com']
+    therapist.user.google_sub = 'google-sub-therapist-mfa'
+    therapist.user.save(update_fields=['google_sub'])
+    UserMFA.objects.create(
+        user=therapist.user,
+        secret_key=generate_totp_secret(),
+        is_enabled=True,
+    )
+    identity = GoogleIdentity(
+        sub='google-sub-therapist-mfa',
+        email=therapist.user.email,
+        email_verified=True,
+        given_name='Jan',
+        family_name='Kowalski',
+    )
+
+    # Act
+    with patch('accounts.views.verify_google_id_token', return_value=identity):
+        response = api_client.post(
+            _google_url(),
+            {'credential': 'fake-id-token'},
+            format='json',
+        )
+
+    # Assert
+    assert response.status_code == status.HTTP_200_OK
+    assert response.data.get('mfa_required') is True
+    assert 'mfa_token' in response.data
 
 
 @pytest.mark.django_db

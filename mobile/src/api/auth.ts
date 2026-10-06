@@ -75,10 +75,10 @@ export const authApi = {
    * @param password - Hasło użytkownika.
    * @returns Obiekt zalogowanego użytkownika.
    */
-  async login(email: string, password: string) {
+  async login(email: string, password: string, recaptcha_token?: string) {
     const data = await api.post<AuthResponse>(
       '/auth/login/',
-      { email, password },
+      { email, password, recaptcha_token, recaptcha_client: 'mobile' },
       { auth: false, skipAuthRefresh: true },
     )
     return persistAuth(data)

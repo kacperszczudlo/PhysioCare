@@ -53,3 +53,29 @@ class StructuredJsonFormatter(logging.Formatter):
         return json.dumps(payload, ensure_ascii=False)
 
 
+def mask_email_for_logging(email: str | None) -> str:
+    """Zwraca zredagowany/zamaskowany adres e-mail do bezpiecznego logowania (np. j***n@domain.com).
+
+    Args:
+        email (str | None): Adres e-mail lub None.
+
+    Returns:
+        str: Zamaskowany adres lub 'anonymous'.
+    """
+    if not email or not isinstance(email, str) or '@' not in email:
+        return 'anonymous'
+    email = email.strip()
+    try:
+        local, domain = email.split('@', 1)
+        if len(local) <= 1:
+            masked_local = f'{local}***'
+        elif len(local) == 2:
+            masked_local = f'{local[0]}***'
+        else:
+            masked_local = f'{local[0]}***{local[-1]}'
+        return f'{masked_local}@{domain}'
+    except Exception:
+        return 'anonymous'
+
+
+

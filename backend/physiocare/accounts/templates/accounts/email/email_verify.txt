@@ -1,3 +1,4 @@
+Twój kod weryfikacyjny PhysioCare: {{ code }} (ważny {{ validity_minutes }} min)
 ========================================
 PhysioCare - Kod Weryfikacyjny
 ========================================

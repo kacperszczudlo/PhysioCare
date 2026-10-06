@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from rest_framework import serializers
@@ -569,6 +571,12 @@ class ExerciseCompletionCreateSerializer(serializers.ModelSerializer):
 
         model = ExerciseCompletion
         fields = ['assignment_id', 'completed_on', 'done']
+
+    def validate_completed_on(self, value: date | None) -> date | None:
+        """Waliduje datę wykonania ćwiczenia – nie może być w przyszłości."""
+        if value is not None and value > timezone.localdate():
+            raise serializers.ValidationError('Data wykonania nie może być w przyszłości.')
+        return value
 
     def create(self, validated_data: dict[str, object]) -> ExerciseCompletion:
         """Tworzy obiekt wykonania ćwiczenia.

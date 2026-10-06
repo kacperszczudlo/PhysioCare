@@ -6,6 +6,12 @@ module.exports = defineConfig([
   expoConfig,
   eslintConfigPrettier,
   {
-    ignores: ['node_modules/**', '.expo/**', 'dist/**'],
+    ignores: ['node_modules/**', '.expo/**', 'dist/**', '.expo/types/**'],
+  },
+  {
+    rules: {
+      'react-hooks/refs': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
 ])

@@ -52,5 +52,4 @@ def normalize_and_validate_email(value: str | None) -> str:
     except DjangoValidationError as exc:
         raise DjangoValidationError(EMAIL_INVALID, code='invalid') from exc
 
-    return email
-
+    return email.lower()

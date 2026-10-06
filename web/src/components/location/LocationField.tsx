@@ -1,7 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { LocationPickerModal } from './LocationPickerModal'
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { searchAddress, type LocationAddressResult } from './locationServices'
 import './LocationField.css'
+
+const LocationPickerModal = lazy(() =>
+  import('./LocationPickerModal').then((m) => ({ default: m.LocationPickerModal })),
+)
 
 /** Właściwości komponentu wyboru lokalizacji gabinetu. */
 export interface LocationFieldProps {
@@ -147,14 +150,18 @@ export const LocationField: React.FC<LocationFieldProps> = ({
         <span className="location-field-hint">{hint}</span>
       ) : null}
 
-      <LocationPickerModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        initialAddress={value}
-        onSelectLocation={(selectedAddress) => {
-          onChange(selectedAddress)
-        }}
-      />
+      {isModalOpen && (
+        <Suspense fallback={null}>
+          <LocationPickerModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            initialAddress={value}
+            onSelectLocation={(selectedAddress) => {
+              onChange(selectedAddress)
+            }}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }

@@ -24,9 +24,6 @@ const memory = new Map<string, string>()
 async function setItem(key: string, value: string): Promise<void> {
   if (Platform.OS === 'web') {
     memory.set(key, value)
-    try {
-      localStorage.setItem(key, value)
-    } catch {}
     return
   }
   await SecureStore.setItemAsync(key, value)
@@ -40,14 +37,7 @@ async function setItem(key: string, value: string): Promise<void> {
  */
 async function getItem(key: string): Promise<string | null> {
   if (Platform.OS === 'web') {
-    if (memory.has(key)) {
-      return memory.get(key) ?? null
-    }
-    try {
-      return localStorage.getItem(key)
-    } catch {
-      return null
-    }
+    return memory.get(key) ?? null
   }
   return SecureStore.getItemAsync(key)
 }
@@ -61,7 +51,9 @@ async function deleteItem(key: string): Promise<void> {
   if (Platform.OS === 'web') {
     memory.delete(key)
     try {
-      localStorage.removeItem(key)
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(key)
+      }
     } catch {}
     return
   }
@@ -158,6 +150,14 @@ export const tokenStorage = {
   async clear(): Promise<void> {
     await deleteItem(ACCESS_KEY)
     await deleteItem(REFRESH_KEY)
+    try {
+      const { clearOfflineQueue } = await import('@/offline/offlineQueue')
+      await clearOfflineQueue()
+    } catch {}
     await deleteItem(USER_KEY)
+    try {
+      const { clearAllOfflineData } = await import('@/offline/offlineStorage')
+      await clearAllOfflineData()
+    } catch {}
   },
 }

@@ -1,27 +1,28 @@
-import base64
 import hashlib
 import hmac
-import os
 
 from cryptography.fernet import Fernet, InvalidToken
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 _FERNET_INSTANCE: Fernet | None = None
 
 
 def get_fernet_key() -> bytes:
-    """Pobiera skonfigurowany klucz FIELD_ENCRYPTION_KEY lub generuje stabilny klucz na podstawie SECRET_KEY.
+    """Pobiera jawnie skonfigurowany klucz szyfrowania pól.
 
     Returns:
         bytes: Bajty klucza zakodowane w formacie base64.
-    """
-    key_str = os.environ.get('FIELD_ENCRYPTION_KEY', '').strip()
-    if key_str:
-        return key_str.encode('utf-8')
 
-    secret = settings.SECRET_KEY if hasattr(settings, 'SECRET_KEY') else 'physiocare-default-encryption-secret-key-2026'
-    derived = hashlib.sha256(secret.encode('utf-8')).digest()
-    return base64.urlsafe_b64encode(derived)
+    Raises:
+        ImproperlyConfigured: Gdy klucz szyfrowania pól nie jest skonfigurowany.
+    """
+    key_str = getattr(settings, 'FIELD_ENCRYPTION_KEY', '').strip()
+    if not key_str:
+        raise ImproperlyConfigured(
+            'FIELD_ENCRYPTION_KEY jest wymagany do szyfrowania danych w bazie.'
+        )
+    return key_str.encode('utf-8')
 
 
 def get_fernet() -> Fernet:
@@ -86,13 +87,13 @@ def decrypt_value(value: str | None) -> str | None:
         return value
 
     if not value.startswith('gAAAAA'):
-        return value
+        raise ValueError('Wartość nie jest zaszyfrowanym szyfrogramem Fernet.')
 
     cipher = get_fernet()
     try:
         return cipher.decrypt(value.encode('utf-8')).decode('utf-8')
     except InvalidToken:
-        return value
+        raise InvalidToken('Nie można odszyfrować wartości przy użyciu skonfigurowanego klucza.') from None
 
 
 def hash_blind_index(value: str | None) -> str | None:
@@ -115,6 +116,4 @@ def hash_blind_index(value: str | None) -> str | None:
 
     secret = get_fernet_key()
     return hmac.new(secret, value.strip().encode('utf-8'), hashlib.sha256).hexdigest()
-
-
 

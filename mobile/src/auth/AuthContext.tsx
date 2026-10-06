@@ -26,6 +26,8 @@ import { tokenStorage } from '@/api/tokenStorage'
 import type { User } from '@/api/types'
 import { useNetworkOptional } from '@/network/NetworkContext'
 import { unregisterPushToken } from '@/notifications/push'
+import { clearAllOfflineData } from '@/offline/offlineStorage'
+import { clearOfflineQueue, flushOfflineQueue } from '@/offline/offlineQueue'
 
 /**
  * Interfejs udostępniający wartości i metody kontekstu autoryzacji.
@@ -38,7 +40,7 @@ interface AuthContextValue {
   /** Czy użytkownik jest uwierzytelniony */
   isAuthenticated: boolean
   /** Loguje pacjenta za pomocą adresu e-mail i hasła */
-  login: (email: string, password: string) => Promise<void>
+  login: (email: string, password: string, recaptchaToken?: string) => Promise<void>
   /** Loguje pacjenta za pomocą tokena Google */
   loginWithGoogle: (credential: string) => Promise<void>
   /** Rejestruje konto nowego pacjenta */
@@ -95,9 +97,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const next = profileToUser(profile)
       setUser(next)
       await tokenStorage.setCachedUser(next)
+      void flushOfflineQueue().catch(() => undefined)
     } catch (error) {
       if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
         setUser(null)
+        await clearOfflineQueue().catch(() => undefined)
+        await clearAllOfflineData().catch(() => undefined)
         await tokenStorage.clear()
         return
       }
@@ -177,23 +182,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const next = profileToUser(profile)
         setUser(next)
         await tokenStorage.setCachedUser(next)
+        void flushOfflineQueue().catch(() => undefined)
       } catch (error) {
         if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
           setUser(null)
+          await clearOfflineQueue().catch(() => undefined)
+          await clearAllOfflineData().catch(() => undefined)
           await tokenStorage.clear()
         }
       }
     })()
   }, [network?.isOffline, network?.isResolved])
 
-  const login = useCallback(async (email: string, password: string) => {
-    const nextUser = await authApi.login(email, password)
+  const login = useCallback(async (email: string, password: string, recaptchaToken?: string) => {
+    const nextUser = await authApi.login(email, password, recaptchaToken)
     if (nextUser.role !== 'PATIENT') {
       await authApi.logout().catch(() => undefined)
       throw new ApiError(403, 'Aplikacja mobilna jest dostępna tylko dla pacjentów.')
     }
     setUser(nextUser)
     await tokenStorage.setCachedUser(nextUser)
+    void flushOfflineQueue().catch(() => undefined)
   }, [])
 
   const loginWithGoogle = useCallback(async (credential: string) => {
@@ -204,6 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(nextUser)
     await tokenStorage.setCachedUser(nextUser)
+    void flushOfflineQueue().catch(() => undefined)
   }, [])
 
   const register = useCallback(async (payload: PatientRegisterPayload) => {
@@ -215,6 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setUser(result.user)
       await tokenStorage.setCachedUser(result.user)
+      void flushOfflineQueue().catch(() => undefined)
     }
     return result
   }, [])
@@ -227,6 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(nextUser)
     await tokenStorage.setCachedUser(nextUser)
+    void flushOfflineQueue().catch(() => undefined)
   }, [])
 
   const resendEmailCode = useCallback(async (email: string) => {
@@ -243,6 +255,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authApi.logout()
     } finally {
+      await clearOfflineQueue().catch(() => undefined)
+      await clearAllOfflineData().catch(() => undefined)
       setUser(null)
     }
   }, [])

@@ -7,7 +7,7 @@ import { isRunningInExpoGo } from 'expo'
 import Constants from 'expo-constants'
 import * as Device from 'expo-device'
 import { Platform } from 'react-native'
-import type { Router } from 'expo-router'
+import type { Href } from 'expo-router'
 
 import { patientApi } from '@/api/patient'
 import { tokenStorage } from '@/api/tokenStorage'
@@ -17,6 +17,7 @@ import type { DeviceToken } from '@/api/types'
 export type PushPermissionStatus = 'granted' | 'denied' | 'undetermined' | 'unsupported'
 
 type NotificationsModule = typeof import('expo-notifications')
+type NotificationResponse = import('expo-notifications').NotificationResponse
 
 /** Sprawdza, czy aplikacja działa na natywnym urządzeniu (iOS / Android) */
 function isNative(): boolean {
@@ -88,10 +89,10 @@ export async function getPushPermissionStatus(): Promise<PushPermissionStatus> {
     return 'unsupported'
   }
   const current = await NotificationsApi.getPermissionsAsync()
-  if (current.status === 'granted') {
+  if ('granted' in current && current.granted === true) {
     return 'granted'
   }
-  if (current.status === 'denied') {
+  if ('canAskAgain' in current && current.canAskAgain === false) {
     return 'denied'
   }
   return 'undetermined'
@@ -111,11 +112,11 @@ export async function requestPushPermission(): Promise<boolean> {
     return false
   }
   const current = await NotificationsApi.getPermissionsAsync()
-  if (current.status === 'granted') {
+  if ('granted' in current && current.granted === true) {
     return true
   }
   const next = await NotificationsApi.requestPermissionsAsync()
-  return next.status === 'granted'
+  return 'granted' in next && next.granted === true
 }
 
 /** Tworzy domyślny kanał powiadomień dla systemu Android z wysokim priorytetem */
@@ -224,13 +225,11 @@ export async function subscribeNotificationResponses(
     return () => undefined
   }
 
-  function handleResponse(
-    response: { notification: { request: { content: { data: unknown } } } } | null,
-  ) {
+  function handleResponse(response: NotificationResponse | null) {
     if (!response) {
       return
     }
-    const data = response.notification.request.content.data as Record<string, unknown>
+    const data = response.notification.request.content.data
     onResponse(data)
   }
 
@@ -259,7 +258,7 @@ function asString(value: unknown): string | undefined {
  * @param data - Ładunek danych powiadomienia (np. `{ type: 'visit', id: '123' }`).
  */
 export function openFromNotificationData(
-  router: Pick<Router, 'push'>,
+  router: { push: (href: Href) => void },
   data: Record<string, unknown> | undefined,
 ): void {
   if (!data) {

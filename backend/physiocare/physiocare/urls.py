@@ -28,5 +28,6 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path('api/v1/', include('exercises.urls')),
     path('api/v1/', include('documents.urls')),
     path('api/v1/', include('therapists.urls')),
+    path('api/v1/', include('reviews.urls')),
     path('media/<path:path>', ProtectedMediaServeView.as_view(), name='protected-media'),
 ]

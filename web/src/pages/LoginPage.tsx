@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { ApiError } from '@/api/client'
+import { authApi, type MFASetupResponse } from '@/api/auth'
 import { useAuth } from '@/auth/AuthContext'
 import { setGoogleRegistrationDraft } from '@/auth/googleRegistrationDraft'
 import { parseGoogleIdTokenClaims } from '@/auth/parseGoogleIdToken'
@@ -9,7 +10,12 @@ import { GoogleSignInButton, isWebGoogleSignInConfigured } from '@/components/Go
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/ToastContext'
+import { useRecaptcha } from '@/hooks/useRecaptcha'
 import './auth-forms.css'
+
+function qrSvgDataUri(svg: string): string {
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
 
 /**
  * Widok strony logowania z obsługą uwierzytelniania adresem e-mail/hasłem, drugiego składnika 2FA/TOTP oraz Google OAuth.
@@ -30,11 +36,22 @@ export function LoginPage() {
       : null
 
   const { toast } = useToast()
+  const { executeRecaptcha } = useRecaptcha()
   const [email, setEmail] = useState(
     typeof locationState?.email === 'string' ? locationState.email : '',
   )
   const [password, setPassword] = useState('')
   const [mfaStep, setMfaStep] = useState<{ mfa_token: string; email: string } | null>(null)
+  const [mfaSetup, setMfaSetup] = useState<{
+    token: string
+    email: string
+    data: MFASetupResponse
+  } | null>(null)
+  const [mfaSetupPending, setMfaSetupPending] = useState<{
+    token: string
+    email: string
+  } | null>(null)
+  const [mfaEmailCode, setMfaEmailCode] = useState('')
   const [mfaCode, setMfaCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -59,9 +76,14 @@ export function LoginPage() {
     }
     setLoading(true)
     try {
-      const result = await login(trimmedEmail, password)
+      const recaptchaToken = await executeRecaptcha('login')
+      const result = await login(trimmedEmail, password, recaptchaToken)
       if (result.kind === 'mfa_required') {
         setMfaStep({ mfa_token: result.mfa_token, email: result.email })
+        return
+      }
+      if (result.kind === 'mfa_setup_required') {
+        setMfaSetupPending({ token: result.mfa_setup_token, email: result.email })
         return
       }
       navigate(from, { replace: true })
@@ -88,6 +110,64 @@ export function LoginPage() {
       navigate(from, { replace: true })
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Nieprawidłowy kod 2FA.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function onMFASetupSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!mfaSetup) return
+    setError(null)
+    setLoading(true)
+    let mfaEnabled = false
+    try {
+      const recaptchaToken = await executeRecaptcha('login')
+      await authApi.enableMFA(mfaCode.trim(), mfaSetup.token)
+      mfaEnabled = true
+      const result = await login(email.trim(), password, recaptchaToken)
+      if (result.kind === 'mfa_required') {
+        setMfaSetup(null)
+        setMfaCode('')
+        setMfaStep({ mfa_token: result.mfa_token, email: result.email })
+        return
+      }
+      throw new Error('Nie udało się rozpocząć weryfikacji MFA.')
+    } catch (err) {
+      if (mfaEnabled) {
+        setMfaSetup(null)
+        setMfaCode('')
+        setError('MFA zostało aktywowane. Zaloguj się ponownie, używając kodu z aplikacji.')
+        return
+      }
+      if (err instanceof ApiError && err.code === 'AUTH_MFA_ALREADY_ENABLED') {
+        setMfaSetup(null)
+        setMfaCode('')
+        setError('MFA zostało aktywowane. Zaloguj się ponownie, używając kodu z aplikacji.')
+        return
+      }
+      setError(err instanceof ApiError ? err.message : 'Nie udało się aktywować MFA.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function onMFAEmailCodeSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!mfaSetupPending) return
+    setError(null)
+    setLoading(true)
+    try {
+      const data = await authApi.setupMFA(mfaSetupPending.token, mfaEmailCode.trim())
+      setMfaSetup({
+        token: mfaSetupPending.token,
+        email: mfaSetupPending.email,
+        data,
+      })
+      setMfaSetupPending(null)
+      setMfaEmailCode('')
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Nie udało się zweryfikować kodu e-mail.')
     } finally {
       setLoading(false)
     }
@@ -146,6 +226,109 @@ export function LoginPage() {
     } else {
       toast.error(message)
     }
+  }
+
+  if (mfaSetupPending) {
+    return (
+      <div className="auth-form">
+        <header className="auth-form__header">
+          <h1>Potwierdź konfigurację MFA</h1>
+          <p>
+            Wysłaliśmy kod bezpieczeństwa na adres {mfaSetupPending.email}. Wpisz go, aby otrzymać
+            kod QR do aplikacji uwierzytelniającej.
+          </p>
+        </header>
+
+        <form className="auth-form__body" onSubmit={(e) => void onMFAEmailCodeSubmit(e)} noValidate>
+          <Field
+            label="Kod z wiadomości e-mail"
+            name="mfaEmailCode"
+            type="text"
+            placeholder="123456"
+            autoComplete="one-time-code"
+            autoFocus
+            required
+            value={mfaEmailCode}
+            onChange={(e) => setMfaEmailCode(e.target.value)}
+          />
+          {error ? (
+            <p className="auth-form__error" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <Button type="submit" loading={loading} className="auth-form__submit">
+            Potwierdź kod e-mail
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setMfaSetupPending(null)
+              setMfaEmailCode('')
+              setError(null)
+            }}
+          >
+            Wróć do logowania
+          </Button>
+        </form>
+      </div>
+    )
+  }
+
+  if (mfaSetup) {
+    return (
+      <div className="auth-form">
+        <header className="auth-form__header">
+          <h1>Skonfiguruj MFA</h1>
+          <p>
+            Konto {mfaSetup.email} wymaga jednorazowej konfiguracji uwierzytelniania
+            dwuskładnikowego.
+          </p>
+        </header>
+
+        <form className="auth-form__body" onSubmit={(e) => void onMFASetupSubmit(e)} noValidate>
+          <p>Zeskanuj kod QR w Google Authenticator lub wpisz klucz ręcznie.</p>
+          <img
+            src={qrSvgDataUri(mfaSetup.data.qr_code_svg)}
+            alt="Kod QR do konfiguracji aplikacji uwierzytelniającej"
+            style={{ width: '220px', maxWidth: '100%', alignSelf: 'center' }}
+          />
+          <code>{mfaSetup.data.secret_key}</code>
+          <Field
+            label="Kod z aplikacji uwierzytelniającej"
+            name="mfaCode"
+            type="text"
+            placeholder="123456"
+            autoComplete="one-time-code"
+            autoFocus
+            required
+            value={mfaCode}
+            onChange={(e) => setMfaCode(e.target.value)}
+          />
+          {error ? (
+            <p className="auth-form__error" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <Button type="submit" loading={loading} className="auth-form__submit">
+            Aktywuj MFA i zaloguj się
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setMfaSetup(null)
+              setMfaCode('')
+              setMfaSetupPending(null)
+              setMfaEmailCode('')
+              setError(null)
+            }}
+          >
+            Wróć do logowania
+          </Button>
+        </form>
+      </div>
+    )
   }
 
   if (mfaStep) {

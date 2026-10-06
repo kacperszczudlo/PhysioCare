@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import IntegrityError, transaction
 from django.db.models import Q, QuerySet
 from django.utils import timezone
@@ -121,6 +123,7 @@ def _visit_related() -> tuple[str, ...]:
         'therapist__user',
         'therapy_type',
         'episode',
+        'review',
     )
 
 
@@ -158,7 +161,20 @@ class TherapistVisitListCreateView(generics.ListCreateAPIView):
         qs = Visit.objects.filter(therapist=therapist).select_related(*_visit_related())
         date_param = self.request.query_params.get('date')
         if date_param:
-            qs = qs.filter(start_at__date=date_param)
+            try:
+                parsed_date = datetime.date.fromisoformat(date_param)
+                tz = timezone.get_current_timezone()
+                day_start = timezone.make_aware(
+                    datetime.datetime.combine(parsed_date, datetime.time.min),
+                    tz,
+                )
+                day_end = timezone.make_aware(
+                    datetime.datetime.combine(parsed_date + datetime.timedelta(days=1), datetime.time.min),
+                    tz,
+                )
+                qs = qs.filter(start_at__gte=day_start, start_at__lt=day_end)
+            except (ValueError, TypeError):
+                qs = qs.filter(start_at__date=date_param)
         if self.request.query_params.get('upcoming') == '1':
             qs = qs.filter(
                 status=VisitStatus.SCHEDULED,
@@ -406,12 +422,7 @@ class MeVisitListCreateView(PatientSelfMixin, generics.ListCreateAPIView):
             Visit.objects.filter(
                 patient=self.get_patient_profile(),
             )
-            .select_related(
-                'therapist',
-                'therapist__user',
-                'therapy_type',
-                'episode',
-            )
+            .select_related(*_visit_related())
             .order_by('start_at')
         )
 

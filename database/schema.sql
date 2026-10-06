@@ -1,12 +1,12 @@
 -- PhysioCare - auto-generated from Django migrations
--- Generated: 2026-09-14T14:37:14Z
+-- Generated: 2026-10-05T12:55:06Z
 -- Do not edit manually. Run: python scripts/sync_schema_sql.py
 
 --
 -- PostgreSQL database dump
 --
 
-\restrict 7K8gIMotVmFMb00L5uMxYW4BPv17CaIld7YHBBSNRbMNtTPd1vJew9bmC4g6xcl
+\restrict cuIaTm14nLMCHLhHPcxfiDt1dkG3s98DoTq40OYSsIj0j4b0Q4GYahW3UvgXOq2
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -139,10 +139,10 @@ CREATE TABLE public.body_area_pain (
     body_region character varying(50) NOT NULL,
     view_side character varying(10) NOT NULL,
     vas_score smallint NOT NULL,
-    pain_character jsonb NOT NULL,
+    pain_character text NOT NULL,
     recorded_at timestamp with time zone NOT NULL,
     episode_id uuid NOT NULL,
-    treatment_targets jsonb NOT NULL,
+    treatment_targets text NOT NULL,
     CONSTRAINT body_area_pain_vas_score_check CHECK ((vas_score >= 0)),
     CONSTRAINT chk_body_pain_vas_score CHECK (((vas_score >= 0) AND (vas_score <= 10)))
 );
@@ -478,11 +478,24 @@ CREATE TABLE public.password_reset_tokens (
 CREATE TABLE public.patient_profiles (
     id uuid NOT NULL,
     created_at timestamp with time zone NOT NULL,
-    pesel character varying(11),
+    pesel character varying(255),
     phone character varying(20) NOT NULL,
     avatar_url character varying(500) NOT NULL,
-    therapist_id uuid NOT NULL,
     user_id uuid NOT NULL
+);
+
+
+--
+-- Name: patient_therapist_links; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.patient_therapist_links (
+    id uuid NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    status character varying(20) NOT NULL,
+    patient_id uuid NOT NULL,
+    therapist_id uuid NOT NULL
 );
 
 
@@ -518,6 +531,27 @@ CREATE TABLE public.recepta_na_ruch_referrals (
 
 
 --
+-- Name: therapist_availability_slots; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.therapist_availability_slots (
+    id uuid NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    start_at timestamp with time zone,
+    end_at timestamp with time zone,
+    day_of_week smallint,
+    start_time time without time zone,
+    end_time time without time zone,
+    is_recurring boolean NOT NULL,
+    is_active boolean NOT NULL,
+    therapist_id uuid NOT NULL,
+    CONSTRAINT chk_avail_slot_valid_range CHECK ((((end_at > start_at) AND (end_at IS NOT NULL) AND (NOT is_recurring) AND (start_at IS NOT NULL)) OR ((day_of_week IS NOT NULL) AND (end_time > start_time) AND (end_time IS NOT NULL) AND is_recurring AND (start_time IS NOT NULL)))),
+    CONSTRAINT therapist_availability_slots_day_of_week_check CHECK ((day_of_week >= 0))
+);
+
+
+--
 -- Name: therapist_profiles; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -533,7 +567,30 @@ CREATE TABLE public.therapist_profiles (
     location_address character varying(300) NOT NULL,
     experience_years smallint NOT NULL,
     qualification_level character varying(20) NOT NULL,
-    CONSTRAINT therapist_profiles_experience_years_check CHECK ((experience_years >= 0))
+    rating_avg numeric(3,2) NOT NULL,
+    rating_count integer NOT NULL,
+    CONSTRAINT therapist_profiles_experience_years_check CHECK ((experience_years >= 0)),
+    CONSTRAINT therapist_profiles_rating_count_check CHECK ((rating_count >= 0))
+);
+
+
+--
+-- Name: therapist_reviews; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.therapist_reviews (
+    id uuid NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    rating smallint NOT NULL,
+    comment text NOT NULL,
+    is_anonymous boolean NOT NULL,
+    therapist_reply text NOT NULL,
+    therapist_replied_at timestamp with time zone,
+    is_visible boolean NOT NULL,
+    patient_id uuid NOT NULL,
+    therapist_id uuid NOT NULL,
+    visit_id uuid,
+    CONSTRAINT therapist_reviews_rating_check CHECK ((rating >= 0))
 );
 
 
@@ -618,7 +675,8 @@ CREATE TABLE public.treatment_episodes (
     started_at date NOT NULL,
     ended_at date,
     patient_id uuid NOT NULL,
-    functional_diagnosis text NOT NULL
+    functional_diagnosis text NOT NULL,
+    therapist_id uuid
 );
 
 
@@ -628,7 +686,7 @@ CREATE TABLE public.treatment_episodes (
 
 CREATE TABLE public.user_mfa (
     id uuid NOT NULL,
-    secret_key character varying(64) NOT NULL,
+    secret_key character varying(255) NOT NULL,
     is_enabled boolean NOT NULL,
     backup_codes jsonb NOT NULL,
     created_at timestamp with time zone NOT NULL,
@@ -718,7 +776,8 @@ CREATE TABLE public.visit_notes (
     created_at timestamp with time zone NOT NULL,
     content text NOT NULL,
     episode_id uuid NOT NULL,
-    visit_id uuid
+    visit_id uuid,
+    therapist_id uuid
 );
 
 
@@ -1034,6 +1093,14 @@ ALTER TABLE ONLY public.patient_profiles
 
 
 --
+-- Name: patient_therapist_links patient_therapist_links_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.patient_therapist_links
+    ADD CONSTRAINT patient_therapist_links_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: physician_order_refusals physician_order_refusals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1047,6 +1114,14 @@ ALTER TABLE ONLY public.physician_order_refusals
 
 ALTER TABLE ONLY public.recepta_na_ruch_referrals
     ADD CONSTRAINT recepta_na_ruch_referrals_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: therapist_availability_slots therapist_availability_slots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.therapist_availability_slots
+    ADD CONSTRAINT therapist_availability_slots_pkey PRIMARY KEY (id);
 
 
 --
@@ -1071,6 +1146,22 @@ ALTER TABLE ONLY public.therapist_profiles
 
 ALTER TABLE ONLY public.therapist_profiles
     ADD CONSTRAINT therapist_profiles_user_id_key UNIQUE (user_id);
+
+
+--
+-- Name: therapist_reviews therapist_reviews_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.therapist_reviews
+    ADD CONSTRAINT therapist_reviews_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: therapist_reviews therapist_reviews_visit_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.therapist_reviews
+    ADD CONSTRAINT therapist_reviews_visit_id_key UNIQUE (visit_id);
 
 
 --
@@ -1162,11 +1253,27 @@ ALTER TABLE ONLY public.notification_preferences
 
 
 --
+-- Name: patient_therapist_links uniq_patient_therapist_link; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.patient_therapist_links
+    ADD CONSTRAINT uniq_patient_therapist_link UNIQUE (patient_id, therapist_id);
+
+
+--
 -- Name: therapy_types uniq_therapy_type_therapist_name; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.therapy_types
     ADD CONSTRAINT uniq_therapy_type_therapist_name UNIQUE (therapist_id, name);
+
+
+--
+-- Name: therapist_reviews unique_review_per_visit; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.therapist_reviews
+    ADD CONSTRAINT unique_review_per_visit UNIQUE (patient_id, visit_id);
 
 
 --
@@ -1440,6 +1547,20 @@ CREATE INDEX exercises_therapist_id_311655b0 ON public.exercises USING btree (th
 
 
 --
+-- Name: idx_avail_therapist_dow; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_avail_therapist_dow ON public.therapist_availability_slots USING btree (therapist_id, is_active, day_of_week);
+
+
+--
+-- Name: idx_avail_therapist_start; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_avail_therapist_start ON public.therapist_availability_slots USING btree (therapist_id, is_active, start_at);
+
+
+--
 -- Name: idx_device_token_user_active; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1489,10 +1610,31 @@ CREATE INDEX idx_notif_delivery_user_dedupe ON public.notification_deliveries US
 
 
 --
--- Name: idx_patient_profiles_therapist; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_pt_link_patient_status; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_patient_profiles_therapist ON public.patient_profiles USING btree (therapist_id);
+CREATE INDEX idx_pt_link_patient_status ON public.patient_therapist_links USING btree (patient_id, status);
+
+
+--
+-- Name: idx_pt_link_therapist_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_pt_link_therapist_status ON public.patient_therapist_links USING btree (therapist_id, status);
+
+
+--
+-- Name: idx_review_rating; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_review_rating ON public.therapist_reviews USING btree (rating);
+
+
+--
+-- Name: idx_review_therapist_visible; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_review_therapist_visible ON public.therapist_reviews USING btree (therapist_id, is_visible, created_at DESC);
 
 
 --
@@ -1594,10 +1736,17 @@ CREATE INDEX password_reset_tokens_user_id_0aeaaad3 ON public.password_reset_tok
 
 
 --
--- Name: patient_profiles_therapist_id_0fe64199; Type: INDEX; Schema: public; Owner: -
+-- Name: patient_therapist_links_patient_id_73c4a339; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX patient_profiles_therapist_id_0fe64199 ON public.patient_profiles USING btree (therapist_id);
+CREATE INDEX patient_therapist_links_patient_id_73c4a339 ON public.patient_therapist_links USING btree (patient_id);
+
+
+--
+-- Name: patient_therapist_links_therapist_id_877940f2; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX patient_therapist_links_therapist_id_877940f2 ON public.patient_therapist_links USING btree (therapist_id);
 
 
 --
@@ -1636,10 +1785,31 @@ CREATE INDEX recepta_na_ruch_referrals_therapist_id_e0535a7b ON public.recepta_n
 
 
 --
+-- Name: therapist_availability_slots_therapist_id_b45e9003; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX therapist_availability_slots_therapist_id_b45e9003 ON public.therapist_availability_slots USING btree (therapist_id);
+
+
+--
 -- Name: therapist_profiles_pwzf_number_2fe72337_like; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX therapist_profiles_pwzf_number_2fe72337_like ON public.therapist_profiles USING btree (pwzf_number varchar_pattern_ops);
+
+
+--
+-- Name: therapist_reviews_patient_id_a38ad284; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX therapist_reviews_patient_id_a38ad284 ON public.therapist_reviews USING btree (patient_id);
+
+
+--
+-- Name: therapist_reviews_therapist_id_ce0b671e; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX therapist_reviews_therapist_id_ce0b671e ON public.therapist_reviews USING btree (therapist_id);
 
 
 --
@@ -1668,6 +1838,13 @@ CREATE INDEX token_blacklist_outstandingtoken_user_id_83bc629a ON public.token_b
 --
 
 CREATE INDEX treatment_episodes_patient_id_2b6d8b9d ON public.treatment_episodes USING btree (patient_id);
+
+
+--
+-- Name: treatment_episodes_therapist_id_a9fde9be; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX treatment_episodes_therapist_id_a9fde9be ON public.treatment_episodes USING btree (therapist_id);
 
 
 --
@@ -1717,6 +1894,13 @@ CREATE INDEX users_user_permissions_permission_id_6d08dcd2 ON public.users_user_
 --
 
 CREATE INDEX visit_notes_episode_id_4154d5bb ON public.visit_notes USING btree (episode_id);
+
+
+--
+-- Name: visit_notes_therapist_id_6f1242b9; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX visit_notes_therapist_id_6f1242b9 ON public.visit_notes USING btree (therapist_id);
 
 
 --
@@ -1987,19 +2171,27 @@ ALTER TABLE ONLY public.password_reset_tokens
 
 
 --
--- Name: patient_profiles patient_profiles_therapist_id_0fe64199_fk_therapist_profiles_id; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.patient_profiles
-    ADD CONSTRAINT patient_profiles_therapist_id_0fe64199_fk_therapist_profiles_id FOREIGN KEY (therapist_id) REFERENCES public.therapist_profiles(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: patient_profiles patient_profiles_user_id_e4d82ea0_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.patient_profiles
     ADD CONSTRAINT patient_profiles_user_id_e4d82ea0_fk_users_id FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: patient_therapist_links patient_therapist_li_patient_id_73c4a339_fk_patient_p; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.patient_therapist_links
+    ADD CONSTRAINT patient_therapist_li_patient_id_73c4a339_fk_patient_p FOREIGN KEY (patient_id) REFERENCES public.patient_profiles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: patient_therapist_links patient_therapist_li_therapist_id_877940f2_fk_therapist; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.patient_therapist_links
+    ADD CONSTRAINT patient_therapist_li_therapist_id_877940f2_fk_therapist FOREIGN KEY (therapist_id) REFERENCES public.therapist_profiles(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2043,11 +2235,43 @@ ALTER TABLE ONLY public.recepta_na_ruch_referrals
 
 
 --
+-- Name: therapist_availability_slots therapist_availabili_therapist_id_b45e9003_fk_therapist; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.therapist_availability_slots
+    ADD CONSTRAINT therapist_availabili_therapist_id_b45e9003_fk_therapist FOREIGN KEY (therapist_id) REFERENCES public.therapist_profiles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: therapist_profiles therapist_profiles_user_id_e67f6201_fk_users_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.therapist_profiles
     ADD CONSTRAINT therapist_profiles_user_id_e67f6201_fk_users_id FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: therapist_reviews therapist_reviews_patient_id_a38ad284_fk_patient_profiles_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.therapist_reviews
+    ADD CONSTRAINT therapist_reviews_patient_id_a38ad284_fk_patient_profiles_id FOREIGN KEY (patient_id) REFERENCES public.patient_profiles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: therapist_reviews therapist_reviews_therapist_id_ce0b671e_fk_therapist; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.therapist_reviews
+    ADD CONSTRAINT therapist_reviews_therapist_id_ce0b671e_fk_therapist FOREIGN KEY (therapist_id) REFERENCES public.therapist_profiles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: therapist_reviews therapist_reviews_visit_id_3796a923_fk_visits_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.therapist_reviews
+    ADD CONSTRAINT therapist_reviews_visit_id_3796a923_fk_visits_id FOREIGN KEY (visit_id) REFERENCES public.visits(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2080,6 +2304,14 @@ ALTER TABLE ONLY public.token_blacklist_outstandingtoken
 
 ALTER TABLE ONLY public.treatment_episodes
     ADD CONSTRAINT treatment_episodes_patient_id_2b6d8b9d_fk_patient_profiles_id FOREIGN KEY (patient_id) REFERENCES public.patient_profiles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: treatment_episodes treatment_episodes_therapist_id_a9fde9be_fk_therapist; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.treatment_episodes
+    ADD CONSTRAINT treatment_episodes_therapist_id_a9fde9be_fk_therapist FOREIGN KEY (therapist_id) REFERENCES public.therapist_profiles(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2131,6 +2363,14 @@ ALTER TABLE ONLY public.visit_notes
 
 
 --
+-- Name: visit_notes visit_notes_therapist_id_6f1242b9_fk_therapist_profiles_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.visit_notes
+    ADD CONSTRAINT visit_notes_therapist_id_6f1242b9_fk_therapist_profiles_id FOREIGN KEY (therapist_id) REFERENCES public.therapist_profiles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: visit_notes visit_notes_visit_id_43338519_fk_visits_id; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2174,5 +2414,5 @@ ALTER TABLE ONLY public.visits
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 7K8gIMotVmFMb00L5uMxYW4BPv17CaIld7YHBBSNRbMNtTPd1vJew9bmC4g6xcl
+\unrestrict cuIaTm14nLMCHLhHPcxfiDt1dkG3s98DoTq40OYSsIj0j4b0Q4GYahW3UvgXOq2
 

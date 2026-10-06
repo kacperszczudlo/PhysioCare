@@ -62,4 +62,23 @@ describe('StatusSelect Component', () => {
     fireEvent.click(trigger)
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
   })
+
+  it('navigates with Home and End keys and closes on Escape', () => {
+    const handleChange = vi.fn()
+    render(<StatusSelect value="IN_PROGRESS" onChange={handleChange} />)
+
+    const trigger = screen.getByRole('button')
+    fireEvent.click(trigger)
+
+    expect(trigger).toHaveAttribute('aria-controls')
+    expect(trigger.getAttribute('aria-activedescendant')).toContain('IN_PROGRESS')
+
+    fireEvent.keyDown(trigger, { key: 'End' })
+    fireEvent.keyDown(trigger, { key: 'Enter' })
+    expect(handleChange).toHaveBeenCalledWith('INTERRUPTED' as EpisodeStatus)
+
+    fireEvent.click(trigger)
+    fireEvent.keyDown(trigger, { key: 'Escape' })
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+  })
 })

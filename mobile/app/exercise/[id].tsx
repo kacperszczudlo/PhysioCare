@@ -4,10 +4,10 @@
  */
 
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 
-import { getErrorMessage } from '@/api/client'
+import { getErrorMessage, isNetworkFailure } from '@/api/client'
 import { patientApi } from '@/api/patient'
 import type { CategoryKind, TodayExercise } from '@/api/types'
 import { ErrorBanner, LoadingBlock } from '@/components/AsyncState'
@@ -16,6 +16,9 @@ import { Button } from '@/components/Button'
 import { ExerciseVideoPlayer } from '@/components/ExerciseVideoPlayer'
 import { SectionCard } from '@/components/ScreenHeader'
 import { downloadAuthenticatedMediaToCache, useAuthenticatedMediaSource } from '@/lib/authMedia'
+import { getCachedExerciseDetail, setCachedExerciseDetail } from '@/offline/offlineCache'
+import { enqueueExerciseToggle } from '@/offline/offlineQueue'
+import { useToast } from '@/components/ToastContext'
 import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
 function tagStyleForKind(kind: CategoryKind) {
@@ -56,20 +59,43 @@ function tagTextForKind(kind: CategoryKind) {
 export default function ExerciseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
+  const { toast } = useToast()
   const [item, setItem] = useState<TodayExercise | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [mediaError, setMediaError] = useState<string | null>(null)
+  const hasCachedRef = useRef(false)
 
   const { source: mediaSource } = useAuthenticatedMediaSource(item?.exercise_file_url)
+
+  // Sprawdź czy mamy to ćwiczenie zapamiętane w pamięci trwałej offline
+  useEffect(() => {
+    if (!id) {
+      return
+    }
+    let mounted = true
+    void getCachedExerciseDetail(id).then((cached) => {
+      if (!mounted || !cached) {
+        return
+      }
+      hasCachedRef.current = true
+      setItem(cached.item)
+      setLoading(false)
+    })
+    return () => {
+      mounted = false
+    }
+  }, [id])
 
   const load = useCallback(async () => {
     if (!id) {
       return
     }
-    setLoading(true)
-    setError(null)
+    if (!hasCachedRef.current) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const today = await patientApi.getExercisesToday()
       let found = today.find((ex) => ex.id === id) ?? null
@@ -81,12 +107,21 @@ export default function ExerciseDetailScreen() {
         }
       }
       setItem(found)
-      if (!found) {
+      if (found) {
+        hasCachedRef.current = true
+        void setCachedExerciseDetail(id, found)
+      } else {
         setError('Nie znaleziono tego zalecenia.')
       }
     } catch (err) {
-      setError(getErrorMessage(err, 'Nie udało się pobrać ćwiczenia.'))
-      setItem(null)
+      if (isNetworkFailure(err) && hasCachedRef.current) {
+        setError(null)
+      } else {
+        setError(getErrorMessage(err, 'Nie udało się pobrać ćwiczenia.'))
+        if (!hasCachedRef.current) {
+          setItem(null)
+        }
+      }
     } finally {
       setLoading(false)
     }
@@ -102,13 +137,26 @@ export default function ExerciseDetailScreen() {
     }
     const previous = item.completed_today
     const nextDone = !previous
+    const updated = { ...item, completed_today: nextDone }
     setBusy(true)
-    setItem({ ...item, completed_today: nextDone })
+    setItem(updated)
+    void setCachedExerciseDetail(item.id, updated)
+
     try {
       await patientApi.completeExercise(item.id, undefined, nextDone)
     } catch (err) {
-      setItem({ ...item, completed_today: previous })
-      setError(getErrorMessage(err, 'Nie udało się zaktualizować zalecenia.'))
+      if (isNetworkFailure(err)) {
+        await enqueueExerciseToggle(item.id, undefined, nextDone)
+        toast.info(
+          'Zapisano offline',
+          'Oznaczenie ćwiczenia zsynchronizuje się po powrocie internetu.',
+        )
+      } else {
+        const reverted = { ...item, completed_today: previous }
+        setItem(reverted)
+        void setCachedExerciseDetail(item.id, reverted)
+        setError(getErrorMessage(err, 'Nie udało się zaktualizować zalecenia.'))
+      }
     } finally {
       setBusy(false)
     }

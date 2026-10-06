@@ -3,6 +3,7 @@ from django.contrib.postgres.fields import DateTimeRangeField, RangeBoundary, Ra
 from django.db import models
 from django.db.models import Func, Q
 
+from core.fields import EncryptedTextField
 from core.models import TimestampedModel, TimestampedUpdatedModel
 
 
@@ -91,10 +92,10 @@ class Visit(TimestampedModel):
         default=VisitStatus.SCHEDULED,
     )
     location_address = models.CharField(max_length=300, blank=True, default='')
-    prep_instructions = models.TextField(blank=True, default='')
-    patient_summary = models.TextField(blank=True, default='')
-    patient_note = models.TextField(blank=True, default='')
-    cancel_reason = models.TextField(blank=True, default='')
+    prep_instructions = EncryptedTextField(blank=True, default='')
+    patient_summary = EncryptedTextField(blank=True, default='')
+    patient_note = EncryptedTextField(blank=True, default='')
+    cancel_reason = EncryptedTextField(blank=True, default='')
 
     class Meta:
         """Metadane modelu Visit."""

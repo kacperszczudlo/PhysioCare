@@ -43,6 +43,7 @@ export function SchedulePage() {
   const [day, setDay] = useState(() => startOfDay(new Date()))
   const [visits, setVisits] = useState<Visit[]>([])
   const [pendingAll, setPendingAll] = useState<Visit[]>([])
+  const [hasSavedSchedule, setHasSavedSchedule] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -105,13 +106,15 @@ export function SchedulePage() {
       }
       setError(null)
       try {
-        const [dayVisits, pending] = await Promise.all([
+        const [dayVisits, pending, availabilities] = await Promise.all([
           schedulingApi.listVisitsForDate(dateIso),
           schedulingApi.listPendingVisits(),
+          schedulingApi.listAvailabilities(),
         ])
         if (!cancelled) {
           setVisits(dayVisits)
           setPendingAll(pending)
+          setHasSavedSchedule(availabilities.some((s) => s.is_recurring && s.is_active))
 
           if (!didAutoFocusPending && pending.length > 0) {
             const soonest = [...pending].sort(
@@ -273,14 +276,42 @@ export function SchedulePage() {
           className={`schedule-segmented-tab ${activeTab === 'AVAILABILITY' ? 'active' : ''}`}
           onClick={() => setActiveTab('AVAILABILITY')}
         >
-          Grafik i dostępność
+          <span>Grafik i dostępność</span>
+          {hasSavedSchedule === false ? (
+            <span
+              className="schedule-tab-indicator"
+              title="Wymaga ustalenia i zapisu"
+              aria-label="Wymaga ustalenia i zapisu"
+            />
+          ) : null}
         </button>
       </div>
 
       {activeTab === 'AVAILABILITY' ? (
-        <AvailabilityTabView />
+        <AvailabilityTabView onScheduleSaved={reload} />
       ) : (
         <>
+          {hasSavedSchedule === false ? (
+            <div className="schedule-unconfigured-banner" role="status">
+              <div className="schedule-unconfigured-banner__copy">
+                <p className="schedule-unconfigured-banner__title">
+                  Harmonogram pracy gabinetu nie został jeszcze ustalony
+                </p>
+                <p className="schedule-unconfigured-banner__meta">
+                  Pacjenci nie mogą rezerwować wizyt online, dopóki nie zatwierdzisz swoich stałych
+                  godzin przyjęć.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={() => setActiveTab('AVAILABILITY')}
+              >
+                Ustal grafik pracy
+              </Button>
+            </div>
+          ) : null}
           {pendingSorted.length > 0 ? (
             <div className="schedule-pending-banner" role="status">
               <div className="schedule-pending-banner__copy">

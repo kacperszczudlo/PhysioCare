@@ -63,9 +63,7 @@ yarn-error.log*
 pnpm-debug.log*
 
 # --- IDE / OS / Windows ---
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
+.vscode/
 .idea/
 *.swp
 *~
@@ -88,3 +86,7 @@ id_rsa.pub
 *.tmp
 .direnv/
 .python-version.local
+
+docs/cheat-sheet.md
+cheat-sheet.md
+*cheat-sheet*.md

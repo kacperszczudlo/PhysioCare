@@ -9,6 +9,7 @@ class NotificationPreferenceKey(models.TextChoices):
     WAITLIST: str = 'waitlist', 'Lista rezerwowa'
     EXERCISE_REMINDER: str = 'exercise_reminder', 'Przypomnienia o ćwiczeniach'
     NEW_DOCUMENT: str = 'new_document', 'Nowe dokumenty'
+    REVIEW_REQUEST: str = 'review_request', 'Prośba o ocenę wizyty'
 
 
 CANONICAL_PREF_KEYS: tuple[str, ...] = tuple(NotificationPreferenceKey.values)

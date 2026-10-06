@@ -129,6 +129,8 @@ class TherapistDashboardStatsView(APIView):
             'visits_today': upcoming,
             'patients_total': patients_count,
             'assignments_active': assignments_active,
+            'rating_avg': float(therapist.rating_avg),
+            'rating_count': therapist.rating_count,
         })
 
 
@@ -171,4 +173,4 @@ class TherapistPublicListView(generics.ListAPIView):
                 query |= Q(user__first_name__icontains=term)
                 query |= Q(user__last_name__icontains=term)
             qs = qs.filter(query)
-        return qs
+        return qs.order_by('user__last_name', 'user__first_name', 'pk')

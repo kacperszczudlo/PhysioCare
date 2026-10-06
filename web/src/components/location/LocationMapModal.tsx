@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import { DEFAULT_CENTER, openInGoogleMaps, searchAddress } from './locationServices'
+import { Modal } from '@/components/ui/Modal'
 import './LocationMapModal.css'
 
 interface LocationMapModalProps {
@@ -93,48 +94,41 @@ export const LocationMapModal: React.FC<LocationMapModalProps> = ({
     }
   }, [isOpen, coords, address, title])
 
-  if (!isOpen) return null
-
   return (
-    <div className="location-view-overlay" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="location-view-card" onClick={(e) => e.stopPropagation()}>
-        <header className="location-view-header">
-          <div className="location-view-title">
-            <h3>{title}</h3>
-            <p className="location-view-address">{address || 'Brak wyznaczonego adresu'}</p>
-          </div>
-          <button className="location-view-close" onClick={onClose} aria-label="Zamknij modal">
-            &times;
-          </button>
-        </header>
-
-        <div className="location-view-map-container">
-          <div ref={mapContainerRef} className="location-view-map-element" />
-        </div>
-
-        <footer className="location-view-footer">
-          <button type="button" className="location-picker-cancel-btn" onClick={onClose}>
-            Zamknij
-          </button>
-          <button
-            type="button"
-            className="location-view-navigate-btn"
-            onClick={() => openInGoogleMaps(address || coords)}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
-            </svg>
-            Otwórz w Google Maps / Jak dojechać
-          </button>
-        </footer>
+    <Modal
+      open={isOpen}
+      title={title}
+      description={address || 'Brak wyznaczonego adresu'}
+      size="xl"
+      onClose={onClose}
+      bodyClassName="location-view-modal-body"
+    >
+      <div className="location-view-map-container">
+        <div ref={mapContainerRef} className="location-view-map-element" />
       </div>
-    </div>
+
+      <footer className="location-view-footer">
+        <button type="button" className="location-picker-cancel-btn" onClick={onClose}>
+          Zamknij
+        </button>
+        <button
+          type="button"
+          className="location-view-navigate-btn"
+          onClick={() => openInGoogleMaps(address || coords)}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+          </svg>
+          Otwórz w Google Maps / Jak dojechać
+        </button>
+      </footer>
+    </Modal>
   )
 }

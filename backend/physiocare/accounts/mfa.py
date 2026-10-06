@@ -10,11 +10,15 @@ import qrcode.image.svg
 from django.contrib.auth import get_user_model
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 
+from core.logging_formatters import mask_email_for_logging
+
 User: type[object] = get_user_model()
 logger: logging.Logger = logging.getLogger('physiocare.auth')
 
 MFA_PREAUTH_SALT: str = 'physiocare.2fa.preauth'
 MFA_PREAUTH_MAX_AGE: int = 300
+MFA_SETUP_SALT: str = 'physiocare.2fa.setup'
+MFA_SETUP_MAX_AGE: int = 600
 
 TOTP_CODE_LENGTH: int = 6
 TOTP_VALID_WINDOW: int = 1
@@ -166,7 +170,11 @@ def verify_and_consume_backup_code(user_mfa: object, code: str) -> bool:
             user_mfa.save(update_fields=['backup_codes', 'updated_at'])
         user_obj = user_mfa.user if hasattr(user_mfa, 'user') else None
         user_email = user_obj.email if user_obj and hasattr(user_obj, 'email') else 'unknown'
-        logger.info('Backup code consumed for user=%s', user_email)
+        logger.info(
+            'Backup code consumed for user_id=%s email=%s',
+            getattr(user_obj, 'id', None),
+            mask_email_for_logging(user_email),
+        )
         return True
 
     return False
@@ -219,3 +227,56 @@ def verify_mfa_preauth_token(token: str, max_age: int = MFA_PREAUTH_MAX_AGE) -> 
     except (SignatureExpired, BadSignature, ValueError):
         return None
 
+
+def issue_mfa_setup_token(user: object, email_verified: bool = False) -> str:
+    """Generuje krótkotrwały token ograniczony do pierwszej konfiguracji MFA."""
+    if user is None:
+        raise TypeError("Argument 'user' nie może być None.")
+
+    signer = TimestampSigner(salt=MFA_SETUP_SALT)
+    user_id = user.id if hasattr(user, 'id') else user
+    flag = 'ev' if email_verified else 'p'
+    return signer.sign(f'{user_id}:{secrets.token_urlsafe(32)}:{flag}')
+
+
+def verify_mfa_setup_token(token: str, max_age: int = MFA_SETUP_MAX_AGE) -> object | None:
+    """Weryfikuje token konfiguracji MFA i zwraca aktywnego użytkownika."""
+    if not isinstance(token, str):
+        raise TypeError("Argument 'token' musi być typu str.")
+    if not isinstance(max_age, int):
+        raise TypeError("Argument 'max_age' musi być typu int.")
+
+    if not token:
+        return None
+    signer = TimestampSigner(salt=MFA_SETUP_SALT)
+    try:
+        signed_value = signer.unsign(token, max_age=max_age)
+        parts = signed_value.split(':')
+        if len(parts) < 2:
+            return None
+        user_id_str = parts[0]
+        if not user_id_str:
+            return None
+        return User.objects.filter(id=user_id_str, is_active=True).first()
+    except (SignatureExpired, BadSignature, ValueError):
+        return None
+
+
+def is_mfa_setup_token_email_verified(token: str, max_age: int = MFA_SETUP_MAX_AGE) -> bool:
+    """Sprawdza, czy token konfiguracji MFA został wystawiony po zweryfikowaniu e-maila."""
+    if not isinstance(token, str) or not isinstance(max_age, int) or not token:
+        return False
+    signer = TimestampSigner(salt=MFA_SETUP_SALT)
+    try:
+        signed_value = signer.unsign(token, max_age=max_age)
+        parts = signed_value.split(':')
+        return len(parts) >= 3 and parts[2] == 'ev'
+    except (SignatureExpired, BadSignature, ValueError):
+        return False
+
+
+def hash_mfa_setup_token(token: str) -> str:
+    """Zwraca jednokierunkowy skrót tokenu konfiguracji MFA do zapisania w bazie."""
+    if not isinstance(token, str):
+        raise TypeError("Argument 'token' musi być typu str.")
+    return hashlib.sha256(token.encode('utf-8')).hexdigest()

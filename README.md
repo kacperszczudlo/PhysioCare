@@ -6,8 +6,8 @@ Narzędzie do prowadzenia gabinetu fizjoterapeutycznego: panel WWW dla terapeuty
 
 PhysioCare obsługuje:
 
-- **panel terapeuty (web):** kalendarz wizyt, kartę pacjenta z epizodami, mapę ciała (VAS), katalog ćwiczeń i pliki dokumentacji;
-- **aplikację pacjenta (mobile):** terminy, ćwiczenia domowe (compliance), dokumenty kliniczne (kierowanie, wyroby, Recepta na Ruch) oraz zgody RODO.
+- **panel terapeuty (web):** kalendarz wizyt, kartę pacjenta z epizodami, mapę ciała (VAS), katalog ćwiczeń, pliki dokumentacji oraz moduł opinii i ocen pacjentów;
+- **aplikację pacjenta (mobile):** terminy wizyt, ćwiczenia domowe (compliance), wystawianie opinii i ocen specjalistom, dokumenty kliniczne (kierowanie, wyroby, Recepta na Ruch) oraz zgody RODO.
 
 ## Stos technologiczny
 
@@ -83,7 +83,8 @@ Skopiuj szablon i uzupełnij sekrety oraz dane bazy:
 Copy-Item .env.example .env
 ```
 
-W `.env` ustaw co najmniej: `POSTGRES_*`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`.  
+W `.env` ustaw co najmniej: `POSTGRES_*`, `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS` oraz
+`FIELD_ENCRYPTION_KEY` (klucz Fernet przeznaczony wyłącznie do szyfrowania danych w bazie).
 Opcjonalnie: `EMAIL_*` (reset hasła), `GOOGLE_CLIENT_IDS` (logowanie Google).
 
 Jeśli PostgreSQL jest świeżo zainstalowany, utwórz użytkownika, bazę i `btree_gist`:
@@ -129,13 +130,22 @@ Ten sam adres IP dodaj do `DJANGO_ALLOWED_HOSTS` w rootowym `.env` (np. `localho
 
 ### 4. Codzienny start — trzy procesy
 
-Stack wymaga **trzech osobnych terminali**. Kolejność ma znaczenie: najpierw API, potem klienci.
+Do komfortowej pracy w VS Code otwórz **trzy terminale** (np. funkcja `Split Terminal`):
+
+```
+┌─────────────────────────┬─────────────────────────┬─────────────────────────┐
+│  TERMINAL 1             │  TERMINAL 2             │  TERMINAL 3             │
+│  Backend (Django API)   │  Web (Panel React)      │  Mobile (Metro / Expo)  │
+└─────────────────────────┴─────────────────────────┴─────────────────────────┘
+```
+
+> **Wskazówka (Emulator Androida):** Przed startem aplikacji mobilnej uruchom wirtualny telefon (w VS Code: `Ctrl + Shift + P` → `Android iOS Emulator: Run Android Emulator` lub z poziomu *Virtual Device Manager* w Android Studio).
 
 #### Terminal 1 — Backend (API)
 
 REST: `http://127.0.0.1:8000/api/v1/` (lokalnie) oraz `http://<IP-LAN>:8000/api/v1/` (telefon w tej samej sieci Wi‑Fi).
 
-Domyślny `runserver` bez hosta słucha tylko na `127.0.0.1` — telefon z `EXPO_PUBLIC_API_BASE_URL=http://<IP-LAN>:8000/...` wtedy **nie** połączy się z API. Dlatego startuj z `0.0.0.0:8000`:
+Domyślny `runserver` bez hosta słucha tylko na `127.0.0.1` — telefon/emulator z `EXPO_PUBLIC_API_BASE_URL=http://<IP>:8000/...` wtedy **nie** połączy się z API. Dlatego startuj z `0.0.0.0:8000`:
 
 ```powershell
 cd backend
@@ -171,25 +181,38 @@ Szczegóły (Google Sign-In, proxy SSE): [web/README.md](web/README.md).
 
 #### Terminal 3 — Mobile (aplikacja pacjenta)
 
+Uruchomienie bezpośrednio na emulatorze Androida:
+
+```powershell
+cd mobile
+npm.cmd run android
+```
+
+Lub start samego bundlera Metro w trybie **dev client** (`expo start --dev-client`):
+
 ```powershell
 cd mobile
 npm.cmd start
 ```
 
-Metro startuje w trybie **dev client** (`expo start --dev-client`). W terminalu Metro:
+W terminalu Metro:
 
 | Klawisz | Działanie |
 |---------|-----------|
 | `a` | otwórz na Androidzie (development build) |
 | `w` | otwórz w przeglądarce |
 | `s` | przełącz na Expo Go |
-| `r` | przeładuj aplikację |
+| `r` | przeładuj aplikację w emulatorze (Fast Refresh) |
 
 Szybki UI bez native builda (tylko hasło, bez push / Google):
 
 ```powershell
 npm.cmd run start:go
 ```
+
+**Przydatne skróty emulatora:**
+* **Menu deweloperskie Androida:** `Ctrl + M` w oknie emulatora.
+* **Przeładowanie widoku:** podwójne naciśnięcie klawisza `R` w emulatorze.
 
 Pełny opis (Expo Go vs native, push, Google): [mobile/README.md](mobile/README.md).
 

@@ -82,6 +82,15 @@
   color: var(--color-ink, #0f172a);
 }
 
+.location-picker-modal-body {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 75vh;
+  min-height: 480px;
+  max-height: 640px;
+}
+
 .location-picker-search-bar {
   position: relative;
   padding: 1rem 1.5rem 0.75rem 1.5rem;

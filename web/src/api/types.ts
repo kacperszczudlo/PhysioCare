@@ -162,6 +162,30 @@ export interface DashboardStats {
   visits_today: number
   patients_total: number
   assignments_active?: number
+  rating_avg?: number | string
+  rating_count?: number
+}
+
+/** Opinia pacjenta o fizjoterapeucie */
+export interface ReviewItem {
+  id: string
+  rating: number
+  comment: string
+  author_name: string
+  author_avatar_url?: string | null
+  is_anonymous: boolean
+  is_verified: boolean
+  is_own?: boolean
+  created_at: string
+  therapist_reply: string
+  therapist_replied_at: string | null
+}
+
+/** Podsumowanie ocen fizjoterapeuty */
+export interface RatingSummary {
+  average_rating: string | number
+  total_reviews: number
+  rating_breakdown: Record<string, number>
 }
 
 export interface PatientSummary {

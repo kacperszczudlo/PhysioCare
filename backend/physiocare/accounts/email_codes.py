@@ -183,6 +183,29 @@ def send_password_reset_code(*, user: object) -> bool:
     )
 
 
+def send_mfa_setup_code(*, user: object) -> bool:
+    """Wysyła jednorazowy kod e-mail przed pierwszą konfiguracją MFA."""
+    if user is None:
+        raise TypeError("Argument 'user' nie może być None.")
+
+    raw = issue_email_code(user=user, purpose=EmailCodePurpose.MFA_SETUP)
+    reset_timeout = settings.PASSWORD_RESET_TIMEOUT if hasattr(settings, 'PASSWORD_RESET_TIMEOUT') else DEFAULT_RESET_TTL_SECONDS
+    validity_minutes = max(1, int(reset_timeout) // SECONDS_PER_MINUTE)
+    user_email = user.email if hasattr(user, 'email') else ''
+    first_name = user.first_name if hasattr(user, 'first_name') else ''
+
+    return send_templated_mail(
+        subject='PhysioCare - potwierdź konfigurację MFA',
+        to=[user_email],
+        template_basename='accounts/email/mfa_setup',
+        context={
+            'code': raw,
+            'validity_minutes': validity_minutes,
+            'first_name': first_name,
+        },
+    )
+
+
 class EmailCodeError(Exception):
     """Wyjątek zgłaszany w przypadku błędów weryfikacji lub wygaśnięcia kodu e-mail."""
 
@@ -367,5 +390,4 @@ def consume_password_reset_token(*, raw_token: str) -> object:
         used_at__isnull=True,
     ).exclude(id=record.id).update(used_at=timezone.now())
     return record.user
-
 

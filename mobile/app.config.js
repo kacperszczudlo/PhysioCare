@@ -43,8 +43,11 @@ const expoConfig = {
     bundler: 'metro',
   },
   plugins: [
-    'expo-router',
+    ['expo-router', { asyncRoutes: false }],
     'expo-secure-store',
+    'expo-sharing',
+    'expo-status-bar',
+    'react-native-quick-crypto',
     'expo-font',
     [
       'expo-image-picker',

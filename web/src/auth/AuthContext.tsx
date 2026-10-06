@@ -15,6 +15,7 @@ import {
   type PasswordResetConfirmPayload,
   type RegisterResult,
   type TherapistRegisterPayload,
+  type VerifyEmailResult,
 } from '@/api/auth'
 import { ApiError } from '@/api/client'
 import type { TherapistProfile, User } from '@/api/types'
@@ -28,7 +29,7 @@ interface AuthContextValue {
   /** Czy użytkownik jest obecnie zalogowany. */
   isAuthenticated: boolean
   /** Loguje użytkownika adresem e-mail i hasłem. */
-  login: (email: string, password: string) => Promise<LoginResult>
+  login: (email: string, password: string, recaptcha_token?: string) => Promise<LoginResult>
   /** Loguje użytkownika drugim składnikiem 2FA/TOTP. */
   loginMFA: (mfa_token: string, code: string) => Promise<void>
   /** Loguje użytkownika tokenem Google ID Token. */
@@ -36,7 +37,7 @@ interface AuthContextValue {
   /** Rejestruje nowego fizjoterapeutę w systemie. */
   register: (payload: TherapistRegisterPayload) => Promise<RegisterResult>
   /** Weryfikuje kod z e-maila aktywujący nowe konto. */
-  verifyEmail: (email: string, code: string) => Promise<void>
+  verifyEmail: (email: string, code: string) => Promise<VerifyEmailResult>
   /** Ponownie wysyła kod aktywacyjny na podany e-mail. */
   resendEmailCode: (email: string) => Promise<string>
   /** Wylogowuje fizjoterapeutę i czyści ciasteczka uwierzytelniające. */
@@ -123,13 +124,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const login = useCallback(async (email: string, password: string): Promise<LoginResult> => {
-    const result = await authApi.login(email, password)
-    if (result.kind === 'authenticated') {
-      await establishTherapistSession(setUser, result.user)
-    }
-    return result
-  }, [])
+  const login = useCallback(
+    async (email: string, password: string, recaptcha_token?: string): Promise<LoginResult> => {
+      const result = await authApi.login(email, password, recaptcha_token)
+      if (result.kind === 'authenticated') {
+        await establishTherapistSession(setUser, result.user)
+      }
+      return result
+    },
+    [],
+  )
 
   const loginMFA = useCallback(async (mfa_token: string, code: string) => {
     const { user: nextUser } = await authApi.loginMFA(mfa_token, code)
@@ -149,10 +153,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result
   }, [])
 
-  const verifyEmail = useCallback(async (email: string, code: string) => {
-    const { user: nextUser } = await authApi.verifyEmail(email, code)
-    await establishTherapistSession(setUser, nextUser)
-  }, [])
+  const verifyEmail = useCallback(
+    async (email: string, code: string): Promise<VerifyEmailResult> => {
+      const result = await authApi.verifyEmail(email, code)
+      if (result.kind === 'authenticated') {
+        await establishTherapistSession(setUser, result.user)
+      }
+      return result
+    },
+    [],
+  )
 
   const resendEmailCode = useCallback(async (email: string) => {
     const res = await authApi.resendEmailCode(email)

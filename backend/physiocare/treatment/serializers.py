@@ -187,6 +187,14 @@ class TreatmentEpisodeSerializer(serializers.ModelSerializer):
         if not isinstance(attrs, dict):
             raise serializers.ValidationError('Dane wejściowe muszą być słownikiem.')
         attrs = super().validate(attrs)
+        ended_at = attrs.get('ended_at')
+        started_at = attrs.get('started_at')
+        if self.instance is not None and started_at is None:
+            started_at = self.instance.started_at
+        if ended_at is not None and started_at is not None and ended_at < started_at:
+            raise serializers.ValidationError({
+                'ended_at': 'Data zakończenia nie może być wcześniejsza niż data rozpoczęcia.',
+            })
         request = self.context.get('request')
         if request is None or not hasattr(request.user, 'therapist_profile'):
             return attrs
@@ -350,6 +358,8 @@ class BodyAreaPainSerializer(serializers.ModelSerializer):
             'max_length': 'Nazwa obszaru ciała może mieć co najwyżej 50 znaków.',
         },
     )
+    pain_character = serializers.JSONField(required=False, default=list)
+    treatment_targets = serializers.JSONField(required=False, default=list)
 
     class Meta:
         """Metadane serializatora bólu obszarów ciała."""

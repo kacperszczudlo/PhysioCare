@@ -37,6 +37,8 @@ interface Therapist {
   qualification_label?: string
   experience_years?: number
   pwzf_number?: string
+  rating_avg?: string | number
+  rating_count?: number
 }
 
 /**
@@ -178,9 +180,12 @@ export default function TherapistsTabScreen() {
                       setSearchQuery('')
                       setSearchResults([])
                     }}
-                    hitSlop={8}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Wyczyść pole wyszukiwania"
+                    accessibilityHint="Usuwa wpisany tekst i czyści listę wyników"
                   >
-                    <Ionicons name="close-circle" size={18} color={colors.muted} />
+                    <Ionicons name="close-circle" size={20} color={colors.muted} />
                   </Pressable>
                 ) : null}
               </View>
@@ -199,6 +204,9 @@ export default function TherapistsTabScreen() {
                       <Pressable
                         style={styles.searchResultContent}
                         onPress={() => router.push(`/therapist/${item.id}`)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Fizjoterapeuta: ${item.first_name} ${item.last_name}${item.qualification_label ? `, ${item.qualification_label}` : ''}${item.location_address ? `, ${item.location_address}` : ''}`}
+                        accessibilityHint="Dotknij dwukrotnie, aby otworzyć profil specjalisty"
                       >
                         <View style={styles.resultAvatar}>
                           <Text style={styles.avatarInitials}>
@@ -259,7 +267,12 @@ export default function TherapistsTabScreen() {
         ) : null
       }
       renderItem={({ item }) => (
-        <Pressable onPress={() => router.push(`/therapist/${item.id}`)}>
+        <Pressable
+          onPress={() => router.push(`/therapist/${item.id}`)}
+          accessibilityRole="button"
+          accessibilityLabel={`Fizjoterapeuta: ${item.first_name} ${item.last_name}${item.qualification_label ? `, ${item.qualification_label}` : ''}`}
+          accessibilityHint="Dotknij dwukrotnie, aby otworzyć szczegóły profilu"
+        >
           <SectionCard style={styles.therapistCard}>
             <View style={styles.cardMainRow}>
               <View style={styles.cardAvatar}>
@@ -271,6 +284,13 @@ export default function TherapistsTabScreen() {
                 <Text style={styles.therapistCardName}>
                   {item.first_name} {item.last_name}
                 </Text>
+                {Number(item.rating_count) > 0 ? (
+                  <View style={styles.starRow}>
+                    <Text style={styles.starIcon}>★</Text>
+                    <Text style={styles.starScore}>{Number(item.rating_avg).toFixed(1)}</Text>
+                    <Text style={styles.starCount}>({item.rating_count})</Text>
+                  </View>
+                ) : null}
                 {item.qualification_label ? (
                   <Text style={styles.therapistCardMeta}>{item.qualification_label}</Text>
                 ) : null}
@@ -452,6 +472,26 @@ const styles = StyleSheet.create({
     fontSize: typography.base,
     fontWeight: '700',
     color: colors.ink,
+  },
+  starRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginVertical: 1,
+  },
+  starIcon: {
+    fontSize: typography.xs,
+    color: colors.warning,
+    fontWeight: '700',
+  },
+  starScore: {
+    fontSize: typography.xs,
+    fontWeight: '700',
+    color: colors.ink,
+  },
+  starCount: {
+    fontSize: typography.xs,
+    color: colors.muted,
   },
   therapistCardMeta: {
     fontSize: typography.sm,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import { patientsApi, treatmentApi } from '@/api/treatment'
@@ -13,10 +13,13 @@ import { FileInput } from '@/components/ui/FileInput'
 import { StatusSelect } from '@/components/ui/StatusSelect'
 import { EPISODE_STATUS_LABELS } from '@/lib/bodyMap'
 import { FIELD_MESSAGES, getIcd10Error } from '@/lib/fieldPolicy'
-import { DiagnosticMapper } from '@/pages/patients/DiagnosticMapper'
 import { ClinicalActionsPanel } from '@/pages/patients/ClinicalActionsPanel'
 import { PatientAssignments } from '@/pages/patients/PatientAssignments'
 import './PatientDetailPage.css'
+
+const DiagnosticMapper = lazy(() =>
+  import('@/pages/patients/DiagnosticMapper').then((m) => ({ default: m.DiagnosticMapper })),
+)
 
 /**
  * Główna strona karty pacjenta z historią epizodów leczenia, dokumentacją medyczną i mapowaniem objawów.
@@ -534,7 +537,11 @@ export function PatientDetailPage() {
                 </fieldset>
               </form>
 
-              <DiagnosticMapper episodeId={selected.id} />
+              <Suspense
+                fallback={<LoadingBlock label="Ładowanie mapy anatomicznej…" variant="panel" />}
+              >
+                <DiagnosticMapper episodeId={selected.id} />
+              </Suspense>
 
               <ClinicalActionsPanel
                 patientId={patient.id}

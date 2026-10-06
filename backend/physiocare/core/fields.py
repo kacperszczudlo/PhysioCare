@@ -1,3 +1,5 @@
+import json
+
 from django.db import models
 
 from core.crypto import decrypt_value, encrypt_value
@@ -55,9 +57,9 @@ class EncryptedCharField(models.CharField):
         if value is None:
             return None
         if isinstance(value, str):
-            return decrypt_value(value)
+            return decrypt_value(value) if value.startswith('gAAAAA') else value
         converted = super().to_python(value)
-        return decrypt_value(converted) if isinstance(converted, str) else converted
+        return decrypt_value(converted) if isinstance(converted, str) and converted.startswith('gAAAAA') else converted
 
 
 class EncryptedTextField(models.TextField):
@@ -112,6 +114,61 @@ class EncryptedTextField(models.TextField):
         if value is None:
             return None
         if isinstance(value, str):
-            return decrypt_value(value)
+            return decrypt_value(value) if value.startswith('gAAAAA') else value
         converted = super().to_python(value)
-        return decrypt_value(converted) if isinstance(converted, str) else converted
+        return decrypt_value(converted) if isinstance(converted, str) and converted.startswith('gAAAAA') else converted
+
+
+class EncryptedJSONField(models.TextField):
+    """Pole przechowujące zserializowane struktury danych (dict, list) zaszyfrowane w bazie algorytmem Fernet."""
+
+    def get_prep_value(self, value: object) -> str | None:
+        """Przygotowuje obiekt danych do zapisu poprzez serializację do JSON i zaszyfrowanie."""
+        if value is None:
+            return None
+        if isinstance(value, str):
+            if value.startswith('gAAAAA'):
+                return value
+            raw_str = value
+        else:
+            raw_str = json.dumps(value, ensure_ascii=False)
+        return encrypt_value(raw_str)
+
+    def from_db_value(self, value: object, expression: object, connection: object) -> object:
+        """Odszyfrowuje ciąg tekstowy z bazy danych i deserializuje JSON."""
+        if value is None:
+            return None
+        if not isinstance(value, str):
+            return value
+        decrypted = decrypt_value(value)
+        if decrypted is None or decrypted == '':
+            return None
+        try:
+            return json.loads(decrypted)
+        except (json.JSONDecodeError, TypeError):
+            return decrypted
+
+    def to_python(self, value: object) -> object:
+        """Konwertuje wartość na strukturę pythonową (dict, list)."""
+        if value is None:
+            return None
+        if isinstance(value, (dict, list)):
+            return value
+        if isinstance(value, str):
+            decrypted = decrypt_value(value) if value.startswith('gAAAAA') else value
+            if decrypted is None or decrypted == '':
+                return None
+            try:
+                return json.loads(decrypted)
+            except (json.JSONDecodeError, TypeError):
+                return decrypted
+        return value
+
+
+try:
+    from rest_framework.serializers import JSONField, ModelSerializer
+
+    ModelSerializer.serializer_field_mapping[EncryptedJSONField] = JSONField
+except ImportError:
+    pass
+
