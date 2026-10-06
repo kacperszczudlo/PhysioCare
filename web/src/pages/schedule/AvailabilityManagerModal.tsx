@@ -3,6 +3,7 @@ import { schedulingApi } from '@/api/scheduling'
 import type { AvailabilitySlot } from '@/api/types'
 import { getErrorMessage } from '@/api/client'
 import { Button } from '@/components/ui/Button'
+import { Modal } from '@/components/ui/Modal'
 import './AvailabilityManagerModal.css'
 
 interface AvailabilityManagerModalProps {
@@ -105,35 +106,19 @@ export function AvailabilityManagerModal({
     }
   }
 
-  if (!isOpen) return null
-
   return (
-    <div className="availability-modal-backdrop" onClick={onClose}>
-      <div
-        className="availability-modal-content"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-labelledby="avail-modal-title"
-      >
-        <div className="availability-modal-header">
-          <h2 id="avail-modal-title" className="availability-modal-title">
-            Grafik Dostępności Fizjoterapeuty
-          </h2>
-          <button
-            type="button"
-            className="availability-modal-close"
-            onClick={onClose}
-            aria-label="Zamknij"
-          >
-            ✕
-          </button>
+    <Modal
+      open={isOpen}
+      title="Grafik Dostępności Fizjoterapeuty"
+      description="Konfiguruj cykliczny tygodniowy grafik pracy lub dodawaj jednorazowe terminy."
+      size="lg"
+      onClose={onClose}
+    >
+      {error && (
+        <div className="availability-modal-error" role="alert">
+          {error}
         </div>
-
-        {error && (
-          <div className="availability-modal-error" role="alert">
-            {error}
-          </div>
-        )}
+      )}
 
         <div className="availability-tabs" role="tablist">
           <button
@@ -315,7 +300,6 @@ export function AvailabilityManagerModal({
             </ul>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   )
 }

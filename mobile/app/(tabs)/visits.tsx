@@ -177,7 +177,10 @@ export default function VisitsScreen() {
               <Pressable
                 key={visit.id}
                 onPress={() => router.push(`/visit/${visit.id}`)}
-                style={styles.card}
+                style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+                accessibilityRole="button"
+                accessibilityLabel={`Wizyta: ${visit.therapy_type_name}, ${formatDateTime(visit.start_at)}, terapeuta ${visit.therapist_first_name} ${visit.therapist_last_name}`}
+                accessibilityHint="Dotknij dwukrotnie, aby przejść do szczegółów wizyty"
               >
                 <View style={styles.rowBetween}>
                   <Text style={styles.title}>{visit.therapy_type_name}</Text>
@@ -247,6 +250,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     padding: space.base,
     gap: space.xs,
+  },
+  cardPressed: {
+    opacity: 0.88,
   },
   rowBetween: {
     flexDirection: 'row',

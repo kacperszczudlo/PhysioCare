@@ -180,9 +180,12 @@ export default function TherapistsTabScreen() {
                       setSearchQuery('')
                       setSearchResults([])
                     }}
-                    hitSlop={8}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Wyczyść pole wyszukiwania"
+                    accessibilityHint="Usuwa wpisany tekst i czyści listę wyników"
                   >
-                    <Ionicons name="close-circle" size={18} color={colors.muted} />
+                    <Ionicons name="close-circle" size={20} color={colors.muted} />
                   </Pressable>
                 ) : null}
               </View>
@@ -201,6 +204,9 @@ export default function TherapistsTabScreen() {
                       <Pressable
                         style={styles.searchResultContent}
                         onPress={() => router.push(`/therapist/${item.id}`)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Fizjoterapeuta: ${item.first_name} ${item.last_name}${item.qualification_label ? `, ${item.qualification_label}` : ''}${item.location_address ? `, ${item.location_address}` : ''}`}
+                        accessibilityHint="Dotknij dwukrotnie, aby otworzyć profil specjalisty"
                       >
                         <View style={styles.resultAvatar}>
                           <Text style={styles.avatarInitials}>
@@ -261,7 +267,12 @@ export default function TherapistsTabScreen() {
         ) : null
       }
       renderItem={({ item }) => (
-        <Pressable onPress={() => router.push(`/therapist/${item.id}`)}>
+        <Pressable
+          onPress={() => router.push(`/therapist/${item.id}`)}
+          accessibilityRole="button"
+          accessibilityLabel={`Fizjoterapeuta: ${item.first_name} ${item.last_name}${item.qualification_label ? `, ${item.qualification_label}` : ''}`}
+          accessibilityHint="Dotknij dwukrotnie, aby otworzyć szczegóły profilu"
+        >
           <SectionCard style={styles.therapistCard}>
             <View style={styles.cardMainRow}>
               <View style={styles.cardAvatar}>

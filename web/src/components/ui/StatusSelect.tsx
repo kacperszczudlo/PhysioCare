@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
 import type { EpisodeStatus } from '@/api/types'
 import { STATUS_OPTIONS_META } from './statusOptions'
 import './StatusSelect.css'
@@ -33,9 +33,16 @@ export function StatusSelect({
   const [isOpen, setIsOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  const generatedId = useId()
+  const triggerId = id ?? `status-select-trigger-${generatedId}`
+  const listboxId = `status-select-listbox-${generatedId}`
 
   const selectedMeta =
     STATUS_OPTIONS_META.find((opt) => opt.value === value) ?? STATUS_OPTIONS_META[0]
+  const activeOption = STATUS_OPTIONS_META[activeIndex]
+  const activeOptionId = isOpen && activeOption ? `${listboxId}-opt-${activeOption.value}` : undefined
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -57,13 +64,14 @@ export function StatusSelect({
   const handleSelectOption = (optValue: EpisodeStatus) => {
     onChange(optValue)
     setIsOpen(false)
+    triggerRef.current?.focus()
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement | HTMLDivElement>) => {
     if (disabled) return
 
     if (!isOpen) {
-      if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) {
+      if (['ArrowDown', 'ArrowUp', 'Enter', ' ', 'Home', 'End'].includes(e.key)) {
         e.preventDefault()
         setIsOpen(true)
         const idx = STATUS_OPTIONS_META.findIndex((opt) => opt.value === value)
@@ -83,12 +91,24 @@ export function StatusSelect({
           (prev) => (prev - 1 + STATUS_OPTIONS_META.length) % STATUS_OPTIONS_META.length,
         )
         break
+      case 'Home':
+        e.preventDefault()
+        setActiveIndex(0)
+        break
+      case 'End':
+        e.preventDefault()
+        setActiveIndex(STATUS_OPTIONS_META.length - 1)
+        break
       case 'Enter':
       case ' ':
         e.preventDefault()
         handleSelectOption(STATUS_OPTIONS_META[activeIndex].value)
         break
       case 'Escape':
+        e.preventDefault()
+        setIsOpen(false)
+        triggerRef.current?.focus()
+        break
       case 'Tab':
         setIsOpen(false)
         break
@@ -101,14 +121,17 @@ export function StatusSelect({
       className={`status-select ${disabled ? 'status-select--disabled' : ''} ${className}`.trim()}
     >
       <button
+        ref={triggerRef}
         type="button"
-        id={id}
+        id={triggerId}
         className={`status-select__trigger ${isOpen ? 'status-select__trigger--active' : ''}`}
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-controls={isOpen ? listboxId : undefined}
+        aria-activedescendant={activeOptionId}
         aria-label="Wybierz status epizodu"
       >
         <span className={`status-pill ${selectedMeta.pillClass}`}>
@@ -132,19 +155,21 @@ export function StatusSelect({
 
       {isOpen && (
         <div
+          id={listboxId}
           className="status-select__popover"
           role="listbox"
           tabIndex={-1}
-          aria-activedescendant={`status-option-${STATUS_OPTIONS_META[activeIndex].value}`}
+          aria-label="Status epizodu leczenia"
         >
           {STATUS_OPTIONS_META.map((opt, idx) => {
             const isSelected = opt.value === value
             const isActive = idx === activeIndex
+            const optionId = `${listboxId}-opt-${opt.value}`
 
             return (
               <div
                 key={opt.value}
-                id={`status-option-${opt.value}`}
+                id={optionId}
                 role="option"
                 aria-selected={isSelected}
                 className={`status-select__option ${

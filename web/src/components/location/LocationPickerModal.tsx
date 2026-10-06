@@ -7,6 +7,7 @@ import {
   type LocationAddressResult,
 } from './locationServices'
 import { useToast } from '@/components/ui/ToastContext'
+import { Modal } from '@/components/ui/Modal'
 import './LocationPickerModal.css'
 
 interface LocationPickerModalProps {
@@ -202,40 +203,16 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
     onClose()
   }
 
-  if (!isOpen) return null
-
   return (
-    <div className="location-picker-overlay" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="location-picker-card" onClick={(e) => e.stopPropagation()}>
-        <header className="location-picker-header">
-          <div className="location-picker-title">
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-              <line x1="8" y1="2" x2="8" y2="18"></line>
-              <line x1="16" y1="6" x2="16" y2="22"></line>
-            </svg>
-            <div>
-              <h3>Wybierz lokalizację z mapy</h3>
-              <p className="location-picker-subtitle">
-                Wyszukaj adres lub kliknij bezpośrednio na mapie, aby ustawić pinezkę
-              </p>
-            </div>
-          </div>
-          <button className="location-picker-close" onClick={onClose} aria-label="Zamknij modal">
-            &times;
-          </button>
-        </header>
-
-        <div className="location-picker-search-bar">
+    <Modal
+      open={isOpen}
+      title="Wybierz lokalizację z mapy"
+      description="Wyszukaj adres lub kliknij bezpośrednio na mapie, aby ustawić pinezkę"
+      size="xl"
+      onClose={onClose}
+      bodyClassName="location-picker-modal-body"
+    >
+      <div className="location-picker-search-bar">
           <div className="location-search-input-wrapper">
             <svg
               className="location-search-icon"
@@ -334,7 +311,6 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
             </button>
           </div>
         </footer>
-      </div>
-    </div>
+    </Modal>
   )
 }

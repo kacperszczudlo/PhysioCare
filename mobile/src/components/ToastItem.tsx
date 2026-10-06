@@ -41,6 +41,20 @@ export function ToastItem({ toast, onClose }: ToastItemProps) {
     }
   }
 
+  const getStatusBgColor = () => {
+    switch (toast.type) {
+      case 'success':
+        return colors.successSubtle
+      case 'error':
+        return colors.dangerSubtle
+      case 'warning':
+        return '#FFF9EE'
+      case 'info':
+      default:
+        return colors.surface
+    }
+  }
+
   const handleDismiss = useCallback(() => {
     Animated.parallel([
       Animated.timing(translateY, {
@@ -63,7 +77,7 @@ export function ToastItem({ toast, onClose }: ToastItemProps) {
         toValue: 0,
         duration: 250,
         useNativeDriver: true,
-        easing: Easing.out(Easing.back(1.2)),
+        easing: Easing.out(Easing.cubic),
       }),
       Animated.timing(opacity, {
         toValue: 1,
@@ -87,7 +101,7 @@ export function ToastItem({ toast, onClose }: ToastItemProps) {
     <Animated.View
       style={[
         styles.card,
-        { borderLeftColor: accentColor },
+        { backgroundColor: getStatusBgColor(), borderColor: accentColor },
         { transform: [{ translateY }], opacity },
       ]}
       accessibilityRole={toast.type === 'error' ? 'alert' : 'none'}
@@ -130,7 +144,6 @@ const styles = StyleSheet.create({
     paddingVertical: space.md,
     paddingHorizontal: space.base,
     marginBottom: space.sm,
-    borderLeftWidth: 4,
     shadowColor: colors.ink,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.12,

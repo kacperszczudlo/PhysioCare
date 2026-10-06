@@ -394,7 +394,11 @@ export default function TherapistPublicScreen() {
                       setSelectedRatingFilter((prev) => (prev === stars ? null : stars))
                       setReviewsExpanded(false)
                     }}
-                    hitSlop={4}
+                    hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
+                    accessibilityLabel={`Filtruj oceny: ${stars} gwiazdek, ${count} opinii`}
+                    accessibilityHint="Dotknij, aby przełączyć filtr dla tej liczby gwiazdek"
                   >
                     <Text style={[styles.breakdownStars, isSelected && styles.breakdownStarsSelected]}>
                       {stars} ★
@@ -423,7 +427,10 @@ export default function TherapistPublicScreen() {
                   setReviewsExpanded(false)
                 }}
                 style={styles.clearFilterBtn}
-                hitSlop={8}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                accessibilityRole="button"
+                accessibilityLabel="Wyczyść filtr ocen"
+                accessibilityHint="Usuwa aktywny filtr ocen i pokazuje wszystkie opinie"
               >
                 <Text style={styles.clearFilterText}>Wyczyść filtr ✕</Text>
               </Pressable>
@@ -442,6 +449,10 @@ export default function TherapistPublicScreen() {
                 <Pressable
                   style={[styles.sortChip, selectedOrdering === '-created_at' && styles.sortChipActive]}
                   onPress={() => setSelectedOrdering('-created_at')}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: selectedOrdering === '-created_at' }}
+                  accessibilityLabel="Sortuj: Najnowsze"
+                  hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
                 >
                   <Ionicons
                     name="time-outline"
@@ -461,6 +472,10 @@ export default function TherapistPublicScreen() {
                 <Pressable
                   style={[styles.sortChip, selectedOrdering === '-rating' && styles.sortChipActive]}
                   onPress={() => setSelectedOrdering('-rating')}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: selectedOrdering === '-rating' }}
+                  accessibilityLabel="Sortuj: Najwyższe oceny"
+                  hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
                 >
                   <Ionicons
                     name="star"
@@ -480,6 +495,10 @@ export default function TherapistPublicScreen() {
                 <Pressable
                   style={[styles.sortChip, selectedOrdering === 'rating' && styles.sortChipActive]}
                   onPress={() => setSelectedOrdering('rating')}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: selectedOrdering === 'rating' }}
+                  accessibilityLabel="Sortuj: Najniższe oceny"
+                  hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
                 >
                   <Ionicons
                     name="arrow-down-outline"
@@ -1105,8 +1124,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   clearFilterBtn: {
-    paddingVertical: 2,
-    paddingHorizontal: 6,
+    paddingVertical: space.xs,
+    paddingHorizontal: space.sm,
+    minHeight: 36,
+    justifyContent: 'center',
   },
   clearFilterText: {
     fontSize: typography.xs,
@@ -1127,7 +1148,7 @@ const styles = StyleSheet.create({
   },
   ownReviewText: {
     color: colors.onPrimary,
-    fontSize: 10,
+    fontSize: typography.xs,
     fontWeight: '700',
   },
   reviewCardOwn: {

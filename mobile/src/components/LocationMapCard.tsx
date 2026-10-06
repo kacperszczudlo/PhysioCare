@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { Skeleton } from '@/components/Skeleton'
 import { openAddressInMaps } from '@/lib/maps'
+import { colors, radius, space, typography } from '@/theme/tokens'
 
 /** Właściwości komponentu {@link LocationMapCard}. */
 interface LocationMapCardProps {
@@ -131,12 +132,12 @@ export const LocationMapCard: React.FC<LocationMapCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    padding: 12,
-    marginTop: 8,
+    borderColor: colors.border,
+    padding: space.md,
+    marginTop: space.sm,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -151,39 +152,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: space.xs,
   },
   title: {
-    fontSize: 13,
+    fontSize: typography.sm,
     fontWeight: '600',
-    color: '#64748b',
+    color: colors.muted,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   badge: {
-    backgroundColor: '#eff6ff',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    backgroundColor: colors.primarySubtle,
+    paddingHorizontal: space.sm,
+    paddingVertical: 4,
     borderRadius: 999,
   },
   badgeText: {
-    fontSize: 11,
+    fontSize: typography.xs,
     fontWeight: '700',
-    color: '#2563eb',
+    color: colors.primary,
   },
   addressText: {
-    fontSize: 15,
+    fontSize: typography.base,
     fontWeight: '600',
-    color: '#0f172a',
-    marginBottom: 10,
-    lineHeight: 20,
+    color: colors.ink,
+    marginBottom: space.sm,
+    lineHeight: 22,
   },
   mapContainer: {
     height: 140,
     width: '100%',
-    borderRadius: 10,
+    borderRadius: radius.md,
     overflow: 'hidden',
-    backgroundColor: '#f1f5f9',
+    backgroundColor: colors.surfaceMuted,
     position: 'relative',
   },
   mapImage: {
@@ -197,20 +198,20 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   loadingText: {
-    fontSize: 12,
-    color: '#64748b',
+    fontSize: typography.xs,
+    color: colors.muted,
   },
   fallbackMap: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#e2e8f0',
+    backgroundColor: colors.surfaceMuted,
     gap: 4,
   },
   fallbackText: {
-    fontSize: 12,
+    fontSize: typography.xs,
     fontWeight: '500',
-    color: '#475569',
+    color: colors.muted,
   },
   pinOverlay: {
     position: 'absolute',
@@ -224,8 +225,8 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   emptyText: {
-    fontSize: 14,
-    color: '#64748b',
+    fontSize: typography.sm,
+    color: colors.muted,
     fontStyle: 'italic',
   },
 })
