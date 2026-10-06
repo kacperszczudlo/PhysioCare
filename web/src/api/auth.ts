@@ -122,8 +122,7 @@ export const authApi = {
         return {
           kind: 'mfa_setup_required',
           mfa_setup_token: error.details.mfa_setup_token,
-          email:
-            typeof error.details.email === 'string' ? error.details.email : email,
+          email: typeof error.details.email === 'string' ? error.details.email : email,
         }
       }
       throw error
@@ -218,13 +217,8 @@ export const authApi = {
 
   async verifyEmail(email: string, code: string): Promise<VerifyEmailResult> {
     const data = await api.post<
-      | AuthResponse
-      | { mfa_setup_required: true; email: string; mfa_setup_token: string }
-    >(
-      '/auth/email/verify/',
-      { email, code, token_delivery: 'cookie' },
-      { skipAuthRefresh: true },
-    )
+      AuthResponse | { mfa_setup_required: true; email: string; mfa_setup_token: string }
+    >('/auth/email/verify/', { email, code, token_delivery: 'cookie' }, { skipAuthRefresh: true })
     if (data && 'mfa_setup_required' in data && data.mfa_setup_required) {
       return {
         kind: 'mfa_setup_required',

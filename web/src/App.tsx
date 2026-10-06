@@ -12,46 +12,44 @@ import { LegalLayout } from '@/layouts/LegalLayout'
 
 // Podział paczki aplikacji (Route-based code splitting i leniwe ładowanie widoków)
 const AccountDeletionPage = lazy(() =>
-  import('@/pages/AccountDeletionPage').then((m) => ({ default: m.AccountDeletionPage }))
+  import('@/pages/AccountDeletionPage').then((m) => ({ default: m.AccountDeletionPage })),
 )
 const CookiePolicyPage = lazy(() =>
-  import('@/pages/CookiePolicyPage').then((m) => ({ default: m.CookiePolicyPage }))
+  import('@/pages/CookiePolicyPage').then((m) => ({ default: m.CookiePolicyPage })),
 )
 const DashboardPage = lazy(() =>
-  import('@/pages/DashboardPage').then((m) => ({ default: m.DashboardPage }))
+  import('@/pages/DashboardPage').then((m) => ({ default: m.DashboardPage })),
 )
 const EmailVerifyPage = lazy(() =>
-  import('@/pages/EmailVerifyPage').then((m) => ({ default: m.EmailVerifyPage }))
+  import('@/pages/EmailVerifyPage').then((m) => ({ default: m.EmailVerifyPage })),
 )
 const ExercisesPage = lazy(() =>
-  import('@/pages/ExercisesPage').then((m) => ({ default: m.ExercisesPage }))
+  import('@/pages/ExercisesPage').then((m) => ({ default: m.ExercisesPage })),
 )
-const LoginPage = lazy(() =>
-  import('@/pages/LoginPage').then((m) => ({ default: m.LoginPage }))
-)
+const LoginPage = lazy(() => import('@/pages/LoginPage').then((m) => ({ default: m.LoginPage })))
 const PasswordResetPage = lazy(() =>
-  import('@/pages/PasswordResetPage').then((m) => ({ default: m.PasswordResetPage }))
+  import('@/pages/PasswordResetPage').then((m) => ({ default: m.PasswordResetPage })),
 )
 const PatientDetailPage = lazy(() =>
-  import('@/pages/PatientDetailPage').then((m) => ({ default: m.PatientDetailPage }))
+  import('@/pages/PatientDetailPage').then((m) => ({ default: m.PatientDetailPage })),
 )
 const PatientsPage = lazy(() =>
-  import('@/pages/PatientsPage').then((m) => ({ default: m.PatientsPage }))
+  import('@/pages/PatientsPage').then((m) => ({ default: m.PatientsPage })),
 )
 const PrivacyPolicyPage = lazy(() =>
-  import('@/pages/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
+  import('@/pages/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })),
 )
 const ProfilePage = lazy(() =>
-  import('@/pages/ProfilePage').then((m) => ({ default: m.ProfilePage }))
+  import('@/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 )
 const RegisterPage = lazy(() =>
-  import('@/pages/RegisterPage').then((m) => ({ default: m.RegisterPage }))
+  import('@/pages/RegisterPage').then((m) => ({ default: m.RegisterPage })),
 )
 const SchedulePage = lazy(() =>
-  import('@/pages/SchedulePage').then((m) => ({ default: m.SchedulePage }))
+  import('@/pages/SchedulePage').then((m) => ({ default: m.SchedulePage })),
 )
 const SettingsPage = lazy(() =>
-  import('@/pages/SettingsPage').then((m) => ({ default: m.SettingsPage }))
+  import('@/pages/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 )
 
 function RouteLoadingFallback() {

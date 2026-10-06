@@ -73,7 +73,9 @@ export async function getCachedVisits(
   status: string,
 ): Promise<{ visits: Visit[]; updatedAt: string } | null> {
   const prefix = await getUserPrefix()
-  return getOfflineItem<{ visits: Visit[]; updatedAt: string }>(`${prefix}${VISITS_PREFIX}${status}`)
+  return getOfflineItem<{ visits: Visit[]; updatedAt: string }>(
+    `${prefix}${VISITS_PREFIX}${status}`,
+  )
 }
 
 /**

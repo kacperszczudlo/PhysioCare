@@ -113,7 +113,6 @@ export function LoginPage() {
     } finally {
       setLoading(false)
     }
-
   }
 
   async function onMFASetupSubmit(event: FormEvent<HTMLFormElement>) {
@@ -235,8 +234,8 @@ export function LoginPage() {
         <header className="auth-form__header">
           <h1>Potwierdź konfigurację MFA</h1>
           <p>
-            Wysłaliśmy kod bezpieczeństwa na adres {mfaSetupPending.email}. Wpisz go, aby
-            otrzymać kod QR do aplikacji uwierzytelniającej.
+            Wysłaliśmy kod bezpieczeństwa na adres {mfaSetupPending.email}. Wpisz go, aby otrzymać
+            kod QR do aplikacji uwierzytelniającej.
           </p>
         </header>
 

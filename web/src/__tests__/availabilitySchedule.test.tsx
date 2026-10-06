@@ -60,7 +60,9 @@ describe('AvailabilityTabView Component', () => {
       expect(screen.getByText('Grafik aktywny')).toBeInTheDocument()
     })
 
-    expect(screen.queryByText('Harmonogram pracy nie został jeszcze zapisany')).not.toBeInTheDocument()
+    expect(
+      screen.queryByText('Harmonogram pracy nie został jeszcze zapisany'),
+    ).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Zapisano' })).toBeDisabled()
   })
 

@@ -353,11 +353,7 @@ export function AvailabilityTabView({ onScheduleSaved }: AvailabilityTabViewProp
                 {hasSavedSchedule !== null && (
                   <span
                     className={`avail-status-pill ${
-                      !hasSavedSchedule
-                        ? 'is-unconfigured'
-                        : isDirty
-                          ? 'is-dirty'
-                          : 'is-active'
+                      !hasSavedSchedule ? 'is-unconfigured' : isDirty ? 'is-dirty' : 'is-active'
                     }`}
                     role="status"
                   >

@@ -141,10 +141,7 @@ export default function VisitRequestScreen() {
 
   async function onSubmit() {
     if (isOffline) {
-      toast.warning(
-        'Brak połączenia',
-        'Umawianie wizyty wymaga aktywnego połączenia z internetem.',
-      )
+      toast.warning('Brak połączenia', 'Umawianie wizyty wymaga aktywnego połączenia z internetem.')
       return
     }
     if (!selectedTherapistId) {

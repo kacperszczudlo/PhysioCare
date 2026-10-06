@@ -58,11 +58,7 @@ function ReviewAuthorAvatar({ item }: { item: ReviewItem }) {
   if (showImg && uri) {
     return (
       <View style={styles.reviewAvatarClip}>
-        <Image
-          source={{ uri }}
-          style={styles.reviewAvatarImg}
-          onError={() => setImgFailed(true)}
-        />
+        <Image source={{ uri }} style={styles.reviewAvatarImg} onError={() => setImgFailed(true)} />
       </View>
     )
   }
@@ -95,7 +91,9 @@ export default function TherapistPublicScreen() {
   const [reviewModalOpen, setReviewModalOpen] = useState(false)
   const [editingReview, setEditingReview] = useState<ReviewItem | null>(null)
   const [selectedRatingFilter, setSelectedRatingFilter] = useState<number | null>(null)
-  const [selectedOrdering, setSelectedOrdering] = useState<'-created_at' | '-rating' | 'rating'>('-created_at')
+  const [selectedOrdering, setSelectedOrdering] = useState<'-created_at' | '-rating' | 'rating'>(
+    '-created_at',
+  )
   const [reviewsExpanded, setReviewsExpanded] = useState(false)
 
   const { uri: avatarUri, error: avatarLoadError } = useAuthenticatedCachedUri(
@@ -166,7 +164,11 @@ export default function TherapistPublicScreen() {
     return reviews.slice(0, DISPLAY_LIMIT)
   }, [reviews, reviewsExpanded])
 
-  const handleReviewSubmit = async (data: { rating: number; comment: string; is_anonymous: boolean }) => {
+  const handleReviewSubmit = async (data: {
+    rating: number
+    comment: string
+    is_anonymous: boolean
+  }) => {
     if (!therapist) return
     if (editingReview) {
       await patientApi.editReview(editingReview.id, data)
@@ -249,7 +251,9 @@ export default function TherapistPublicScreen() {
                 <View style={styles.ratingBadge}>
                   <Text style={styles.ratingStars}>★</Text>
                   <Text style={styles.ratingScore}>{Number(avgRating).toFixed(1)}</Text>
-                  <Text style={styles.ratingCount}>({countReviews} {countReviews === 1 ? 'opinia' : 'opinii'})</Text>
+                  <Text style={styles.ratingCount}>
+                    ({countReviews} {countReviews === 1 ? 'opinia' : 'opinii'})
+                  </Text>
                 </View>
               ) : (
                 <Text style={styles.noRatingText}>Brak ocen (nowy specjalista)</Text>
@@ -384,7 +388,8 @@ export default function TherapistPublicScreen() {
             <View style={styles.breakdownCard}>
               {[5, 4, 3, 2, 1].map((stars) => {
                 const count = ratingSummary.rating_breakdown[stars] ?? 0
-                const percent = ratingSummary.total_reviews > 0 ? (count / ratingSummary.total_reviews) * 100 : 0
+                const percent =
+                  ratingSummary.total_reviews > 0 ? (count / ratingSummary.total_reviews) * 100 : 0
                 const isSelected = selectedRatingFilter === stars
                 return (
                   <Pressable
@@ -400,13 +405,17 @@ export default function TherapistPublicScreen() {
                     accessibilityLabel={`Filtruj oceny: ${stars} gwiazdek, ${count} opinii`}
                     accessibilityHint="Dotknij, aby przełączyć filtr dla tej liczby gwiazdek"
                   >
-                    <Text style={[styles.breakdownStars, isSelected && styles.breakdownStarsSelected]}>
+                    <Text
+                      style={[styles.breakdownStars, isSelected && styles.breakdownStarsSelected]}
+                    >
                       {stars} ★
                     </Text>
                     <View style={styles.barTrack}>
                       <View style={[styles.barFill, { width: `${percent}%` }]} />
                     </View>
-                    <Text style={[styles.breakdownCount, isSelected && styles.breakdownCountSelected]}>
+                    <Text
+                      style={[styles.breakdownCount, isSelected && styles.breakdownCountSelected]}
+                    >
                       {count}
                     </Text>
                   </Pressable>
@@ -447,7 +456,10 @@ export default function TherapistPublicScreen() {
                 contentContainerStyle={styles.sortChipsWrap}
               >
                 <Pressable
-                  style={[styles.sortChip, selectedOrdering === '-created_at' && styles.sortChipActive]}
+                  style={[
+                    styles.sortChip,
+                    selectedOrdering === '-created_at' && styles.sortChipActive,
+                  ]}
                   onPress={() => setSelectedOrdering('-created_at')}
                   accessibilityRole="button"
                   accessibilityState={{ selected: selectedOrdering === '-created_at' }}
@@ -522,10 +534,7 @@ export default function TherapistPublicScreen() {
           {displayedReviews.length > 0 ? (
             <View style={styles.reviewList}>
               {displayedReviews.map((rev) => (
-                <View
-                  key={rev.id}
-                  style={[styles.reviewCard, rev.is_own && styles.reviewCardOwn]}
-                >
+                <View key={rev.id} style={[styles.reviewCard, rev.is_own && styles.reviewCardOwn]}>
                   <View style={styles.reviewCardHead}>
                     <View style={styles.reviewAuthorRow}>
                       <ReviewAuthorAvatar item={rev} />
@@ -548,15 +557,14 @@ export default function TherapistPublicScreen() {
                     </View>
                     <View style={styles.reviewScoreCol}>
                       <Text style={styles.reviewStars}>
-                        {'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}
+                        {'★'.repeat(rev.rating)}
+                        {'☆'.repeat(5 - rev.rating)}
                       </Text>
                       <Text style={styles.reviewDate}>{formatDateTime(rev.created_at)}</Text>
                     </View>
                   </View>
 
-                  {rev.comment ? (
-                    <Text style={styles.reviewComment}>{rev.comment}</Text>
-                  ) : null}
+                  {rev.comment ? <Text style={styles.reviewComment}>{rev.comment}</Text> : null}
 
                   {rev.therapist_reply ? (
                     <View style={styles.replyBox}>
@@ -570,9 +578,7 @@ export default function TherapistPublicScreen() {
                             />
                           ) : (
                             <View style={styles.replyAvatarInitials}>
-                              <Text style={styles.replyAvatarInitialsText}>
-                                {initials || 'FT'}
-                              </Text>
+                              <Text style={styles.replyAvatarInitialsText}>{initials || 'FT'}</Text>
                             </View>
                           )}
                         </View>
@@ -617,9 +623,7 @@ export default function TherapistPublicScreen() {
               {reviews.length > DISPLAY_LIMIT ? (
                 <Button
                   title={
-                    reviewsExpanded
-                      ? 'Zwiń opinie'
-                      : `Zobacz wszystkie opinie (${reviews.length})`
+                    reviewsExpanded ? 'Zwiń opinie' : `Zobacz wszystkie opinie (${reviews.length})`
                   }
                   variant="secondary"
                   onPress={() => setReviewsExpanded((prev) => !prev)}

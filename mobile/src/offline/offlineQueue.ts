@@ -74,7 +74,8 @@ export async function enqueueExerciseToggle(
     const current = await getPendingToggles()
     const dateKey = completedOn ?? ''
     const existingIndex = current.findIndex(
-      (item) => String(item.assignmentId) === String(assignmentId) && (item.completedOn ?? '') === dateKey,
+      (item) =>
+        String(item.assignmentId) === String(assignmentId) && (item.completedOn ?? '') === dateKey,
     )
 
     const entry: QueuedExerciseToggle = {

@@ -298,7 +298,8 @@ export function SchedulePage() {
                   Harmonogram pracy gabinetu nie został jeszcze ustalony
                 </p>
                 <p className="schedule-unconfigured-banner__meta">
-                  Pacjenci nie mogą rezerwować wizyt online, dopóki nie zatwierdzisz swoich stałych godzin przyjęć.
+                  Pacjenci nie mogą rezerwować wizyt online, dopóki nie zatwierdzisz swoich stałych
+                  godzin przyjęć.
                 </p>
               </div>
               <Button

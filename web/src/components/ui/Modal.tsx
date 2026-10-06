@@ -99,7 +99,12 @@ export function Modal({
               </p>
             ) : null}
           </div>
-          <button type="button" className="ui-modal__close" onClick={handleClose} aria-label="Zamknij okno">
+          <button
+            type="button"
+            className="ui-modal__close"
+            onClick={handleClose}
+            aria-label="Zamknij okno"
+          >
             ×
           </button>
         </header>

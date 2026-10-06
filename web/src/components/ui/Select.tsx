@@ -58,7 +58,8 @@ export function Select<T extends string = string>({
 
   const selectedOption = options.find((opt) => opt.value === value)
   const activeOption = options[activeIndex]
-  const activeOptionId = isOpen && activeOption ? `${listboxId}-opt-${activeOption.value}` : undefined
+  const activeOptionId =
+    isOpen && activeOption ? `${listboxId}-opt-${activeOption.value}` : undefined
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

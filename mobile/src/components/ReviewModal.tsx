@@ -103,9 +103,7 @@ export function ReviewModal({
                 <Text style={styles.title}>
                   {title || (isEdit ? 'Edytuj opinię' : 'Oceń fizjoterapeutę')}
                 </Text>
-                {therapistName ? (
-                  <Text style={styles.subtitle}>{therapistName}</Text>
-                ) : null}
+                {therapistName ? <Text style={styles.subtitle}>{therapistName}</Text> : null}
               </View>
               <Pressable onPress={onClose} hitSlop={12} accessibilityLabel="Zamknij">
                 <Ionicons name="close" size={24} color={colors.muted} />

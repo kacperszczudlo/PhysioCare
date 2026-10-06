@@ -18,7 +18,7 @@ import { PatientAssignments } from '@/pages/patients/PatientAssignments'
 import './PatientDetailPage.css'
 
 const DiagnosticMapper = lazy(() =>
-  import('@/pages/patients/DiagnosticMapper').then((m) => ({ default: m.DiagnosticMapper }))
+  import('@/pages/patients/DiagnosticMapper').then((m) => ({ default: m.DiagnosticMapper })),
 )
 
 /**
@@ -538,9 +538,7 @@ export function PatientDetailPage() {
               </form>
 
               <Suspense
-                fallback={
-                  <LoadingBlock label="Ładowanie mapy anatomicznej…" variant="panel" />
-                }
+                fallback={<LoadingBlock label="Ładowanie mapy anatomicznej…" variant="panel" />}
               >
                 <DiagnosticMapper episodeId={selected.id} />
               </Suspense>

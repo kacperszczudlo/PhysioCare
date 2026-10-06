@@ -246,7 +246,8 @@ export function TherapistReviewsModal({
               <span className="reviews-summary__avg">{avgRating}</span>
               <StarRating rating={Math.round(Number(summary.average_rating))} size={18} />
               <span className="reviews-summary__count">
-                {totalReviews} {totalReviews === 1 ? 'opinia' : totalReviews < 5 ? 'opinie' : 'opinii'}
+                {totalReviews}{' '}
+                {totalReviews === 1 ? 'opinia' : totalReviews < 5 ? 'opinie' : 'opinii'}
               </span>
             </div>
 
@@ -259,9 +260,7 @@ export function TherapistReviewsModal({
                     key={stars}
                     type="button"
                     className="reviews-breakdown-row"
-                    onClick={() =>
-                      setRatingFilter((prev) => (prev === stars ? null : stars))
-                    }
+                    onClick={() => setRatingFilter((prev) => (prev === stars ? null : stars))}
                     title={`Pokaż opinie z oceną ${stars}★`}
                   >
                     <span className="reviews-breakdown-row__star">{stars} ★</span>
@@ -406,11 +405,7 @@ export function TherapistReviewsModal({
                     </div>
                     <p className="review-card__reply-text">{item.therapist_reply}</p>
                     <div className="review-card__reply-actions">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => startReplying(item)}
-                      >
+                      <Button variant="secondary" size="sm" onClick={() => startReplying(item)}>
                         Edytuj odpowiedź
                       </Button>
                     </div>
@@ -419,11 +414,7 @@ export function TherapistReviewsModal({
 
                 {!item.therapist_reply && replyingToId !== item.id ? (
                   <div className="review-card__reply-actions">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => startReplying(item)}
-                    >
+                    <Button variant="secondary" size="sm" onClick={() => startReplying(item)}>
                       Odpowiedz na opinię
                     </Button>
                   </div>
@@ -432,7 +423,9 @@ export function TherapistReviewsModal({
                 {replyingToId === item.id ? (
                   <div className="review-reply-form">
                     <label htmlFor={`reply-${item.id}`} className="review-card__reply-title">
-                      {item.therapist_reply ? 'Edytuj odpowiedź na opinię:' : 'Napisz odpowiedź na opinię:'}
+                      {item.therapist_reply
+                        ? 'Edytuj odpowiedź na opinię:'
+                        : 'Napisz odpowiedź na opinię:'}
                     </label>
                     <textarea
                       id={`reply-${item.id}`}
@@ -449,7 +442,11 @@ export function TherapistReviewsModal({
                       aria-describedby={replyError ? `reply-err-${item.id}` : undefined}
                     />
                     {replyError ? (
-                      <p id={`reply-err-${item.id}`} className="review-reply-form__error" role="alert">
+                      <p
+                        id={`reply-err-${item.id}`}
+                        className="review-reply-form__error"
+                        role="alert"
+                      >
                         <svg
                           width="14"
                           height="14"

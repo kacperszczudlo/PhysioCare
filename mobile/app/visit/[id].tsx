@@ -169,7 +169,11 @@ export default function VisitDetailScreen() {
   const isPending = visit.status === 'PENDING_APPROVAL'
   const canManage = visit.status === 'SCHEDULED' || isPending
 
-  async function handleReviewSubmit(data: { rating: number; comment: string; is_anonymous: boolean }) {
+  async function handleReviewSubmit(data: {
+    rating: number
+    comment: string
+    is_anonymous: boolean
+  }) {
     if (!visit) return
     if (visit.review?.id) {
       await patientApi.editReview(visit.review.id, data)
@@ -229,7 +233,8 @@ export default function VisitDetailScreen() {
               <View style={styles.reviewBox}>
                 <View style={styles.reviewHeader}>
                   <Text style={styles.reviewStars}>
-                    {'★'.repeat(visit.review.rating)}{'☆'.repeat(5 - visit.review.rating)}
+                    {'★'.repeat(visit.review.rating)}
+                    {'☆'.repeat(5 - visit.review.rating)}
                   </Text>
                   <Text style={styles.reviewDate}>
                     {visit.review.created_at ? formatDateTime(visit.review.created_at) : ''}
@@ -253,17 +258,14 @@ export default function VisitDetailScreen() {
                       setReviewModalOpen(true)
                     }}
                   />
-                  <Button
-                    title="Usuń"
-                    variant="danger"
-                    onPress={handleDeleteReview}
-                  />
+                  <Button title="Usuń" variant="danger" onPress={handleDeleteReview} />
                 </View>
               </View>
             ) : (
               <View style={styles.reviewPrompt}>
                 <Text style={styles.muted}>
-                  Wizyta dobiegła końca. Podziel się swoją opinią o przebiegu terapii i specjaliście!
+                  Wizyta dobiegła końca. Podziel się swoją opinią o przebiegu terapii i
+                  specjaliście!
                 </Text>
                 <Button
                   title="★ Oceń tę wizytę"

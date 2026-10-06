@@ -213,104 +213,104 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({
       bodyClassName="location-picker-modal-body"
     >
       <div className="location-picker-search-bar">
-          <div className="location-search-input-wrapper">
-            <svg
-              className="location-search-icon"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input
-              type="text"
-              className="location-search-input"
-              placeholder="Wpisz ulicę, miasto lub kod pocztowy..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {isSearching && (
-              <div className="location-suggestions-dropdown">
-                <div className="location-suggestion-item" style={{ color: 'var(--color-muted)' }}>
-                  Szukanie adresu…
+        <div className="location-search-input-wrapper">
+          <svg
+            className="location-search-icon"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            className="location-search-input"
+            placeholder="Wpisz ulicę, miasto lub kod pocztowy..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {isSearching && (
+            <div className="location-suggestions-dropdown">
+              <div className="location-suggestion-item" style={{ color: 'var(--color-muted)' }}>
+                Szukanie adresu…
+              </div>
+            </div>
+          )}
+          {!isSearching && suggestions.length > 0 && (
+            <div className="location-suggestions-dropdown">
+              {suggestions.map((item) => (
+                <div
+                  key={item.place_id}
+                  className="location-suggestion-item"
+                  onClick={() => handleSelectSuggestion(item)}
+                >
+                  <span className="location-suggestion-main">
+                    {item.formatted_address || item.display_name}
+                  </span>
+                  <span className="location-suggestion-sub">{item.display_name}</span>
                 </div>
-              </div>
-            )}
-            {!isSearching && suggestions.length > 0 && (
-              <div className="location-suggestions-dropdown">
-                {suggestions.map((item) => (
-                  <div
-                    key={item.place_id}
-                    className="location-suggestion-item"
-                    onClick={() => handleSelectSuggestion(item)}
-                  >
-                    <span className="location-suggestion-main">
-                      {item.formatted_address || item.display_name}
-                    </span>
-                    <span className="location-suggestion-sub">{item.display_name}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
+        </div>
 
+        <button
+          type="button"
+          className="location-gps-btn"
+          onClick={handleUseGps}
+          disabled={isGpsLoading}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="2" x2="12" y2="6"></line>
+            <line x1="12" y1="18" x2="12" y2="22"></line>
+            <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+            <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+            <line x1="2" y1="12" x2="6" y2="12"></line>
+            <line x1="18" y1="12" x2="22" y2="12"></line>
+          </svg>
+          {isGpsLoading ? 'Pobieranie...' : 'GPS'}
+        </button>
+      </div>
+
+      <div className="location-picker-map-container">
+        <div ref={mapContainerRef} className="location-picker-map-element" />
+        <div className="location-hint-badge">
+          Kliknij na mapie lub przeciągnij pinezkę, aby precyzyjnie ustalić adres
+        </div>
+      </div>
+
+      <footer className="location-picker-footer">
+        <div className="location-selected-address-preview">
+          <span className="location-selected-badge">Wybrany adres:</span>
+          <span>{selectedAddress || 'Brak wybranego adresu (kliknij na mapie)'}</span>
+        </div>
+
+        <div className="location-picker-actions">
+          <button type="button" className="location-picker-cancel-btn" onClick={onClose}>
+            Anuluj
+          </button>
           <button
             type="button"
-            className="location-gps-btn"
-            onClick={handleUseGps}
-            disabled={isGpsLoading}
+            className="location-picker-confirm-btn"
+            onClick={handleConfirm}
+            disabled={!selectedAddress.trim()}
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="2" x2="12" y2="6"></line>
-              <line x1="12" y1="18" x2="12" y2="22"></line>
-              <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
-              <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
-              <line x1="2" y1="12" x2="6" y2="12"></line>
-              <line x1="18" y1="12" x2="22" y2="12"></line>
-            </svg>
-            {isGpsLoading ? 'Pobieranie...' : 'GPS'}
+            Zatwierdź lokalizację
           </button>
         </div>
-
-        <div className="location-picker-map-container">
-          <div ref={mapContainerRef} className="location-picker-map-element" />
-          <div className="location-hint-badge">
-            Kliknij na mapie lub przeciągnij pinezkę, aby precyzyjnie ustalić adres
-          </div>
-        </div>
-
-        <footer className="location-picker-footer">
-          <div className="location-selected-address-preview">
-            <span className="location-selected-badge">Wybrany adres:</span>
-            <span>{selectedAddress || 'Brak wybranego adresu (kliknij na mapie)'}</span>
-          </div>
-
-          <div className="location-picker-actions">
-            <button type="button" className="location-picker-cancel-btn" onClick={onClose}>
-              Anuluj
-            </button>
-            <button
-              type="button"
-              className="location-picker-confirm-btn"
-              onClick={handleConfirm}
-              disabled={!selectedAddress.trim()}
-            >
-              Zatwierdź lokalizację
-            </button>
-          </div>
-        </footer>
+      </footer>
     </Modal>
   )
 }

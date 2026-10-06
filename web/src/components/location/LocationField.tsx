@@ -3,7 +3,7 @@ import { searchAddress, type LocationAddressResult } from './locationServices'
 import './LocationField.css'
 
 const LocationPickerModal = lazy(() =>
-  import('./LocationPickerModal').then((m) => ({ default: m.LocationPickerModal }))
+  import('./LocationPickerModal').then((m) => ({ default: m.LocationPickerModal })),
 )
 
 /** Właściwości komponentu wyboru lokalizacji gabinetu. */

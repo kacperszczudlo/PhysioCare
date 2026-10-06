@@ -9,7 +9,11 @@ async function listResults<T>(path: string): Promise<T[]> {
 /** Usługi API do pobierania opinii pacjentów oraz odpowiadania na nie przez fizjoterapeutę. */
 export const reviewsApi = {
   /** Pobiera listę widocznych opinii danego fizjoterapeuty z opcjonalnym filtrem ocen i sortowaniem. */
-  async listReviews(therapistId: string, rating?: number, ordering?: string): Promise<ReviewItem[]> {
+  async listReviews(
+    therapistId: string,
+    rating?: number,
+    ordering?: string,
+  ): Promise<ReviewItem[]> {
     const params = new URLSearchParams()
     if (rating) params.set('rating', String(rating))
     if (ordering) params.set('ordering', ordering)

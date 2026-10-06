@@ -153,13 +153,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result
   }, [])
 
-  const verifyEmail = useCallback(async (email: string, code: string): Promise<VerifyEmailResult> => {
-    const result = await authApi.verifyEmail(email, code)
-    if (result.kind === 'authenticated') {
-      await establishTherapistSession(setUser, result.user)
-    }
-    return result
-  }, [])
+  const verifyEmail = useCallback(
+    async (email: string, code: string): Promise<VerifyEmailResult> => {
+      const result = await authApi.verifyEmail(email, code)
+      if (result.kind === 'authenticated') {
+        await establishTherapistSession(setUser, result.user)
+      }
+      return result
+    },
+    [],
+  )
 
   const resendEmailCode = useCallback(async (email: string) => {
     const res = await authApi.resendEmailCode(email)

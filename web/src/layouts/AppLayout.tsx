@@ -62,7 +62,13 @@ export function AppLayout() {
             aria-label="PhysioCare - Pulpit"
             onClick={() => setIsMenuOpen(false)}
           >
-            <img className="app-shell__mark" src="/brand/sygnet.png" alt="" width={48} height={48} />
+            <img
+              className="app-shell__mark"
+              src="/brand/sygnet.png"
+              alt=""
+              width={48}
+              height={48}
+            />
             <div>
               <p className="app-shell__product">PhysioCare</p>
               <p className="app-shell__product-sub">Panel fizjoterapeuty</p>

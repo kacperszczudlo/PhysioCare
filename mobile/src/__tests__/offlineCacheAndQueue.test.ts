@@ -46,7 +46,9 @@ vi.mock('expo-constants', () => ({
 const secureStoreMock = new Map<string, string>()
 
 vi.mock('expo-secure-store', () => ({
-  getItemAsync: vi.fn().mockImplementation((k: string) => Promise.resolve(secureStoreMock.get(k) ?? null)),
+  getItemAsync: vi
+    .fn()
+    .mockImplementation((k: string) => Promise.resolve(secureStoreMock.get(k) ?? null)),
   setItemAsync: vi.fn().mockImplementation((k: string, v: string) => {
     secureStoreMock.set(k, v)
     return Promise.resolve()
@@ -274,7 +276,13 @@ describe('offlineQueue (Outbox)', () => {
 
   it('eliminuje wyścig przy enqueue wywołanym w trakcie flushOfflineQueue', async () => {
     let resolveComplete!: () => void
-    const slowApiPromise = new Promise<{ id: number; assignment: number; completed_on: string; done: boolean; completed_at: string }>((resolve) => {
+    const slowApiPromise = new Promise<{
+      id: number
+      assignment: number
+      completed_on: string
+      done: boolean
+      completed_at: string
+    }>((resolve) => {
       resolveComplete = () =>
         resolve({
           id: 50,

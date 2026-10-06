@@ -42,7 +42,8 @@ export function StatusSelect({
   const selectedMeta =
     STATUS_OPTIONS_META.find((opt) => opt.value === value) ?? STATUS_OPTIONS_META[0]
   const activeOption = STATUS_OPTIONS_META[activeIndex]
-  const activeOptionId = isOpen && activeOption ? `${listboxId}-opt-${activeOption.value}` : undefined
+  const activeOptionId =
+    isOpen && activeOption ? `${listboxId}-opt-${activeOption.value}` : undefined
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

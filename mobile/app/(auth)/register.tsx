@@ -59,9 +59,7 @@ export default function RegisterScreen() {
   const [medical, setMedical] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [infoMessage, setInfoMessage] = useState<string | null>(() =>
-    googleDraft
-      ? 'Połączono z Google. Uzupełnij formularz, aby dokończyć rejestrację.'
-      : null,
+    googleDraft ? 'Połączono z Google. Uzupełnij formularz, aby dokończyć rejestrację.' : null,
   )
   const [fieldErrors, setFieldErrors] = useState<{
     firstName?: string
