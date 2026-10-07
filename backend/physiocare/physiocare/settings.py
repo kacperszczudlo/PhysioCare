@@ -175,6 +175,11 @@ def postgres_database(*, db_name: str | None = None, test_db_name: str | None = 
         raise TypeError('Parametr test_db_name musi być typu str lub None.')
 
     sslmode = os.environ.get('DB_SSLMODE', '').strip()
+    db_options: dict[str, str] = {
+        'options': '-c search_path=physiocare,public',
+    }
+    if sslmode:
+        db_options['sslmode'] = sslmode
 
     config = {
         'ENGINE': 'django.db.backends.postgresql',
@@ -185,9 +190,8 @@ def postgres_database(*, db_name: str | None = None, test_db_name: str | None = 
         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
         'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '60')),
         'CONN_HEALTH_CHECKS': True,
+        'OPTIONS': db_options,
     }
-    if sslmode:
-        config['OPTIONS'] = {'sslmode': sslmode}
     if test_db_name:
         config['TEST'] = {'NAME': test_db_name}
     return config

@@ -4,15 +4,20 @@ import pytest
 from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMessage
 
-from core.gmail_backend import GmailApiEmailBackend
+from core.gmail_backend import EmailBackend, GmailApiEmailBackend, GmailEmailBackend
 
 
-class TestGmailApiEmailBackend:
+class TestGmailEmailBackend:
     """Testy jednostkowe backendu wysyłki e-maili przez Gmail REST API."""
+
+    def test_class_aliases(self) -> None:
+        """Sprawdza czy aliasy EmailBackend i GmailApiEmailBackend wskazują na GmailEmailBackend."""
+        assert EmailBackend is GmailEmailBackend
+        assert GmailApiEmailBackend is GmailEmailBackend
 
     def test_missing_credentials_raises_improperly_configured(self) -> None:
         """Sprawdza czy brakujące dane uwierzytelniania rzucają ImproperlyConfigured."""
-        backend = GmailApiEmailBackend(
+        backend = GmailEmailBackend(
             client_id='',
             client_secret='',
             refresh_token='',
