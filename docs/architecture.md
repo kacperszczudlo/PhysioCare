@@ -116,6 +116,7 @@ Terapeuta: widok w harmonogramie i karcie pacjenta (ten sam zasób Visit)
 - **Transport Security:** Przesył danych przez HTTPS (SSL/TLS) oraz opcjonalny `sslmode` połączenia PostgreSQL z aplikacją Django
 - **Limit ciała żądania:** Django `DATA_UPLOAD_MAX_MEMORY_SIZE`
 - **Pliki medyczne:** JWT + własność rekordu; typ pliku z sygnatury bajtów, nie z nagłówka klienta
+- **Polityka pamięci podręcznej i CDN:** Pliki medyczne (`/media/*`) oraz wrażliwe dokumenty pacjenta zwracają nagłówek `Cache-Control: private, no-store`. Publiczne serwery brzegowe CDN (Cloudflare) mają bezwzględny zakaz buforowania danych medycznych oraz dynamicznych endpointów REST API.
 - **Throttle:** dedykowany rate limiting na logowanie, rejestrację i reset hasła
 
 ## Stack technologiczny
@@ -126,5 +127,6 @@ Zgodnie z tematem zatwierdzonym przez prowadzącego - [topic-selection.md](topic
 
 - [use-cases.md](use-cases.md) - przypadki użycia
 - [api.md](api.md) - kontrakt REST
+- [deployment.md](deployment.md) - wdrożenie, architektura CDN i konfiguracja Cloudflare
 - [diagrams/erd.drawio](diagrams/erd.drawio) - model danych
 

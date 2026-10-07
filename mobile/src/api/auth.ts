@@ -25,6 +25,10 @@ export interface PatientRegisterPayload {
   therapist_id?: string
   /** Numer telefonu kontaktowego */
   phone?: string
+  /** Opcjonalny token weryfikacji Google reCAPTCHA */
+  recaptcha_token?: string
+  /** Identyfikator klienta reCAPTCHA ('mobile') */
+  recaptcha_client?: 'mobile'
   /** Zgody prawne i medyczne wyrażone przez pacjenta */
   consents: {
     /** Akceptacja regulaminu serwisu */

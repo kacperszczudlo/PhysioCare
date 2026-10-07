@@ -212,6 +212,7 @@ export default function RegisterScreen() {
         last_name: lastName.trim(),
         phone: formatPhoneForApi(phoneNational, countryCode) || undefined,
         consents: { terms, medical_data: medical },
+        recaptcha_client: 'mobile',
       })
       if (result.kind === 'needs_email_verification') {
         router.replace(`/(auth)/verify-email?email=${encodeURIComponent(result.email)}` as Href)

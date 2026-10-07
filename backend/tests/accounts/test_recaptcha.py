@@ -76,6 +76,25 @@ class TestRecaptchaVerification:
 
         assert mock_post.call_args[1]['data']['secret'] == expected_secret
 
+    @override_settings(
+        RECAPTCHA_ENABLED=True,
+        RECAPTCHA_SECRET_KEY='',
+        RECAPTCHA_V2_SECRET_KEY='v2_secret',
+        RECAPTCHA_V3_SECRET_KEY='v3_secret',
+    )
+    @patch('accounts.recaptcha.requests.post')
+    def test_unspecified_client_falls_back_to_available_secrets(
+        self,
+        mock_post: MagicMock,
+    ) -> None:
+        mock_response = MagicMock()
+        mock_response.json.return_value = {'success': True, 'score': 0.9}
+        mock_post.return_value = mock_response
+
+        verify_recaptcha_token('valid_token')
+
+        assert mock_post.call_args[1]['data']['secret'] in {'v3_secret', 'v2_secret'}
+
     @override_settings(RECAPTCHA_ENABLED=True, RECAPTCHA_SECRET_KEY='secret_key_test')
     @patch('accounts.recaptcha.requests.post')
     def test_failed_recaptcha_verification(self, mock_post: MagicMock) -> None:

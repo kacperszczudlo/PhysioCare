@@ -30,54 +30,68 @@ def verify_recaptcha_token(
         return
 
     legacy_secret = getattr(settings, 'RECAPTCHA_SECRET_KEY', '').strip()
+    v3_secret = getattr(settings, 'RECAPTCHA_V3_SECRET_KEY', '').strip()
+    v2_secret = getattr(settings, 'RECAPTCHA_V2_SECRET_KEY', '').strip()
+
     if client == 'web':
-        secret_key = getattr(settings, 'RECAPTCHA_V3_SECRET_KEY', '').strip()
+        secret_keys = [k for k in (v3_secret, legacy_secret) if k]
     elif client == 'mobile':
-        secret_key = getattr(settings, 'RECAPTCHA_V2_SECRET_KEY', '').strip()
+        secret_keys = [k for k in (v2_secret, legacy_secret) if k]
     elif legacy_secret:
-        secret_key = legacy_secret
+        secret_keys = [legacy_secret]
     else:
+        # Gdy klient nie został jednoznacznie określony, sprawdzamy dostępne klucze (v3, v2, legacy)
+        secret_keys = [k for k in (v3_secret, v2_secret, legacy_secret) if k]
+
+    if not secret_keys:
         raise serializers.ValidationError(
             'Weryfikacja CAPTCHA nie jest poprawnie skonfigurowana.'
         )
-    if not secret_key:
-        return
 
     if not token or not isinstance(token, str) or not token.strip():
         raise serializers.ValidationError(
             'Weryfikacja CAPTCHA jest wymagana. Potwierdź, że nie jesteś botem.'
         )
 
-    payload = {
-        'secret': secret_key,
-        'response': token.strip(),
-    }
-    if remote_ip and isinstance(remote_ip, str):
-        payload['remoteip'] = remote_ip
-
-    try:
-        response = requests.post(VERIFY_URL, data=payload, timeout=5)
-        data = response.json()
-    except Exception as exc:
-        logger.error('Failed to communicate with reCAPTCHA API: %s', exc)
-        raise serializers.ValidationError(
-            'Błąd połączenia z serwerem weryfikacji CAPTCHA. Spróbuj ponownie.'
-        ) from exc
-
-    success = data.get('success', False)
-    score = data.get('score')
+    last_error: serializers.ValidationError | None = None
     threshold_val = settings.RECAPTCHA_SCORE_THRESHOLD if hasattr(settings, 'RECAPTCHA_SCORE_THRESHOLD') else 0.5
     threshold = float(threshold_val)
 
-    if not success:
-        error_codes = data.get('error-codes', [])
-        logger.warning('reCAPTCHA verification failed: error_codes=%s', error_codes)
-        raise serializers.ValidationError(
-            'Weryfikacja CAPTCHA nie powiodła się. Spróbuj ponownie.'
-        )
+    for secret_key in secret_keys:
+        payload = {
+            'secret': secret_key,
+            'response': token.strip(),
+        }
+        if remote_ip and isinstance(remote_ip, str):
+            payload['remoteip'] = remote_ip
 
-    if score is not None and float(score) < threshold:
-        logger.warning('reCAPTCHA score too low: score=%s threshold=%s', score, threshold)
-        raise serializers.ValidationError(
-            'Weryfikacja bota zwróciła niski wynik zaufania. Spróbuj ponownie.'
-        )
+        try:
+            response = requests.post(VERIFY_URL, data=payload, timeout=5)
+            data = response.json()
+        except Exception as exc:
+            logger.error('Failed to communicate with reCAPTCHA API: %s', exc)
+            raise serializers.ValidationError(
+                'Błąd połączenia z serwerem weryfikacji CAPTCHA. Spróbuj ponownie.'
+            ) from exc
+
+        success = data.get('success', False)
+        score = data.get('score')
+
+        if not success:
+            error_codes = data.get('error-codes', [])
+            logger.warning('reCAPTCHA verification failed: error_codes=%s', error_codes)
+            last_error = serializers.ValidationError(
+                'Weryfikacja CAPTCHA nie powiodła się. Spróbuj ponownie.'
+            )
+            continue
+
+        if score is not None and float(score) < threshold:
+            logger.warning('reCAPTCHA score too low: score=%s threshold=%s', score, threshold)
+            raise serializers.ValidationError(
+                'Weryfikacja bota zwróciła niski wynik zaufania. Spróbuj ponownie.'
+            )
+
+        return
+
+    if last_error:
+        raise last_error
