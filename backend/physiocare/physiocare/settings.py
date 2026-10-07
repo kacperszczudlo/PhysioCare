@@ -389,17 +389,29 @@ CELERY_BEAT_SCHEDULE: dict[str, dict[str, object]] = {
 
 DEFAULT_FROM_EMAIL = os.environ.get('EMAIL_FROM', 'noreply@example.com')
 
-EMAIL_BACKEND = os.environ.get(
-    'EMAIL_BACKEND',
-    'django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend',
+GMAIL_CLIENT_ID = os.environ.get('GMAIL_CLIENT_ID', '').strip()
+GMAIL_CLIENT_SECRET = os.environ.get('GMAIL_CLIENT_SECRET', '').strip()
+GMAIL_REFRESH_TOKEN = os.environ.get('GMAIL_REFRESH_TOKEN', '').strip()
+EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', '10'))
+
+_default_backend = (
+    'django.core.mail.backends.console.EmailBackend'
+    if DEBUG
+    else (
+        'core.gmail_backend.GmailApiEmailBackend'
+        if GMAIL_REFRESH_TOKEN
+        else 'django.core.mail.backends.smtp.EmailBackend'
+    )
 )
+
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', _default_backend)
 EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = env_bool('EMAIL_USE_TLS', 'true')
 
-if not DEBUG and EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend':
+if not DEBUG and EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend' and not env_bool('ALLOW_CONSOLE_EMAIL_IN_PROD', 'false'):
     raise ImproperlyConfigured(
         'Konfiguracja django.core.mail.backends.console.EmailBackend jest zabroniona przy DJANGO_DEBUG=false.'
     )

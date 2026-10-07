@@ -1,7 +1,6 @@
 import base64
 import logging
 from pathlib import Path
-from smtplib import SMTPException
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
@@ -107,7 +106,7 @@ def send_templated_mail(
     )
     try:
         message.send(fail_silently=False)
-    except (OSError, SMTPException):
+    except Exception:
         logger.exception('Templated e-mail failed subject=%s to=%s', subject, masked_to)
         return False
 
