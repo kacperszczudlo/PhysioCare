@@ -439,7 +439,6 @@ export default function RegisterScreen() {
           onPress={() => void onSubmit()}
         />
 
-
         {!googleMode && isGoogleSignInConfigured ? (
           <GoogleSignInButton
             loading={loading}
