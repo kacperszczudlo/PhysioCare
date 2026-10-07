@@ -421,9 +421,13 @@ SSE_BUS_ENGINE = os.environ.get('SSE_BUS_ENGINE', 'auto').lower()
 SSE_REDIS_CHANNEL_PREFIX = os.environ.get('SSE_REDIS_CHANNEL_PREFIX', 'physiocare:sse:')
 
 RECAPTCHA_ENABLED = env_bool('RECAPTCHA_ENABLED', 'true' if not DEBUG else 'false')
-RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY', '')
 RECAPTCHA_V2_SECRET_KEY = os.environ.get('RECAPTCHA_V2_SECRET_KEY', '')
 RECAPTCHA_V3_SECRET_KEY = os.environ.get('RECAPTCHA_V3_SECRET_KEY', '')
+RECAPTCHA_SECRET_KEY = (
+    os.environ.get('RECAPTCHA_SECRET_KEY', '').strip()
+    or RECAPTCHA_V3_SECRET_KEY.strip()
+    or RECAPTCHA_V2_SECRET_KEY.strip()
+)
 RECAPTCHA_SCORE_THRESHOLD = float(os.environ.get('RECAPTCHA_SCORE_THRESHOLD', '0.5'))
 
 if not DEBUG:

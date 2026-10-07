@@ -258,6 +258,11 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
         allow_blank=True,
         write_only=True,
     )
+    recaptcha_client = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        write_only=True,
+    )
     therapist_id = serializers.UUIDField(
         required=False,
         allow_null=True,
@@ -281,7 +286,7 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'email', 'password', 'google_credential', 'recaptcha_token', 'first_name', 'last_name',
+            'id', 'email', 'password', 'google_credential', 'recaptcha_token', 'recaptcha_client', 'first_name', 'last_name',
             'therapist_id', 'therapist_code', 'consents', 'phone',
         )
         read_only_fields = ('id',)
@@ -460,11 +465,18 @@ class PatientRegistrationSerializer(serializers.ModelSerializer):
             raise TypeError("Argument 'attrs' musi być słownikiem.")
 
         recaptcha_token = attrs.pop('recaptcha_token', None)
-        verify_recaptcha_token(str(recaptcha_token) if recaptcha_token else None)
+        recaptcha_client = attrs.pop('recaptcha_client', None)
+        client_val = str(recaptcha_client).strip() if recaptcha_client in {'web', 'mobile'} else None
 
         credential = str(attrs.pop('google_credential', None) or '').strip()
         if credential:
             return _apply_google_identity(attrs, credential=credential)
+
+        if client_val != 'mobile' or recaptcha_token:
+            verify_recaptcha_token(
+                str(recaptcha_token) if recaptcha_token else None,
+                client=client_val,
+            )
 
         errors = {}
         email_attr = attrs.get('email')
@@ -595,6 +607,11 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
         allow_blank=True,
         write_only=True,
     )
+    recaptcha_client = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        write_only=True,
+    )
     pwzf_number = serializers.CharField(
         max_length=20,
         write_only=True,
@@ -618,7 +635,7 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'email', 'password', 'google_credential', 'recaptcha_token', 'first_name', 'last_name',
+            'id', 'email', 'password', 'google_credential', 'recaptcha_token', 'recaptcha_client', 'first_name', 'last_name',
             'pwzf_number', 'pwzf_declaration', 'phone', 'qualification_level',
         )
         read_only_fields = ('id',)
@@ -796,11 +813,18 @@ class TherapistRegistrationSerializer(serializers.ModelSerializer):
             raise TypeError("Argument 'attrs' musi być słownikiem.")
 
         recaptcha_token = attrs.pop('recaptcha_token', None)
-        verify_recaptcha_token(str(recaptcha_token) if recaptcha_token else None)
+        recaptcha_client = attrs.pop('recaptcha_client', None)
+        client_val = str(recaptcha_client).strip() if recaptcha_client in {'web', 'mobile'} else None
 
         credential = str(attrs.pop('google_credential', None) or '').strip()
         if credential:
             return _apply_google_identity(attrs, credential=credential)
+
+        if client_val != 'mobile' or recaptcha_token:
+            verify_recaptcha_token(
+                str(recaptcha_token) if recaptcha_token else None,
+                client=client_val,
+            )
 
         errors = {}
         email_attr = attrs.get('email')
@@ -901,7 +925,11 @@ class PasswordResetRequestSerializer(serializers.Serializer):
             raise TypeError("Argument 'attrs' musi być słownikiem.")
 
         recaptcha_token = attrs.pop('recaptcha_token', None)
-        verify_recaptcha_token(str(recaptcha_token) if recaptcha_token else None)
+        client_val = str(attrs.get('client')).strip() if attrs.get('client') in {'web', 'mobile'} else None
+        verify_recaptcha_token(
+            str(recaptcha_token) if recaptcha_token else None,
+            client=client_val,
+        )
         return attrs
 
     def validate_email(self, value: object) -> str:
