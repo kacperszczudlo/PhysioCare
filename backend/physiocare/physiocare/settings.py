@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 from datetime import timedelta
 from pathlib import Path
 
@@ -174,20 +175,41 @@ def postgres_database(*, db_name: str | None = None, test_db_name: str | None = 
     if test_db_name is not None and not isinstance(test_db_name, str):
         raise TypeError('Parametr test_db_name musi być typu str lub None.')
 
-    sslmode = os.environ.get('DB_SSLMODE', '').strip()
-    db_options: dict[str, str] = {
-        'options': '-c search_path=physiocare,public',
-    }
+    db_url = os.environ.get('DATABASE_URL', '').strip()
+    if db_url:
+        parsed = urllib.parse.urlparse(db_url)
+        db_name = db_name or (parsed.path[1:] if parsed.path.startswith('/') else parsed.path)
+        db_user = urllib.parse.unquote(parsed.username or '')
+        db_password = urllib.parse.unquote(parsed.password or '')
+        db_host = parsed.hostname or 'localhost'
+        db_port = str(parsed.port or 5432)
+        query_params = urllib.parse.parse_qs(parsed.query)
+        sslmode = query_params.get('sslmode', [''])[0] or os.environ.get('DB_SSLMODE', '').strip()
+    else:
+        db_name = db_name or require_env('POSTGRES_DB')
+        db_user = require_env('POSTGRES_USER')
+        db_password = require_env('POSTGRES_PASSWORD')
+        db_host = os.environ.get('POSTGRES_HOST', 'localhost')
+        db_port = os.environ.get('POSTGRES_PORT', '5432')
+        sslmode = os.environ.get('DB_SSLMODE', '').strip()
+
+    db_options: dict[str, str] = {}
+    db_schema = os.environ.get('DB_SCHEMA', '').strip()
+    if db_schema:
+        db_options['options'] = f'-c search_path={db_schema},public'
+
+    if not sslmode and ('.render.com' in db_host or not DEBUG):
+        sslmode = 'require'
     if sslmode:
         db_options['sslmode'] = sslmode
 
     config = {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': db_name or require_env('POSTGRES_DB'),
-        'USER': require_env('POSTGRES_USER'),
-        'PASSWORD': require_env('POSTGRES_PASSWORD'),
-        'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
-        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+        'NAME': db_name,
+        'USER': db_user,
+        'PASSWORD': db_password,
+        'HOST': db_host,
+        'PORT': db_port,
         'CONN_MAX_AGE': int(os.environ.get('DB_CONN_MAX_AGE', '60')),
         'CONN_HEALTH_CHECKS': True,
         'OPTIONS': db_options,
@@ -401,14 +423,12 @@ EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', '10'))
 _default_backend = (
     'django.core.mail.backends.console.EmailBackend'
     if DEBUG
-    else (
-        'core.gmail_backend.GmailApiEmailBackend'
-        if GMAIL_REFRESH_TOKEN
-        else 'django.core.mail.backends.smtp.EmailBackend'
-    )
+    else 'core.gmail_backend.GmailEmailBackend'
 )
 
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', _default_backend)
+if not DEBUG and 'smtp' in EMAIL_BACKEND.lower() and not env_bool('ALLOW_SMTP_IN_PROD', 'false'):
+    EMAIL_BACKEND = 'core.gmail_backend.GmailEmailBackend'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
