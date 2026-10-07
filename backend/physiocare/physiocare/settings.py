@@ -257,8 +257,11 @@ from corsheaders.defaults import default_headers  # noqa: E402
 
 CORS_ALLOWED_ORIGINS = env_list(
     'CORS_ALLOWED_ORIGINS',
-    'http://localhost:5173,http://localhost:8081,http://127.0.0.1:5173,http://127.0.0.1:8081',
+    'http://localhost:5173,http://localhost:8081,http://127.0.0.1:5173,http://127.0.0.1:8081,https://physiocare-3yh.pages.dev',
 )
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^https:\/\/.*\.pages\.dev$',
+]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'x-physiocare-token-delivery',

@@ -89,6 +89,7 @@ def _set_auth_cookies(response: Response, *, access_token: str, refresh_token: s
         raise TypeError('Tokeny muszą być ciągami znaków.')
 
     secure = settings.SECURE_COOKIES
+    samesite = 'None' if secure else 'Lax'
 
     response.set_cookie(
         key=settings.SIMPLE_JWT.get('AUTH_COOKIE_ACCESS', 'access_token'),
@@ -96,7 +97,7 @@ def _set_auth_cookies(response: Response, *, access_token: str, refresh_token: s
         max_age=int(settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds()),
         secure=secure,
         httponly=True,
-        samesite='Lax',
+        samesite=samesite,
     )
     response.set_cookie(
         key=settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token'),
@@ -104,7 +105,7 @@ def _set_auth_cookies(response: Response, *, access_token: str, refresh_token: s
         max_age=int(settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds()),
         secure=secure,
         httponly=True,
-        samesite='Lax',
+        samesite=samesite,
     )
     return response
 
@@ -125,6 +126,7 @@ def _clear_auth_cookies(response: Response) -> Response:
         raise TypeError("Argument 'response' nie może być None.")
 
     secure = settings.SECURE_COOKIES
+    samesite = 'None' if secure else 'Lax'
     for key in (
         settings.SIMPLE_JWT.get('AUTH_COOKIE_ACCESS', 'access_token'),
         settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token'),
@@ -136,7 +138,7 @@ def _clear_auth_cookies(response: Response) -> Response:
             expires='Thu, 01 Jan 1970 00:00:00 GMT',
             secure=secure,
             httponly=True,
-            samesite='Lax',
+            samesite=samesite,
         )
     return response
 
