@@ -8,14 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Select } from '@/components/ui/Select'
 import { useToast } from '@/components/ui/ToastContext'
-import {
-  IconEye,
-  IconKey,
-  IconLock,
-  IconSearch,
-  IconTrash,
-  IconUnlock,
-} from './AdminIcons'
+import { IconEye, IconKey, IconLock, IconSearch, IconTrash, IconUnlock } from './AdminIcons'
 import './AdminUsersPage.css'
 
 const PAGE_SIZE = 20
@@ -455,25 +448,17 @@ export function AdminUsersPage() {
                     </div>
                     <div className="admin-detail-item">
                       <span className="admin-detail-label">Liczba wizyt</span>
-                      <span className="admin-detail-value">
-                        {userDetail.visits_count}
-                      </span>
+                      <span className="admin-detail-value">{userDetail.visits_count}</span>
                     </div>
                   </div>
                 </div>
               )}
 
               <div className="admin-modal-actions">
-                <Button
-                  variant="secondary"
-                  onClick={() => void handleToggleStatus(userDetail)}
-                >
+                <Button variant="secondary" onClick={() => void handleToggleStatus(userDetail)}>
                   {userDetail.is_active ? 'Zablokuj konto' : 'Odblokuj konto'}
                 </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => setUserToResetPassword(userDetail)}
-                >
+                <Button variant="ghost" onClick={() => setUserToResetPassword(userDetail)}>
                   Wyślij reset hasła
                 </Button>
               </div>
@@ -527,12 +512,11 @@ export function AdminUsersPage() {
         >
           <div className="admin-modal-delete-content">
             <p className="admin-delete-warning">
-              Czy na pewno chcesz dezaktywować konto{' '}
-              <strong>{userToDelete.email}</strong>?
+              Czy na pewno chcesz dezaktywować konto <strong>{userToDelete.email}</strong>?
             </p>
             <p className="admin-delete-subtext">
-              Zgodnie z procedurą RODO konto zostanie oznaczone jako nieaktywne, a dane
-              kontaktowe zostaną zabezpieczone.
+              Zgodnie z procedurą RODO konto zostanie oznaczone jako nieaktywne, a dane kontaktowe
+              zostaną zabezpieczone.
             </p>
             <div className="admin-modal-actions">
               <Button

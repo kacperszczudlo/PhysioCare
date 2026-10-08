@@ -523,4 +523,3 @@ export interface AdminReview {
   therapist_replied_at: string | null
   created_at: string
 }
-

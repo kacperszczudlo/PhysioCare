@@ -83,10 +83,7 @@ async function loadUserSession(): Promise<User> {
   return user
 }
 
-async function establishSession(
-  setUser: (user: User) => void,
-  nextUser: User,
-): Promise<void> {
+async function establishSession(setUser: (user: User) => void, nextUser: User): Promise<void> {
   if (nextUser.role === 'THERAPIST') {
     try {
       setUser(await loadTherapistSession())

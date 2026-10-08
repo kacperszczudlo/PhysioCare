@@ -33,14 +33,16 @@ Ten sam klient musi być skonfigurowany w `GOOGLE_CLIENT_IDS` na backendzie.
 
 ## Funkcjonalności Panelu WWW
 
-### 🩺 Panel Fizjoterapeuty (`/`)
+### Panel Fizjoterapeuty (`/`)
+
 - **Autoryzacja i Profil Terapeuty:** Logowanie z weryfikacją numeru PWZFz, rejestracja, reset hasła kodem e-mail oraz zarządzenie profilem gabinetu.
 - **Harmonogram Dzienny:** Interaktywny kalendarz wizyt z obsługą przeciągnij i upuść (drag & drop), zmianami statusów i filtrowaniem.
 - **Kartoteka Pacjenta:** Pełna historia leczenia, wpisy epizodów, mapa bólów (skala VAS), dokumenty kliniczne i zgody RODO.
 - **Baza Ćwiczeń i Zalecenia:** Katalog ćwiczeń fizjoterapeutycznych oraz moduł przypisywania spersonalizowanych planów domowych pacjentom.
 - **Realtime UI (SSE):** Automatyczne odświeżanie interfejsu przy zmianie statusu wizyty lub dodaniu dokumentu bez konieczności przeładowywania strony.
 
-### 🛡️ Panel Administratora (`/admin`)
+### Panel Administratora (`/admin`)
+
 - **Pulpit Analityczny (Dashboard KPI):** Monitorowanie wielkości bazy użytkowników (podział Mobile/Web/Admin), frekwencji wizyt (show-up rate %), średniej ocen kliniki oraz aktywnych planów leczenia.
 - **Zarządzanie Użytkownikami:** Paginowana lista, zaawansowane filtry ról i statusów, modal szczegółów (PWZF, 2FA, data), natychmiastowe blokowanie kont, wysyłka kodów resetu hasła oraz bezpieczny soft-delete RODO.
 - **Zbiorczy Grafik Kliniki:** Wielostanowiskowy przegląd harmonogramu pracy i wizyt z nawigacją tygodniową oraz filtrami specjalistów.

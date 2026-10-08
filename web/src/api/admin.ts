@@ -45,7 +45,8 @@ export const adminApi = {
     const sp = new URLSearchParams()
     if (params?.role) sp.set('role', params.role)
     if (params?.is_active !== undefined) sp.set('is_active', String(params.is_active))
-    if (params?.email_verified !== undefined) sp.set('email_verified', String(params.email_verified))
+    if (params?.email_verified !== undefined)
+      sp.set('email_verified', String(params.email_verified))
     if (params?.search) sp.set('search', params.search)
     if (params?.page) sp.set('page', String(params.page))
     const query = sp.toString() ? `?${sp.toString()}` : ''

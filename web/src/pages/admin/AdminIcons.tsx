@@ -354,4 +354,3 @@ export function IconShield({ className, ...props }: IconProps) {
     </svg>
   )
 }
-

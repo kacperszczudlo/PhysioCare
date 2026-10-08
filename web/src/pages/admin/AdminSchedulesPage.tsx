@@ -76,11 +76,7 @@ export function AdminSchedulesPage() {
             >
               ← Poprzedni tydzień
             </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setDateOffsetDays(0)}
-            >
+            <Button variant="secondary" size="sm" onClick={() => setDateOffsetDays(0)}>
               Bieżący tydzień
             </Button>
             <Button
@@ -141,9 +137,8 @@ export function AdminSchedulesPage() {
               <span className="admin-schedule-kpi-card__label">Odwołane / No-Show</span>
               <span className="admin-schedule-kpi-card__val admin-schedule-kpi-card__val--danger">
                 {
-                  data.visits.filter(
-                    (v) => v.status === 'CANCELLED' || v.status === 'NO_SHOW',
-                  ).length
+                  data.visits.filter((v) => v.status === 'CANCELLED' || v.status === 'NO_SHOW')
+                    .length
                 }
               </span>
             </div>

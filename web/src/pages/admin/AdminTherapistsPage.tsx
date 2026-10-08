@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { adminApi } from '@/api/admin'
 import type { AdminTherapistStats } from '@/api/types'
@@ -22,7 +22,7 @@ export function AdminTherapistsPage() {
   const [therapists, setTherapists] = useState<AdminTherapistStats[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setIsLoading(true)
     try {
       const data = await adminApi.getTherapistStats()
@@ -32,11 +32,11 @@ export function AdminTherapistsPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [toast])
 
   useEffect(() => {
     void fetchStats()
-  }, [])
+  }, [fetchStats])
 
   return (
     <div className="admin-therapists-page">
@@ -74,9 +74,7 @@ export function AdminTherapistsPage() {
                     <span>{t.rating_avg.toFixed(2)}</span>
                   </div>
                   <span className="admin-rating-count">
-                    {t.rating_count === 1
-                      ? '1 opinia'
-                      : `${t.rating_count} opinii`}
+                    {t.rating_count === 1 ? '1 opinia' : `${t.rating_count} opinii`}
                   </span>
                 </div>
               </div>

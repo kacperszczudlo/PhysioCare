@@ -57,9 +57,9 @@ export function PatientNoticePage() {
             marginBottom: '1.75rem',
           }}
         >
-          Twój profil pacjenta jest w pełni zintegrowany z <strong>aplikacją mobilną PhysioCare</strong>.
-          Aby przeglądać harmonogram wizyt, wykonywać zadane ćwiczenia wideo oraz otrzymywać przypomnienia,
-          skorzystaj z aplikacji na telefonie.
+          Twój profil pacjenta jest w pełni zintegrowany z{' '}
+          <strong>aplikacją mobilną PhysioCare</strong>. Aby przeglądać harmonogram wizyt, wykonywać
+          zadane ćwiczenia wideo oraz otrzymywać przypomnienia, skorzystaj z aplikacji na telefonie.
         </p>
 
         <div

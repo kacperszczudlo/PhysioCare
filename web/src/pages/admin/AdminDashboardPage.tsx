@@ -6,13 +6,7 @@ import type { AdminDashboardStats } from '@/api/types'
 import { LoadingBlock } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
-import {
-  IconActivity,
-  IconCalendar,
-  IconStar,
-  IconStethoscope,
-  IconUsers,
-} from './AdminIcons'
+import { IconActivity, IconCalendar, IconStar, IconStethoscope, IconUsers } from './AdminIcons'
 import './AdminDashboardPage.css'
 
 /**
@@ -130,9 +124,7 @@ export function AdminDashboardPage() {
             </div>
           </div>
           <div className="admin-metric-card__footer">
-            <span className="admin-metric-card__subtext">
-              Frekwencja: {showUpRate.toFixed(1)}%
-            </span>
+            <span className="admin-metric-card__subtext">Frekwencja: {showUpRate.toFixed(1)}%</span>
           </div>
         </div>
 
@@ -156,11 +148,7 @@ export function AdminDashboardPage() {
             <div className="admin-breakdown-row">
               <span>Zadowolenie pacjentów:</span>
               <strong>
-                {ratingAvg >= 4.5
-                  ? 'Bardzo wysokie'
-                  : ratingAvg >= 3.5
-                    ? 'Dobre'
-                    : 'Wymaga uwagi'}
+                {ratingAvg >= 4.5 ? 'Bardzo wysokie' : ratingAvg >= 3.5 ? 'Dobre' : 'Wymaga uwagi'}
               </strong>
             </div>
           </div>
@@ -221,8 +209,8 @@ export function AdminDashboardPage() {
           <div className="admin-action-card__content">
             <h2 className="admin-action-card__title">Zespół i Harmonogramy</h2>
             <p className="admin-action-card__desc">
-              Weryfikuj uprawnienia zawodowe PWZFz, obłożenie gabinetów, dostępność czasową personelu
-              oraz statystyki zrealizowanych terapii.
+              Weryfikuj uprawnienia zawodowe PWZFz, obłożenie gabinetów, dostępność czasową
+              personelu oraz statystyki zrealizowanych terapii.
             </p>
           </div>
           <div className="admin-action-card__btn-group">

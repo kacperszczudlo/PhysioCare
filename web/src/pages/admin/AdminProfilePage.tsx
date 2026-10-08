@@ -8,11 +8,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/ToastContext'
-import {
-  IconKey,
-  IconSettings,
-  IconShield,
-} from '@/pages/admin/AdminIcons'
+import { IconKey, IconSettings, IconShield } from '@/pages/admin/AdminIcons'
 import './AdminProfilePage.css'
 /**
  * Widok profilu osobistego administratora.
@@ -33,7 +29,7 @@ export function AdminProfilePage() {
       setFirstName(user.first_name ?? '')
       setLastName(user.last_name ?? '')
     }
-  }, [user?.id])
+  }, [user])
 
   useEffect(() => {
     let cancelled = false
@@ -150,7 +146,10 @@ export function AdminProfilePage() {
 
             <div className="admin-profile-security">
               <div>
-                <span className="admin-profile-form__label" style={{ display: 'block', marginBottom: '0.5rem' }}>
+                <span
+                  className="admin-profile-form__label"
+                  style={{ display: 'block', marginBottom: '0.5rem' }}
+                >
                   Stan dwuskładnikowej weryfikacji (2FA)
                 </span>
                 {loadingMfa ? (
