@@ -6,6 +6,7 @@ import {
   IconCalendar,
   IconDashboard,
   IconSettings,
+  IconShield,
   IconStar,
   IconStethoscope,
   IconUser,
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { to: '/admin/schedules', label: 'Harmonogramy', icon: IconCalendar },
   { to: '/admin/therapists', label: 'Zespół fizjoterapeutów', icon: IconStethoscope },
   { to: '/admin/reviews', label: 'Moderacja opinii', icon: IconStar },
+  { to: '/admin/privacy', label: 'RODO i Prywatność', icon: IconShield },
   { to: '/admin/profile', label: 'Mój profil', icon: IconUser },
   { to: '/admin/settings', label: 'Ustawienia', icon: IconSettings },
 ]

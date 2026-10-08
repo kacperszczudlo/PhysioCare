@@ -591,13 +591,21 @@ class PatientVisitRequestSerializer(serializers.ModelSerializer):
         therapist_id = attrs.pop('therapist_id', None)
         if therapist_id:
             from therapists.models import TherapistProfile
-            therapist = TherapistProfile.objects.filter(pk=therapist_id).first()
+            therapist = (
+                TherapistProfile.objects.select_related('user')
+                .filter(pk=therapist_id, user__is_active=True)
+                .first()
+            )
             if not therapist:
                 raise serializers.ValidationError(
-                    {'therapist_id': 'Nie znaleziono wskazanego terapeuty.'}
+                    {'therapist_id': 'Nie znaleziono wskazanego terapeuty lub jego konto jest nieaktywne.'}
                 )
         else:
             therapist = therapy_type.therapist
+            if hasattr(therapist, 'user') and not therapist.user.is_active:
+                raise serializers.ValidationError(
+                    {'therapist_id': 'Konto wybranego fizjoterapeuty jest obecnie nieaktywne.'}
+                )
 
         if therapy_type.therapist_id != therapist.id:
             raise serializers.ValidationError(

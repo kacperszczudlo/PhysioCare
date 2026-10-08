@@ -72,6 +72,9 @@ const AdminTherapistsPage = lazy(() =>
 const AdminReviewsPage = lazy(() =>
   import('@/pages/admin/AdminReviewsPage').then((m) => ({ default: m.AdminReviewsPage })),
 )
+const AdminPrivacyPage = lazy(() =>
+  import('@/pages/admin/AdminPrivacyPage').then((m) => ({ default: m.AdminPrivacyPage })),
+)
 const AdminProfilePage = lazy(() =>
   import('@/pages/admin/AdminProfilePage').then((m) => ({ default: m.AdminProfilePage })),
 )
@@ -148,6 +151,7 @@ export default function App() {
                   <Route path="schedules" element={<AdminSchedulesPage />} />
                   <Route path="therapists" element={<AdminTherapistsPage />} />
                   <Route path="reviews" element={<AdminReviewsPage />} />
+                  <Route path="privacy" element={<AdminPrivacyPage />} />
                   <Route path="profile" element={<AdminProfilePage />} />
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>

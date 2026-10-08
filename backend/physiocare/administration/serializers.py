@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from accounts.models import RoleChoices
+from privacy.models import AccountDeletionRequest, Consent
 from reviews.models import Review
 from scheduling.models import TherapistAvailabilitySlot, Visit
 
@@ -213,3 +214,106 @@ class AdminReviewVisibilityUpdateSerializer(serializers.Serializer):
     """Serializer zmiany widoczności opinii."""
 
     is_visible = serializers.BooleanField(required=True)
+
+
+class AdminPrivacyRequestSerializer(serializers.ModelSerializer):
+    """Serializer wniosków o usunięcie konta (RODO Art. 17)."""
+
+    user_email = serializers.SerializerMethodField()
+    user_full_name = serializers.SerializerMethodField()
+    is_processed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AccountDeletionRequest
+        fields = [
+            'id',
+            'user_id',
+            'user_email',
+            'user_full_name',
+            'reason',
+            'processed_at',
+            'notes',
+            'created_at',
+            'is_processed',
+        ]
+        read_only_fields = fields
+
+    def get_user_email(self, obj: AccountDeletionRequest) -> str:
+        """Pobiera historyczny lub bieżący adres e-mail powiązany z wnioskiem.
+
+        Args:
+            obj (AccountDeletionRequest): Instancja wniosku o usunięcie konta.
+
+        Returns:
+            str: Pierwotny adres e-mail pacjenta lub zanonimizowany identyfikator.
+        """
+        if obj.notes:
+            for line in obj.notes.splitlines():
+                if line.startswith('email_at_request='):
+                    return line.split('email_at_request=', 1)[1].strip()
+        return obj.user.email
+
+    def get_user_full_name(self, obj: AccountDeletionRequest) -> str:
+        """Pobiera pełne imię i nazwisko wnioskującego użytkownika.
+
+        Args:
+            obj (AccountDeletionRequest): Instancja wniosku o usunięcie konta.
+
+        Returns:
+            str: Imię i nazwisko lub domyślny placeholder.
+        """
+        name = f'{obj.user.first_name} {obj.user.last_name}'.strip()
+        return name or '(Użytkownik)'
+
+    def get_is_processed(self, obj: AccountDeletionRequest) -> bool:
+        """Sprawdza, czy dany wniosek został już przetworzony przez administratora.
+
+        Args:
+            obj (AccountDeletionRequest): Instancja wniosku o usunięcie konta.
+
+        Returns:
+            bool: True jeśli wniosek został zrealizowany, False w przeciwnym razie.
+        """
+        return obj.is_processed()
+
+
+class AdminProcessPrivacyRequestSerializer(serializers.Serializer):
+    """Serializer akcji przetworzenia/anonimizacji wniosku o usunięcie konta."""
+
+    notes = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class AdminConsentSerializer(serializers.ModelSerializer):
+    """Serializer zgód użytkowników dla audytu RODO."""
+
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    user_full_name = serializers.SerializerMethodField()
+    consent_type_display = serializers.CharField(source='get_consent_type_display', read_only=True)
+
+    class Meta:
+        model = Consent
+        fields = [
+            'id',
+            'user_id',
+            'user_email',
+            'user_full_name',
+            'consent_type',
+            'consent_type_display',
+            'granted',
+            'granted_at',
+        ]
+        read_only_fields = fields
+
+    def get_user_full_name(self, obj: Consent) -> str:
+        """Pobiera pełne imię i nazwisko użytkownika powiązanego ze zgodą.
+
+        Args:
+            obj (Consent): Instancja zarejestrowanej zgody.
+
+        Returns:
+            str: Imię i nazwisko lub domyślny placeholder.
+        """
+        name = f'{obj.user.first_name} {obj.user.last_name}'.strip()
+        return name or '(Użytkownik)'
+
+

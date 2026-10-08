@@ -4,6 +4,9 @@ from django.urls import path
 
 from .views import (
     AdminDashboardAnalyticsView,
+    AdminPrivacyConsentsListView,
+    AdminPrivacyRequestsListView,
+    AdminProcessPrivacyRequestView,
     AdminReviewListView,
     AdminReviewVisibilityToggleView,
     AdminSchedulingOverviewView,
@@ -35,4 +38,9 @@ urlpatterns = [
     # Moderacja Opinii
     path('reviews/', AdminReviewListView.as_view(), name='reviews-list'),
     path('reviews/<uuid:pk>/visibility/', AdminReviewVisibilityToggleView.as_view(), name='reviews-visibility-toggle'),
+
+    # RODO i Zarządzanie Prywatnością
+    path('privacy/requests/', AdminPrivacyRequestsListView.as_view(), name='privacy-requests-list'),
+    path('privacy/requests/<uuid:pk>/process/', AdminProcessPrivacyRequestView.as_view(), name='privacy-requests-process'),
+    path('privacy/consents/', AdminPrivacyConsentsListView.as_view(), name='privacy-consents-list'),
 ]

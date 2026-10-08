@@ -527,4 +527,120 @@ class TestAdminValidationAndEdgeCases:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert 'is_visible' in response.json().get('error', {}).get('details', {})
 
+    def test_scheduling_invalid_uuid_returns_400(
+        self, api_client: APIClient, admin_user: User
+    ) -> None:
+        """Sprawdza, czy niepoprawny format UUID terapeuty w harmonogramie zwraca kod 400 zamiast 500."""
+        api_client.force_authenticate(user=admin_user)
+        response = api_client.get('/api/v1/admin/scheduling/overview/?therapist_id=not-a-valid-uuid')
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert 'therapist_id' in response.json().get('error', {}).get('details', {})
+
+    def test_scheduling_range_exceeded_returns_400(
+        self, api_client: APIClient, admin_user: User
+    ) -> None:
+        """Sprawdza, czy przekroczenie dopuszczalnego zakresu dat (>60 dni) w harmonogramie zwraca kod 400."""
+        api_client.force_authenticate(user=admin_user)
+        response = api_client.get(
+            '/api/v1/admin/scheduling/overview/?date_from=2026-01-01T00:00:00Z&date_to=2026-04-01T00:00:00Z'
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert 'range' in response.json().get('error', {}).get('details', {})
+
+    def test_reviews_invalid_uuid_returns_400(
+        self, api_client: APIClient, admin_user: User
+    ) -> None:
+        """Sprawdza, czy niepoprawny format UUID terapeuty w liście recenzji zwraca kod 400."""
+        api_client.force_authenticate(user=admin_user)
+        response = api_client.get('/api/v1/admin/reviews/?therapist_id=not-a-valid-uuid')
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert 'therapist_id' in response.json().get('error', {}).get('details', {})
+
+
+@pytest.mark.django_db
+class TestAdminSecurityHardening:
+    """Testy wzmocnionych zabezpieczeń panelu administratora."""
+
+    def test_non_superuser_cannot_modify_or_delete_superuser(
+        self, api_client: APIClient
+    ) -> None:
+        """Weryfikuje, że zwykły administrator nie może zmodyfikować, zablokować ani usunąć superusera."""
+        # Utwórz superusera i zwykłego admina bez flagi superuser
+        superuser = User.objects.create_superuser(
+            email='root.superuser@physiocare.test',
+            password='StrongRootPassword123!',
+            first_name='Root',
+            last_name='Admin',
+        )
+        regular_admin = User.objects.create_user(
+            email='staff.admin@physiocare.test',
+            password='StaffPassword123!',
+            first_name='Staff',
+            last_name='Admin',
+            role='ADMIN',
+            is_staff=True,
+            is_superuser=False,
+            is_active=True,
+        )
+
+        api_client.force_authenticate(user=regular_admin)
+
+        # Próba usunięcia superusera przez zwykłego admina -> 403
+        del_res = api_client.delete(f'/api/v1/admin/users/{superuser.id}/')
+        assert del_res.status_code == status.HTTP_403_FORBIDDEN
+
+        # Próba zablokowania superusera przez zwykłego admina -> 403
+        patch_res = api_client.patch(
+            f'/api/v1/admin/users/{superuser.id}/status/',
+            {'is_active': False},
+            format='json',
+        )
+        assert patch_res.status_code == status.HTTP_403_FORBIDDEN
+
+        # Próba resetu hasła superusera przez zwykłego admina -> 403
+        reset_res = api_client.post(f'/api/v1/admin/users/{superuser.id}/reset-password/')
+        assert reset_res.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_admin_delete_performs_full_rodo_anonymization(
+        self, api_client: APIClient, admin_user: User, patient: PatientProfile
+    ) -> None:
+        """Weryfikuje, że usunięcie użytkownika przez administratora wykonuje pełną anonimizację danych osobowych RODO."""
+        patient.pesel = '90010112345'
+        patient.phone = '+48123456789'
+        patient.save()
+
+        api_client.force_authenticate(user=admin_user)
+        del_res = api_client.delete(f'/api/v1/admin/users/{patient.user.id}/')
+        assert del_res.status_code == status.HTTP_200_OK
+
+        patient.user.refresh_from_db()
+        patient.refresh_from_db()
+        assert patient.user.is_active is False
+        assert patient.user.email.startswith('deleted-')
+        assert patient.user.first_name == 'Usunięte'
+        assert patient.user.last_name == 'Konto'
+        assert patient.pesel is None
+        assert patient.phone == ''
+
+    @patch('administration.views.send_password_reset_code', return_value=True)
+    def test_admin_password_reset_throttling(
+        self,
+        mock_send_reset,
+        api_client: APIClient,
+        admin_user: User,
+        patient: PatientProfile,
+    ) -> None:
+        """Weryfikuje ograniczenie częstotliwości zlecania resetu hasła przez administratora (10/min)."""
+        api_client.force_authenticate(user=admin_user)
+
+        # Limit to 10/minute
+        for _ in range(10):
+            res = api_client.post(f'/api/v1/admin/users/{patient.user.id}/reset-password/')
+            assert res.status_code == status.HTTP_200_OK
+
+        # 11 zapytanie powinno zostać odrzucone z 429
+        rate_limited_res = api_client.post(f'/api/v1/admin/users/{patient.user.id}/reset-password/')
+        assert rate_limited_res.status_code == status.HTTP_429_TOO_MANY_REQUESTS
+
+
 

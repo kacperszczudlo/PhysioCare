@@ -100,6 +100,9 @@ class Exercise(TimestampedModel):
         """Metadane modelu Exercise."""
 
         db_table: str = 'exercises'
+        indexes: list[models.Index] = [
+            models.Index(fields=['therapist', '-created_at'], name='idx_ex_therapist_created'),
+        ]
 
     def __str__(self) -> str:
         """Zwraca reprezentację tekstową ćwiczenia.

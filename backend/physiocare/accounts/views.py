@@ -1,4 +1,5 @@
 import logging
+import os
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
@@ -90,7 +91,7 @@ def _set_auth_cookies(response: Response, *, access_token: str, refresh_token: s
         raise TypeError('Tokeny muszą być ciągami znaków.')
 
     secure = settings.SECURE_COOKIES
-    samesite = 'None' if secure else 'Lax'
+    samesite = os.environ.get('DJANGO_COOKIE_SAMESITE', 'None' if secure else 'Lax')
 
     response.set_cookie(
         key=settings.SIMPLE_JWT.get('AUTH_COOKIE_ACCESS', 'access_token'),
@@ -127,7 +128,7 @@ def _clear_auth_cookies(response: Response) -> Response:
         raise TypeError("Argument 'response' nie może być None.")
 
     secure = settings.SECURE_COOKIES
-    samesite = 'None' if secure else 'Lax'
+    samesite = os.environ.get('DJANGO_COOKIE_SAMESITE', 'None' if secure else 'Lax')
     for key in (
         settings.SIMPLE_JWT.get('AUTH_COOKIE_ACCESS', 'access_token'),
         settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token'),

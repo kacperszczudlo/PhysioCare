@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from accounts.token_ops import blacklist_user_refresh_tokens
 from core.mixins import PatientSelfMixin, TherapistPatientQuerysetMixin
 from core.permissions import IsOwnerPatientProfile, IsPatient, IsTherapist
+from core.throttling import ExportRateThrottle
 from privacy.account_deletion import submit_account_deletion
 from privacy.export import build_patient_export
 from privacy.models import Consent, ConsentType
@@ -178,6 +179,7 @@ class MeDataExportView(PatientSelfMixin, APIView):
     """Widok eksportu danych osobowych pacjenta (zgodnie z RODO)."""
 
     permission_classes = [IsAuthenticated, IsPatient]
+    throttle_classes = [ExportRateThrottle]
 
     def post(self, request: Request, *args: object, **kwargs: object) -> Response:
         """Generuje paczkę eksportową danych pacjenta.

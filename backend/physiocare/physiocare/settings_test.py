@@ -24,6 +24,10 @@ REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {  # noqa: F405
     'login': '5/minute',
     'register': '3/hour',
     'password_reset': '3/hour',
+    'admin_password_reset': '10/minute',
+    'export': '5/hour',
+    'visit_booking': '20/hour',
+    'document_upload': '30/hour',
 }
 
 SSE_BUS_ENGINE: str = 'inmemory'

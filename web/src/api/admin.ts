@@ -1,6 +1,8 @@
 import { api } from './client'
 import type {
+  AdminConsent,
   AdminDashboardStats,
+  AdminPrivacyRequest,
   AdminReview,
   AdminSchedulingOverview,
   AdminTherapistStats,
@@ -30,6 +32,21 @@ export interface AdminReviewsFilterParams {
   rating?: number
   is_visible?: boolean
   therapist_id?: string
+  page?: number
+}
+
+/** Parametry filtrowania wniosków RODO o usunięcie konta. */
+export interface AdminPrivacyRequestsFilterParams {
+  is_processed?: boolean
+  search?: string
+  page?: number
+}
+
+/** Parametry filtrowania rejestru zgód RODO. */
+export interface AdminConsentsFilterParams {
+  consent_type?: string
+  granted?: boolean
+  search?: string
   page?: number
 }
 
@@ -106,5 +123,35 @@ export const adminApi = {
     return api.patch<AdminReview>(`/admin/reviews/${reviewId}/visibility/`, {
       is_visible: isVisible,
     })
+  },
+
+  /** Pobiera listę wniosków o usunięcie konta (RODO / Prawo do bycia zapomnianym). */
+  getPrivacyRequests(
+    params?: AdminPrivacyRequestsFilterParams,
+  ): Promise<Paginated<AdminPrivacyRequest>> {
+    const sp = new URLSearchParams()
+    if (params?.is_processed !== undefined) sp.set('is_processed', String(params.is_processed))
+    if (params?.search) sp.set('search', params.search)
+    if (params?.page) sp.set('page', String(params.page))
+    const query = sp.toString() ? `?${sp.toString()}` : ''
+    return api.get<Paginated<AdminPrivacyRequest>>(`/admin/privacy/requests/${query}`)
+  },
+
+  /** Przetwarza wniosek o usunięcie konta i wykonuje trwałą anonimizację danych osobowych. */
+  processPrivacyRequest(requestId: string, notes?: string): Promise<AdminPrivacyRequest> {
+    return api.post<AdminPrivacyRequest>(`/admin/privacy/requests/${requestId}/process/`, {
+      notes: notes || '',
+    })
+  },
+
+  /** Pobiera rejestr zgód pacjentów do celów audytu RODO. */
+  getConsents(params?: AdminConsentsFilterParams): Promise<Paginated<AdminConsent>> {
+    const sp = new URLSearchParams()
+    if (params?.consent_type) sp.set('consent_type', params.consent_type)
+    if (params?.granted !== undefined) sp.set('granted', String(params.granted))
+    if (params?.search) sp.set('search', params.search)
+    if (params?.page) sp.set('page', String(params.page))
+    const query = sp.toString() ? `?${sp.toString()}` : ''
+    return api.get<Paginated<AdminConsent>>(`/admin/privacy/consents/${query}`)
   },
 }

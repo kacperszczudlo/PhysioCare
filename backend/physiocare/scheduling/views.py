@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 
 from core.mixins import PatientSelfMixin, user_can_access_visit
 from core.permissions import IsPatient, IsTherapist, IsVisitParticipant
+from core.throttling import VisitBookingRateThrottle
 from notifications.events import (
     notify_visit_change,
     publish_document_realtime,
@@ -411,6 +412,16 @@ class MeVisitListCreateView(PatientSelfMixin, generics.ListCreateAPIView):
     """Widok przeglądania i tworzenia zgłoszeń wizyt dla zalogowanego pacjenta."""
 
     permission_classes = [IsAuthenticated, IsPatient]
+
+    def get_throttles(self) -> list[object]:
+        """Aplikuje dedykowany limiter zapytań dla tworzenia nowych wizyt (POST).
+
+        Returns:
+            list[object]: Lista klas dławiących ruch HTTP dla żądania.
+        """
+        if self.request and self.request.method == 'POST':
+            return [VisitBookingRateThrottle()]
+        return super().get_throttles()
 
     def get_queryset(self) -> QuerySet:
         """Zwraca zestaw wizyt należących do zalogowanego pacjenta z filtrowaniem po statusie.

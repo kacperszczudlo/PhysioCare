@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { adminApi } from '@/api/admin'
+import { getErrorMessage } from '@/api/client'
 import type { AdminUserDetail, AdminUserListItem } from '@/api/types'
 import { LoadingBlock } from '@/components/AsyncState'
 import { PageHeader } from '@/components/PageHeader'
@@ -99,8 +100,8 @@ export function AdminUsersPage() {
           ? `Konto ${user.email} zostało odblokowane.`
           : `Konto ${user.email} zostało zablokowane.`,
       )
-    } catch {
-      toast.error('Nie udało się zmienić statusu konta użytkownika.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Nie udało się zmienić statusu konta użytkownika.'))
     }
   }
 
@@ -111,8 +112,8 @@ export function AdminUsersPage() {
       await adminApi.resetUserPassword(userToResetPassword.id)
       toast.success(`Kod resetowania hasła został wysłany na adres ${userToResetPassword.email}.`)
       setUserToResetPassword(null)
-    } catch {
-      toast.error('Wysyłka resetu hasła nie powiodła się.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Wysyłka resetu hasła nie powiodła się.'))
     } finally {
       setIsResettingPassword(false)
     }
@@ -123,11 +124,11 @@ export function AdminUsersPage() {
     setIsDeleting(true)
     try {
       await adminApi.softDeleteUser(userToDelete.id)
-      toast.success(`Konto ${userToDelete.email} zostało pomyślnie dezaktywowane (RODO).`)
+      toast.success(`Konto ${userToDelete.email} zostało pomyślnie usunięte i zanonimizowane (RODO).`)
       setUserToDelete(null)
       void fetchUsers()
-    } catch {
-      toast.error('Nie udało się usunąć użytkownika.')
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Nie udało się usunąć użytkownika.'))
     } finally {
       setIsDeleting(false)
     }
@@ -512,11 +513,11 @@ export function AdminUsersPage() {
         >
           <div className="admin-modal-delete-content">
             <p className="admin-delete-warning">
-              Czy na pewno chcesz dezaktywować konto <strong>{userToDelete.email}</strong>?
+              Czy na pewno chcesz dezaktywować i zanonimizować konto <strong>{userToDelete.email}</strong>?
             </p>
             <p className="admin-delete-subtext">
-              Zgodnie z procedurą RODO konto zostanie oznaczone jako nieaktywne, a dane kontaktowe
-              zostaną zabezpieczone.
+              Zgodnie z procedurą RODO dane osobowe (PII) zostaną zanonimizowane, a wszystkie sesje i tokeny
+              zostaną unieważnione. Operacja jest nieodwracalna.
             </p>
             <div className="admin-modal-actions">
               <Button

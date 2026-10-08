@@ -523,3 +523,29 @@ export interface AdminReview {
   therapist_replied_at: string | null
   created_at: string
 }
+
+/** Wniosek o usunięcie konta pacjenta (RODO Art. 17 - Prawo do bycia zapomnianym). */
+export interface AdminPrivacyRequest {
+  id: string
+  user_id: string
+  user_email: string
+  user_full_name: string
+  reason: string
+  processed_at: string | null
+  notes: string
+  created_at: string
+  is_processed: boolean
+}
+
+/** Zgoda pacjenta zarejestrowana w systemie (RODO Art. 7). */
+export interface AdminConsent {
+  id: string
+  user_id: string
+  user_email: string
+  user_full_name: string
+  consent_type: string
+  consent_type_display: string
+  granted: boolean
+  granted_at: string
+}
+
