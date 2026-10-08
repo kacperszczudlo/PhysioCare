@@ -61,7 +61,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)
-        extra_fields.setdefault('role', 'THERAPIST')
+        extra_fields.setdefault('role', 'ADMIN')
         extra_fields.setdefault('first_name', 'Admin')
         extra_fields.setdefault('last_name', 'System')
         extra_fields.setdefault('email_verified_at', timezone.now())

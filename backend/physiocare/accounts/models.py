@@ -14,6 +14,7 @@ class RoleChoices(models.TextChoices):
 
     PATIENT = 'PATIENT', 'Pacjent'
     THERAPIST = 'THERAPIST', 'Fizjoterapeuta'
+    ADMIN = 'ADMIN', 'Administrator'
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):

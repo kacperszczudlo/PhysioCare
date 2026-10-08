@@ -3,7 +3,7 @@
  * @description Główny plik definicji typów TypeScript dla warstwy komunikacji API systemu PhysioCare (DTO, modele danych, interfejsy).
  */
 
-export type UserRole = 'PATIENT' | 'THERAPIST'
+export type UserRole = 'PATIENT' | 'THERAPIST' | 'ADMIN'
 
 export type VisitStatus = 'PENDING_APPROVAL' | 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
 
@@ -379,3 +379,140 @@ export interface AvailableSlotsResponse {
   is_holiday?: boolean
   holiday_name?: string | null
 }
+
+export interface AdminDashboardStats {
+  users: {
+    total: number
+    patients_count: number
+    therapists_count: number
+    admins_count: number
+    active_count: number
+    inactive_count: number
+    new_last_30_days: number
+  }
+  visits: {
+    total: number
+    scheduled: number
+    completed: number
+    cancelled: number
+    no_show: number
+    pending_approval: number
+    show_up_rate_percent: number
+  }
+  quality: {
+    rating_avg: number
+    rating_count: number
+  }
+  exercises: {
+    total_exercises: number
+    total_assignments: number
+  }
+}
+
+export interface AdminUserListItem {
+  id: string
+  email: string
+  first_name: string
+  last_name: string
+  role: UserRole
+  is_active: boolean
+  is_staff: boolean
+  email_verified: boolean
+  created_at: string
+  last_login?: string | null
+}
+
+export interface AdminUserDetail extends AdminUserListItem {
+  is_superuser: boolean
+  updated_at: string
+  google_linked: boolean
+  has_mfa: boolean
+  visits_count: number
+  profile_info?: {
+    pwzf_number?: string
+    phone?: string
+    qualification_level?: string
+    experience_years?: number
+    rating_avg?: number
+    rating_count?: number
+    avatar_url?: string
+  } | null
+}
+
+export interface AdminTherapistStats {
+  therapist_id: string
+  user_id: string
+  first_name: string
+  last_name: string
+  email: string
+  pwzf_number: string
+  qualification_level: string
+  experience_years: number
+  rating_avg: number
+  rating_count: number
+  total_visits: number
+  completed_visits: number
+  cancelled_visits: number
+  no_show_visits: number
+  pending_visits: number
+}
+
+export interface AdminVisitSummary {
+  id: string
+  start_at: string
+  end_at: string
+  status: VisitStatus
+  location_address: string
+  patient_name: string
+  therapist_name: string
+  therapist_id: string
+  therapy_type_name: string
+  therapy_type_color: string
+}
+
+export interface AdminAvailabilitySlot {
+  id: string
+  therapist_id: string
+  start_at: string | null
+  end_at: string | null
+  day_of_week: number | null
+  start_time: string | null
+  end_time: string | null
+  is_recurring: boolean
+  is_active: boolean
+}
+
+export interface AdminSchedulingOverview {
+  range: {
+    start_at: string
+    end_at: string
+  }
+  therapists: Array<{
+    id: string
+    user_id: string
+    name: string
+    email: string
+    qualification_level: string
+    rating_avg: number
+    rating_count: number
+  }>
+  visits: AdminVisitSummary[]
+  availability_slots: AdminAvailabilitySlot[]
+}
+
+export interface AdminReview {
+  id: string
+  patient_id: string
+  patient_name: string
+  therapist_id: string
+  therapist_name: string
+  visit_id: string | null
+  rating: number
+  comment: string
+  is_anonymous: boolean
+  is_visible: boolean
+  therapist_reply: string
+  therapist_replied_at: string | null
+  created_at: string
+}
+

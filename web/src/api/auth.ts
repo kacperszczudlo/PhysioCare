@@ -90,6 +90,14 @@ export interface MFAStatusResponse {
 
 /** Usługi API uwierzytelniania, rejestracji, resetu hasła oraz 2FA/MFA. */
 export const authApi = {
+  getMe(): Promise<AuthResponse> {
+    return api.get<AuthResponse>('/auth/me/')
+  },
+
+  updateMe(payload: { first_name?: string; last_name?: string }): Promise<AuthResponse> {
+    return api.patch<AuthResponse>('/auth/me/', payload)
+  },
+
   async login(email: string, password: string, recaptcha_token?: string): Promise<LoginResult> {
     let data:
       | AuthResponse

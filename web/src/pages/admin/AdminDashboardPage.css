@@ -1,0 +1,243 @@
+.admin-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  max-width: 72rem;
+}
+
+.admin-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.admin-metric-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 12.5rem;
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.admin-metric-card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.admin-metric-card--users {
+  background: linear-gradient(145deg, oklch(0.97 0.025 55), var(--color-surface-raised) 55%);
+}
+
+.admin-metric-card--visits {
+  background: linear-gradient(145deg, oklch(0.97 0.03 113), var(--color-surface-raised) 55%);
+}
+
+.admin-metric-card--reviews {
+  background: linear-gradient(145deg, oklch(0.97 0.035 85), var(--color-surface-raised) 55%);
+}
+
+.admin-metric-card--activity {
+  background: linear-gradient(145deg, oklch(0.97 0.03 145), var(--color-surface-raised) 55%);
+}
+
+.admin-metric-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.admin-metric-card__label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.admin-metric-card__icon {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  color: var(--color-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-subtle);
+}
+
+.admin-metric-card__value {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--color-ink);
+  font-variant-numeric: tabular-nums;
+  margin-bottom: var(--space-3);
+}
+
+.admin-metric-card__unit {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.admin-metric-card__breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+  margin-bottom: auto;
+}
+
+.admin-breakdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.admin-breakdown-row strong {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-breakdown-row__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.admin-breakdown-row__dot--patient {
+  background: var(--color-primary);
+}
+
+.admin-breakdown-row__dot--therapist {
+  background: var(--color-info);
+}
+
+.admin-breakdown-row__dot--admin {
+  background: var(--color-warning);
+}
+
+.admin-metric-card__footer {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.admin-trend-badge {
+  display: inline-block;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-success);
+}
+
+.admin-metric-card__subtext {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.admin-inline-link {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.admin-inline-link:hover {
+  text-decoration: underline;
+}
+
+/* Kafelki akcji na dole */
+.admin-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.admin-action-card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-action-card__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
+}
+
+.admin-action-card__title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  margin-bottom: var(--space-2);
+}
+
+.admin-action-card__desc {
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--color-muted);
+  margin-bottom: var(--space-6);
+  flex: 1;
+}
+
+.admin-action-card__btn-group {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.admin-action-card__btn-group a,
+.admin-action-card__btn {
+  text-decoration: none;
+}
+
+.admin-error-block {
+  text-align: center;
+  padding: var(--space-12) var(--space-4);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+}
+
+.admin-error-msg {
+  color: var(--color-danger);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 1024px) {
+  .admin-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}

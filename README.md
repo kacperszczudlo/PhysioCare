@@ -1,13 +1,14 @@
 # PhysioCare
 
-Narzędzie do prowadzenia gabinetu fizjoterapeutycznego: panel WWW dla terapeuty, aplikacja mobilna dla pacjenta oraz jedno REST API.
+Narzędzie do prowadzenia kliniki i gabinetu fizjoterapeutycznego: panel WWW dla fizjoterapeuty i administratora, aplikacja mobilna dla pacjenta oraz jedno spójne REST API.
 
 ## Opis
 
 PhysioCare obsługuje:
 
-- **panel terapeuty (web):** kalendarz wizyt, kartę pacjenta z epizodami, mapę ciała (VAS), katalog ćwiczeń, pliki dokumentacji oraz moduł opinii i ocen pacjentów;
-- **aplikację pacjenta (mobile):** terminy wizyt, ćwiczenia domowe (compliance), wystawianie opinii i ocen specjalistom, dokumenty kliniczne (kierowanie, wyroby, Recepta na Ruch) oraz zgody RODO.
+- **panel terapeuty (web):** kalendarz wizyt, kartę pacjenta z epizodami leczenia, mapę ciała (VAS), katalog ćwiczeń, pliki dokumentacji medycznej oraz moduł opinii i ocen;
+- **panel administratora (web):** pulpit analityczny (wskaźniki KPI, frekwencja, statystyki wizyt), zarządzanie bazą użytkowników (role Mobile/Web, blokowanie kont, RODO soft-delete), wielostanowiskowy harmonogram kliniki, weryfikację zespołu fizjoterapeutów oraz moderację opinii pacjentów;
+- **aplikację pacjenta (mobile):** terminy wizyt, ćwiczenia domowe wideo (compliance), wystawianie opinii specjalistom, dokumenty kliniczne (kierowanie, wyroby, Recepta na Ruch) oraz zgody RODO.
 
 ## Stos technologiczny
 
@@ -15,9 +16,9 @@ PhysioCare obsługuje:
 |---------|-------------|
 | Backend | Python 3.12+, Django 6, Django REST Framework |
 | Baza danych | PostgreSQL 16 |
-| Web | React 19, Vite, TypeScript |
+| Web | React 19, Vite, TypeScript (Panel Fizjoterapeuty & Panel Administratora) |
 | Mobile | React Native (Expo), TypeScript |
-| Auth | JWT (access + refresh) |
+| Auth | JWT (access + refresh) + Role-Based Access Control (RBAC: PATIENT, THERAPIST, ADMIN) |
 
 Zgodnie z zatwierdzonym tematem pracy - szczegóły są w [docs/topic-selection.md](docs/topic-selection.md).
 
@@ -26,7 +27,7 @@ Zgodnie z zatwierdzonym tematem pracy - szczegóły są w [docs/topic-selection.
 ```
 PhysioCare/
 ├── backend/          # Django + DRF (oraz backend/README.md)
-├── web/              # Panel fizjoterapeuty (React + web/README.md)
+├── web/              # Panel fizjoterapeuty i administratora (React + web/README.md)
 ├── mobile/           # Aplikacja pacjenta (Expo + mobile/README.md)
 ├── database/         # schema.sql - referencja schematu
 ├── docs/             # Dokumentacja, diagramy, API
@@ -268,6 +269,7 @@ Raporty: `backend/reports/pytest-report.html`, `backend/reports/coverage/index.h
 
 | Skrypt | Opis |
 |--------|------|
+| `create_admin.py` | Tworzenie/awansowanie administratora (CLI / generator SQL) |
 | `setup_postgres_auth.py` | User, baza, `btree_gist` |
 | `reset_db.py` | Drop/create DB + migrate |
 | `sync_schema_sql.py` | Dump schematu → `database/schema.sql` |
@@ -278,6 +280,18 @@ Uruchamianie zawsze z roota repo:
 
 ```powershell
 python scripts/<nazwa>.py
+```
+
+#### Tworzenie konta Administratora (Role Isolation)
+Zgodnie z wymogami bezpieczeństwa konta administratora (`role='ADMIN'`) **nie można** zarejestrować przez publiczne endpointy rejestracji (`/auth/register/patient/`, `/auth/register/therapist/`).
+Konto tworzy się wyłącznie bezpośrednio w bazie danych lub przez narzędzie CLI:
+
+```powershell
+# Interaktywne utworzenie nowego konta administratora:
+python scripts/create_admin.py
+
+# Lub szybkie wygenerowanie gotowych zapytań SQL INSERT/UPDATE do wklejenia w pgAdmin / DBeaver:
+python scripts/create_admin.py --generate-sql --email admin@physiocare.pl --password "TwojeHaslo123!"
 ```
 
 Na Windowsie nie odpalaj skryptów dwuklikiem — użyj PowerShell / terminala Cursor.

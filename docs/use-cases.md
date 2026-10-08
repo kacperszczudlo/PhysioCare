@@ -7,7 +7,8 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Aktor | Opis |
 |-------|------|
 | **Pacjent** | Korzysta z aplikacji mobilnej |
-| **Fizjoterapeuta** | Korzysta z panelu webowego |
+| **Fizjoterapeuta** | Korzysta z klinicznego panelu webowego |
+| **Administrator** | Korzysta z webowego panelu administracyjnego (nadzór, analityka, użytkownicy, moderacja) |
 | **System** | Automatyczne procesy (powiadomienia, walidacja) |
 
 ---
@@ -224,13 +225,101 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
+## UC-22 - Przegląd pulpitu analitycznego kliniki (KPI)
+
+| Pole | Wartość |
+|------|---------|
+| Aktor | Administrator |
+| Cel | Monitorowanie kluczowych wskaźników operacyjnych i bazy użytkowników |
+| Warunki wstępne | Uwierzytelnienie z rolą `ADMIN` |
+| Przebieg | 1. Administrator otwiera pulpit główny `/admin`. 2. System pobiera zagregowane statystyki: liczbę pacjentów (Mobile), fizjoterapeutów (Web), administratorów, nowych rejestracji w ostatnich 30 dniach, frekwencję wizyt (show-up rate %), średnią ocen kliniki oraz wielkość bazy ćwiczeń. 3. Prezentacja danych na interaktywnych kartach KPI z opcją ręcznego odświeżenia. |
+| Wyjątki | E1: Użytkownik bez uprawnień administratora -> 403 Forbidden. |
+
+---
+
+## UC-23 - Zarządzanie kontami użytkowników i uprawnieniami
+
+| Pole | Wartość |
+|------|---------|
+| Aktor | Administrator |
+| Cel | Weryfikacja bazy użytkowników, blokowanie naruszeń regulaminu i wsparcie techniczne |
+| Warunki wstępne | Uwierzytelnienie z rolą `ADMIN` |
+| Przebieg | 1. Przejście do widoku `/admin/users`. 2. Przeszukiwanie listy po imieniu, nazwisku lub e-mailu z filtrowaniem roli (`PATIENT`, `THERAPIST`, `ADMIN`) i statusu (`is_active`). 3. Podgląd karty profilu (PWZF, 2FA, powiązanie Google, data rejestracji, liczba wizyt). 4. Przełączenie blokady konta (`toggle-status`) – natychmiastowa deaktywacja i unieważnienie tokenów refresh (blacklist). 5. Wygenerowanie i wysyłka kodu resetu hasła na e-mail użytkownika (`reset-password`). |
+| Bezpieczeństwo | Administrator nie może zablokować ani usunąć własnego konta. Rejestracja audytowa w logach systemowych. |
+
+---
+
+## UC-24 - Dezaktywacja konta i retencja danych RODO przez administratora
+
+| Pole | Wartość |
+|------|---------|
+| Aktor | Administrator |
+| Cel | Realizacja prawa do bycia zapomnianym z poszanowaniem prawa medycznego |
+| Warunki wstępne | Uwierzytelnienie z rolą `ADMIN` |
+| Przebieg | 1. Kliknięcie opcji usunięcia konta w tabeli użytkowników. 2. Wyświetlenie ostrzegawczego okna modalnego z informacją o procedurze RODO. 3. Potwierdzenie operacji: deaktywacja konta (`is_active=False`), unieważnienie tokenów JWT, zachowanie spójności kluczy obcych i historii leczenia w celach prawno-medycznych (soft-delete). |
+
+---
+
+## UC-25 - Zbiorczy nadzór nad harmonogramami kliniki
+
+| Pole | Wartość |
+|------|---------|
+| Aktor | Administrator |
+| Cel | Koordynacja obłożenia gabinetów i dostępności personelu |
+| Warunki wstępne | Uwierzytelnienie z rolą `ADMIN` |
+| Przebieg | 1. Otwarcie widoku `/admin/schedules`. 2. Wybór przedziału czasowego (nawigacja tygodniowa) oraz opcjonalny filtr konkretnego fizjoterapeuty. 3. Prezentacja grafiku: sloty dostępności personelu oraz zarezerwowane wizyty z podziałem na statusy (zaplanowana, zakończona, odwołana, no-show) i gabinety. |
+
+---
+
+## UC-26 - Monitorowanie zespołu i efektywności personelu
+
+| Pole | Wartość |
+|------|---------|
+| Aktor | Administrator |
+| Cel | Kontrola uprawnień zawodowych (PWZFz), stażu oraz satysfakcji pacjentów |
+| Warunki wstępne | Uwierzytelnienie z rolą `ADMIN` |
+| Przebieg | 1. Otwarcie widoku `/admin/therapists`. 2. Przegląd kart specjalistów: numer PWZF, poziom kwalifikacji, lata doświadczenia, statystyki wizyt (zrealizowane vs odwołane vs niestawiennictwa) oraz średnia ocen i liczba opinii. |
+
+---
+
+## UC-27 - Moderacja opinii pacjentów
+
+| Pole | Wartość |
+|------|---------|
+| Aktor | Administrator |
+| Cel | Weryfikacja jakości komentarzy i ukrywanie treści naruszających regulamin |
+| Warunki wstępne | Uwierzytelnienie z rolą `ADMIN` |
+| Przebieg | 1. Otwarcie widoku `/admin/reviews`. 2. Filtrowanie recenzji po liczbie gwiazdek (1–5) oraz statusie widoczności. 3. Podgląd treści opinii, autora, ocenianego fizjoterapeuty oraz oficjalnej odpowiedzi personelu. 4. Przełączenie widoczności (`toggle-visibility`): ukrycie opinii natychmiast wyklucza ją z widoku publicznego i automatycznie rekalkuluje średnią ocen fizjoterapeuty via sygnał bazodanowy. |
+
+## UC-28 - Zarządzanie profilem i tożsamością administratora
+
+| Pole | Wartość |
+|------|---------|
+| Aktor | Administrator |
+| Cel | Aktualizacja danych personalnych i wgląd w uprawnienia systemowe |
+| Warunki wstępne | Uwierzytelnienie z rolą `ADMIN` |
+| Przebieg | 1. Otwarcie widoku `/admin/profile`. 2. Edycja imienia i nazwiska administratora. 3. Zapis zmian (`PATCH /api/v1/auth/me/`) z natychmiastowym odświeżeniem tożsamości w nagłówkach i audycie. 4. Podgląd statusu 2FA i zakresu uprawnień. |
+
+---
+
+## UC-29 - Ustawienia bezpieczeństwa i 2FA administratora
+
+| Pole | Wartość |
+|------|---------|
+| Aktor | Administrator |
+| Cel | Zabezpieczenie konta o najwyższym poziomie uprawnień (hasło, 2FA/TOTP) |
+| Warunki wstępne | Uwierzytelnienie z rolą `ADMIN` |
+| Przebieg | 1. Otwarcie widoku `/admin/settings`. 2. Konfiguracja dwuskładnikowej autentykacji (TOTP QR, kody zapasowe). 3. Bezpieczna zmiana hasła administratora zgodnie z restrykcyjną polityką haseł. 4. Zarządzanie sesją panelu. |
+
+---
+
 ## Ochrona Danych Osobowych i Medycznych (RODO Art. 9)
 
 | Mechanizm | Opis Wdrożenia |
 |-----------|----------------|
 | **Szyfrowanie pól at-rest** | Dane wrażliwe (PESEL, notatki medyczne, diagnoza funkcjonalna, uzasadnienia skierowań) są przed zapisaniem do tabel w PostgreSQL automatycznie szyfrowane symetrycznym algorytmem Fernet (AES-128-CBC + HMAC SHA-256). |
 | **Brak jawnego PESELu w BD** | Zapytania surowe SQL zwracają zaszyfrowany ciąg (`gAAAAA...`). Dekrypcja zachodzi wyłącznie w warstwie ORM po autoryzacji sesji. |
-| **Maskowanie w API** | Endpointy API udostępniają numer PESEL oraz wpisy medyczne wyłącznie autoryzowanemu fizjoterapeucie (przypisanemu do pacjenta) oraz samemu pacjentowi. |
+| **Maskowanie w API** | Endpointy API udostępniają numer PESEL oraz wpisy medyczne wyłącznie autoryzowanemu fizjoterapeucie (przypisanemu do pacjenta) oraz samemu pacjentowi. Panel administratora ma celowo odcięty dostęp do zaszyfrowanej dokumentacji klinicznej (zasada ograniczonego dostępu). |
 
 ---
 
@@ -243,3 +332,5 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | UC-10-16 | - | ✓ | treatment, scheduling, exercises | episodes, visits |
 | UC-17-18 | ✓ | - | therapists, notifications | profiles, prefs |
 | UC-19-21 | ✓ | ✓ | therapists, privacy | medical_devices, deleted_users |
+| UC-22-29 | - | ✓ (Admin) | administration, accounts | users, visits, reviews |
+

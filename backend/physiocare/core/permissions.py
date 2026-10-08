@@ -133,3 +133,33 @@ class IsEpisodeParticipant(permissions.BasePermission):
         user = request.user if hasattr(request, 'user') else None
         return user_can_access_episode(user, obj)
 
+
+class IsAdminRole(permissions.BasePermission):
+    """Uprawnienie sprawdzające, czy użytkownik jest uwierzytelniony i posiada uprawnienia administratora."""
+
+    def has_permission(self, request: object, view: object) -> bool:
+        """Sprawdza uprawnienie administracyjne dla widoku.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            view (object): Widok DRF.
+
+        Returns:
+            bool: True, jeśli użytkownik jest zalogowany i ma rolę ADMIN, is_staff lub is_superuser.
+
+        Raises:
+            TypeError: Gdy request jest None.
+        """
+        if request is None:
+            raise TypeError("Argument 'request' nie może być None.")
+
+        user = request.user if hasattr(request, 'user') else None
+        if not user or not getattr(user, 'is_authenticated', False):
+            return False
+
+        role = getattr(user, 'role', None)
+        is_staff = getattr(user, 'is_staff', False)
+        is_superuser = getattr(user, 'is_superuser', False)
+
+        return bool(role == 'ADMIN' or is_staff or is_superuser)
+

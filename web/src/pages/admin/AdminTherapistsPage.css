@@ -1,0 +1,177 @@
+.admin-therapists-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 72rem;
+}
+
+.admin-therapists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: var(--space-4);
+}
+
+.admin-therapist-card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.admin-therapist-card:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.admin-therapist-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.admin-therapist-card__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.admin-therapist-card__name {
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.admin-therapist-card__email {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.admin-therapist-card__rating {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+
+.admin-rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-warning);
+}
+
+.admin-rating-star {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+}
+
+.admin-rating-count {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.admin-therapist-card__credentials {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  font-size: var(--text-xs);
+  margin-bottom: var(--space-4);
+}
+
+.admin-credential-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-credential-label {
+  color: var(--color-muted);
+}
+
+.admin-credential-value {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.admin-therapist-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  text-align: center;
+  margin-bottom: var(--space-4);
+}
+
+.admin-therapist-metric {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.admin-therapist-metric__num {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 0.1rem;
+}
+
+.admin-therapist-metric__label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.admin-therapist-metric--completed .admin-therapist-metric__num {
+  color: var(--color-success);
+}
+
+.admin-therapist-metric--cancelled .admin-therapist-metric__num {
+  color: var(--color-danger);
+}
+
+.admin-therapist-metric--noshow .admin-therapist-metric__num {
+  color: var(--color-warning);
+}
+
+.admin-therapist-card__footer {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+  margin-top: auto;
+}
+
+.admin-therapist-footer-text {
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.admin-therapist-footer-text strong {
+  color: var(--color-ink);
+}
+
+.admin-therapists-empty {
+  text-align: center;
+  padding: var(--space-12) var(--space-4);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  color: var(--color-muted);
+}
