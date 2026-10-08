@@ -380,3 +380,151 @@ class TestAdminSchedulingAndReviews:
         assert admin_user.first_name == 'Kacper Nowy'
         assert admin_user.last_name == 'Admin Nowy'
 
+
+@pytest.mark.django_db
+class TestAdminValidationAndEdgeCases:
+    """Testy walidacji wejściowej (5 Filarów Walidacji) oraz obsługi błędów 404/400."""
+
+    NON_EXISTENT_UUID = '00000000-0000-0000-0000-000000000000'
+
+    def test_user_detail_not_found_returns_404(
+        self, api_client: APIClient, admin_user: User
+    ) -> None:
+        # Arrange
+        api_client.force_authenticate(user=admin_user)
+
+        # Act
+        response = api_client.get(f'/api/v1/admin/users/{self.NON_EXISTENT_UUID}/')
+
+        # Assert
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_toggle_status_not_found_returns_404(
+        self, api_client: APIClient, admin_user: User
+    ) -> None:
+        # Arrange
+        api_client.force_authenticate(user=admin_user)
+
+        # Act
+        response = api_client.patch(
+            f'/api/v1/admin/users/{self.NON_EXISTENT_UUID}/status/',
+            {'is_active': False},
+            format='json',
+        )
+
+        # Assert
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_toggle_status_invalid_payload_returns_400(
+        self, api_client: APIClient, admin_user: User, patient: PatientProfile
+    ) -> None:
+        # Arrange
+        api_client.force_authenticate(user=admin_user)
+
+        # Act
+        response = api_client.patch(
+            f'/api/v1/admin/users/{patient.user.id}/status/',
+            {},  # brak wymaganego pola is_active
+            format='json',
+        )
+
+        # Assert
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert 'is_active' in response.json().get('error', {}).get('details', {})
+
+    def test_reset_password_user_not_found_returns_404(
+        self, api_client: APIClient, admin_user: User
+    ) -> None:
+        # Arrange
+        api_client.force_authenticate(user=admin_user)
+
+        # Act
+        response = api_client.post(f'/api/v1/admin/users/{self.NON_EXISTENT_UUID}/reset-password/')
+
+        # Assert
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_reset_password_for_inactive_user_returns_400(
+        self, api_client: APIClient, admin_user: User, patient: PatientProfile
+    ) -> None:
+        # Arrange
+        api_client.force_authenticate(user=admin_user)
+        patient.user.is_active = False
+        patient.user.save(update_fields=['is_active'])
+
+        # Act
+        response = api_client.post(f'/api/v1/admin/users/{patient.user.id}/reset-password/')
+
+        # Assert
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        error_msg = str(response.json())
+        assert 'zablokowanego konta' in error_msg
+
+    def test_soft_delete_user_not_found_returns_404(
+        self, api_client: APIClient, admin_user: User
+    ) -> None:
+        # Arrange
+        api_client.force_authenticate(user=admin_user)
+
+        # Act
+        response = api_client.delete(f'/api/v1/admin/users/{self.NON_EXISTENT_UUID}/')
+
+        # Assert
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_toggle_review_visibility_not_found_returns_404(
+        self, api_client: APIClient, admin_user: User
+    ) -> None:
+        # Arrange
+        api_client.force_authenticate(user=admin_user)
+
+        # Act
+        response = api_client.patch(
+            f'/api/v1/admin/reviews/{self.NON_EXISTENT_UUID}/visibility/',
+            {'is_visible': False},
+            format='json',
+        )
+
+        # Assert
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_toggle_review_visibility_missing_payload_returns_400(
+        self,
+        api_client: APIClient,
+        admin_user: User,
+        therapist: TherapistProfile,
+        patient: PatientProfile,
+        therapy_type: TherapyType,
+    ) -> None:
+        # Arrange
+        now = timezone.now()
+        visit = Visit.objects.create(
+            patient=patient,
+            therapist=therapist,
+            therapy_type=therapy_type,
+            start_at=now - timedelta(days=2),
+            end_at=now - timedelta(days=2, hours=-1),
+            status=VisitStatus.COMPLETED,
+        )
+        review = Review.objects.create(
+            patient=patient,
+            therapist=therapist,
+            visit=visit,
+            rating=4,
+            comment='Dobra terapia',
+            is_visible=True,
+        )
+        api_client.force_authenticate(user=admin_user)
+
+        # Act
+        response = api_client.patch(
+            f'/api/v1/admin/reviews/{review.id}/visibility/',
+            {},  # brak is_visible
+            format='json',
+        )
+
+        # Assert
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert 'is_visible' in response.json().get('error', {}).get('details', {})
+
+
