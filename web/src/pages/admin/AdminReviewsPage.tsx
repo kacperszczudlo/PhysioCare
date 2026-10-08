@@ -9,6 +9,9 @@ import { Select } from '@/components/ui/Select'
 import { useToast } from '@/components/ui/ToastContext'
 import { IconStar } from './AdminIcons'
 import './AdminReviewsPage.css'
+
+const PAGE_SIZE = 20
+
 /**
  * Komponent pomocniczy renderujący graficzną skalę ocen 1-5 gwiazdek.
  */
@@ -190,7 +193,7 @@ export function AdminReviewsPage() {
           {/* Paginacja */}
           <div className="admin-pagination">
             <span className="admin-pagination__info">
-              Strona {page} z {Math.max(1, Math.ceil(count / 20))}
+              Strona {page} z {Math.max(1, Math.ceil(count / PAGE_SIZE))}
             </span>
             <div className="admin-pagination__controls">
               <Button
@@ -204,7 +207,7 @@ export function AdminReviewsPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                disabled={page * 20 >= count}
+                disabled={page * PAGE_SIZE >= count}
                 onClick={() => setPage((p) => p + 1)}
               >
                 Następna

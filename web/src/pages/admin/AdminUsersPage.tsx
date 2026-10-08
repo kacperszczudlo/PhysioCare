@@ -18,6 +18,8 @@ import {
 } from './AdminIcons'
 import './AdminUsersPage.css'
 
+const PAGE_SIZE = 20
+
 function initials(first?: string, last?: string): string {
   const value = `${first?.charAt(0) ?? ''}${last?.charAt(0) ?? ''}`.toUpperCase()
   return value || '?'
@@ -334,7 +336,7 @@ export function AdminUsersPage() {
         {/* Paginacja */}
         <div className="admin-pagination">
           <span className="admin-pagination__info">
-            Strona {page} z {Math.max(1, Math.ceil(count / 20))}
+            Strona {page} z {Math.max(1, Math.ceil(count / PAGE_SIZE))}
           </span>
           <div className="admin-pagination__controls">
             <Button
@@ -348,7 +350,7 @@ export function AdminUsersPage() {
             <Button
               variant="secondary"
               size="sm"
-              disabled={page * 20 >= count}
+              disabled={page * PAGE_SIZE >= count}
               onClick={() => setPage((p) => p + 1)}
             >
               Następna

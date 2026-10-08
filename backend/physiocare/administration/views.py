@@ -52,24 +52,29 @@ class AdminDashboardAnalyticsView(APIView):
         now = timezone.now()
         thirty_days_ago = now - timedelta(days=30)
 
-        # Statystyki użytkowników
-        total_users = User.objects.count()
-        patients_count = User.objects.filter(role=RoleChoices.PATIENT).count()
-        therapists_count = User.objects.filter(role=RoleChoices.THERAPIST).count()
-        admins_count = User.objects.filter(role=RoleChoices.ADMIN).count()
-        active_count = User.objects.filter(is_active=True).count()
-        inactive_count = User.objects.filter(is_active=False).count()
-        new_last_30_days = User.objects.filter(created_at__gte=thirty_days_ago).count()
+        # Statystyki użytkowników w 1 zapytaniu agregującym
+        user_stats = User.objects.aggregate(
+            total_users=Count('id'),
+            patients_count=Count('id', filter=Q(role=RoleChoices.PATIENT)),
+            therapists_count=Count('id', filter=Q(role=RoleChoices.THERAPIST)),
+            admins_count=Count('id', filter=Q(role=RoleChoices.ADMIN)),
+            active_count=Count('id', filter=Q(is_active=True)),
+            inactive_count=Count('id', filter=Q(is_active=False)),
+            new_last_30_days=Count('id', filter=Q(created_at__gte=thirty_days_ago)),
+        )
 
-        # Statystyki wizyt
-        visits_qs = Visit.objects.all()
-        total_visits = visits_qs.count()
-        scheduled_visits = visits_qs.filter(status=VisitStatus.SCHEDULED).count()
-        completed_visits = visits_qs.filter(status=VisitStatus.COMPLETED).count()
-        cancelled_visits = visits_qs.filter(status=VisitStatus.CANCELLED).count()
-        no_show_visits = visits_qs.filter(status=VisitStatus.NO_SHOW).count()
-        pending_visits = visits_qs.filter(status=VisitStatus.PENDING_APPROVAL).count()
+        # Statystyki wizyt w 1 zapytaniu agregującym
+        visit_stats = Visit.objects.aggregate(
+            total_visits=Count('id'),
+            scheduled_visits=Count('id', filter=Q(status=VisitStatus.SCHEDULED)),
+            completed_visits=Count('id', filter=Q(status=VisitStatus.COMPLETED)),
+            cancelled_visits=Count('id', filter=Q(status=VisitStatus.CANCELLED)),
+            no_show_visits=Count('id', filter=Q(status=VisitStatus.NO_SHOW)),
+            pending_visits=Count('id', filter=Q(status=VisitStatus.PENDING_APPROVAL)),
+        )
 
+        completed_visits = visit_stats['completed_visits']
+        no_show_visits = visit_stats['no_show_visits']
         attended_sum = completed_visits + no_show_visits
         show_up_rate = (
             round((completed_visits / attended_sum) * 100, 1) if attended_sum > 0 else 100.0
@@ -88,21 +93,21 @@ class AdminDashboardAnalyticsView(APIView):
 
         payload = {
             'users': {
-                'total': total_users,
-                'patients_count': patients_count,
-                'therapists_count': therapists_count,
-                'admins_count': admins_count,
-                'active_count': active_count,
-                'inactive_count': inactive_count,
-                'new_last_30_days': new_last_30_days,
+                'total': user_stats['total_users'],
+                'patients_count': user_stats['patients_count'],
+                'therapists_count': user_stats['therapists_count'],
+                'admins_count': user_stats['admins_count'],
+                'active_count': user_stats['active_count'],
+                'inactive_count': user_stats['inactive_count'],
+                'new_last_30_days': user_stats['new_last_30_days'],
             },
             'visits': {
-                'total': total_visits,
-                'scheduled': scheduled_visits,
-                'completed': completed_visits,
-                'cancelled': cancelled_visits,
-                'no_show': no_show_visits,
-                'pending_approval': pending_visits,
+                'total': visit_stats['total_visits'],
+                'scheduled': visit_stats['scheduled_visits'],
+                'completed': visit_stats['completed_visits'],
+                'cancelled': visit_stats['cancelled_visits'],
+                'no_show': visit_stats['no_show_visits'],
+                'pending_approval': visit_stats['pending_visits'],
                 'show_up_rate_percent': show_up_rate,
             },
             'quality': {
@@ -124,7 +129,7 @@ class AdminUserListView(generics.ListAPIView):
     serializer_class = AdminUserListSerializer
 
     def get_queryset(self):
-        qs = User.objects.all().order_by('-created_at')
+        qs = User.objects.all().order_by('-created_at', 'pk')
 
         # Filtr roli
         role = self.request.query_params.get('role')
@@ -287,13 +292,15 @@ class AdminSchedulingOverviewView(APIView):
         visits_qs = (
             Visit.objects.filter(start_at__lt=end_dt, end_at__gt=start_dt)
             .select_related('patient__user', 'therapist__user', 'therapy_type')
-            .order_by('start_at')
+            .order_by('start_at', 'pk')
         )
         if therapist_id:
             visits_qs = visits_qs.filter(therapist_id=therapist_id)
 
         # Pobranie aktywnych slotów dostępności
-        slots_qs = TherapistAvailabilitySlot.objects.filter(is_active=True)
+        slots_qs = TherapistAvailabilitySlot.objects.filter(is_active=True).order_by(
+            'day_of_week', 'start_time', 'pk'
+        )
         if therapist_id:
             slots_qs = slots_qs.filter(therapist_id=therapist_id)
 
@@ -330,36 +337,37 @@ class AdminTherapistStatsView(APIView):
     permission_classes = [IsAuthenticated, IsAdminRole]
 
     def get(self, request, *args, **kwargs) -> Response:
-        therapists = TherapistProfile.objects.select_related('user').all()
-        data = []
-
-        for t in therapists:
-            visits = t.visits.all()
-            total = visits.count()
-            completed = visits.filter(status=VisitStatus.COMPLETED).count()
-            cancelled = visits.filter(status=VisitStatus.CANCELLED).count()
-            no_show = visits.filter(status=VisitStatus.NO_SHOW).count()
-            pending = visits.filter(status=VisitStatus.PENDING_APPROVAL).count()
-
-            data.append(
-                {
-                    'therapist_id': str(t.id),
-                    'user_id': str(t.user.id),
-                    'first_name': t.user.first_name,
-                    'last_name': t.user.last_name,
-                    'email': t.user.email,
-                    'pwzf_number': t.pwzf_number,
-                    'qualification_level': t.qualification_level,
-                    'experience_years': t.experience_years,
-                    'rating_avg': float(t.rating_avg),
-                    'rating_count': t.rating_count,
-                    'total_visits': total,
-                    'completed_visits': completed,
-                    'cancelled_visits': cancelled,
-                    'no_show_visits': no_show,
-                    'pending_visits': pending,
-                }
+        therapists = (
+            TherapistProfile.objects.select_related('user')
+            .annotate(
+                total_visits_count=Count('visits'),
+                completed_visits_count=Count('visits', filter=Q(visits__status=VisitStatus.COMPLETED)),
+                cancelled_visits_count=Count('visits', filter=Q(visits__status=VisitStatus.CANCELLED)),
+                no_show_visits_count=Count('visits', filter=Q(visits__status=VisitStatus.NO_SHOW)),
+                pending_visits_count=Count('visits', filter=Q(visits__status=VisitStatus.PENDING_APPROVAL)),
             )
+            .order_by('user__last_name', 'user__first_name', 'pk')
+        )
+        data = [
+            {
+                'therapist_id': str(t.id),
+                'user_id': str(t.user.id),
+                'first_name': t.user.first_name,
+                'last_name': t.user.last_name,
+                'email': t.user.email,
+                'pwzf_number': t.pwzf_number,
+                'qualification_level': t.qualification_level,
+                'experience_years': t.experience_years,
+                'rating_avg': float(t.rating_avg),
+                'rating_count': t.rating_count,
+                'total_visits': t.total_visits_count,
+                'completed_visits': t.completed_visits_count,
+                'cancelled_visits': t.cancelled_visits_count,
+                'no_show_visits': t.no_show_visits_count,
+                'pending_visits': t.pending_visits_count,
+            }
+            for t in therapists
+        ]
 
         serializer = AdminTherapistStatsSerializer(data, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -375,7 +383,7 @@ class AdminReviewListView(generics.ListAPIView):
         qs = (
             Review.objects.select_related('patient__user', 'therapist__user')
             .all()
-            .order_by('-created_at')
+            .order_by('-created_at', 'pk')
         )
 
         rating = self.request.query_params.get('rating')
