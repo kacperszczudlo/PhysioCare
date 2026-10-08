@@ -9,12 +9,13 @@ Dokument łączy **zamysł projektu** (UC-01-UC-18) z **konkretnymi requestami**
 
 ## 1. Co weryfikujemy
 
-PhysioCare ma dwóch aktorów i jeden backend:
+PhysioCare ma trzech aktorów i jeden centralny backend:
 
 | Klient | Rola JWT | Główne UC |
 |--------|----------|-----------|
 | Mobile | `PATIENT` | UC-01-09, UC-17-18 |
-| Web | `THERAPIST` | UC-01-04, UC-10-16 |
+| Web | `THERAPIST` | UC-01-04, UC-10-16, UC-19 |
+| Web | `ADMIN` | UC-22-29 (Nadzór, analityka KPI, użytkownicy, moderacja, profil, 2FA) |
 
 Każdy request w kolekcji ma skrypt testowy (status HTTP + często envelope błędu / zapis ID do zmiennych).
 
@@ -25,7 +26,8 @@ flowchart TB
     L1[Login therapist]
     P[Register patient]
     L2[Login patient]
-    T --> L1 --> P --> L2
+    A[Login admin]
+    T --> L1 --> P --> L2 --> A
   end
 
   subgraph therapist [Ścieżka terapeuty]
@@ -44,8 +46,18 @@ flowchart TB
     Me --> Vis --> Comp --> Docs
   end
 
+  subgraph admin [Ścieżka administratora]
+    ADash[Admin Dashboard KPI]
+    AUsers[Zarządzanie użytkownikami]
+    ASched[Zbiorczy kalendarz kliniki]
+    ATherap[Statystyki personelu]
+    ARev[Moderacja opinii]
+    ADash --> AUsers --> ASched --> ATherap --> ARev
+  end
+
   setup --> therapist
   setup --> patient
+  setup --> admin
 ```
 
 ---
@@ -275,10 +287,29 @@ Uruchom Collection Runner (kolejność folderów) i odhacz:
 - [ ] Publiczny profil terapeuty
 - [ ] Request bez auth -> 401
 
-### Role
+### Administrator (UC-22 - UC-29)
+
+- [ ] Dashboard KPI `/admin/dashboard/` (or `/admin/analytics/dashboard/`) -> 200
+- [ ] Paginowana lista kont `/admin/users/` (wyszukiwanie + filtry) -> 200
+- [ ] Szczegóły profilu użytkownika `/admin/users/{id}/` -> 200
+- [ ] Zmiana statusu konta (blokada/odblokowanie) `/admin/users/{id}/status/` -> 200
+- [ ] Inicjalizacja resetu hasła `/admin/users/{id}/reset-password/` -> 200
+- [ ] Bezpieczna dezaktywacja RODO (soft delete) DELETE `/admin/users/{id}/` -> 200
+- [ ] Blokada samodezaktywacji admina -> 403
+- [ ] Wielostanowiskowy grafik `/admin/schedules/overview/` (or `/admin/scheduling/overview/`) -> 200
+- [ ] Efektywność personelu `/admin/therapists/stats/` -> 200
+- [ ] Moderacja recenzji `/admin/reviews/` -> 200
+- [ ] Ukrycie / przywrócenie opinii `/admin/reviews/{id}/visibility/` -> 200
+- [ ] Edycja profilu administratora (UC-28) PATCH `/auth/me/` -> 200
+- [ ] Status i konfiguracja 2FA administratora (UC-29) `/auth/mfa/status/` -> 200
+
+### Role & Strażnicy Dostępności (RBAC / BFLA)
 
 - [ ] Pacjent nie listuje `/patients/` (403)
 - [ ] Pacjent nie czyta dashboardu terapeuty (403)
+- [ ] Pacjent nie ma dostępu do panelu administratora `/admin/*` (403)
+- [ ] Fizjoterapeuta nie ma dostępu do panelu administratora `/admin/*` (403)
+- [ ] Zapytanie bez tokenu do `/admin/*` -> 401
 
 ---
 

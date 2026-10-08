@@ -162,3 +162,16 @@ def patient_profiles(db: object, therapist: TherapistProfile) -> list[PatientPro
         )
     return patients
 
+
+@pytest.fixture
+def admin_user(db: object) -> User:
+    """Tworzy użytkownika z rolą administratora na potrzeby testów."""
+    return User.objects.create_superuser(
+        email='admin@physiocare.test',
+        password='test-pass',
+        role='ADMIN',
+        first_name='Admin',
+        last_name='Główny',
+        email_verified_at=timezone.now(),
+    )
+

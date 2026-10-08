@@ -3,7 +3,7 @@
  * @description Główny plik definicji typów TypeScript dla warstwy komunikacji API systemu PhysioCare (DTO, modele danych, interfejsy).
  */
 
-export type UserRole = 'PATIENT' | 'THERAPIST'
+export type UserRole = 'PATIENT' | 'THERAPIST' | 'ADMIN'
 
 export type VisitStatus = 'PENDING_APPROVAL' | 'SCHEDULED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
 
@@ -378,4 +378,173 @@ export interface AvailableSlotsResponse {
   results: AvailabilitySlot[]
   is_holiday?: boolean
   holiday_name?: string | null
+}
+
+/** Zbiorcze metryki i analityka KPI dla pulpitu administratora. */
+export interface AdminDashboardStats {
+  users: {
+    total: number
+    patients_count: number
+    therapists_count: number
+    admins_count: number
+    active_count: number
+    inactive_count: number
+    new_last_30_days: number
+  }
+  visits: {
+    total: number
+    scheduled: number
+    completed: number
+    cancelled: number
+    no_show: number
+    pending_approval: number
+    show_up_rate_percent: number
+  }
+  quality: {
+    rating_avg: number
+    rating_count: number
+  }
+  exercises: {
+    total_exercises: number
+    total_assignments: number
+  }
+}
+
+/** Element listy użytkowników w widoku zarządzania kontami w panelu admina. */
+export interface AdminUserListItem {
+  id: string
+  email: string
+  first_name: string
+  last_name: string
+  role: UserRole
+  is_active: boolean
+  is_staff: boolean
+  email_verified: boolean
+  created_at: string
+  last_login?: string | null
+}
+
+/** Pełne szczegóły profilu użytkownika dla administratora. */
+export interface AdminUserDetail extends AdminUserListItem {
+  is_superuser: boolean
+  updated_at: string
+  google_linked: boolean
+  has_mfa: boolean
+  visits_count: number
+  profile_info?: {
+    pwzf_number?: string
+    phone?: string
+    qualification_level?: string
+    experience_years?: number
+    rating_avg?: number
+    rating_count?: number
+    avatar_url?: string
+  } | null
+}
+
+/** Zestawienie statystyk pracy i efektywności pojedynczego fizjoterapeuty. */
+export interface AdminTherapistStats {
+  therapist_id: string
+  user_id: string
+  first_name: string
+  last_name: string
+  email: string
+  pwzf_number: string
+  qualification_level: string
+  experience_years: number
+  rating_avg: number
+  rating_count: number
+  total_visits: number
+  completed_visits: number
+  cancelled_visits: number
+  no_show_visits: number
+  pending_visits: number
+}
+
+/** Podsumowanie wizyty w zbiorczym widoku harmonogramu administratora. */
+export interface AdminVisitSummary {
+  id: string
+  start_at: string
+  end_at: string
+  status: VisitStatus
+  location_address: string
+  patient_name: string
+  therapist_name: string
+  therapist_id: string
+  therapy_type_name: string
+  therapy_type_color: string
+}
+
+/** Slot dostępności fizjoterapeuty w zbiorczym harmonogramie. */
+export interface AdminAvailabilitySlot {
+  id: string
+  therapist_id: string
+  start_at: string | null
+  end_at: string | null
+  day_of_week: number | null
+  start_time: string | null
+  end_time: string | null
+  is_recurring: boolean
+  is_active: boolean
+}
+
+/** Zbiorczy przegląd grafiku wizyt i dostępności personelu w zadanym oknie czasu. */
+export interface AdminSchedulingOverview {
+  range: {
+    start_at: string
+    end_at: string
+  }
+  therapists: Array<{
+    id: string
+    user_id: string
+    name: string
+    email: string
+    qualification_level: string
+    rating_avg: number
+    rating_count: number
+  }>
+  visits: AdminVisitSummary[]
+  availability_slots: AdminAvailabilitySlot[]
+}
+
+/** Recenzja pacjenta w widoku moderacji opinii panelu administratora. */
+export interface AdminReview {
+  id: string
+  patient_id: string
+  patient_name: string
+  therapist_id: string
+  therapist_name: string
+  visit_id: string | null
+  rating: number
+  comment: string
+  is_anonymous: boolean
+  is_visible: boolean
+  therapist_reply: string
+  therapist_replied_at: string | null
+  created_at: string
+}
+
+/** Wniosek o usunięcie konta pacjenta (RODO Art. 17 - Prawo do bycia zapomnianym). */
+export interface AdminPrivacyRequest {
+  id: string
+  user_id: string
+  user_email: string
+  user_full_name: string
+  reason: string
+  processed_at: string | null
+  notes: string
+  created_at: string
+  is_processed: boolean
+}
+
+/** Zgoda pacjenta zarejestrowana w systemie (RODO Art. 7). */
+export interface AdminConsent {
+  id: string
+  user_id: string
+  user_email: string
+  user_full_name: string
+  consent_type: string
+  consent_type_display: string
+  granted: boolean
+  granted_at: string
 }

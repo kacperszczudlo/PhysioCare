@@ -92,3 +92,42 @@ def test_dashboard_stats_exclude_soft_deleted_patients(
     assert response.status_code == 200
     assert response.data['patients_total'] == 10
 
+
+@pytest.mark.django_db
+def test_patient_list_search_by_name_and_email(
+    therapist: object, patient_profiles: object, api_client: object,
+) -> None:
+    """Sprawdza filtrowanie listy pacjentów po imieniu, nazwisku lub adresie e-mail."""
+    # Arrange
+    api_client.force_authenticate(user=therapist.user)
+    target_patient = patient_profiles[0]
+    first_name = target_patient.user.first_name
+
+    # Act
+    response = api_client.get(f'/api/v1/patients/?search={first_name}')
+
+    # Assert
+    assert response.status_code == 200
+    assert response.data['count'] >= 1
+    returned_ids = [item['id'] for item in response.data['results']]
+    assert str(target_patient.id) in returned_ids
+
+
+@pytest.mark.django_db
+def test_patient_list_pagination_support(
+    therapist: object, patient_profiles: object, api_client: object,
+) -> None:
+    """Sprawdza działanie paginacji i struktury odpowiedzi dla listy pacjentów."""
+    # Arrange
+    api_client.force_authenticate(user=therapist.user)
+
+    # Act
+    response = api_client.get('/api/v1/patients/?page=1')
+
+    # Assert
+    assert response.status_code == 200
+    assert 'count' in response.data
+    assert 'results' in response.data
+    assert isinstance(response.data['results'], list)
+
+

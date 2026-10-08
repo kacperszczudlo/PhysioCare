@@ -188,6 +188,10 @@ class VisitNote(TimestampedModel):
         """Metadane modelu notatki z wizyty."""
 
         db_table: str = 'visit_notes'
+        indexes: list[object] = [
+            models.Index(fields=['episode', '-created_at'], name='idx_notes_episode_created'),
+            models.Index(fields=['therapist', '-created_at'], name='idx_notes_therapist_created'),
+        ]
 
     def __str__(self) -> str:
         """Zwraca reprezentację tekstową notatki z wizyty.
@@ -233,6 +237,9 @@ class DiagnosticRecommendation(TimestampedModel):
 
         db_table: str = 'diagnostic_recommendations'
         ordering: list[str] = ['-created_at']
+        indexes: list[object] = [
+            models.Index(fields=['episode', '-created_at'], name='idx_diag_rec_ep_created'),
+        ]
 
     def __str__(self) -> str:
         """Zwraca reprezentację tekstową rekomendacji diagnostycznej.
@@ -289,6 +296,10 @@ class MedicalDeviceOrder(TimestampedModel):
 
         db_table: str = 'medical_device_orders'
         ordering: list[str] = ['-created_at']
+        indexes: list[object] = [
+            models.Index(fields=['patient', '-created_at'], name='idx_dev_ord_pt_created'),
+            models.Index(fields=['episode', '-created_at'], name='idx_dev_ord_ep_created'),
+        ]
 
     def __str__(self) -> str:
         """Zwraca reprezentację tekstową zlecenia na wyrób medyczny.

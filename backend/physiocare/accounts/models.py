@@ -14,6 +14,7 @@ class RoleChoices(models.TextChoices):
 
     PATIENT = 'PATIENT', 'Pacjent'
     THERAPIST = 'THERAPIST', 'Fizjoterapeuta'
+    ADMIN = 'ADMIN', 'Administrator'
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
@@ -64,6 +65,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
                 Lower('email'),
                 name='uniq_users_email_lower',
             ),
+        ]
+        indexes = [
+            models.Index(fields=['-created_at'], name='idx_users_created_at_desc'),
+            models.Index(fields=['role', '-created_at'], name='idx_users_role_created_at'),
+            models.Index(fields=['is_active'], name='idx_users_is_active'),
         ]
 
     def __str__(self) -> str:

@@ -2,37 +2,39 @@
 
 ## Przegląd
 
-PhysioCare to zintegrowany system trójwarstwowy składający się z panelu webowego (React), klienta mobilnego (Expo) oraz centralnej usługi backendowej REST (Django) połączonej z bazą PostgreSQL. Komunikacja kliencka realizowana jest przez bezpieczny protokół HTTPS (payload JSON). Kanał **Server-Sent Events (SSE)** (`GET /api/v1/me/events/`) zapewnia synchronizację interfejsu w czasie rzeczywistym poprzez automatyczne unieważnianie pamięci podręcznej i ponowne pobieranie zasobów REST po wystąpieniu zdarzeń domenowych. Powiadomienia w tle realizowane są natywnym kanałem Push (Expo/FCM) oraz e-mail. Szczegółowy kontrakt SSE: [api.md - Realtime SSE](api.md#realtime--sse-meevents).
+PhysioCare to zintegrowany system trójwarstwowy składający się z aplikacji webowej (React: panel kliniczny fizjoterapeuty oraz panel administratora), klienta mobilnego (Expo dla pacjenta) oraz centralnej usługi backendowej REST (Django) połączonej z bazą PostgreSQL. Komunikacja kliencka realizowana jest przez bezpieczny protokół HTTPS (payload JSON). Kanał **Server-Sent Events (SSE)** (`GET /api/v1/me/events/`) zapewnia synchronizację interfejsu w czasie rzeczywistym poprzez automatyczne unieważnianie pamięci podręcznej i ponowne pobieranie zasobów REST po wystąpieniu zdarzeń domenowych. Powiadomienia w tle realizowane są natywnym kanałem Push (Expo/FCM) oraz e-mail. Szczegółowy kontrakt SSE: [api.md - Realtime SSE](api.md#realtime--sse-meevents).
 
 ```
-+-----------------+     +-----------------+
-|  Web (React)    |     | Mobile (Expo)   |
-|  Fizjoterapeuta |     | Pacjent         |
-+--------+--------+     +--------+--------+
-         |    HTTPS JSON + SSE     |
-         +----------+------------+
-                    v
-         +----------------------+
-         |  Django REST API     |
-         |  JWT + Role Guard    |
-         +----------+-----------+
-                    |
-         +----------+-----------+
-         v                      v
-   +-----------+         +-------------+
-   | PostgreSQL|         | File Storage|
-   |           |         | PDF / mp4   |
-   +-----------+         +-------------+
++------------------------------------+     +-----------------+
+|  Web (React + Vite)                |     | Mobile (Expo)   |
+|  • Fizjoterapeuta (panel kliniczny)|     | Pacjent         |
+|  • Administrator (/admin)          |     |                 |
++------------------+-----------------+     +--------+--------+
+                   |    HTTPS JSON + SSE            |
+                   +----------------+---------------+
+                                    v
+                         +----------------------+
+                         |  Django REST API     |
+                         |  JWT + RoleGuard RBAC|
+                         +----------+-----------+
+                                    |
+                         +----------+-----------+
+                         v                      v
+                   +-----------+         +-------------+
+                   | PostgreSQL|         | File Storage|
+                   |           |         | PDF / mp4   |
+                   +-----------+         +-------------+
 ```
 
 Szczegółowy rysunek kontenerów: [diagrams/architecture.drawio](diagrams/architecture.drawio).
 
 ## Aktorzy i role
 
-| Aktor | Klient | Rola API |
-|-------|--------|----------|
-| Fizjoterapeuta | Web | `THERAPIST` |
-| Pacjent | Mobile | `PATIENT` |
+| Aktor | Klient | Rola API | Zakres uprawnień |
+|-------|--------|----------|-------------------|
+| Fizjoterapeuta | Web | `THERAPIST` | Prowadzenie pacjentów, kalendarz gabinetu, diagnoza VAS, plany ćwiczeń, dokumenty medyczne |
+| Pacjent | Mobile | `PATIENT` | Przegląd terapii, rezerwacje wizyt, wykonywanie ćwiczeń wideo, zgody RODO, recenzje |
+| Administrator | Web | `ADMIN` | Pełny nadzór nad bazą użytkowników, blokowanie/dezaktywacja kont, KPI kliniki, moderacja recenzji |
 
 Reguły dostępu obowiązują **tylko na serwerze**. Klient może ukryć przyciski, ale nie jest źródłem prawdy.
 
@@ -40,15 +42,16 @@ Reguły dostępu obowiązują **tylko na serwerze**. Klient może ukryć przycis
 
 | App | Odpowiedzialność |
 |-----|------------------|
-| `core` | Ustawienia, URL, middleware, error handler |
-| `accounts` | User, JWT, rejestracja, reset hasła |
-| `patients` | PatientProfile, dane kontaktowe |
-| `therapists` | TherapistProfile, PWZFz, biogram, kursy |
-| `treatment` | TreatmentEpisode, BodyAreaPain, VisitNote |
-| `scheduling` | Visit, TherapyType, dostępność |
-| `exercises` | Exercise, kategorie, przypisania, compliance |
-| `documents` | MedicalDocument, upload/download |
-| `privacy` | Consent, eksport danych, wniosek o usunięcie |
+| `core` | Ustawienia, URL, middleware, error handler, klasy uprawnień (`IsAdminRole`, `IsTherapist`) |
+| `accounts` | User (`RoleChoices`), JWT, rejestracja, reset hasła, 2FA/TOTP |
+| `administration` | Analityka i KPI (`AdminDashboard`), zarządzanie użytkownikami, zbiorczy grafik, statystyki personelu, moderacja recenzji |
+| `patients` | PatientProfile, dane kontaktowe, powiązania z terapeutami |
+| `therapists` | TherapistProfile, weryfikacja PWZFz, biogram, kursy, statystyki ocen |
+| `treatment` | TreatmentEpisode, BodyAreaPain, VisitNote, zlecenia wyrobów e-ZWM |
+| `scheduling` | Visit, TherapyType, dostępność personelu |
+| `exercises` | Exercise, kategorie, przypisania, compliance pacjenta |
+| `documents` | MedicalDocument, upload/download, walidacja MIME |
+| `privacy` | Consent, eksport danych, procedura prawa do bycia zapomnianym (RODO) |
 | `notifications` | NotificationPreference, DeviceToken, wysyłka Expo/e-mail; proces `run_notification_scheduler` (przypomnienia) |
 
 Zależności modułów: [diagrams/module-dependencies.drawio](diagrams/module-dependencies.drawio)

@@ -20,15 +20,17 @@ Zbudowana w oparciu o **Python 3.12+**, **Django 6** oraz **Django REST Framewor
 
 ## Moduły aplikacji Django (`physiocare/`)
 
-- `accounts` – Obsługa użytkowników, autoryzacja JWT, rejestracja, reset hasła oraz logowanie Google.
+- `accounts` – Obsługa użytkowników, autoryzacja JWT, rejestracja, reset hasła, role (PATIENT, THERAPIST, ADMIN) oraz logowanie Google.
+- `administration` – Moduł panelu administratora: analityka KPI, zarządzanie użytkownikami, zbiorczy grafik, audyt personelu, moderacja opinii.
 - `therapists` – Profile fizjoterapeutów, weryfikacja numerów PWZFz, ustawienia gabinetów.
 - `patients` – Kartoteka pacjentów, historie epizodów chorobowych, mapa bólów (VAS).
 - `scheduling` – Harmonogram wizyt, wykrywanie nakładania terminów (PostgreSQL GIST constraints).
 - `exercises` – Katalog ćwiczeń fizjoterapeutycznych i przydzielanie planów treningowych pacjentom.
 - `documents` – Pliki dokumentacji medycznej (zaświadczenia, skierowania, "Recepta na Ruch").
+- `reviews` – System opinii i ocen pacjentów z automatycznym odświeżaniem wskaźników jakości gabinetu.
 - `privacy` – Moduł zgód RODO oraz rejestracji przetwarzania danych.
 - `notifications` – Harmonogram i wysyłka przypomnień e-mail oraz powiadomień Push (Expo/FCM).
-- `core` – Klasy bazowe, wyjątki, middleware oraz mechanizmy szyny zdarzeń SSE.
+- `core` – Klasy bazowe, wyjątki, middleware, uprawnienia (RBAC / IsAdminRole) oraz mechanizmy szyny zdarzeń SSE.
 
 ---
 
@@ -60,7 +62,21 @@ W osobnym terminalu należy uruchomić proces odliczania powiadomień i przypomn
 python manage.py run_notification_scheduler
 ```
 
-### 4. Testy i Jakość Kodu
+### 4. Tworzenie konta Administratora (Role Isolation)
+
+Zgodnie z regułami bezpieczeństwa konta administratora nie można utworzyć przez publiczne formularze rejestracji. Użyj skryptu pomocniczego z katalogu głównego projektu:
+
+```powershell
+python ..\scripts\create_admin.py --email admin@physiocare.pl --password "TwojeHaslo123!"
+```
+
+Lub z poziomu Django CLI:
+
+```powershell
+python manage.py createsuperuser
+```
+
+### 5. Testy i Jakość Kodu
 
 ```powershell
 # Testy jednostkowe i integracyjne (pytest)

@@ -1,17 +1,27 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 
+import type { UserRole } from '@/api/types'
 import { useAuth } from '@/auth/AuthContext'
 import { Skeleton, SkeletonWrapper } from '@/components/ui/Skeleton'
 
+interface RoleRouteProps {
+  /** Tablica dozwolonych ról dla danej ścieżki. */
+  allowedRoles?: UserRole[]
+  /** Opcjonalna ścieżka przekierowania w przypadku braku uprawnień. */
+  fallbackPath?: string
+}
+
 /**
- * Strażnik tras chronionych autoryzacją w React Router.
+ * Zaawansowany strażnik tras z weryfikacją ról (RBAC).
  *
- * Przepuszcza zalogowanych fizjoterapeutów do podrzędnego widoku (`<Outlet />`),
- * wyświetla stan ładowania `Skeleton` podczas weryfikacji sesji lub przekierowuje
- * niezalogowanych użytkowników do formularza logowania (`/login`).
+ * Przepuszcza użytkowników, których rola znajduje się w `allowedRoles`.
+ * W razie braku uprawnień przekierowuje do dedykowanego panelu danej roli:
+ * - ADMIN -> /admin
+ * - THERAPIST -> /
+ * - PATIENT -> /patient-portal
  */
-export function ProtectedRoute() {
-  const { isAuthenticated, isLoading } = useAuth()
+export function RoleRoute({ allowedRoles, fallbackPath }: RoleRouteProps) {
+  const { user, isAuthenticated, isLoading } = useAuth()
   const location = useLocation()
 
   if (isLoading) {
@@ -27,21 +37,41 @@ export function ProtectedRoute() {
     )
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace state={{ from: location }} />
+  }
+
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    if (fallbackPath) {
+      return <Navigate to={fallbackPath} replace />
+    }
+    if (user.role === 'ADMIN') {
+      return <Navigate to="/admin" replace />
+    }
+    if (user.role === 'THERAPIST') {
+      return <Navigate to="/" replace />
+    }
+    return <Navigate to="/patient-portal" replace />
   }
 
   return <Outlet />
 }
 
 /**
+ * Standardowy strażnik tras chronionych autoryzacją w React Router.
+ */
+export function ProtectedRoute() {
+  return <RoleRoute />
+}
+
+/**
  * Strażnik tras przeznaczonych dla niezalogowanych gości (np. /login, /register).
  *
- * Automatycznie przekierowuje zalogowanych użytkowników do pulpitu głównego (`/`),
- * uniemożliwiając ponowne wyświetlenie formularza logowania.
+ * Automatycznie przekierowuje zalogowanych użytkowników do odpowiedniego pulpitu
+ * w zależności od posiadanej roli (ADMIN -> /admin, THERAPIST -> /, PATIENT -> /patient-portal).
  */
 export function GuestRoute() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { user, isAuthenticated, isLoading } = useAuth()
   const location = useLocation()
 
   if (isLoading) {
@@ -58,7 +88,9 @@ export function GuestRoute() {
     location.pathname === '/password-reset' ||
     location.pathname === '/verify-email'
   if (isAuthenticated && !isPasswordReset) {
-    return <Navigate to="/" replace />
+    const dest =
+      user?.role === 'ADMIN' ? '/admin' : user?.role === 'PATIENT' ? '/patient-portal' : '/'
+    return <Navigate to={dest} replace />
   }
 
   return <Outlet />

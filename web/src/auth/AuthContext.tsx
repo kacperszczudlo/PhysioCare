@@ -70,17 +70,27 @@ async function loadTherapistSession(): Promise<User> {
   return profileToUser(profile)
 }
 
-async function establishTherapistSession(
-  setUser: (user: User) => void,
-  nextUser: User,
-): Promise<void> {
-  if (nextUser.role !== 'THERAPIST') {
-    await authApi.logout().catch(() => undefined)
-    throw new ApiError(403, 'Panel webowy jest dostępny tylko dla fizjoterapeutów.')
+async function loadUserSession(): Promise<User> {
+  const { user } = await authApi.getMe()
+  if (user.role === 'THERAPIST') {
+    try {
+      const profile = await therapistApi.getProfile()
+      return profileToUser(profile)
+    } catch {
+      return user
+    }
   }
-  try {
-    setUser(await loadTherapistSession())
-  } catch {
+  return user
+}
+
+async function establishSession(setUser: (user: User) => void, nextUser: User): Promise<void> {
+  if (nextUser.role === 'THERAPIST') {
+    try {
+      setUser(await loadTherapistSession())
+    } catch {
+      setUser({ ...nextUser, avatar_url: nextUser.avatar_url ?? null })
+    }
+  } else {
     setUser({ ...nextUser, avatar_url: nextUser.avatar_url ?? null })
   }
 }
@@ -100,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function restoreSession() {
       try {
-        const nextUser = await loadTherapistSession()
+        const nextUser = await loadUserSession()
         if (!cancelled) {
           setUser(nextUser)
         }
@@ -128,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (email: string, password: string, recaptcha_token?: string): Promise<LoginResult> => {
       const result = await authApi.login(email, password, recaptcha_token)
       if (result.kind === 'authenticated') {
-        await establishTherapistSession(setUser, result.user)
+        await establishSession(setUser, result.user)
       }
       return result
     },
@@ -137,18 +147,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMFA = useCallback(async (mfa_token: string, code: string) => {
     const { user: nextUser } = await authApi.loginMFA(mfa_token, code)
-    await establishTherapistSession(setUser, nextUser)
+    await establishSession(setUser, nextUser)
   }, [])
 
   const loginWithGoogle = useCallback(async (credential: string) => {
     const { user: nextUser } = await authApi.loginWithGoogle(credential)
-    await establishTherapistSession(setUser, nextUser)
+    await establishSession(setUser, nextUser)
   }, [])
 
   const register = useCallback(async (payload: TherapistRegisterPayload) => {
     const result = await authApi.registerTherapist(payload)
     if (result.kind === 'authenticated') {
-      await establishTherapistSession(setUser, result.user)
+      await establishSession(setUser, result.user)
     }
     return result
   }, [])
@@ -157,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (email: string, code: string): Promise<VerifyEmailResult> => {
       const result = await authApi.verifyEmail(email, code)
       if (result.kind === 'authenticated') {
-        await establishTherapistSession(setUser, result.user)
+        await establishSession(setUser, result.user)
       }
       return result
     },
@@ -179,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshSession = useCallback(async () => {
     try {
-      const nextUser = await loadTherapistSession()
+      const nextUser = await loadUserSession()
       setUser(nextUser)
     } catch {
       setUser(null)

@@ -117,6 +117,7 @@ INSTALLED_APPS = [
     'exercises',
     'documents',
     'reviews',
+    'administration',
 ]
 
 MIDDLEWARE = [
@@ -260,7 +261,7 @@ CORS_ALLOWED_ORIGINS = env_list(
     'http://localhost:5173,http://localhost:8081,http://127.0.0.1:5173,http://127.0.0.1:8081,https://physiocare-3yh.pages.dev',
 )
 CORS_ALLOWED_ORIGIN_REGEXES = [
-    r'^https:\/\/.*\.pages\.dev$',
+    r'^https:\/\/([a-z0-9\-]+\.)?physiocare-3yh\.pages\.dev$',
 ]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = list(default_headers) + [
@@ -312,6 +313,10 @@ REST_FRAMEWORK = {
         'login': os.environ.get('THROTTLE_LOGIN', '5/minute'),
         'register': os.environ.get('THROTTLE_REGISTER', '3/hour'),
         'password_reset': os.environ.get('THROTTLE_PASSWORD_RESET', '3/hour'),
+        'admin_password_reset': os.environ.get('THROTTLE_ADMIN_PASSWORD_RESET', '10/minute'),
+        'export': os.environ.get('THROTTLE_EXPORT', '5/hour'),
+        'visit_booking': os.environ.get('THROTTLE_VISIT_BOOKING', '20/hour'),
+        'document_upload': os.environ.get('THROTTLE_DOCUMENT_UPLOAD', '30/hour'),
     },
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,

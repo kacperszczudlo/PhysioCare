@@ -45,7 +45,12 @@ class AdminAccessMiddleware:
             raise TypeError("Argument 'request' musi być instancją HttpRequest.")
 
         path = request.path
-        if path == '/admin' or path.startswith('/admin/'):
+        if (
+            path == '/admin'
+            or path.startswith('/admin/')
+            or path == '/api/v1/admin'
+            or path.startswith('/api/v1/admin/')
+        ):
             admin_enabled = settings.ADMIN_ENABLED if hasattr(settings, 'ADMIN_ENABLED') else True
             if not admin_enabled:
                 return HttpResponseNotFound()

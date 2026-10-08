@@ -84,6 +84,12 @@ export function SettingsPage() {
     }
   }
 
+  const profileLink = user?.role === 'ADMIN' ? '/admin/profile' : '/profile'
+  const sessionText =
+    user?.role === 'ADMIN'
+      ? 'Aktywna sesja w panelu administratora.'
+      : 'Aktywna sesja w panelu fizjoterapeuty.'
+
   return (
     <section className="settings-page">
       <PageHeader
@@ -99,7 +105,7 @@ export function SettingsPage() {
           >
             <header className="settings-card__head">
               <h2 id="account-heading">Konto</h2>
-              <p className="settings-muted">Aktywna sesja w panelu fizjoterapeuty.</p>
+              <p className="settings-muted">{sessionText}</p>
             </header>
 
             <div className="settings-identity">
@@ -116,7 +122,7 @@ export function SettingsPage() {
               <div className="settings-identity__text">
                 <p className="settings-identity__name">{displayName}</p>
                 {user?.email ? <p className="settings-identity__email">{user.email}</p> : null}
-                <Link to="/profile" className="settings-identity__link">
+                <Link to={profileLink} className="settings-identity__link">
                   Edytuj profil
                 </Link>
               </div>
@@ -231,7 +237,11 @@ export function SettingsPage() {
           <section className="settings-card" aria-labelledby="session-heading">
             <header className="settings-card__head">
               <h2 id="session-heading">Sesja</h2>
-              <p className="settings-muted">Aktywne połączenie z panelem gabinetu.</p>
+              <p className="settings-muted">
+                {user?.role === 'ADMIN'
+                  ? 'Aktywne połączenie z panelem administratora.'
+                  : 'Aktywne połączenie z panelem gabinetu.'}
+              </p>
             </header>
 
             <Button

@@ -126,6 +126,26 @@
     {
       "key": "today",
       "value": "2026-08-03"
+    },
+    {
+      "key": "admin_email",
+      "value": "admin@physiocare.pl"
+    },
+    {
+      "key": "admin_password",
+      "value": "SecurePass123!"
+    },
+    {
+      "key": "admin_access_token",
+      "value": ""
+    },
+    {
+      "key": "target_user_id",
+      "value": ""
+    },
+    {
+      "key": "target_review_id",
+      "value": ""
     }
   ],
   "item": [
@@ -1049,6 +1069,144 @@
             "description": "Logout session"
           },
           "response": []
+        },
+        {
+          "name": "GET current user session /auth/me/",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me",
+                ""
+              ]
+            },
+            "description": "Zwraca dane profilu i role aktualnie uwierzytelnionego użytkownika (PATIENT, THERAPIST, ADMIN).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "pm.test('User payload present', () => pm.expect(data).to.have.property('user'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH update current user /auth/me/",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Kacper\",\n  \"last_name\": \"Administrator\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/me/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me",
+                ""
+              ]
+            },
+            "description": "Aktualizuje dane osobowe (imię, nazwisko) zalogowanego użytkownika (w tym administratora).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "pm.test('Updated user present', () => pm.expect(data.user).to.have.property('first_name'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-01 Login admin (happy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login",
+                ""
+              ]
+            },
+            "description": "Logowanie administratora - zapisuje admin_access_token oraz {{access_token}} do nagłówka Bearer."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "if (data.access) {",
+                  "  pm.environment.set('access_token', data.access);",
+                  "  pm.environment.set('admin_access_token', data.access);",
+                  "}",
+                  "pm.test('Rola ADMIN', () => pm.expect(data.user && data.user.role).to.eql('ADMIN'));"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -4128,6 +4286,469 @@
       ]
     },
     {
+      "name": "UC-22 - UC-27 Administration panel (RBAC)",
+      "description": "Endpointy panelu administratora platformy PhysioCare (/admin/*). Wymagają uwierzytelnienia z rolą ADMIN.",
+      "item": [
+        {
+          "name": "UC-22 Get admin dashboard KPI analytics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/dashboard/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "dashboard",
+                ""
+              ]
+            },
+            "description": "Zagregowane statystyki KPI bazy pacjentów/terapeutów, frekwencji wizyt i jakości opinii.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "pm.test('Zawiera metryki users', () => pm.expect(data.users).to.have.property('total'));",
+                  "pm.test('Zawiera metryki visits', () => pm.expect(data.visits).to.have.property('show_up_rate_percent'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-23 List users with filters and search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/?role=PATIENT&is_active=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "PATIENT"
+                },
+                {
+                  "key": "is_active",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Paginowana lista kont użytkowników z filtrami roli, statusu i wyszukiwarką.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "if (data.results && data.results.length > 0) {",
+                  "  pm.environment.set('target_user_id', data.results[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-23 Get user detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/{{target_user_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{target_user_id}}",
+                ""
+              ]
+            },
+            "description": "Szczegółowy profil użytkownika (dane profilu, PWZF, 2FA, data utworzenia).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "pm.test('Id zgadza się', () => pm.expect(data.id).to.eql(pm.environment.get('target_user_id')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-23 Toggle user status (block/unblock)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/{{target_user_id}}/status/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{target_user_id}}",
+                "status",
+                ""
+              ]
+            },
+            "description": "Blokuje lub odblokowuje konto użytkownika (unieważnia tokeny sesyjne przy blokadzie).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "pm.test('is_active zaktualizowany', () => pm.expect(data.is_active).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-23 Trigger user password reset",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/{{target_user_id}}/reset-password/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{target_user_id}}",
+                "reset-password",
+                ""
+              ]
+            },
+            "description": "Inicjuje wysyłkę kodu resetu hasła na e-mail użytkownika.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200/400', () => pm.expect([200, 400]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-24 Soft delete user (RODO)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/{{target_user_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "{{target_user_id}}",
+                ""
+              ]
+            },
+            "description": "Bezpieczna dezaktywacja konta z zachowaniem integralności archiwalnej dokumentacji medycznej.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-25 Get clinic scheduling overview",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/schedules/overview/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "schedules",
+                "overview",
+                ""
+              ]
+            },
+            "description": "Wielostanowiskowy przegląd slotów przyjęć oraz wizyt fizjoterapeutów.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "pm.test('Zawiera pole therapists', () => pm.expect(data).to.have.property('therapists'));",
+                  "pm.test('Zawiera pole visits', () => pm.expect(data).to.have.property('visits'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-26 Get therapists performance stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/therapists/stats/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "therapists",
+                "stats",
+                ""
+              ]
+            },
+            "description": "Statystyki personelu medycznego: PWZF, stopień kwalifikacji, wizyty zrealizowane i oceny.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Wynik jest tablicą', () => pm.expect(Array.isArray(pm.response.json())).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-27 List reviews for moderation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/reviews/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "reviews",
+                ""
+              ]
+            },
+            "description": "Paginowana lista recenzji pacjentów (widoczne oraz ukryte).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const data = pm.response.json();",
+                  "if (data.results && data.results.length > 0) {",
+                  "  pm.environment.set('target_review_id', data.results[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "UC-27 Toggle review visibility",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_visible\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/reviews/{{target_review_id}}/visibility/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "reviews",
+                "{{target_review_id}}",
+                "visibility",
+                ""
+              ]
+            },
+            "description": "Ukrycie opinii pacjenta (moderacja) z automatycznym przeliczeniem średniej ocen fizjoterapeuty.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200/404', () => pm.expect([200, 404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Security & role guards",
       "description": "Przypadki cross-role i brak tokena.",
       "item": [
@@ -4204,6 +4825,86 @@
                   "  pm.expect(j.error).to.have.property('code');",
                   "  pm.expect(j.error).to.have.property('message');",
                   "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Patient cannot access admin dashboard (403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/dashboard/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "dashboard",
+                ""
+              ]
+            },
+            "description": "Uruchomione z tokenem pacjenta powinno zwrocic 403 Forbidden.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{patient_access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403 Forbidden', () => pm.expect([401, 403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Therapist cannot access admin dashboard (403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/dashboard/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "dashboard",
+                ""
+              ]
+            },
+            "description": "Uruchomione z tokenem fizjoterapeuty powinno zwrocic 403 Forbidden.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{therapist_access_token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403 Forbidden', () => pm.expect([401, 403]).to.include(pm.response.code));"
                 ]
               }
             }
