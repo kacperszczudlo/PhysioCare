@@ -9,6 +9,7 @@ import type {
   Paginated,
 } from './types'
 
+/** Parametry filtrowania listy użytkowników w panelu administratora. */
 export interface AdminUsersFilterParams {
   role?: string
   is_active?: boolean
@@ -17,12 +18,14 @@ export interface AdminUsersFilterParams {
   page?: number
 }
 
+/** Parametry filtrowania zbiorczego harmonogramu wizyt. */
 export interface AdminSchedulingFilterParams {
   date_from?: string
   date_to?: string
   therapist_id?: string
 }
 
+/** Parametry filtrowania listy opinii pacjentów do moderacji. */
 export interface AdminReviewsFilterParams {
   rating?: number
   is_visible?: boolean

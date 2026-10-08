@@ -23,6 +23,10 @@ function initials(first?: string, last?: string): string {
   return value || '?'
 }
 
+/**
+ * Widok zarządzania kontami użytkowników (pacjenci, fizjoterapeuci, administratorzy).
+ * Obsługuje filtrowanie, blokowanie kont, reset hasła, podgląd szczegółów oraz procedurę RODO.
+ */
 export function AdminUsersPage() {
   const { toast } = useToast()
   const [users, setUsers] = useState<AdminUserListItem[]>([])

@@ -380,6 +380,7 @@ export interface AvailableSlotsResponse {
   holiday_name?: string | null
 }
 
+/** Zbiorcze metryki i analityka KPI dla pulpitu administratora. */
 export interface AdminDashboardStats {
   users: {
     total: number
@@ -409,6 +410,7 @@ export interface AdminDashboardStats {
   }
 }
 
+/** Element listy użytkowników w widoku zarządzania kontami w panelu admina. */
 export interface AdminUserListItem {
   id: string
   email: string
@@ -422,6 +424,7 @@ export interface AdminUserListItem {
   last_login?: string | null
 }
 
+/** Pełne szczegóły profilu użytkownika dla administratora. */
 export interface AdminUserDetail extends AdminUserListItem {
   is_superuser: boolean
   updated_at: string
@@ -439,6 +442,7 @@ export interface AdminUserDetail extends AdminUserListItem {
   } | null
 }
 
+/** Zestawienie statystyk pracy i efektywności pojedynczego fizjoterapeuty. */
 export interface AdminTherapistStats {
   therapist_id: string
   user_id: string
@@ -457,6 +461,7 @@ export interface AdminTherapistStats {
   pending_visits: number
 }
 
+/** Podsumowanie wizyty w zbiorczym widoku harmonogramu administratora. */
 export interface AdminVisitSummary {
   id: string
   start_at: string
@@ -470,6 +475,7 @@ export interface AdminVisitSummary {
   therapy_type_color: string
 }
 
+/** Slot dostępności fizjoterapeuty w zbiorczym harmonogramie. */
 export interface AdminAvailabilitySlot {
   id: string
   therapist_id: string
@@ -482,6 +488,7 @@ export interface AdminAvailabilitySlot {
   is_active: boolean
 }
 
+/** Zbiorczy przegląd grafiku wizyt i dostępności personelu w zadanym oknie czasu. */
 export interface AdminSchedulingOverview {
   range: {
     start_at: string
@@ -500,6 +507,7 @@ export interface AdminSchedulingOverview {
   availability_slots: AdminAvailabilitySlot[]
 }
 
+/** Recenzja pacjenta w widoku moderacji opinii panelu administratora. */
 export interface AdminReview {
   id: string
   patient_id: string

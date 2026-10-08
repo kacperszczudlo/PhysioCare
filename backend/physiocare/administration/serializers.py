@@ -1,3 +1,9 @@
+"""Serializatory danych panelu administracyjnego PhysioCare.
+
+Zawiera definicje serializatorów dla list i szczegółów użytkowników, harmonogramów,
+statystyk terapeutów, analityki wizyt oraz moderacji recenzji.
+"""
+
 from decimal import Decimal
 from django.contrib.auth import get_user_model
 from rest_framework import serializers

@@ -13,6 +13,10 @@ function initials(first?: string, last?: string): string {
   return value || 'F'
 }
 
+/**
+ * Widok zestawienia personelu medycznego i efektywności fizjoterapeutów.
+ * Prezentuje kwalifikacje, numer PWZFz, wskaźniki wizyt oraz oceny pacjentów.
+ */
 export function AdminTherapistsPage() {
   const { toast } = useToast()
   const [therapists, setTherapists] = useState<AdminTherapistStats[]>([])

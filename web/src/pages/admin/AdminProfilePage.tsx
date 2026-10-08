@@ -14,7 +14,10 @@ import {
   IconShield,
 } from '@/pages/admin/AdminIcons'
 import './AdminProfilePage.css'
-
+/**
+ * Widok profilu osobistego administratora.
+ * Umożliwia edycję danych osobowych (imię, nazwisko) oraz podgląd stanu zabezpieczeń 2FA.
+ */
 export function AdminProfilePage() {
   const { user, refreshSession } = useAuth()
   const { toast } = useToast()

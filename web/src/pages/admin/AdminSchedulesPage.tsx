@@ -8,7 +8,10 @@ import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
 import { useToast } from '@/components/ui/ToastContext'
 import './AdminSchedulesPage.css'
-
+/**
+ * Zbiorczy widok harmonogramów wizyt i slotów dostępności personelu medycznego.
+ * Umożliwia monitorowanie obłożenia gabinetów i grafików fizjoterapeutów w wybranym oknie czasowym.
+ */
 export function AdminSchedulesPage() {
   const { toast } = useToast()
   const [data, setData] = useState<AdminSchedulingOverview | null>(null)

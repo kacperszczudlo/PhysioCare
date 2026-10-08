@@ -1,3 +1,9 @@
+"""Widoki API panelu administracyjnego PhysioCare.
+
+Zawiera punkty końcowe do zarządzania kontami użytkowników, monitorowania harmonogramów,
+analityki wizyt, profili fizjoterapeutów oraz moderacji opinii pacjentów.
+"""
+
 from datetime import datetime, time, timedelta
 from decimal import Decimal
 import logging

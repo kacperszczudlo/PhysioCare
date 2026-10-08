@@ -1,3 +1,10 @@
+"""Zestaw testów jednostkowych i integracyjnych dla modułu administracyjnego PhysioCare.
+
+Weryfikuje autoryzację i uprawnienia (BFLA/RBAC), endpointy analityczne dashboardu,
+zarządzanie użytkownikami (blokowanie, soft delete RODO, reset hasła),
+harmonogramy zbiorcze, personel fizjoterapeutyczny oraz moderację recenzji.
+"""
+
 from datetime import timedelta
 from unittest.mock import patch
 

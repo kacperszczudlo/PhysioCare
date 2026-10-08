@@ -9,7 +9,9 @@ import { Select } from '@/components/ui/Select'
 import { useToast } from '@/components/ui/ToastContext'
 import { IconStar } from './AdminIcons'
 import './AdminReviewsPage.css'
-
+/**
+ * Komponent pomocniczy renderujący graficzną skalę ocen 1-5 gwiazdek.
+ */
 function RatingStars({ rating }: { rating: number }) {
   return (
     <div className="admin-stars-row" aria-label={`Ocena: ${rating} na 5`}>
@@ -23,6 +25,10 @@ function RatingStars({ rating }: { rating: number }) {
   )
 }
 
+/**
+ * Widok moderacji opinii i recenzji pacjentów.
+ * Umożliwia weryfikację treści, ocen oraz ukrywanie nieodpowiednich wpisów z audytem moderatora.
+ */
 export function AdminReviewsPage() {
   const { toast } = useToast()
   const [reviews, setReviews] = useState<AdminReview[]>([])

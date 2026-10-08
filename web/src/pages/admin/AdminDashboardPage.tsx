@@ -15,6 +15,10 @@ import {
 } from './AdminIcons'
 import './AdminDashboardPage.css'
 
+/**
+ * Główny pulpit administracyjny platformy PhysioCare.
+ * Prezentuje wskaźniki KPI: użytkowników, wizyty, jakość i aktywność platformy.
+ */
 export function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminDashboardStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)

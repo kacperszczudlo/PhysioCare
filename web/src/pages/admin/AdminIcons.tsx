@@ -1,3 +1,7 @@
+/**
+ * Zestaw wektorowych ikon SVG dla panelu administracyjnego PhysioCare.
+ * Spójny z tokenami systemu projektowego (/impeccable).
+ */
 import type { SVGProps } from 'react'
 
 type IconProps = SVGProps<SVGSVGElement>
