@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from rest_framework import generics, serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -26,7 +26,7 @@ from .serializers import (
 
 
 class PatientListView(TherapistPatientQuerysetMixin, generics.ListAPIView):
-    """Widok listy pacjentów przypisanych do fizjoterapeuty."""
+    """Widok listy pacjentów przypisanych do fizjoterapeuty z paginacją i wyszukiwaniem."""
 
     serializer_class = PatientListSerializer
     permission_classes = [IsAuthenticated, IsTherapist]
@@ -37,7 +37,20 @@ class PatientListView(TherapistPatientQuerysetMixin, generics.ListAPIView):
         Returns:
             QuerySet[PatientProfile]: Zestaw profilów pacjentów fizjoterapeuty.
         """
-        return self.therapist_patients()
+        qs = self.therapist_patients()
+        search = (
+            self.request.query_params.get('search')
+            or self.request.query_params.get('q')
+        )
+        if search:
+            search = search.strip()
+            qs = qs.filter(
+                Q(user__first_name__icontains=search)
+                | Q(user__last_name__icontains=search)
+                | Q(user__email__icontains=search)
+                | Q(phone__icontains=search)
+            )
+        return qs.order_by('user__last_name', 'user__first_name', 'pk')
 
 
 class PatientDetailView(TherapistPatientQuerysetMixin, generics.RetrieveAPIView):

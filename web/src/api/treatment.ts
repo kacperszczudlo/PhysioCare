@@ -23,8 +23,28 @@ async function listResults<T>(path: string): Promise<T[]> {
   return Array.isArray(page) ? page : page.results
 }
 
+/** Parametry wyszukiwania i stronicowania kartoteki pacjentów. */
+export interface PatientsListParams {
+  page?: number
+  search?: string
+}
+
 /** Usługi API do pobierania listy i kartoteki pacjentów fizjoterapeuty. */
 export const patientsApi = {
+  /** Pobiera stronnicowaną listę pacjentów pod opieką fizjoterapeuty. */
+  getPaginated(params?: PatientsListParams): Promise<Paginated<PatientSummary>> {
+    const sp = new URLSearchParams()
+    if (params?.page && params.page > 1) sp.set('page', String(params.page))
+    if (params?.search?.trim()) sp.set('search', params.search.trim())
+    const q = sp.toString() ? `?${sp.toString()}` : ''
+    return api.get<Paginated<PatientSummary> | PatientSummary[]>(`/patients/${q}`).then((res) => {
+      if (Array.isArray(res)) {
+        return { count: res.length, next: null, previous: null, results: res }
+      }
+      return res
+    })
+  },
+
   /** Pobiera podsumowującą listę pacjentów pod opieką fizjoterapeuty. */
   list() {
     return listResults<PatientSummary>('/patients/')
