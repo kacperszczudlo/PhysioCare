@@ -15,7 +15,7 @@ PhysioCare ma trzech aktorów i jeden centralny backend:
 |--------|----------|-----------|
 | Mobile | `PATIENT` | UC-01-09, UC-17-18 |
 | Web | `THERAPIST` | UC-01-04, UC-10-16, UC-19 |
-| Web | `ADMIN` | UC-22-27 (Nadzór, analityka KPI, użytkownicy, moderacja) |
+| Web | `ADMIN` | UC-22-29 (Nadzór, analityka KPI, użytkownicy, moderacja, profil, 2FA) |
 
 Każdy request w kolekcji ma skrypt testowy (status HTTP + często envelope błędu / zapis ID do zmiennych).
 
@@ -287,19 +287,21 @@ Uruchom Collection Runner (kolejność folderów) i odhacz:
 - [ ] Publiczny profil terapeuty
 - [ ] Request bez auth -> 401
 
-### Administrator (UC-22 - UC-27)
+### Administrator (UC-22 - UC-29)
 
-- [ ] Dashboard KPI `/admin/dashboard/` -> 200
+- [ ] Dashboard KPI `/admin/dashboard/` (or `/admin/analytics/dashboard/`) -> 200
 - [ ] Paginowana lista kont `/admin/users/` (wyszukiwanie + filtry) -> 200
 - [ ] Szczegóły profilu użytkownika `/admin/users/{id}/` -> 200
 - [ ] Zmiana statusu konta (blokada/odblokowanie) `/admin/users/{id}/status/` -> 200
 - [ ] Inicjalizacja resetu hasła `/admin/users/{id}/reset-password/` -> 200
 - [ ] Bezpieczna dezaktywacja RODO (soft delete) DELETE `/admin/users/{id}/` -> 200
 - [ ] Blokada samodezaktywacji admina -> 403
-- [ ] Wielostanowiskowy grafik `/admin/schedules/overview/` -> 200
+- [ ] Wielostanowiskowy grafik `/admin/schedules/overview/` (or `/admin/scheduling/overview/`) -> 200
 - [ ] Efektywność personelu `/admin/therapists/stats/` -> 200
 - [ ] Moderacja recenzji `/admin/reviews/` -> 200
 - [ ] Ukrycie / przywrócenie opinii `/admin/reviews/{id}/visibility/` -> 200
+- [ ] Edycja profilu administratora (UC-28) PATCH `/auth/me/` -> 200
+- [ ] Status i konfiguracja 2FA administratora (UC-29) `/auth/mfa/status/` -> 200
 
 ### Role & Strażnicy Dostępności (RBAC / BFLA)
 

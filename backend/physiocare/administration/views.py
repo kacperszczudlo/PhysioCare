@@ -4,9 +4,8 @@ Zawiera punkty końcowe do zarządzania kontami użytkowników, monitorowania ha
 analityki wizyt, profili fizjoterapeutów oraz moderacji opinii pacjentów.
 """
 
-from datetime import datetime, time, timedelta
-from decimal import Decimal
 import logging
+from datetime import datetime, time, timedelta
 from uuid import UUID
 
 from django.contrib.auth import get_user_model

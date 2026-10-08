@@ -8,13 +8,12 @@ harmonogramy zbiorcze, personel fizjoterapeutyczny oraz moderację recenzji.
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-import pytest
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from accounts.models import RoleChoices
 from patients.models import PatientProfile
 from reviews.models import Review
 from scheduling.models import TherapistAvailabilitySlot, TherapyType, Visit, VisitStatus
@@ -45,6 +44,10 @@ class TestAdminPermissions:
         api_client.force_authenticate(user=admin_user)
         response = api_client.get('/api/v1/admin/analytics/dashboard/')
         assert response.status_code == status.HTTP_200_OK
+
+        # Weryfikacja alternatywnego aliasu URL
+        response_alias = api_client.get('/api/v1/admin/dashboard/')
+        assert response_alias.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.django_db
@@ -264,6 +267,10 @@ class TestAdminSchedulingAndReviews:
         api_client.force_authenticate(user=admin_user)
         response = api_client.get('/api/v1/admin/scheduling/overview/')
         assert response.status_code == status.HTTP_200_OK
+
+        # Weryfikacja alternatywnego aliasu URL
+        response_alias = api_client.get('/api/v1/admin/schedules/overview/')
+        assert response_alias.status_code == status.HTTP_200_OK
         data = response.json()
 
         assert 'range' in data

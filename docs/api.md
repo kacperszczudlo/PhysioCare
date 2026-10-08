@@ -568,7 +568,7 @@ Przykład `ping`:
 
 Wszystkie endpointy w tej sekcji wymagają uwierzytelnienia sesyjnego oraz roli **`ADMIN`** (egzekwowane przez klasę uprawnień `IsAdminRole`). Próba wywołania przez pacjenta lub fizjoterapeutę zwraca **403 Forbidden**.
 
-### GET `/admin/dashboard/`
+### GET `/admin/analytics/dashboard/` (alias: `/admin/dashboard/`)
 
 Zwraca zagregowane wskaźniki KPI dla głównego pulpitu analitycznego kliniki:
 - Rozbicie bazy użytkowników (`total`, `patients_count` [App], `therapists_count` [Web], `admins_count`, `active_count`, `inactive_count`, `new_last_30_days`).
@@ -702,7 +702,7 @@ Bezpieczna dezaktywacja konta użytkownika (soft-delete RODO). Wyłącza konto (
 ```
 **403 Forbidden:** Administrator nie może usunąć własnego konta.
 
-### GET `/admin/schedules/overview/`
+### GET `/admin/scheduling/overview/` (alias: `/admin/schedules/overview/`)
 
 Wielostanowiskowy przegląd harmonogramu pracy i wizyt personelu medycznego w zadanym oknie czasowym.
 

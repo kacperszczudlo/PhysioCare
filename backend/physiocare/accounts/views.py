@@ -290,6 +290,7 @@ def is_mfa_required_for_user(user: object | None) -> bool:
         return False
     user_role = getattr(user, 'role', None)
     is_staff = getattr(user, 'is_staff', False)
+    is_superuser = getattr(user, 'is_superuser', False)
     return user_role in (RoleChoices.THERAPIST, RoleChoices.ADMIN) or is_staff or is_superuser
 
 

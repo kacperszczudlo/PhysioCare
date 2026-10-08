@@ -4,14 +4,12 @@ Zawiera definicje serializatorów dla list i szczegółów użytkowników, harmo
 statystyk terapeutów, analityki wizyt oraz moderacji recenzji.
 """
 
-from decimal import Decimal
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from accounts.models import RoleChoices
 from reviews.models import Review
 from scheduling.models import TherapistAvailabilitySlot, Visit
-from therapists.models import TherapistProfile
 
 User = get_user_model()
 

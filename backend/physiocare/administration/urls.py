@@ -19,6 +19,7 @@ app_name = 'administration'
 urlpatterns = [
     # Analityka i KPI
     path('analytics/dashboard/', AdminDashboardAnalyticsView.as_view(), name='dashboard-analytics'),
+    path('dashboard/', AdminDashboardAnalyticsView.as_view(), name='dashboard-analytics-alias'),
     
     # Zarządzanie użytkownikami
     path('users/', AdminUserListView.as_view(), name='users-list'),
@@ -28,6 +29,7 @@ urlpatterns = [
     
     # Harmonogramy i Zespół
     path('scheduling/overview/', AdminSchedulingOverviewView.as_view(), name='scheduling-overview'),
+    path('schedules/overview/', AdminSchedulingOverviewView.as_view(), name='schedules-overview-alias'),
     path('therapists/stats/', AdminTherapistStatsView.as_view(), name='therapists-stats'),
     
     # Moderacja Opinii
