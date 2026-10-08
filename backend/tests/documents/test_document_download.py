@@ -36,6 +36,7 @@ def test_download_document_success(
         assert response.status_code == status.HTTP_200_OK
         assert response.headers['X-Content-Type-Options'] == 'nosniff'
         assert response.headers['Cache-Control'] == 'private, no-store'
+        assert response.headers['Content-Security-Policy'] == "sandbox; default-src 'none'"
         assert response.getvalue() == b'%PDF-1.4 test file content'
     finally:
         if file_path.exists():

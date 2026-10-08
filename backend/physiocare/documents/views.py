@@ -19,6 +19,7 @@ from core.field_policies import (
 from core.mixins import PatientSelfMixin, user_can_access_patient
 from core.permissions import IsPatient, IsTherapist
 from core.storage import save_upload
+from core.throttling import DocumentUploadRateThrottle
 from notifications.events import notify_new_document
 from scheduling.models import Visit
 from treatment.models import TreatmentEpisode
@@ -49,6 +50,7 @@ class TherapistDocumentUploadView(generics.CreateAPIView):
 
     serializer_class = MedicalDocumentSerializer
     permission_classes = [IsAuthenticated, IsTherapist]
+    throttle_classes = [DocumentUploadRateThrottle]
     parser_classes = [parsers.MultiPartParser, parsers.FormParser]
 
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
@@ -198,5 +200,6 @@ class DocumentDownloadView(APIView):
         )
         response['X-Content-Type-Options'] = 'nosniff'
         response['Cache-Control'] = 'private, no-store'
+        response['Content-Security-Policy'] = "sandbox; default-src 'none'"
         return response
 

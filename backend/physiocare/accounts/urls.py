@@ -3,6 +3,7 @@ from django.urls import URLPattern, URLResolver, path
 from .views import (
     ChangePasswordView,
     CookieTokenRefreshView,
+    CurrentUserView,
     EmailResendView,
     EmailVerifyView,
     GoogleLoginView,
@@ -21,6 +22,7 @@ from .views import (
 )
 
 urlpatterns: list[URLPattern | URLResolver] = [
+    path('me/', CurrentUserView.as_view(), name='current-user'),
     path('login/', LoginView.as_view(), name='login'),
     path('google/', GoogleLoginView.as_view(), name='login-google'),
     path('logout/', LogoutView.as_view(), name='logout'),

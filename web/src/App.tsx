@@ -2,10 +2,11 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 
 import { AuthProvider } from '@/auth/AuthContext'
-import { GuestRoute, ProtectedRoute } from '@/auth/ProtectedRoute'
+import { GuestRoute, RoleRoute } from '@/auth/ProtectedRoute'
 import { LoadingBlock } from '@/components/AsyncState'
 import { ToastContainer } from '@/components/ui/ToastContainer'
 import { ToastProvider } from '@/components/ui/ToastContext'
+import { AdminLayout } from '@/layouts/AdminLayout'
 import { AppLayout } from '@/layouts/AppLayout'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { LegalLayout } from '@/layouts/LegalLayout'
@@ -51,6 +52,32 @@ const SchedulePage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('@/pages/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 )
+const PatientNoticePage = lazy(() =>
+  import('@/pages/PatientNoticePage').then((m) => ({ default: m.PatientNoticePage })),
+)
+
+// Widoki Panelu Administracyjnego
+const AdminDashboardPage = lazy(() =>
+  import('@/pages/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })),
+)
+const AdminUsersPage = lazy(() =>
+  import('@/pages/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })),
+)
+const AdminSchedulesPage = lazy(() =>
+  import('@/pages/admin/AdminSchedulesPage').then((m) => ({ default: m.AdminSchedulesPage })),
+)
+const AdminTherapistsPage = lazy(() =>
+  import('@/pages/admin/AdminTherapistsPage').then((m) => ({ default: m.AdminTherapistsPage })),
+)
+const AdminReviewsPage = lazy(() =>
+  import('@/pages/admin/AdminReviewsPage').then((m) => ({ default: m.AdminReviewsPage })),
+)
+const AdminPrivacyPage = lazy(() =>
+  import('@/pages/admin/AdminPrivacyPage').then((m) => ({ default: m.AdminPrivacyPage })),
+)
+const AdminProfilePage = lazy(() =>
+  import('@/pages/admin/AdminProfilePage').then((m) => ({ default: m.AdminProfilePage })),
+)
 
 function RouteLoadingFallback() {
   return (
@@ -68,8 +95,9 @@ function RouteLoadingFallback() {
 }
 
 /**
- * Główny komponent widoku z konfiguracją trasowania React Router v6, leniwym ładowaniem tras
- * i dostawców kontekstu (AuthProvider, ToastProvider).
+ * Główny komponent widoku z konfiguracją trasowania React Router v6, leniwym ładowaniem tras,
+ * strażnikami ról (RBAC dla Administratora, Fizjoterapeuty i Pacjenta)
+ * oraz dostawcami kontekstu (AuthProvider, ToastProvider).
  */
 export default function App() {
   return (
@@ -79,12 +107,14 @@ export default function App() {
           <ToastContainer />
           <Suspense fallback={<RouteLoadingFallback />}>
             <Routes>
+              {/* Informacje prawne */}
               <Route element={<LegalLayout />}>
                 <Route path="/privacy" element={<PrivacyPolicyPage />} />
                 <Route path="/cookies" element={<CookiePolicyPage />} />
                 <Route path="/account-deletion" element={<AccountDeletionPage />} />
               </Route>
 
+              {/* Trasy dla gości (niezalogowanych) */}
               <Route element={<GuestRoute />}>
                 <Route element={<AuthLayout />}>
                   <Route path="/login" element={<LoginPage />} />
@@ -95,7 +125,13 @@ export default function App() {
                 </Route>
               </Route>
 
-              <Route element={<ProtectedRoute />}>
+              {/* Trasy Pacjenta (Web Notice) */}
+              <Route element={<RoleRoute allowedRoles={['PATIENT']} />}>
+                <Route path="/patient-portal" element={<PatientNoticePage />} />
+              </Route>
+
+              {/* Trasy Fizjoterapeuty (Pulpit Roboczy) */}
+              <Route element={<RoleRoute allowedRoles={['THERAPIST']} />}>
                 <Route element={<AppLayout />}>
                   <Route index element={<DashboardPage />} />
                   <Route path="/schedule" element={<SchedulePage />} />
@@ -107,6 +143,21 @@ export default function App() {
                 </Route>
               </Route>
 
+              {/* Trasy Panelu Administracyjnego (Admin Dashboard) */}
+              <Route element={<RoleRoute allowedRoles={['ADMIN']} />}>
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboardPage />} />
+                  <Route path="users" element={<AdminUsersPage />} />
+                  <Route path="schedules" element={<AdminSchedulesPage />} />
+                  <Route path="therapists" element={<AdminTherapistsPage />} />
+                  <Route path="reviews" element={<AdminReviewsPage />} />
+                  <Route path="privacy" element={<AdminPrivacyPage />} />
+                  <Route path="profile" element={<AdminProfilePage />} />
+                  <Route path="settings" element={<SettingsPage />} />
+                </Route>
+              </Route>
+
+              {/* Domyślne przekierowanie */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>

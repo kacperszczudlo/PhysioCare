@@ -16,7 +16,7 @@ Login, rejestracja i refresh zwracają `access` + `refresh` w JSON, gdy klient n
 | Daty | ISO 8601 (`2026-06-09T14:30:00+02:00`) |
 | Błędy | `{ "error": { "code": "...", "message": "...", "details": {} } }` |
 | Paginacja | `?page=1&page_size=20` -> `{ "count", "next", "previous", "results" }` |
-| Role | `PATIENT` \| `THERAPIST` - egzekwowane per endpoint |
+| Role | `PATIENT` \| `THERAPIST` \| `ADMIN` - egzekwowane per endpoint |
 
 ## Kody HTTP (wybrane)
 
@@ -97,7 +97,12 @@ Wymaga `GOOGLE_CLIENT_IDS` (lista audience). Serwer weryfikuje token (`google-au
 
 **200** - jak `/auth/login`. Bez konfiguracji Google: **503** `AUTH_020`.
 
-Rejestracja z Google: w `POST /auth/register/therapist/` lub `/auth/register/patient/` wyślij `google_credential` zamiast `password` (e-mail/imię z tokenu). Web wymaga PWZFz (dla fizjoterapeuty); mobile - zgody RODO.
+### GET / PATCH `/auth/me/`
+
+Zwraca lub częściowo aktualizuje dane zalogowanego użytkownika (imię, nazwisko). Dostępne dla każdej roli (`PATIENT`, `THERAPIST`, `ADMIN`).
+
+- **GET**: Zwraca `{ "user": { "id", "email", "role", "first_name", "last_name" } }`.
+- **PATCH**: Przyjmuje opcjonalne pola `{ "first_name": "...", "last_name": "..." }`, waliduje reguły i zwraca zaktualizowany obiekt `{ "user": { ... } }`.
 
 ### POST `/auth/logout`
 
@@ -233,6 +238,29 @@ Po sukcesie hasło zmienione, sesje unieważnione. Niezweryfikowany e-mail zosta
 ```
 
 Potwierdza adres po rejestracji e-mail+hasło. **200** - sesja jak przy loginie. Konta Google pomijają ten krok (`email_verified_at` ustawiane od razu).
+
+### GET `/auth/me`
+
+Zwraca profil aktualnie uwierzytelnionego użytkownika dla wszystkich ról (`PATIENT`, `THERAPIST`, `ADMIN`), umożliwiając odtworzenie sesji oraz dynamiczne trasowanie RBAC w warstwie klienta.
+
+**Wymaga:** Auth (cookie `access_token` lub nagłówek `Authorization: Bearer <token>`).
+
+**200 OK:**
+```json
+{
+  "id": "c1f79a95-5fa8-4bf3-a3d2-d17e305e7e39",
+  "email": "admin@physiocare.pl",
+  "first_name": "Aleksandra",
+  "last_name": "Nowak",
+  "role": "ADMIN",
+  "email_verified": true,
+  "is_active": true,
+  "has_mfa": true,
+  "google_linked": false,
+  "created_at": "2026-03-01T10:00:00Z"
+}
+```
+**401 Unauthorized:** Brak sesji lub token wygasł.
 
 ### POST `/auth/email/resend`
 
@@ -533,6 +561,275 @@ Przykład `ping`:
 
 - Demo / lokalnie: ASGI (np. uvicorn). Sync Gunicorn + wiele równoległych streamów = słabe dopasowanie.
 - Wiele workerów / instancji: bus między procesami (np. Redis) - szczegóły w [README - Skalowanie i Architektura Realtime (SSE)](../README.md#skalowanie-i-architektura-realtime-sse).
+
+---
+
+## Panel Administracyjny (`/admin/`)
+
+Wszystkie endpointy w tej sekcji wymagają uwierzytelnienia sesyjnego oraz roli **`ADMIN`** (egzekwowane przez klasę uprawnień `IsAdminRole`). Próba wywołania przez pacjenta lub fizjoterapeutę zwraca **403 Forbidden**.
+
+### GET `/admin/analytics/dashboard/` (alias: `/admin/dashboard/`)
+
+Zwraca zagregowane wskaźniki KPI dla głównego pulpitu analitycznego kliniki:
+- Rozbicie bazy użytkowników (`total`, `patients_count` [App], `therapists_count` [Web], `admins_count`, `active_count`, `inactive_count`, `new_last_30_days`).
+- Statystyki wizyt (`total`, `scheduled`, `completed`, `cancelled`, `no_show`, `pending_approval`, `show_up_rate_percent`).
+- Metryki satysfakcji pacjentów (`rating_avg`, `rating_count`).
+- Baza ćwiczeń i programów (`total_exercises`, `total_assignments`).
+
+**200 OK:**
+```json
+{
+  "users": {
+    "total": 142,
+    "patients_count": 120,
+    "therapists_count": 20,
+    "admins_count": 2,
+    "active_count": 139,
+    "inactive_count": 3,
+    "new_last_30_days": 15
+  },
+  "visits": {
+    "total": 350,
+    "scheduled": 45,
+    "completed": 280,
+    "cancelled": 15,
+    "no_show": 10,
+    "pending_approval": 0,
+    "show_up_rate_percent": 92.5
+  },
+  "quality": {
+    "rating_avg": 4.88,
+    "rating_count": 75
+  },
+  "exercises": {
+    "total_exercises": 84,
+    "total_assignments": 210
+  }
+}
+```
+
+### GET `/admin/users/`
+
+Paginowana lista użytkowników systemu z możliwością filtrowania i wyszukiwania.
+
+**Parametry zapytania (query params):**
+- `search` – filtr tekstowy przeszukujący imię, nazwisko oraz adres e-mail.
+- `role` – filtr roli: `PATIENT` | `THERAPIST` | `ADMIN`.
+- `is_active` – filtr statusu konta: `true` | `false`.
+- `email_verified` – filtr weryfikacji adresu e-mail: `true` | `false`.
+- `page` – numer strony (domyślnie 1, rozmiar strony 20).
+
+**200 OK:**
+```json
+{
+  "count": 142,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": "e9b1c2d3-...",
+      "email": "piotr@example.com",
+      "first_name": "Piotr",
+      "last_name": "Zieliński",
+      "role": "PATIENT",
+      "is_active": true,
+      "email_verified": true,
+      "created_at": "2026-03-01T10:00:00Z",
+      "last_login": "2026-03-05T12:30:00Z"
+    }
+  ]
+}
+```
+
+### GET `/admin/users/{id}/`
+
+Zwraca szczegółowy profil użytkownika wraz z metadanymi roli (numer PWZF, stopień kwalifikacji dla fizjoterapeuty, telefon, liczba zrealizowanych wizyt, status 2FA i powiązanie z Google).
+
+**200 OK:**
+```json
+{
+  "id": "e9b1c2d3-...",
+  "email": "piotr@example.com",
+  "first_name": "Piotr",
+  "last_name": "Zieliński",
+  "role": "PATIENT",
+  "is_active": true,
+  "email_verified": true,
+  "has_mfa": false,
+  "google_linked": true,
+  "created_at": "2026-03-01T10:00:00Z",
+  "visits_count": 4,
+  "profile_info": {
+    "phone": "+48 500 600 700"
+  }
+}
+```
+
+### PATCH `/admin/users/{id}/status/`
+
+Blokuje lub odblokowuje konto użytkownika (`is_active`). Przy zablokowaniu konta następuje unieważnienie wszystkich aktywnych tokenów odświeżających (JWT Blacklist).
+
+```json
+{
+  "is_active": false
+}
+```
+
+**200 OK:** Zwraca zaktualizowany obiekt szczegółów użytkownika.  
+**403 Forbidden:** Administrator nie może zablokować własnego konta.
+
+### POST `/admin/users/{id}/reset-password/`
+
+Inicjuje wysyłkę 6-cyfrowego kodu resetowania hasła na powiązany adres e-mail użytkownika.
+
+**200 OK:**
+```json
+{
+  "message": "Kod resetu hasła został wysłany na adres uzytkownik@example.com."
+}
+```
+**400 Bad Request:** Nie można zresetować hasła zablokowanego konta (`is_active=False`).
+
+### DELETE `/admin/users/{id}/`
+
+Bezpieczna dezaktywacja konta użytkownika (soft-delete RODO). Wyłącza konto (`is_active=False`), unieważnia tokeny sesyjne oraz zabezpiecza integralność medyczną bazy danych (brak kaskadowego usuwania historii wizyt).
+
+**200 OK:**
+```json
+{
+  "message": "Użytkownik został pomyślnie zdezaktywowany."
+}
+```
+**403 Forbidden:** Administrator nie może usunąć własnego konta.
+
+### GET `/admin/scheduling/overview/` (alias: `/admin/schedules/overview/`)
+
+Wielostanowiskowy przegląd harmonogramu pracy i wizyt personelu medycznego w zadanym oknie czasowym.
+
+**Parametry zapytania:**
+- `date_from` – początek okna czasowego (ISO 8601).
+- `date_to` – koniec okna czasowego (ISO 8601).
+- `therapist_id` – opcjonalny UUID fizjoterapeuty do filtrowania.
+
+**200 OK:**
+```json
+{
+  "range": {
+    "start_at": "2026-03-01T00:00:00Z",
+    "end_at": "2026-03-08T23:59:59Z"
+  },
+  "therapists": [
+    {
+      "id": "uuid-profilu-terapeuty",
+      "user_id": "uuid-usera",
+      "name": "Tomasz Nowak",
+      "email": "tomasz@physiocare.pl",
+      "qualification_level": "Specjalista",
+      "rating_avg": 4.9,
+      "rating_count": 10
+    }
+  ],
+  "visits": [
+    {
+      "id": "uuid-wizyty",
+      "patient_id": "uuid-pacjenta",
+      "patient_name": "Michał Wiśniewski",
+      "therapist_id": "uuid-terapeuty",
+      "therapist_name": "Tomasz Nowak",
+      "therapy_type_name": "Rehabilitacja pourazowa",
+      "therapy_type_color": "#3b82f6",
+      "start_at": "2026-03-02T10:00:00Z",
+      "end_at": "2026-03-02T11:00:00Z",
+      "status": "SCHEDULED",
+      "location_address": "Gabinet 102"
+    }
+  ],
+  "availability_slots": [
+    {
+      "id": "uuid-slotu",
+      "therapist_id": "uuid-terapeuty",
+      "therapist_name": "Tomasz Nowak",
+      "day_of_week": 1,
+      "start_time": "08:00:00",
+      "end_time": "16:00:00",
+      "is_active": true
+    }
+  ]
+}
+```
+
+### GET `/admin/therapists/stats/`
+
+Zestawienie efektywności personelu: numer PWZF, poziom kwalifikacji, lata stażu, liczba ukończonych/odwołanych/nieodbytych wizyt (no-show) oraz średnia ocen i liczba opinii.
+
+**200 OK:**
+```json
+[
+  {
+    "therapist_id": "uuid-profilu",
+    "user_id": "uuid-usera",
+    "first_name": "Tomasz",
+    "last_name": "Nowak",
+    "email": "tomasz@physiocare.pl",
+    "pwzf_number": "71239",
+    "qualification_level": "Magister Fizjoterapii",
+    "experience_years": 8,
+    "rating_avg": 4.95,
+    "rating_count": 42,
+    "total_visits": 120,
+    "completed_visits": 110,
+    "cancelled_visits": 7,
+    "no_show_visits": 3,
+    "pending_visits": 0
+  }
+]
+```
+
+### GET `/admin/reviews/`
+
+Paginowana lista recenzji pacjentów do moderacji.
+
+**Parametry zapytania:**
+- `rating` – ocena gwiazdkowa (1–5).
+- `is_visible` – status widoczności (`true` | `false`).
+- `therapist_id` – identyfikator ocenianego fizjoterapeuty.
+
+**200 OK:**
+```json
+{
+  "count": 45,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": "uuid-opinii",
+      "patient_id": "uuid-pacjenta",
+      "patient_name": "Anna Kowalska",
+      "therapist_id": "uuid-terapeuty",
+      "therapist_name": "Tomasz Nowak",
+      "rating": 5,
+      "comment": "Znakomity specjalista, terapia przyniosła natychmiastową ulgę.",
+      "is_anonymous": false,
+      "is_visible": true,
+      "therapist_reply": "Dziękuję za miłe słowa!",
+      "therapist_replied_at": "2026-03-02T10:00:00Z",
+      "created_at": "2026-03-01T15:30:00Z"
+    }
+  ]
+}
+```
+
+### PATCH `/admin/reviews/{id}/visibility/`
+
+Ukrywa opinię (zmoderowana przez administratora) lub przywraca jej widoczność publiczną. Zmiana statusu widoczności automatycznie uruchamia sygnał rekalkulacji średniej ocen i liczby recenzji ocenianego fizjoterapeuty.
+
+```json
+{
+  "is_visible": false
+}
+```
+
+**200 OK:** Zwraca zaktualizowaną recenzję z nowym statusem `is_visible`.
 
 ---
 

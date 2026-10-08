@@ -1,4 +1,5 @@
 import logging
+import os
 
 from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
@@ -58,6 +59,7 @@ from .serializers import (
     PasswordResetVerifySerializer,
     PatientRegistrationSerializer,
     TherapistRegistrationSerializer,
+    UpdateMeSerializer,
 )
 from .token_ops import (
     blacklist_refresh_value,
@@ -89,7 +91,7 @@ def _set_auth_cookies(response: Response, *, access_token: str, refresh_token: s
         raise TypeError('Tokeny muszą być ciągami znaków.')
 
     secure = settings.SECURE_COOKIES
-    samesite = 'None' if secure else 'Lax'
+    samesite = os.environ.get('DJANGO_COOKIE_SAMESITE', 'None' if secure else 'Lax')
 
     response.set_cookie(
         key=settings.SIMPLE_JWT.get('AUTH_COOKIE_ACCESS', 'access_token'),
@@ -126,7 +128,7 @@ def _clear_auth_cookies(response: Response) -> Response:
         raise TypeError("Argument 'response' nie może być None.")
 
     secure = settings.SECURE_COOKIES
-    samesite = 'None' if secure else 'Lax'
+    samesite = os.environ.get('DJANGO_COOKIE_SAMESITE', 'None' if secure else 'Lax')
     for key in (
         settings.SIMPLE_JWT.get('AUTH_COOKIE_ACCESS', 'access_token'),
         settings.SIMPLE_JWT.get('AUTH_COOKIE_REFRESH', 'refresh_token'),
@@ -290,7 +292,7 @@ def is_mfa_required_for_user(user: object | None) -> bool:
     user_role = getattr(user, 'role', None)
     is_staff = getattr(user, 'is_staff', False)
     is_superuser = getattr(user, 'is_superuser', False)
-    return user_role == RoleChoices.THERAPIST or is_staff or is_superuser
+    return user_role in (RoleChoices.THERAPIST, RoleChoices.ADMIN) or is_staff or is_superuser
 
 
 class LoginView(APIView):
@@ -1664,3 +1666,54 @@ class ChangePasswordView(APIView):
         blacklist_user_refresh_tokens(user)
         response = Response({'detail': 'Hasło zostało zmienione. Zaloguj się ponownie.'})
         return _clear_auth_cookies(response)
+
+
+class CurrentUserView(APIView):
+    """Zwraca dane profilowe aktualnie uwierzytelnionego użytkownika oraz umożliwia ich aktualizację."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Zwraca podstawowe dane zalogowanego użytkownika.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź zawierająca obiekt user.
+        """
+        user = getattr(request, 'user', None)
+        return Response({'user': _user_payload(user)}, status=status.HTTP_200_OK)
+
+    def patch(self, request: object, *args: object, **kwargs: object) -> Response:
+        """Aktualizuje dane osobowe (imię, nazwisko) zalogowanego użytkownika.
+
+        Args:
+            request (object): Obiekt żądania HTTP.
+            *args (object): Dodatkowe argumenty.
+            **kwargs (object): Dodatkowe argumenty kluczowe.
+
+        Returns:
+            Response: Odpowiedź zawierająca zaktualizowany obiekt user.
+        """
+        user = getattr(request, 'user', None)
+        data = getattr(request, 'data', {})
+        serializer = UpdateMeSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        updated_fields: list[str] = []
+        if 'first_name' in serializer.validated_data:
+            user.first_name = serializer.validated_data['first_name']
+            updated_fields.append('first_name')
+        if 'last_name' in serializer.validated_data:
+            user.last_name = serializer.validated_data['last_name']
+            updated_fields.append('last_name')
+
+        if updated_fields:
+            updated_fields.append('updated_at')
+            user.save(update_fields=updated_fields)
+
+        return Response({'user': _user_payload(user)}, status=status.HTTP_200_OK)
+

@@ -1293,5 +1293,39 @@ class MFADisableSerializer(serializers.Serializer):
         return cleaned
 
 
+class UpdateMeSerializer(serializers.Serializer):
+    """Serializator aktualizacji danych osobowych zalogowanego użytkownika (imię, nazwisko)."""
+
+    first_name = serializers.CharField(
+        required=False,
+        max_length=100,
+        error_messages=_FIRST_NAME_FIELD_ERRORS,
+    )
+    last_name = serializers.CharField(
+        required=False,
+        max_length=100,
+        error_messages=_LAST_NAME_FIELD_ERRORS,
+    )
+
+    def validate_first_name(self, value: object) -> str:
+        """Waliduje i normalizuje imię użytkownika."""
+        if value is None:
+            return ''
+        val_str = str(value).strip()
+        if not val_str:
+            raise serializers.ValidationError(NAME_REQUIRED)
+        return normalize_and_validate_first_name(val_str)
+
+    def validate_last_name(self, value: object) -> str:
+        """Waliduje i normalizuje nazwisko użytkownika."""
+        if value is None:
+            return ''
+        val_str = str(value).strip()
+        if not val_str:
+            raise serializers.ValidationError(LAST_NAME_REQUIRED)
+        return normalize_and_validate_last_name(val_str)
+
+
+
 
 

@@ -47,6 +47,35 @@ class TestCorsConfiguration:
         # Assert
         assert 'Access-Control-Allow-Origin' not in response.headers
 
+    def test_cloudflare_pages_allowed_only_for_project_domain(self) -> None:
+        """Weryfikuje, że tylko subdomeny projektu physiocare-3yh.pages.dev są akceptowane przez CORS."""
+        client = APIClient()
+
+        # Projekt główny -> dozwolony
+        res_main = client.options(
+            '/api/v1/auth/login/',
+            HTTP_ORIGIN='https://physiocare-3yh.pages.dev',
+            HTTP_ACCESS_CONTROL_REQUEST_METHOD='POST',
+        )
+        assert res_main.headers.get('Access-Control-Allow-Origin') == 'https://physiocare-3yh.pages.dev'
+
+        # Podgląd brancha projektu -> dozwolony
+        res_preview = client.options(
+            '/api/v1/auth/login/',
+            HTTP_ORIGIN='https://feature-preview.physiocare-3yh.pages.dev',
+            HTTP_ACCESS_CONTROL_REQUEST_METHOD='POST',
+        )
+        assert res_preview.headers.get('Access-Control-Allow-Origin') == 'https://feature-preview.physiocare-3yh.pages.dev'
+
+        # Obca subdomena innego użytkownika pages.dev -> zablokowana
+        res_evil = client.options(
+            '/api/v1/auth/login/',
+            HTTP_ORIGIN='https://attacker.pages.dev',
+            HTTP_ACCESS_CONTROL_REQUEST_METHOD='POST',
+        )
+        assert 'Access-Control-Allow-Origin' not in res_evil.headers
+
+
     def test_cors_exposed_headers_present(self) -> None:
         """Sprawdza, czy odpowiedzi zawierają zadeklarowane nagłówki Access-Control-Expose-Headers."""
         # Arrange
