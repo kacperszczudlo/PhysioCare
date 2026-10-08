@@ -548,4 +548,3 @@ export interface AdminConsent {
   granted: boolean
   granted_at: string
 }
-

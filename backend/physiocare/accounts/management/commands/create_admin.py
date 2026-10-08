@@ -5,7 +5,6 @@ from __future__ import annotations
 import getpass
 import logging
 import os
-import sys
 from typing import Any
 
 from django.contrib.auth import get_user_model

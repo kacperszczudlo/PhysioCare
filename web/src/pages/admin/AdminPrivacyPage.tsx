@@ -48,10 +48,7 @@ export function AdminPrivacyPage() {
     setRequestsLoading(true)
     try {
       const res = await adminApi.getPrivacyRequests({
-        is_processed:
-          processedFilter === ''
-            ? undefined
-            : processedFilter === 'processed',
+        is_processed: processedFilter === '' ? undefined : processedFilter === 'processed',
         search: requestsSearch || undefined,
         page: requestsPage,
       })
@@ -102,7 +99,7 @@ export function AdminPrivacyPage() {
     try {
       await adminApi.processPrivacyRequest(selectedRequest.id, adminNotes)
       toast.success(
-        `Wniosek użytkownika ${selectedRequest.user_email} został pomyślnie zrealizowany. Dane osobowe zanonimizowano.`
+        `Wniosek użytkownika ${selectedRequest.user_email} został pomyślnie zrealizowany. Dane osobowe zanonimizowano.`,
       )
       setSelectedRequest(null)
       void fetchRequests()
@@ -442,12 +439,15 @@ export function AdminPrivacyPage() {
             </p>
             <p className="admin-delete-subtext">
               Wykonanie tej operacji spowoduje trwałą anonimizację danych osobowych pacjenta
-              (wyczyszczenie PESEL, numeru telefonu, podmianę e-mail na hash, dezaktywację konta oraz unieważnienie wszystkich sesji i tokenów push).
-              Operacja ta jest <strong>nieodwracalna</strong>.
+              (wyczyszczenie PESEL, numeru telefonu, podmianę e-mail na hash, dezaktywację konta
+              oraz unieważnienie wszystkich sesji i tokenów push). Operacja ta jest{' '}
+              <strong>nieodwracalna</strong>.
             </p>
 
             <div className="admin-modal-notes-field">
-              <label htmlFor="admin-process-notes">Notatki z weryfikacji tożsamości (opcjonalnie):</label>
+              <label htmlFor="admin-process-notes">
+                Notatki z weryfikacji tożsamości (opcjonalnie):
+              </label>
               <textarea
                 id="admin-process-notes"
                 placeholder="Np. Zweryfikowano telefonicznie wniosek pacjenta..."

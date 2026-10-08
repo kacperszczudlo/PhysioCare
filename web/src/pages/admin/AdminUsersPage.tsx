@@ -124,7 +124,9 @@ export function AdminUsersPage() {
     setIsDeleting(true)
     try {
       await adminApi.softDeleteUser(userToDelete.id)
-      toast.success(`Konto ${userToDelete.email} zostało pomyślnie usunięte i zanonimizowane (RODO).`)
+      toast.success(
+        `Konto ${userToDelete.email} zostało pomyślnie usunięte i zanonimizowane (RODO).`,
+      )
       setUserToDelete(null)
       void fetchUsers()
     } catch (err) {
@@ -513,11 +515,12 @@ export function AdminUsersPage() {
         >
           <div className="admin-modal-delete-content">
             <p className="admin-delete-warning">
-              Czy na pewno chcesz dezaktywować i zanonimizować konto <strong>{userToDelete.email}</strong>?
+              Czy na pewno chcesz dezaktywować i zanonimizować konto{' '}
+              <strong>{userToDelete.email}</strong>?
             </p>
             <p className="admin-delete-subtext">
-              Zgodnie z procedurą RODO dane osobowe (PII) zostaną zanonimizowane, a wszystkie sesje i tokeny
-              zostaną unieważnione. Operacja jest nieodwracalna.
+              Zgodnie z procedurą RODO dane osobowe (PII) zostaną zanonimizowane, a wszystkie sesje
+              i tokeny zostaną unieważnione. Operacja jest nieodwracalna.
             </p>
             <div className="admin-modal-actions">
               <Button

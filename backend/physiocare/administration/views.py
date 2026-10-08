@@ -286,8 +286,8 @@ class AdminSchedulingOverviewView(APIView):
         if therapist_id:
             try:
                 therapist_uuid = UUID(therapist_id)
-            except (ValueError, AttributeError):
-                raise ValidationError({'therapist_id': ['Niepoprawny format identyfikatora UUID.']})
+            except (ValueError, AttributeError) as err:
+                raise ValidationError({'therapist_id': ['Niepoprawny format identyfikatora UUID.']}) from err
 
         # Parsowanie dat (domyślnie bieżący tydzień - 3 dni wstecz do +7 dni w przód)
         start_dt = parse_datetime(date_from_str) if date_from_str else None
@@ -429,8 +429,8 @@ class AdminReviewListView(generics.ListAPIView):
         if therapist_id:
             try:
                 therapist_uuid = UUID(therapist_id)
-            except (ValueError, AttributeError):
-                raise ValidationError({'therapist_id': ['Niepoprawny format identyfikatora UUID.']})
+            except (ValueError, AttributeError) as err:
+                raise ValidationError({'therapist_id': ['Niepoprawny format identyfikatora UUID.']}) from err
             qs = qs.filter(therapist_id=therapist_uuid)
 
         return qs

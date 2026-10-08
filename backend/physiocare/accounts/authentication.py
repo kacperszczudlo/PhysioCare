@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import urllib.parse
+
 from django.conf import settings
 from django.http import HttpRequest
 from rest_framework.exceptions import PermissionDenied
@@ -34,11 +35,7 @@ def is_trusted_csrf_origin(origin: str) -> bool:
 
     # 2. Dopasowanie do dozwolonych wyrażeń regularnych CORS
     regexes = getattr(settings, 'CORS_ALLOWED_ORIGIN_REGEXES', [])
-    for pattern in regexes:
-        if re.match(pattern, normalized_origin):
-            return True
-
-    return False
+    return any(re.match(pattern, normalized_origin) for pattern in regexes)
 
 
 class CookieJWTAuthentication(JWTAuthentication):

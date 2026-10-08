@@ -142,9 +142,7 @@ describe('AdminPrivacyPage Component', () => {
     const processBtn = screen.getByText('Zrealizuj (RODO)')
     fireEvent.click(processBtn)
 
-    expect(
-      screen.getByText('Potwierdzenie Realizacji Wniosku RODO (Art. 17)'),
-    ).toBeInTheDocument()
+    expect(screen.getByText('Potwierdzenie Realizacji Wniosku RODO (Art. 17)')).toBeInTheDocument()
 
     const notesInput = screen.getByPlaceholderText(/Zweryfikowano telefonicznie/)
     fireEvent.change(notesInput, { target: { value: 'Potwierdzono tożsamość pacjenta' } })

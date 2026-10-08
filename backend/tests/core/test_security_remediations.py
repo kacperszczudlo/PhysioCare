@@ -1,6 +1,7 @@
 """Testy weryfikujące wdrożenie remediacji bezpieczeństwa i wydajności."""
 
 from datetime import timedelta
+
 import pytest
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -13,7 +14,7 @@ from core.throttling import (
     VisitBookingRateThrottle,
 )
 from documents.models import MedicalDocument
-from documents.views import DocumentDownloadView, TherapistDocumentUploadView
+from documents.views import TherapistDocumentUploadView
 from patients.models import PatientProfile
 from patients.views import MeDataExportView
 from scheduling.models import TherapyType
