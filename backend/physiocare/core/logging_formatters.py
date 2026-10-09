@@ -50,7 +50,7 @@ class StructuredJsonFormatter(logging.Formatter):
         if record.exc_info:
             payload['exception'] = self.formatException(record.exc_info)
 
-        return json.dumps(payload, ensure_ascii=False)
+        return json.dumps(payload, default=str, ensure_ascii=False)
 
 
 def mask_email_for_logging(email: str | None) -> str:

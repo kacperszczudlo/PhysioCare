@@ -13,6 +13,26 @@ logger = logging.getLogger('physiocare.api')
 _SKIP_PREFIXES: tuple[str, ...] = ('/static/', '/media/', '/favicon.ico')
 
 
+def get_client_ip(request: HttpRequest) -> str:
+    """Pobiera rzeczywisty adres IP klienta z uwzględnieniem Cloudflare oraz nagłówków proxy.
+
+    Args:
+        request (HttpRequest): Obiekt żądania HTTP.
+
+    Returns:
+        str: Adres IP klienta lub pusty ciąg.
+    """
+    if not hasattr(request, 'META'):
+        return ''
+    cf_ip = request.META.get('HTTP_CF_CONNECTING_IP')
+    if cf_ip:
+        return cf_ip.strip()
+    x_forwarded = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded:
+        return x_forwarded.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', '').strip()
+
+
 class AdminAccessMiddleware:
     """Ogranicza dostęp do panelu administracyjnego Django na podstawie flagi konfiguracyjnej oraz białej listy IP."""
 
@@ -57,7 +77,7 @@ class AdminAccessMiddleware:
 
             allowed_ips = (settings.ADMIN_ALLOWED_IPS if hasattr(settings, 'ADMIN_ALLOWED_IPS') else None) or []
             if allowed_ips:
-                client_ip = request.META.get('REMOTE_ADDR', '')
+                client_ip = get_client_ip(request)
                 if client_ip not in allowed_ips:
                     return HttpResponseNotFound()
 
@@ -120,7 +140,11 @@ class RequestTimingMiddleware:
             level = logging.WARNING
 
         user = request.user if hasattr(request, 'user') else None
-        user_id = user.pk if user is not None and hasattr(user, 'is_authenticated') and user.is_authenticated else None
+        user_id = (
+            str(user.pk)
+            if user is not None and hasattr(user, 'is_authenticated') and user.is_authenticated
+            else None
+        )
 
         logger.log(
             level,
