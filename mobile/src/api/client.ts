@@ -79,8 +79,8 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
   auth?: boolean
 }
 
-/** Limit czasu oczekiwania na odpowiedź HTTP w milisekundach */
-const REQUEST_TIMEOUT_MS = 8000
+/** Limit czasu oczekiwania na odpowiedź HTTP w milisekundach (30s z uwagi na cold-start darmowych instancji chmurowych) */
+const REQUEST_TIMEOUT_MS = 30000
 
 let refreshPromise: Promise<boolean> | null = null
 
