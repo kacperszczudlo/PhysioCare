@@ -96,8 +96,9 @@ W przypadku podpięcia domeny głównej pod Cloudflare, w panelu zarządzania na
    - **Root directory:** `web`
    - **Build command:** `npm run build`
    - **Build output directory:** `dist`
-3. Dodaj zmienną środowiskową:
+3. Dodaj zmienne środowiskowe (Settings -> Environment variables):
    - `VITE_API_BASE_URL` = adres publiczny backendu (np. `https://api.twojadomena.pl/api/v1`).
+   - `VITE_EXPO_MOBILE_BUILD_URL` = (opcjonalnie) link do kompilacji Expo EAS Preview APK dla pacjentów (domyślnie zaszyty w kodzie fallback do ostatniej stabilnej kompilacji preview).
 
 ### Krok 2: Wdrożenie backendu (VPS / Docker / Railway)
 1. Skonfiguruj zmienne środowiskowe z `.env.example`.
