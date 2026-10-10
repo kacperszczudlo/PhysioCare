@@ -272,6 +272,25 @@
   }
 }
 
+@media (max-width: 480px) {
+  .clinical-actions {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .clinical-actions__tabs {
+    width: 100%;
+  }
+
+  .clinical-actions__tab {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .clinical-actions__item {
+    padding: var(--space-3);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .clinical-actions__tab {
     transition: none;

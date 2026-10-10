@@ -332,19 +332,48 @@
 
   .diag-map__canvas-wrap {
     width: min(100%, 320px);
+    max-width: 100%;
   }
 
   .diag-map__model {
-    width: min(100%, 300px);
-    height: 600px;
+    width: min(100%, 280px);
+    height: auto;
+    aspect-ratio: 1 / 2;
+    max-height: 560px;
   }
 
   .diag-map__model svg {
-    width: 300px !important;
-    height: 600px !important;
+    width: 100% !important;
+    max-width: 280px !important;
+    height: auto !important;
+    aspect-ratio: 1 / 2;
   }
 
   .diag-map__panel {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .diag-map {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .diag-map__tabs {
+    width: 100%;
+  }
+
+  .diag-map__tab {
+    flex: 1;
+    text-align: center;
+  }
+
+  .diag-map__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .diag-map__actions button {
     width: 100%;
   }
 }

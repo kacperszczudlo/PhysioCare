@@ -253,9 +253,32 @@
     align-items: stretch;
   }
 
+  .settings-actions button {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
   .settings-logout {
     align-self: stretch;
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-card {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .mfa-qr-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .mfa-secret-value {
+    word-break: break-all;
+    font-size: var(--text-sm);
+    max-width: 100%;
   }
 }
 

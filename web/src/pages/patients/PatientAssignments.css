@@ -251,3 +251,28 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 480px) {
+  .patient-assignments {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .patient-assignments__head-actions {
+    width: 100%;
+  }
+
+  .patient-assignments__head-actions button {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .patient-assignments__actions {
+    width: 100%;
+  }
+
+  .patient-assignments__actions > * {
+    flex: 1 1 auto;
+    min-height: 2.25rem;
+    justify-content: center;
+  }
+}

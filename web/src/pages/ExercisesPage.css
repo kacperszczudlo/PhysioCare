@@ -387,6 +387,43 @@
   }
 }
 
+@media (max-width: 480px) {
+  .exercises-card {
+    padding: var(--space-4);
+  }
+
+  .exercises-card__actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .exercises-card__buttons {
+    width: 100%;
+  }
+
+  .exercises-card__buttons > * {
+    flex: 1 1 auto;
+    min-height: 2.25rem;
+    justify-content: center;
+  }
+
+  .exercises-pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .exercises-pagination__controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .exercises-pagination__controls > * {
+    flex: 1;
+    min-height: 2.25rem;
+    justify-content: center;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .exercises-card {
     transition: none;

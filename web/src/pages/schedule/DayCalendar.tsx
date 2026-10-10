@@ -156,7 +156,7 @@ export function DayCalendar({
   }
 
   function beginDrag(visit: Visit, event: ReactPointerEvent<HTMLElement>) {
-    if (visit.status === 'CANCELLED' || savingId) {
+    if (visit.status === 'CANCELLED' || savingId || event.pointerType === 'touch') {
       return
     }
     event.preventDefault()
@@ -312,6 +312,11 @@ export function DayCalendar({
                       : undefined
                   }
                   onPointerDown={(event) => beginDrag(visit, event)}
+                  onClick={() => {
+                    if (!drag && !savingId) {
+                      onEditVisit(visit)
+                    }
+                  }}
                 >
                   <div className="day-cal__event-body">
                     <p className="day-cal__event-time">

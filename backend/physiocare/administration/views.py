@@ -312,7 +312,11 @@ class AdminSchedulingOverviewView(APIView):
             raise ValidationError({'range': ['Maksymalny dozwolony zakres czasu w harmonogramie to 60 dni.']})
 
         # Pobranie terapeutów
-        therapists_qs = TherapistProfile.objects.select_related('user').all()
+        therapists_qs = (
+            TherapistProfile.objects.select_related('user')
+            .filter(user__isnull=False)
+            .all()
+        )
         if therapist_uuid:
             therapists_qs = therapists_qs.filter(id=therapist_uuid)
 
@@ -335,14 +339,19 @@ class AdminSchedulingOverviewView(APIView):
         therapists_list = [
             {
                 'id': str(t.id),
-                'user_id': str(t.user.id),
-                'name': f'{t.user.first_name} {t.user.last_name}',
-                'email': t.user.email,
+                'user_id': str(t.user.id) if t.user else '',
+                'name': (
+                    f'{t.user.first_name} {t.user.last_name}'.strip() or t.user.email
+                    if t.user
+                    else 'Nieznany fizjoterapeuta'
+                ),
+                'email': t.user.email if t.user else '',
                 'qualification_level': t.qualification_level,
                 'rating_avg': float(t.rating_avg),
                 'rating_count': t.rating_count,
             }
             for t in therapists_qs
+            if t.user is not None
         ]
 
         return Response(

@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "PhysioCare API",
-    "description": "Pełna kolekcja kontraktu REST PhysioCare (`/api/v1`).\n\nPokrywa UC-01-UC-18: happy path + wyjątki (400/401/403/409).\n\n**Auth:** JWT w cookies `access_token` / `refresh_token` (httpOnly). Kolekcja dodatkowo ustawia `{{access_token}}` z jar cookies (gdy dostępne) i wysyła `Authorization: Bearer`.\n\n**Kolejność Collection Runner:** folder `00 Setup`, potem pozostałe foldery.\n\nDokumentacja: `docs/postman-testing.md`, kontrakt: `docs/api.md`.",
+    "description": "Pełna kolekcja kontraktu REST PhysioCare (`/api/v1`).\n\nPokrywa UC-01-UC-29: happy path + wyjątki (400/401/403/409/422) dla ról Pacjent, Fizjoterapeuta oraz Administrator.\n\n**Auth:** JWT w cookies `access_token` / `refresh_token` (httpOnly) oraz nagłówek `Authorization: Bearer {{access_token}}`.\n\n**Kolejność Collection Runner:** folder `00 Setup`, potem pozostałe foldery dziedzinowe.\n\nDokumentacja: `docs/postman-testing.md`, kontrakt: `docs/api.md`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {

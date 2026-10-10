@@ -243,24 +243,43 @@
   font-weight: 700;
 }
 
+@media (hover: none) and (pointer: coarse) {
+  .day-cal__event {
+    touch-action: pan-y;
+  }
+}
+
 @media (max-width: 640px) {
   .day-cal {
-    grid-template-columns: 3.25rem 1fr;
+    grid-template-columns: 3rem 1fr;
+    gap: var(--space-1);
   }
 
   .day-cal__event {
-    justify-content: flex-start;
-    padding: 0.35rem 0.5rem;
+    justify-content: center;
+    padding: 0.25rem 0.45rem;
   }
 
   .day-cal__event-body {
-    padding-right: 0;
+    padding-right: 4.5rem;
   }
 
   .day-cal__event-actions {
-    position: static;
-    transform: none;
-    margin-top: 0.25rem;
+    position: absolute;
+    top: 50%;
+    right: 0.35rem;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    margin-top: 0;
+  }
+
+  .day-cal__event-action {
+    min-height: 1.65rem;
+    min-width: 1.65rem;
+    padding: 0 0.35rem;
+    font-size: 0.65rem;
   }
 }
 
