@@ -41,7 +41,8 @@ describe('PatientNoticePage Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    import.meta.env.VITE_EXPO_MOBILE_BUILD_URL = 'https://expo.dev/accounts/demo/projects/test/builds/12345'
+    import.meta.env.VITE_EXPO_MOBILE_BUILD_URL =
+      'https://expo.dev/accounts/demo/projects/test/builds/12345'
     Object.assign(navigator, {
       clipboard: {
         writeText: vi.fn().mockResolvedValue(undefined),
@@ -72,7 +73,9 @@ describe('PatientNoticePage Component', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByTitle('Kod QR do pobrania aplikacji mobilnej PhysioCare')).toBeInTheDocument()
+    expect(
+      screen.getByTitle('Kod QR do pobrania aplikacji mobilnej PhysioCare'),
+    ).toBeInTheDocument()
 
     const downloadLink = screen.getByRole('link', { name: /Pobierz aplikację \(Expo \/ APK\)/i })
     expect(downloadLink).toBeInTheDocument()
@@ -92,7 +95,9 @@ describe('PatientNoticePage Component', () => {
     )
 
     expect(screen.getByText('Wydanie mobilne w przygotowaniu')).toBeInTheDocument()
-    expect(screen.queryByTitle('Kod QR do pobrania aplikacji mobilnej PhysioCare')).not.toBeInTheDocument()
+    expect(
+      screen.queryByTitle('Kod QR do pobrania aplikacji mobilnej PhysioCare'),
+    ).not.toBeInTheDocument()
   })
 
   it('copies download link to clipboard on button click and shows toast', async () => {
@@ -109,9 +114,7 @@ describe('PatientNoticePage Component', () => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
         'https://expo.dev/accounts/demo/projects/test/builds/12345',
       )
-      expect(mockToastSuccess).toHaveBeenCalledWith(
-        expect.stringContaining('Skopiowano link'),
-      )
+      expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('Skopiowano link'))
     })
   })
 

@@ -17,8 +17,7 @@ export function PatientNoticePage() {
   const { toast } = useToast()
   const [copied, setCopied] = useState(false)
 
-  const buildUrl =
-    (import.meta.env.VITE_EXPO_MOBILE_BUILD_URL as string | undefined)?.trim() || ''
+  const buildUrl = (import.meta.env.VITE_EXPO_MOBILE_BUILD_URL as string | undefined)?.trim() || ''
 
   const handleCopyLink = async () => {
     if (!buildUrl) return
@@ -48,8 +47,20 @@ export function PatientNoticePage() {
         </Link>
         <div className="patient-notice__user-bar">
           <span className="patient-notice__role-badge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
+              />
               <circle cx="9" cy="7" r="4" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M22 21v-2a4 4 0 0 0-3-3.87" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M16 3.13a4 4 0 0 1 0 7.75" />
@@ -90,15 +101,22 @@ export function PatientNoticePage() {
             </h1>
 
             <p className="patient-notice__desc">
-              Twoja fizjoterapia, harmonogram spotkań i dedykowane ćwiczenia są zintegrowane
-              z aplikacją mobilną PhysioCare. Pobierz aplikację na telefon, aby mieć stały wgląd w
+              Twoja fizjoterapia, harmonogram spotkań i dedykowane ćwiczenia są zintegrowane z
+              aplikacją mobilną PhysioCare. Pobierz aplikację na telefon, aby mieć stały wgląd w
               postępy leczenia i bezpośredni kontakt ze swoim fizjoterapeutą.
             </p>
 
             <div className="patient-notice__features">
               <article className="patient-notice__feature-item">
                 <div className="patient-notice__feature-icon-wrap" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                     <line x1="16" y1="2" x2="16" y2="6" />
                     <line x1="8" y1="2" x2="8" y2="6" />
@@ -107,44 +125,77 @@ export function PatientNoticePage() {
                 </div>
                 <div className="patient-notice__feature-content">
                   <h3>Harmonogram i rezerwacja wizyt</h3>
-                  <p>Sprawdzaj zbliżające się terminy rehabilitacji, potwierdzaj obecność i planuj kolejne spotkania w gabinecie.</p>
+                  <p>
+                    Sprawdzaj zbliżające się terminy rehabilitacji, potwierdzaj obecność i planuj
+                    kolejne spotkania w gabinecie.
+                  </p>
                 </div>
               </article>
 
               <article className="patient-notice__feature-item">
                 <div className="patient-notice__feature-icon-wrap" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <polygon points="5 3 19 12 5 21 5 3" />
                   </svg>
                 </div>
                 <div className="patient-notice__feature-content">
                   <h3>Spersonalizowane ćwiczenia wideo</h3>
-                  <p>Oglądaj instrukcje wideo zadane przez fizjoterapeutę, sprawdzaj serie i poprawną technikę wykonywania ruchu.</p>
+                  <p>
+                    Oglądaj instrukcje wideo zadane przez fizjoterapeutę, sprawdzaj serie i poprawną
+                    technikę wykonywania ruchu.
+                  </p>
                 </div>
               </article>
 
               <article className="patient-notice__feature-item">
                 <div className="patient-notice__feature-icon-wrap" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h24s-3-2-3-9" />
                     <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                   </svg>
                 </div>
                 <div className="patient-notice__feature-content">
                   <h3>Powiadomienia i przypomnienia</h3>
-                  <p>Otrzymuj alerty o nadchodzących wizytach oraz codzienne przypomnienia o realizacji zaplanowanych serii.</p>
+                  <p>
+                    Otrzymuj alerty o nadchodzących wizytach oraz codzienne przypomnienia o
+                    realizacji zaplanowanych serii.
+                  </p>
                 </div>
               </article>
 
               <article className="patient-notice__feature-item">
                 <div className="patient-notice__feature-icon-wrap" aria-hidden="true">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
                 </div>
                 <div className="patient-notice__feature-content">
                   <h3>Bezpieczna dokumentacja medyczna</h3>
-                  <p>Wszystkie zalecenia i karty rehabilitacji są chronione i natychmiast dostępne na Twoim smartfonie.</p>
+                  <p>
+                    Wszystkie zalecenia i karty rehabilitacji są chronione i natychmiast dostępne na
+                    Twoim smartfonie.
+                  </p>
                 </div>
               </article>
             </div>
@@ -181,11 +232,10 @@ export function PatientNoticePage() {
                       title="Kod QR do pobrania aplikacji mobilnej PhysioCare"
                     />
                   </div>
-                  <div className="patient-notice__qr-caption">
-                    Zeskanuj aparatem w telefonie
-                  </div>
+                  <div className="patient-notice__qr-caption">Zeskanuj aparatem w telefonie</div>
                   <p className="patient-notice__qr-subcaption">
-                    Skieruj obiektyw smartfona na powyższy kod, aby bezpośrednio otworzyć stronę instalacji aplikacji.
+                    Skieruj obiektyw smartfona na powyższy kod, aby bezpośrednio otworzyć stronę
+                    instalacji aplikacji.
                   </p>
                 </div>
 
@@ -197,11 +247,16 @@ export function PatientNoticePage() {
                   </li>
                   <li className="patient-notice__step">
                     <span className="patient-notice__step-num">2</span>
-                    <span>Otwórz oficjalną stronę kompilacji i wybierz opcję <strong>Install / APK</strong>.</span>
+                    <span>
+                      Otwórz oficjalną stronę kompilacji i wybierz opcję{' '}
+                      <strong>Install / APK</strong>.
+                    </span>
                   </li>
                   <li className="patient-notice__step">
                     <span className="patient-notice__step-num">3</span>
-                    <span>Po zainstalowaniu zaloguj się kontem <strong>{user?.email}</strong>.</span>
+                    <span>
+                      Po zainstalowaniu zaloguj się kontem <strong>{user?.email}</strong>.
+                    </span>
                   </li>
                 </ol>
 
@@ -214,8 +269,20 @@ export function PatientNoticePage() {
                     className="patient-notice__btn-download"
                   >
                     <span>Pobierz aplikację (Expo / APK)</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
+                      />
                       <polyline points="15 3 21 3 21 9" />
                       <line x1="10" y1="14" x2="21" y2="3" />
                     </svg>
@@ -230,14 +297,30 @@ export function PatientNoticePage() {
                     >
                       {copied ? (
                         <>
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                          <svg
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            aria-hidden="true"
+                          >
                             <polyline points="20 6 9 17 4 12" />
                           </svg>
                           <span>Skopiowano link!</span>
                         </>
                       ) : (
                         <>
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                          <svg
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            aria-hidden="true"
+                          >
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                           </svg>
@@ -249,23 +332,35 @@ export function PatientNoticePage() {
                 </div>
 
                 <p className="patient-notice__card-note">
-                  Aplikacja w wersji dystrybucji wewnętrznej (Internal Preview). System Android może wyświetlić standardowy komunikat z prośbą o potwierdzenie instalacji pakietu APK pobranego z przeglądarki.
+                  Aplikacja w wersji dystrybucji wewnętrznej (Internal Preview). System Android może
+                  wyświetlić standardowy komunikat z prośbą o potwierdzenie instalacji pakietu APK
+                  pobranego z przeglądarki.
                 </p>
               </>
             ) : (
               <div className="patient-notice__qr-wrapper">
-                <div className="patient-notice__feature-icon-wrap" style={{ margin: '0.5rem auto' }} aria-hidden="true">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <div
+                  className="patient-notice__feature-icon-wrap"
+                  style={{ margin: '0.5rem auto' }}
+                  aria-hidden="true"
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <rect x="5" y="2" width="14" height="20" rx="3" ry="3" />
                     <line x1="12" y1="18" x2="12.01" y2="18" strokeWidth="2.5" />
                   </svg>
                 </div>
-                <div className="patient-notice__qr-caption">
-                  Wydanie mobilne w przygotowaniu
-                </div>
+                <div className="patient-notice__qr-caption">Wydanie mobilne w przygotowaniu</div>
                 <p className="patient-notice__qr-subcaption">
-                  Pakiet instalacyjny aplikacji mobilnej dla pacjentów zostanie wkrótce udostępniony.
-                  Skontaktuj się ze swoim fizjoterapeutą lub administratorem gabinetu, aby uzyskać dostęp.
+                  Pakiet instalacyjny aplikacji mobilnej dla pacjentów zostanie wkrótce
+                  udostępniony. Skontaktuj się ze swoim fizjoterapeutą lub administratorem gabinetu,
+                  aby uzyskać dostęp.
                 </p>
               </div>
             )}
