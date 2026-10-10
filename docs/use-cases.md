@@ -6,10 +6,10 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 | Aktor | Opis |
 |-------|------|
-| **Pacjent** | Korzysta z aplikacji mobilnej |
-| **Fizjoterapeuta** | Korzysta z klinicznego panelu webowego |
-| **Administrator** | Korzysta z webowego panelu administracyjnego (nadzór, analityka, użytkownicy, moderacja) |
-| **System** | Automatyczne procesy (powiadomienia, walidacja) |
+| **Pacjent** | Korzysta z aplikacji mobilnej oraz webowego portalu pacjenta (instrukcja, dystrybucja APK) |
+| **Fizjoterapeuta** | Korzysta z klinicznego panelu webowego (harmonogram, pacjenci, dokumentacja, ćwiczenia) |
+| **Administrator** | Korzysta z webowego panelu administracyjnego (nadzór, analityka, użytkownicy, grafiki, moderacja, audyt) |
+| **System** | Automatyczne procesy (powiadomienia, ochrona botowa reCAPTCHA, retencja RODO, synchronizacja) |
 
 ---
 
@@ -313,6 +313,18 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 
 ---
 
+## UC-30 - Webowy portal informacyjny i dystrybucja aplikacji pacjenta
+
+| Pole | Wartość |
+|------|---------|
+| Aktor | Pacjent |
+| Cel | Wygodne pobranie aplikacji mobilnej na smartfon oraz zapoznanie się z zakresem opieki klinicznej |
+| Warunki wstępne | Zalogowanie na koncie pacjenta w przeglądarce (`/patient-portal`) |
+| Przebieg | 1. Pacjent loguje się w portalu webowym i zostaje przekierowany do dedykowanego widoku `/patient-portal`. 2. System wyświetla spersonalizowane powitanie z adresem e-mail oraz opisem funkcjonalności (harmonogram, ćwiczenia, kontakt z fizjoterapeutą). 3. Pacjent może jednym kliknięciem pobrać najnowszą paczkę instalacyjną Android APK (Expo EAS Distribution) lub skopiować bezpośredni link instalacyjny do schowka. 4. Dostęp do bezpiecznego wylogowania i regulaminu. |
+| Responsywność | Układ w pełni dostosowany do urządzeń mobilnych (min. touch target 44px, brak overflow przy 320px). |
+
+---
+
 ## Ochrona Danych Osobowych i Medycznych (RODO Art. 9)
 
 | Mechanizm | Opis Wdrożenia |
@@ -333,4 +345,6 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | UC-17-18 | ✓ | - | therapists, notifications | profiles, prefs |
 | UC-19-21 | ✓ | ✓ | therapists, privacy | medical_devices, deleted_users |
 | UC-22-29 | - | ✓ (Admin) | administration, accounts | users, visits, reviews |
+| UC-30    | - | ✓ (Pacjent) | accounts | users |
+
 

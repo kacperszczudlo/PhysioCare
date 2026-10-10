@@ -1,5 +1,5 @@
 -- PhysioCare - auto-generated from Django migrations
--- Generated: 2026-10-05T12:55:06Z
+-- Generated: 2026-10-10T23:55:00Z
 -- Do not edit manually. Run: python scripts/sync_schema_sql.py
 
 --
@@ -1656,6 +1656,70 @@ CREATE INDEX idx_visits_pt_status_start ON public.visits USING btree (patient_id
 --
 
 CREATE INDEX idx_visits_therapist_start ON public.visits USING btree (therapist_id, start_at);
+
+
+--
+-- Name: idx_users_created_at_desc; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_users_created_at_desc ON public.users USING btree (created_at DESC);
+
+
+--
+-- Name: idx_users_role_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_users_role_created_at ON public.users USING btree (role, created_at DESC);
+
+
+--
+-- Name: idx_users_is_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_users_is_active ON public.users USING btree (is_active);
+
+
+--
+-- Name: idx_ex_therapist_created; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_ex_therapist_created ON public.exercises USING btree (therapist_id, created_at DESC);
+
+
+--
+-- Name: idx_diag_rec_ep_created; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_diag_rec_ep_created ON public.diagnostic_recommendations USING btree (episode_id, created_at DESC);
+
+
+--
+-- Name: idx_dev_ord_pt_created; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_dev_ord_pt_created ON public.medical_device_orders USING btree (patient_id, created_at DESC);
+
+
+--
+-- Name: idx_dev_ord_ep_created; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_dev_ord_ep_created ON public.medical_device_orders USING btree (episode_id, created_at DESC);
+
+
+--
+-- Name: idx_notes_episode_created; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_notes_episode_created ON public.visit_notes USING btree (episode_id, created_at DESC);
+
+
+--
+-- Name: idx_notes_therapist_created; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_notes_therapist_created ON public.visit_notes USING btree (therapist_id, created_at DESC);
+
 
 
 --
