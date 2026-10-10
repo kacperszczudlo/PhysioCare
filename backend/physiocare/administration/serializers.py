@@ -153,10 +153,16 @@ class AdminVisitSummarySerializer(serializers.ModelSerializer):
         ]
 
     def get_patient_name(self, obj: Visit) -> str:
-        return f'{obj.patient.user.first_name} {obj.patient.user.last_name}'
+        if obj.patient and getattr(obj.patient, 'user', None):
+            name = f'{obj.patient.user.first_name} {obj.patient.user.last_name}'.strip()
+            return name or obj.patient.user.email
+        return 'Nieznany pacjent'
 
     def get_therapist_name(self, obj: Visit) -> str:
-        return f'{obj.therapist.user.first_name} {obj.therapist.user.last_name}'
+        if obj.therapist and getattr(obj.therapist, 'user', None):
+            name = f'{obj.therapist.user.first_name} {obj.therapist.user.last_name}'.strip()
+            return name or obj.therapist.user.email
+        return 'Nieznany fizjoterapeuta'
 
 
 class AdminAvailabilitySlotSerializer(serializers.ModelSerializer):
