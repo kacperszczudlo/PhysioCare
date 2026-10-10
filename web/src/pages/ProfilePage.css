@@ -533,6 +533,10 @@
 }
 
 @media (max-width: 540px) {
+  .profile-card {
+    padding: var(--space-4) var(--space-3);
+  }
+
   .profile-floating-bar {
     border-radius: var(--radius-lg);
     padding: var(--space-3);
@@ -540,5 +544,14 @@
 
   .profile-floating-bar__desc {
     display: none;
+  }
+
+  .profile-floating-bar__actions {
+    width: 100%;
+  }
+
+  .profile-floating-bar__btn {
+    flex: 1;
+    min-height: 2.75rem;
   }
 }

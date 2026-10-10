@@ -4,7 +4,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { PatientNoticePage } from '../pages/PatientNoticePage'
 
 const mockLogout = vi.fn().mockResolvedValue(undefined)
-const mockToast = vi.fn()
+const mockToastSuccess = vi.fn()
+const mockToastError = vi.fn()
 
 const mockUser = {
   id: 'patient-123',
@@ -25,7 +26,13 @@ vi.mock('@/auth/AuthContext', () => ({
 
 vi.mock('@/components/ui/ToastContext', () => ({
   useToast: () => ({
-    toast: mockToast,
+    toast: {
+      success: mockToastSuccess,
+      error: mockToastError,
+      warning: vi.fn(),
+      info: vi.fn(),
+    },
+    showToast: vi.fn(),
   }),
 }))
 
@@ -102,11 +109,8 @@ describe('PatientNoticePage Component', () => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
         'https://expo.dev/accounts/demo/projects/test/builds/12345',
       )
-      expect(mockToast).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'success',
-          message: expect.stringContaining('Skopiowano link'),
-        }),
+      expect(mockToastSuccess).toHaveBeenCalledWith(
+        expect.stringContaining('Skopiowano link'),
       )
     })
   })

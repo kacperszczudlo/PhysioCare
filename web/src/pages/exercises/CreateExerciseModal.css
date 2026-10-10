@@ -295,4 +295,23 @@
   .ex-create__file-actions {
     width: 100%;
   }
+
+  .ex-create__actions {
+    width: 100%;
+  }
+
+  .ex-create__actions > * {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .ex-create__chips {
+    gap: var(--space-1);
+  }
+
+  .ex-create__chip {
+    font-size: var(--text-xs);
+    padding: 0 var(--space-2);
+  }
 }

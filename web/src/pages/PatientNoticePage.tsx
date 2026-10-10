@@ -26,16 +26,10 @@ export function PatientNoticePage() {
     try {
       await navigator.clipboard.writeText(buildUrl)
       setCopied(true)
-      toast({
-        type: 'success',
-        message: 'Skopiowano link instalacyjny aplikacji do schowka.',
-      })
+      toast.success('Skopiowano link instalacyjny aplikacji do schowka.')
       setTimeout(() => setCopied(false), 2500)
     } catch {
-      toast({
-        type: 'error',
-        message: 'Nie udało się skopiować linku. Możesz otworzyć go przyciskiem pobierania.',
-      })
+      toast.error('Nie udało się skopiować linku. Możesz otworzyć go przyciskiem pobierania.')
     }
   }
 

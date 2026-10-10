@@ -166,3 +166,25 @@
   font-weight: 600;
   font-size: var(--text-sm);
 }
+
+@media (max-width: 640px) {
+  .legal-layout__header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .legal-layout__main {
+    padding: var(--space-5) var(--space-3) var(--space-8);
+  }
+
+  .legal-doc__summary,
+  .legal-doc__table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  .legal-layout__footer {
+    padding: var(--space-3);
+  }
+}

@@ -203,3 +203,18 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 480px) {
+  .admin-profile-card {
+    padding: var(--space-4);
+  }
+
+  .admin-profile-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-profile-actions button {
+    width: 100%;
+  }
+}

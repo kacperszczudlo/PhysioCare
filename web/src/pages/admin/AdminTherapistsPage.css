@@ -7,7 +7,7 @@
 
 .admin-therapists-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: var(--space-4);
 }
 
@@ -174,4 +174,38 @@
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   color: var(--color-muted);
+}
+
+@media (max-width: 640px) {
+  .admin-therapists-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-therapist-card {
+    padding: var(--space-4);
+  }
+}
+
+@media (max-width: 420px) {
+  .admin-therapist-card__top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .admin-therapist-card__rating {
+    align-items: flex-start;
+  }
+
+  .admin-therapist-metrics {
+    gap: var(--space-1);
+  }
+
+  .admin-therapist-metric {
+    padding: var(--space-2);
+  }
+
+  .admin-therapist-metric__num {
+    font-size: var(--text-base);
+  }
 }

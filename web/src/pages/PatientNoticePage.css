@@ -308,6 +308,7 @@
   justify-content: center;
   gap: var(--space-2);
   width: 100%;
+  min-height: var(--control-size-lg, 3rem);
   padding: 0.75rem 1.25rem;
   background: var(--color-primary);
   color: var(--color-on-primary);
@@ -337,6 +338,7 @@
   justify-content: center;
   gap: var(--space-2);
   flex: 1;
+  min-height: var(--control-size, 2.75rem);
   padding: 0.6rem 1rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -378,6 +380,7 @@
 .patient-notice__footer-links {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-4);
 }
 
@@ -413,6 +416,48 @@
   .patient-notice__footer {
     flex-direction: column;
     align-items: flex-start;
+    gap: var(--space-3);
+  }
+}
+
+@media (max-width: 540px) {
+  .patient-notice__header {
+    padding: 0 var(--space-3);
+  }
+
+  .patient-notice__logo {
+    height: 1.65rem;
+  }
+
+  .patient-notice__main {
+    padding: var(--space-5) var(--space-3);
+  }
+
+  .patient-notice__card {
+    padding: var(--space-4);
+  }
+
+  .patient-notice__title {
+    font-size: clamp(1.4rem, 6vw, 2rem);
+  }
+
+  .patient-notice__desc {
+    font-size: var(--text-base);
+  }
+
+  .patient-notice__footer {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .patient-notice__footer-links {
+    gap: var(--space-3);
+  }
+}
+
+@media (max-width: 380px) {
+  .patient-notice__role-badge {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.7rem;
   }
 }
 

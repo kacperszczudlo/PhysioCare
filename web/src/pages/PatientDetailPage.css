@@ -402,3 +402,18 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 480px) {
+  .patient-episodes,
+  .patient-notes,
+  .patient-pdf-upload,
+  .patient-episode-form {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .patient-back-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 2.5rem;
+  }
+}

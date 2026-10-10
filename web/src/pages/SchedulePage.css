@@ -229,3 +229,68 @@
   flex-wrap: wrap;
   gap: var(--space-2);
 }
+
+@media (max-width: 640px) {
+  .schedule-segmented-tabs {
+    width: 100%;
+    margin-bottom: var(--space-3);
+  }
+
+  .schedule-segmented-tab {
+    flex: 1;
+    min-width: 0;
+    padding: var(--space-2) var(--space-2);
+    font-size: var(--text-xs);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .schedule-toolbar {
+    gap: var(--space-2);
+  }
+
+  .schedule-toolbar__nav {
+    width: 100%;
+  }
+
+  .schedule-toolbar__nav > * {
+    flex: 1 1 auto;
+    min-height: 2.5rem;
+  }
+
+  .schedule-toolbar__label {
+    width: 100%;
+    text-align: center;
+    font-size: var(--text-sm);
+    padding: var(--space-1) 0;
+  }
+
+  .schedule-unconfigured-banner,
+  .schedule-pending-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+
+  .schedule-unconfigured-banner > button,
+  .schedule-pending-banner > button {
+    width: 100%;
+  }
+
+  .schedule-pending-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+  }
+
+  .schedule-pending-item__actions {
+    width: 100%;
+  }
+
+  .schedule-pending-item__actions > * {
+    flex: 1 1 auto;
+    min-height: 2.25rem;
+  }
+}
