@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 
+import { useOptionalAuth } from '@/auth/AuthContext'
 import {
   PRIVACY_POLICY_META,
   PRIVACY_SECTIONS,
@@ -10,6 +11,26 @@ import {
  * Strona z warstwową treścią Polityki Prywatności (RODO / RODO Medyczne / PKE) systemu PhysioCare.
  */
 export function PrivacyPolicyPage() {
+  const auth = useOptionalAuth()
+  const isAuthenticated = auth?.isAuthenticated ?? false
+  const user = auth?.user ?? null
+
+  const homePath = !isAuthenticated
+    ? '/login'
+    : user?.role === 'ADMIN'
+      ? '/admin'
+      : user?.role === 'PATIENT'
+        ? '/patient-portal'
+        : '/'
+
+  const homeLabel = !isAuthenticated
+    ? 'Wróć do logowania'
+    : user?.role === 'ADMIN'
+      ? 'Panel administratora'
+      : user?.role === 'PATIENT'
+        ? 'Portal pacjenta'
+        : 'Wróć do pulpitu'
+
   return (
     <article className="legal-doc">
       <header className="legal-doc__header">
@@ -62,7 +83,7 @@ export function PrivacyPolicyPage() {
       <div className="legal-doc__actions">
         <Link to="/cookies">Polityka cookies</Link>
         <Link to="/account-deletion">Usuwanie konta</Link>
-        <Link to="/login">Wróć do logowania</Link>
+        <Link to={homePath}>{homeLabel}</Link>
       </div>
     </article>
   )

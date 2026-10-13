@@ -184,108 +184,122 @@ export function AdminPrivacyPage() {
           <div className="admin-table-container">
             {requestsLoading ? (
               <LoadingBlock label="Ładowanie wniosków RODO…" variant="panel" />
-            ) : requests.length === 0 ? (
-              <div className="admin-empty-state">
-                <p className="admin-empty-title">Brak wniosków o usunięcie konta</p>
-                <p className="admin-empty-description">
-                  Nie znaleziono żadnych zgłoszeń spełniających zadane kryteria filtrowania.
-                </p>
-              </div>
             ) : (
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Wnioskodawca</th>
-                    <th>Powód rezygnacji</th>
-                    <th>Data zgłoszenia</th>
-                    <th>Status</th>
-                    <th>Notatki systemowe</th>
-                    <th className="admin-th-actions">Akcje</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {requests.map((r) => (
-                    <tr key={r.id}>
-                      <td>
-                        <div className="admin-user-cell">
-                          <div>
-                            <div className="admin-user-name">{r.user_full_name}</div>
-                            <div className="admin-user-email">{r.user_email}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="admin-reason-cell" title={r.reason || 'Brak uzasadnienia'}>
-                        {r.reason || <span className="text-muted">(Brak uzasadnienia)</span>}
-                      </td>
-                      <td className="admin-date-cell">
-                        {new Date(r.created_at).toLocaleDateString('pl-PL')}
-                      </td>
-                      <td>
-                        {r.is_processed ? (
-                          <span className="admin-badge admin-badge--processed">
-                            Zrealizowany
-                            {r.processed_at && (
-                              <span style={{ fontSize: '0.75rem', opacity: 0.8, display: 'block' }}>
-                                {new Date(r.processed_at).toLocaleDateString('pl-PL')}
-                              </span>
-                            )}
-                          </span>
-                        ) : (
-                          <span className="admin-badge admin-badge--pending">
-                            Oczekuje na realizację
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        <span className="admin-notes-preview" title={r.notes}>
-                          {r.notes || '—'}
-                        </span>
-                      </td>
-                      <td className="admin-td-actions">
-                        {!r.is_processed && (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => handleOpenProcessModal(r)}
-                            title="Zrealizuj usunięcie konta i anonimizację danych"
-                          >
-                            Zrealizuj (RODO)
-                          </Button>
-                        )}
-                      </td>
+              <div className="admin-table-scroll">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Wnioskodawca</th>
+                      <th>Powód rezygnacji</th>
+                      <th>Data zgłoszenia</th>
+                      <th>Status</th>
+                      <th className="admin-th-actions">Akcje</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {requests.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="admin-td-empty">
+                          Brak wniosków o usunięcie konta w wybranym filtrze.
+                        </td>
+                      </tr>
+                    ) : (
+                      requests.map((r) => (
+                        <tr key={r.id}>
+                        <td>
+                          <div className="admin-user-cell">
+                            <div>
+                              {r.user_full_name &&
+                              r.user_full_name !== 'Usunięte Konto' &&
+                              r.user_full_name !== '(Użytkownik)' ? (
+                                <>
+                                  <div className="admin-user-name">{r.user_full_name}</div>
+                                  <div className="admin-user-email">{r.user_email}</div>
+                                </>
+                              ) : (
+                                <div className="admin-user-name">{r.user_email}</div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="admin-reason-cell" title={r.reason || 'Brak uzasadnienia'}>
+                          {r.reason || <span className="text-muted">(Brak uzasadnienia)</span>}
+                        </td>
+                        <td className="admin-date-cell">
+                          {new Date(r.created_at).toLocaleDateString('pl-PL')}
+                        </td>
+                        <td>
+                          {r.is_processed ? (
+                            <span
+                              className="admin-status-pill admin-status-pill--active"
+                              title={
+                                r.processed_at
+                                  ? `Data realizacji: ${new Date(r.processed_at).toLocaleString('pl-PL')}`
+                                  : undefined
+                              }
+                            >
+                              <span className="admin-status-dot" aria-hidden="true" />
+                              <span>Zrealizowany</span>
+                              {r.processed_at && (
+                                <span className="admin-status-pill__date">
+                                  · {new Date(r.processed_at).toLocaleDateString('pl-PL')}
+                                </span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="admin-status-pill admin-status-pill--pending">
+                              <span className="admin-status-dot" aria-hidden="true" />
+                              <span>Oczekuje na realizację</span>
+                            </span>
+                          )}
+                        </td>
+                        <td className="admin-td-actions">
+                          {!r.is_processed && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleOpenProcessModal(r)}
+                              title="Zrealizuj usunięcie konta i anonimizację danych"
+                            >
+                              Zrealizuj (RODO)
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Paginacja wniosków */}
+            {requestsCount > 0 && (
+              <div className="admin-pagination">
+                <span className="admin-pagination__info">
+                  Strona {requestsPage} z {Math.max(1, totalRequestsPages)}
+                </span>
+                <div className="admin-pagination__controls">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={requestsPage <= 1}
+                    onClick={() => setRequestsPage((p) => Math.max(1, p - 1))}
+                  >
+                    Poprzednia
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={requestsPage >= totalRequestsPages}
+                    onClick={() => setRequestsPage((p) => p + 1)}
+                  >
+                    Następna
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
-
-          {/* Paginacja wniosków */}
-          {requestsCount > PAGE_SIZE && (
-            <div className="admin-pagination">
-              <span className="admin-pagination-info">
-                Strona {requestsPage} z {totalRequestsPages} ({requestsCount} rekordów)
-              </span>
-              <div className="admin-pagination-actions">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={requestsPage <= 1}
-                  onClick={() => setRequestsPage((p) => p - 1)}
-                >
-                  Poprzednia
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={requestsPage >= totalRequestsPages}
-                  onClick={() => setRequestsPage((p) => p + 1)}
-                >
-                  Następna
-                </Button>
-              </div>
-            </div>
-          )}
         </>
       ) : (
         <>
@@ -340,88 +354,91 @@ export function AdminPrivacyPage() {
           <div className="admin-table-container">
             {consentsLoading ? (
               <LoadingBlock label="Ładowanie rejestru zgód…" variant="panel" />
-            ) : consents.length === 0 ? (
-              <div className="admin-empty-state">
-                <p className="admin-empty-title">Brak wpisów w rejestrze zgód</p>
-                <p className="admin-empty-description">
-                  Nie znaleziono zarejestrowanych zgód dla wybranych filtrów.
-                </p>
-              </div>
             ) : (
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Użytkownik</th>
-                    <th>Typ zgody</th>
-                    <th>Status zgody</th>
-                    <th>Data rejestracji</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {consents.map((c) => (
-                    <tr key={c.id}>
-                      <td>
-                        <div className="admin-user-cell">
-                          <div>
-                            <div className="admin-user-name">{c.user_full_name}</div>
-                            <div className="admin-user-email">{c.user_email}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <span className="admin-badge admin-badge--therapist">
-                          {c.consent_type_display}
-                        </span>
-                      </td>
-                      <td>
-                        {c.granted ? (
-                          <span className="admin-status-pill admin-status-pill--active">
-                            <span className="admin-status-dot" aria-hidden="true" />
-                            <span>Udzielona</span>
-                          </span>
-                        ) : (
-                          <span className="admin-status-pill admin-status-pill--blocked">
-                            <span className="admin-status-dot" aria-hidden="true" />
-                            <span>Brak zgody</span>
-                          </span>
-                        )}
-                      </td>
-                      <td className="admin-date-cell">
-                        {new Date(c.granted_at).toLocaleString('pl-PL')}
-                      </td>
+              <div className="admin-table-scroll">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Użytkownik</th>
+                      <th>Typ zgody</th>
+                      <th>Status zgody</th>
+                      <th>Data wyrażenia zgody</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {consents.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="admin-td-empty">
+                          Brak wpisów w rejestrze zgód dla wybranych filtrów.
+                        </td>
+                      </tr>
+                    ) : (
+                      consents.map((c) => (
+                        <tr key={c.id}>
+                        <td>
+                          <div className="admin-user-cell">
+                            <div>
+                              <div className="admin-user-name">{c.user_full_name}</div>
+                              <div className="admin-user-email">{c.user_email}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="admin-badge admin-badge--therapist">
+                            {c.consent_type_display}
+                          </span>
+                        </td>
+                        <td>
+                          {c.granted ? (
+                            <span className="admin-status-pill admin-status-pill--active">
+                              <span className="admin-status-dot" aria-hidden="true" />
+                              <span>Udzielona</span>
+                            </span>
+                          ) : (
+                            <span className="admin-status-pill admin-status-pill--blocked">
+                              <span className="admin-status-dot" aria-hidden="true" />
+                              <span>Brak zgody</span>
+                            </span>
+                          )}
+                        </td>
+                        <td className="admin-date-cell">
+                          {new Date(c.granted_at).toLocaleString('pl-PL')}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Paginacja zgód */}
+            {consentsCount > 0 && (
+              <div className="admin-pagination">
+                <span className="admin-pagination__info">
+                  Strona {consentsPage} z {Math.max(1, totalConsentsPages)}
+                </span>
+                <div className="admin-pagination__controls">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={consentsPage <= 1}
+                    onClick={() => setConsentsPage((p) => Math.max(1, p - 1))}
+                  >
+                    Poprzednia
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={consentsPage >= totalConsentsPages}
+                    onClick={() => setConsentsPage((p) => p + 1)}
+                  >
+                    Następna
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
-
-          {/* Paginacja zgód */}
-          {consentsCount > PAGE_SIZE && (
-            <div className="admin-pagination">
-              <span className="admin-pagination-info">
-                Strona {consentsPage} z {totalConsentsPages} ({consentsCount} rekordów)
-              </span>
-              <div className="admin-pagination-actions">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={consentsPage <= 1}
-                  onClick={() => setConsentsPage((p) => p - 1)}
-                >
-                  Poprzednia
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={consentsPage >= totalConsentsPages}
-                  onClick={() => setConsentsPage((p) => p + 1)}
-                >
-                  Następna
-                </Button>
-              </div>
-            </div>
-          )}
         </>
       )}
 
@@ -455,6 +472,13 @@ export function AdminPrivacyPage() {
                 onChange={(e) => setAdminNotes(e.target.value)}
               />
             </div>
+
+            {selectedRequest.notes && (
+              <div className="admin-modal-notes-preview">
+                <span className="admin-modal-notes-label">Wewnętrzne notatki systemowe:</span>
+                <p className="admin-modal-notes-text">{selectedRequest.notes}</p>
+              </div>
+            )}
 
             <div className="admin-modal-actions">
               <Button

@@ -1,11 +1,32 @@
 import { Link } from 'react-router-dom'
 
+import { useOptionalAuth } from '@/auth/AuthContext'
 import { COOKIE_POLICY_META, COOKIE_SECTIONS } from '@/content/cookiePolicy'
 
 /**
  * Strona z treścią Polityki Plików Cookie oraz informacji o lokalnym przechowywaniu danych sesji.
  */
 export function CookiePolicyPage() {
+  const auth = useOptionalAuth()
+  const isAuthenticated = auth?.isAuthenticated ?? false
+  const user = auth?.user ?? null
+
+  const homePath = !isAuthenticated
+    ? '/login'
+    : user?.role === 'ADMIN'
+      ? '/admin'
+      : user?.role === 'PATIENT'
+        ? '/patient-portal'
+        : '/'
+
+  const homeLabel = !isAuthenticated
+    ? 'Wróć do logowania'
+    : user?.role === 'ADMIN'
+      ? 'Panel administratora'
+      : user?.role === 'PATIENT'
+        ? 'Portal pacjenta'
+        : 'Wróć do pulpitu'
+
   return (
     <article className="legal-doc">
       <header className="legal-doc__header">
@@ -52,7 +73,7 @@ export function CookiePolicyPage() {
 
       <div className="legal-doc__actions">
         <Link to="/privacy">Polityka prywatności</Link>
-        <Link to="/login">Wróć do logowania</Link>
+        <Link to={homePath}>{homeLabel}</Link>
       </div>
     </article>
   )

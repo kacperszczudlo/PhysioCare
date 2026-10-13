@@ -262,3 +262,13 @@ export function useAuth(): AuthContextValue {
   }
   return ctx
 }
+
+/**
+ * Bezpieczny wariant useAuth nie rzucający wyjątku poza drzewem AuthProvider.
+ * Zwraca null, gdy kontekst nie jest dostępny (np. w odizolowanych testach jednostkowych widoków publicznych).
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export function useOptionalAuth(): AuthContextValue | null {
+  return useContext(AuthContext)
+}
+

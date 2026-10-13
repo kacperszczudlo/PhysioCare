@@ -157,4 +157,45 @@ describe('AdminPrivacyPage Component', () => {
       )
     })
   })
+
+  it('renders properly styled empty state when there are no privacy deletion requests', async () => {
+    vi.mocked(adminApi.getPrivacyRequests).mockResolvedValueOnce({
+      count: 0,
+      results: [],
+    } as Paginated<AdminPrivacyRequest>)
+
+    renderComponent()
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Brak wniosków o usunięcie konta w wybranym filtrze.'),
+      ).toBeInTheDocument()
+      expect(screen.getByText('Wnioskodawca')).toBeInTheDocument()
+      expect(screen.getByText('Powód rezygnacji')).toBeInTheDocument()
+    })
+  })
+
+  it('renders properly styled empty state when there are no consent entries in registry', async () => {
+    vi.mocked(adminApi.getConsents).mockResolvedValueOnce({
+      count: 0,
+      results: [],
+    } as Paginated<AdminConsent>)
+
+    renderComponent()
+
+    await waitFor(() => {
+      expect(screen.getByText(/Wnioski o usunięcie konta/)).toBeInTheDocument()
+    })
+
+    const consentsTab = screen.getByText(/Rejestr zgód pacjentów/)
+    fireEvent.click(consentsTab)
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Brak wpisów w rejestrze zgód dla wybranych filtrów.'),
+      ).toBeInTheDocument()
+      expect(screen.getByText('Użytkownik')).toBeInTheDocument()
+      expect(screen.getByText('Typ zgody')).toBeInTheDocument()
+    })
+  })
 })

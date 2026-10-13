@@ -9,7 +9,15 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Select } from '@/components/ui/Select'
 import { useToast } from '@/components/ui/ToastContext'
-import { IconEye, IconKey, IconLock, IconSearch, IconTrash, IconUnlock } from './AdminIcons'
+import {
+  IconEye,
+  IconKey,
+  IconLock,
+  IconSearch,
+  IconTrash,
+  IconUnlock,
+  IconUsers,
+} from './AdminIcons'
 import './AdminUsersPage.css'
 
 const PAGE_SIZE = 20
@@ -225,7 +233,13 @@ export function AdminUsersPage() {
           </div>
         ) : users.length === 0 ? (
           <div className="admin-empty-state">
-            <p>Nie znaleziono użytkowników spełniających podane kryteria.</p>
+            <div className="admin-empty-icon" aria-hidden="true">
+              <IconUsers />
+            </div>
+            <p className="admin-empty-title">Nie znaleziono użytkowników</p>
+            <p className="admin-empty-description">
+              Żadne konto nie spełnia zadanych kryteriów wyszukiwania lub filtrów.
+            </p>
           </div>
         ) : (
           <div className="admin-table-scroll">
