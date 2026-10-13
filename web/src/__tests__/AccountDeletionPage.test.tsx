@@ -45,4 +45,3 @@ describe('AccountDeletionPage Component', () => {
     expect(screen.getByRole('link', { name: 'Logowanie' })).toHaveAttribute('href', '/login')
   })
 })
-

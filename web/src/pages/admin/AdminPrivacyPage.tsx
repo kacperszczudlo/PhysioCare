@@ -206,68 +206,68 @@ export function AdminPrivacyPage() {
                     ) : (
                       requests.map((r) => (
                         <tr key={r.id}>
-                        <td>
-                          <div className="admin-user-cell">
-                            <div>
-                              {r.user_full_name &&
-                              r.user_full_name !== 'Usunięte Konto' &&
-                              r.user_full_name !== '(Użytkownik)' ? (
-                                <>
-                                  <div className="admin-user-name">{r.user_full_name}</div>
-                                  <div className="admin-user-email">{r.user_email}</div>
-                                </>
-                              ) : (
-                                <div className="admin-user-name">{r.user_email}</div>
-                              )}
+                          <td>
+                            <div className="admin-user-cell">
+                              <div>
+                                {r.user_full_name &&
+                                r.user_full_name !== 'Usunięte Konto' &&
+                                r.user_full_name !== '(Użytkownik)' ? (
+                                  <>
+                                    <div className="admin-user-name">{r.user_full_name}</div>
+                                    <div className="admin-user-email">{r.user_email}</div>
+                                  </>
+                                ) : (
+                                  <div className="admin-user-name">{r.user_email}</div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="admin-reason-cell" title={r.reason || 'Brak uzasadnienia'}>
-                          {r.reason || <span className="text-muted">(Brak uzasadnienia)</span>}
-                        </td>
-                        <td className="admin-date-cell">
-                          {new Date(r.created_at).toLocaleDateString('pl-PL')}
-                        </td>
-                        <td>
-                          {r.is_processed ? (
-                            <span
-                              className="admin-status-pill admin-status-pill--active"
-                              title={
-                                r.processed_at
-                                  ? `Data realizacji: ${new Date(r.processed_at).toLocaleString('pl-PL')}`
-                                  : undefined
-                              }
-                            >
-                              <span className="admin-status-dot" aria-hidden="true" />
-                              <span>Zrealizowany</span>
-                              {r.processed_at && (
-                                <span className="admin-status-pill__date">
-                                  · {new Date(r.processed_at).toLocaleDateString('pl-PL')}
-                                </span>
-                              )}
-                            </span>
-                          ) : (
-                            <span className="admin-status-pill admin-status-pill--pending">
-                              <span className="admin-status-dot" aria-hidden="true" />
-                              <span>Oczekuje na realizację</span>
-                            </span>
-                          )}
-                        </td>
-                        <td className="admin-td-actions">
-                          {!r.is_processed && (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => handleOpenProcessModal(r)}
-                              title="Zrealizuj usunięcie konta i anonimizację danych"
-                            >
-                              Zrealizuj (RODO)
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  )}
+                          </td>
+                          <td className="admin-reason-cell" title={r.reason || 'Brak uzasadnienia'}>
+                            {r.reason || <span className="text-muted">(Brak uzasadnienia)</span>}
+                          </td>
+                          <td className="admin-date-cell">
+                            {new Date(r.created_at).toLocaleDateString('pl-PL')}
+                          </td>
+                          <td>
+                            {r.is_processed ? (
+                              <span
+                                className="admin-status-pill admin-status-pill--active"
+                                title={
+                                  r.processed_at
+                                    ? `Data realizacji: ${new Date(r.processed_at).toLocaleString('pl-PL')}`
+                                    : undefined
+                                }
+                              >
+                                <span className="admin-status-dot" aria-hidden="true" />
+                                <span>Zrealizowany</span>
+                                {r.processed_at && (
+                                  <span className="admin-status-pill__date">
+                                    · {new Date(r.processed_at).toLocaleDateString('pl-PL')}
+                                  </span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className="admin-status-pill admin-status-pill--pending">
+                                <span className="admin-status-dot" aria-hidden="true" />
+                                <span>Oczekuje na realizację</span>
+                              </span>
+                            )}
+                          </td>
+                          <td className="admin-td-actions">
+                            {!r.is_processed && (
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => handleOpenProcessModal(r)}
+                                title="Zrealizuj usunięcie konta i anonimizację danych"
+                              >
+                                Zrealizuj (RODO)
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -375,38 +375,38 @@ export function AdminPrivacyPage() {
                     ) : (
                       consents.map((c) => (
                         <tr key={c.id}>
-                        <td>
-                          <div className="admin-user-cell">
-                            <div>
-                              <div className="admin-user-name">{c.user_full_name}</div>
-                              <div className="admin-user-email">{c.user_email}</div>
+                          <td>
+                            <div className="admin-user-cell">
+                              <div>
+                                <div className="admin-user-name">{c.user_full_name}</div>
+                                <div className="admin-user-email">{c.user_email}</div>
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td>
-                          <span className="admin-badge admin-badge--therapist">
-                            {c.consent_type_display}
-                          </span>
-                        </td>
-                        <td>
-                          {c.granted ? (
-                            <span className="admin-status-pill admin-status-pill--active">
-                              <span className="admin-status-dot" aria-hidden="true" />
-                              <span>Udzielona</span>
+                          </td>
+                          <td>
+                            <span className="admin-badge admin-badge--therapist">
+                              {c.consent_type_display}
                             </span>
-                          ) : (
-                            <span className="admin-status-pill admin-status-pill--blocked">
-                              <span className="admin-status-dot" aria-hidden="true" />
-                              <span>Brak zgody</span>
-                            </span>
-                          )}
-                        </td>
-                        <td className="admin-date-cell">
-                          {new Date(c.granted_at).toLocaleString('pl-PL')}
-                        </td>
-                      </tr>
-                    ))
-                  )}
+                          </td>
+                          <td>
+                            {c.granted ? (
+                              <span className="admin-status-pill admin-status-pill--active">
+                                <span className="admin-status-dot" aria-hidden="true" />
+                                <span>Udzielona</span>
+                              </span>
+                            ) : (
+                              <span className="admin-status-pill admin-status-pill--blocked">
+                                <span className="admin-status-dot" aria-hidden="true" />
+                                <span>Brak zgody</span>
+                              </span>
+                            )}
+                          </td>
+                          <td className="admin-date-cell">
+                            {new Date(c.granted_at).toLocaleString('pl-PL')}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>

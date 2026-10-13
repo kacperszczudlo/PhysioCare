@@ -271,4 +271,3 @@ export function useAuth(): AuthContextValue {
 export function useOptionalAuth(): AuthContextValue | null {
   return useContext(AuthContext)
 }
-

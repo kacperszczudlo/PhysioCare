@@ -5,7 +5,13 @@ import { LegalLayout } from '../LegalLayout'
 
 const mockAuth = {
   isAuthenticated: false,
-  user: null as { id: string; email: string; first_name: string; last_name: string; role: 'ADMIN' | 'THERAPIST' | 'PATIENT' } | null,
+  user: null as {
+    id: string
+    email: string
+    first_name: string
+    last_name: string
+    role: 'ADMIN' | 'THERAPIST' | 'PATIENT'
+  } | null,
 }
 
 vi.mock('@/auth/AuthContext', () => ({
@@ -77,7 +83,13 @@ describe('LegalLayout Component', () => {
     )
 
     expect(screen.getByText(/PhysioCare\. Wszelkie prawa zastrzeżone\./)).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Polityka prywatności' })).toHaveAttribute('href', '/privacy')
-    expect(screen.getByRole('link', { name: 'Polityka cookies' })).toHaveAttribute('href', '/cookies')
+    expect(screen.getByRole('link', { name: 'Polityka prywatności' })).toHaveAttribute(
+      'href',
+      '/privacy',
+    )
+    expect(screen.getByRole('link', { name: 'Polityka cookies' })).toHaveAttribute(
+      'href',
+      '/cookies',
+    )
   })
 })
