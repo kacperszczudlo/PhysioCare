@@ -289,7 +289,7 @@ Rysunek: [diagrams/use-cases.drawio](diagrams/use-cases.drawio)
 | Aktor | Administrator |
 | Cel | Weryfikacja jakości komentarzy i ukrywanie treści naruszających regulamin |
 | Warunki wstępne | Uwierzytelnienie z rolą `ADMIN` |
-| Przebieg | 1. Otwarcie widoku `/admin/reviews`. 2. Filtrowanie recenzji po liczbie gwiazdek (1–5) oraz statusie widoczności. 3. Podgląd treści opinii, autora, ocenianego fizjoterapeuty oraz oficjalnej odpowiedzi personelu. 4. Przełączenie widoczności (`toggle-visibility`): ukrycie opinii natychmiast wyklucza ją z widoku publicznego i automatycznie rekalkuluje średnią ocen fizjoterapeuty via sygnał bazodanowy. |
+| Przebieg | 1. Otwarcie widoku `/admin/reviews`. 2. Filtrowanie recenzji po liczbie gwiazdek (1–5) oraz statusie widoczności. 3. Podgląd treści opinii, autora, ocenianego fizjoterapeuty oraz oficjalnej odpowiedzi personelu. 4. Przełączenie widoczności (`toggle-visibility`): ukrycie opinii natychmiast wyklucza ją z widoku publicznego i automatycznie rekalkuluje średnią ocen fizjoterapeuty poprzez transakcyjny serwis domenowy (`reviews/services.py`). |
 
 ## UC-28 - Zarządzanie profilem i tożsamością administratora
 

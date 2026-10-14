@@ -1,7 +1,6 @@
 import contextlib
-from decimal import Decimal
 
-from django.db.models import Count, QuerySet
+from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.exceptions import PermissionDenied
@@ -36,27 +35,25 @@ class TherapistReviewListView(generics.ListAPIView):
         return context
 
     def get_queryset(self) -> QuerySet[Review]:
-        """Pobiera widoczne opinie danego fizjoterapeuty z opcjonalnym filtrowaniem.
+        """Pobiera widoczne opinie danego fizjoterapeuty z opcjonalnym filtrowaniem poprzez selektor.
 
         Returns:
             QuerySet[Review]: Przefiltrowany zestaw opinii.
         """
+        from .selectors import review_list_for_therapist_selector
+
         therapist_id = self.kwargs['therapist_id']
-        qs = Review.objects.select_related(
-            'patient__user',
-        ).filter(
-            therapist_id=therapist_id,
-            is_visible=True,
-        )
         rating = self.request.query_params.get('rating')
+        parsed_rating = None
         if rating is not None:
             with contextlib.suppress(ValueError, TypeError):
-                qs = qs.filter(rating=int(rating))
+                parsed_rating = int(rating)
         ordering = self.request.query_params.get('ordering', '-created_at')
-        allowed_orderings = {'created_at', '-created_at', 'rating', '-rating'}
-        if ordering in allowed_orderings:
-            qs = qs.order_by(ordering)
-        return qs
+        return review_list_for_therapist_selector(
+            therapist_id=therapist_id,
+            rating=parsed_rating,
+            ordering=ordering,
+        )
 
 
 class TherapistRatingSummaryView(APIView):
@@ -65,7 +62,7 @@ class TherapistRatingSummaryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request: Request, therapist_id: str) -> Response:
-        """Zwraca zagregowane statystyki ocen dla fizjoterapeuty.
+        """Zwraca zagregowane statystyki ocen dla fizjoterapeuty poprzez selektor.
 
         Args:
             request (Request): Obiekt żądania HTTP.
@@ -80,23 +77,9 @@ class TherapistRatingSummaryView(APIView):
         if not isinstance(request, Request):
             raise TypeError('Argument request musi być instancją Request.')
 
-        from therapists.models import TherapistProfile
-        therapist = get_object_or_404(TherapistProfile, pk=therapist_id, user__is_active=True)
+        from .selectors import therapist_rating_summary_selector
 
-        breakdown_qs = Review.objects.filter(
-            therapist=therapist,
-            is_visible=True,
-        ).values('rating').annotate(count=Count('id'))
-
-        breakdown: dict[str, int] = {'1': 0, '2': 0, '3': 0, '4': 0, '5': 0}
-        for row in breakdown_qs:
-            breakdown[str(row['rating'])] = row['count']
-
-        data = {
-            'average_rating': Decimal(str(therapist.rating_avg)),
-            'total_reviews': therapist.rating_count,
-            'rating_breakdown': breakdown,
-        }
+        data = therapist_rating_summary_selector(therapist_id)
         serializer = RatingSummarySerializer(data)
         return Response(serializer.data)
 
@@ -225,6 +208,12 @@ class ReviewDeleteView(generics.DestroyAPIView):
         if patient_profile is None:
             return Review.objects.none()
         return Review.objects.filter(patient=patient_profile)
+
+    def perform_destroy(self, instance: Review) -> None:
+        """Usuwa opinię i przelicza statystyki ocen terapeuty za pośrednictwem serwisu."""
+        from .services import review_delete_service
+
+        review_delete_service(review=instance)
 
 
 class ReviewReplyView(APIView):

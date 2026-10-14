@@ -140,6 +140,13 @@ class PatientProfile(TimestampedModel):
         Returns:
             TherapistProfile | None: Instancja profilu aktywnego fizjoterapeuty lub None.
         """
+        if (
+            hasattr(self, '_prefetched_objects_cache')
+            and 'therapists' in self._prefetched_objects_cache
+        ):
+            for t in self.therapists.all():
+                return t
+            return None
         return self.therapists.filter(patient_links__status=LinkStatus.ACTIVE).first()
 
     @property
@@ -151,4 +158,3 @@ class PatientProfile(TimestampedModel):
         """
         t = self.therapist
         return t.id if t else None
-

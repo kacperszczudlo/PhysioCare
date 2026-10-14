@@ -41,6 +41,7 @@ htmlcov/
 .nox/
 .mypy_cache/
 .ruff_cache/
+.superpowers/
 .hypothesis/
 pytest-cache-files-*/
 **/reports/coverage/

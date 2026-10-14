@@ -74,7 +74,7 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data: dict) -> Review:
-        """Tworzy nową opinię powiązaną z wizytą i terapeutą.
+        """Tworzy nową opinię powiązaną z wizytą i terapeutą poprzez warstwę usług.
 
         Args:
             validated_data (dict): Zwalidowane dane do zapisu.
@@ -82,10 +82,12 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
         Returns:
             Review: Nowo utworzona opinia.
         """
+        from .services import review_create_service
+
         visit = self.context['visit']
         request = self.context['request']
         patient = request.user.patient_profile
-        return Review.objects.create(
+        return review_create_service(
             visit=visit,
             patient=patient,
             therapist=visit.therapist,
@@ -123,12 +125,16 @@ class TherapistDirectReviewCreateSerializer(serializers.ModelSerializer):
         existing = Review.objects.filter(patient=patient, therapist=therapist).first()
         if existing:
             raise serializers.ValidationError(
-                {'non_field_errors': 'Dodałeś już opinię dla tego fizjoterapeuty. Możesz ją edytować.'}
+                {
+                    'non_field_errors': 'Dodałeś już opinię dla tego fizjoterapeuty. Możesz ją edytować.'
+                }
             )
 
         return data
 
     def create(self, validated_data: dict) -> Review:
+        from .services import review_create_service
+
         request = self.context['request']
         therapist = self.context['therapist']
         patient = request.user.patient_profile
@@ -145,7 +151,7 @@ class TherapistDirectReviewCreateSerializer(serializers.ModelSerializer):
             .first()
         )
 
-        return Review.objects.create(
+        return review_create_service(
             therapist=therapist,
             patient=patient,
             visit=unreviewed_visit,
@@ -198,9 +204,22 @@ class ReviewEditSerializer(serializers.ModelSerializer):
             delta = timezone.now() - instance.created_at
             if delta.days > 14:
                 raise serializers.ValidationError(
-                    {'non_field_errors': 'Edycja opinii jest możliwa tylko w ciągu 14 dni od jej wystawienia.'}
+                    {
+                        'non_field_errors': 'Edycja opinii jest możliwa tylko w ciągu 14 dni od jej wystawienia.'
+                    }
                 )
         return data
+
+    def update(self, instance: Review, validated_data: dict) -> Review:
+        """Aktualizuje opinię poprzez warstwę usług review_edit_service."""
+        from .services import review_edit_service
+
+        return review_edit_service(
+            review=instance,
+            rating=validated_data.get('rating'),
+            comment=validated_data.get('comment'),
+            is_anonymous=validated_data.get('is_anonymous'),
+        )
 
 
 class ReviewReadSerializer(serializers.ModelSerializer):
@@ -219,8 +238,17 @@ class ReviewReadSerializer(serializers.ModelSerializer):
 
         model = Review
         fields = [
-            'id', 'rating', 'comment', 'author_name', 'author_avatar_url', 'is_anonymous',
-            'is_verified', 'is_own', 'created_at', 'therapist_reply', 'therapist_replied_at',
+            'id',
+            'rating',
+            'comment',
+            'author_name',
+            'author_avatar_url',
+            'is_anonymous',
+            'is_verified',
+            'is_own',
+            'created_at',
+            'therapist_reply',
+            'therapist_replied_at',
         ]
 
     def get_is_own(self, obj: Review) -> bool:
@@ -306,7 +334,7 @@ class ReviewReplySerializer(serializers.ModelSerializer):
         return stripped
 
     def update(self, instance: Review, validated_data: dict) -> Review:
-        """Zapisuje odpowiedź i ustawia znacznik czasu.
+        """Zapisuje odpowiedź poprzez warstwę usług review_reply_service.
 
         Args:
             instance (Review): Instancja opinii do aktualizacji.
@@ -315,10 +343,12 @@ class ReviewReplySerializer(serializers.ModelSerializer):
         Returns:
             Review: Zaktualizowana opinia.
         """
-        instance.therapist_reply = validated_data['therapist_reply']
-        instance.therapist_replied_at = timezone.now()
-        instance.save(update_fields=['therapist_reply', 'therapist_replied_at'])
-        return instance
+        from .services import review_reply_service
+
+        return review_reply_service(
+            review=instance,
+            therapist_reply=validated_data['therapist_reply'],
+        )
 
 
 class RatingSummarySerializer(serializers.Serializer):

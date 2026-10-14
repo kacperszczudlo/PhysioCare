@@ -25,6 +25,7 @@ ignore = [
 [tool.ruff.lint.isort]
 known-first-party = [
   "accounts",
+  "administration",
   "core",
   "documents",
   "exercises",
@@ -32,6 +33,7 @@ known-first-party = [
   "patients",
   "physiocare",
   "privacy",
+  "reviews",
   "scheduling",
   "therapists",
   "treatment",
