@@ -323,11 +323,13 @@ class LoginView(APIView):
         password = data.get('password')
         recaptcha_token = data.get('recaptcha_token')
         recaptcha_client = data.get('recaptcha_client')
-        verify_recaptcha_token(
-            str(recaptcha_token) if recaptcha_token else None,
-            request.META.get('REMOTE_ADDR') if hasattr(request, 'META') else None,
-            str(recaptcha_client) if recaptcha_client in {'web', 'mobile'} else None,
-        )
+        client_val = str(recaptcha_client) if recaptcha_client in {'web', 'mobile'} else None
+        if client_val != 'mobile' or recaptcha_token:
+            verify_recaptcha_token(
+                str(recaptcha_token) if recaptcha_token else None,
+                request.META.get('REMOTE_ADDR') if hasattr(request, 'META') else None,
+                client_val,
+            )
 
         user = authenticate(request, email=email, password=password)
 

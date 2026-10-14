@@ -30,7 +30,7 @@ export function PasswordResetPage() {
     logout,
     isAuthenticated,
   } = useAuth()
-  const { executeRecaptcha } = useRecaptcha()
+  const { executeRecaptcha, isRecaptchaConfigured } = useRecaptcha()
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const emailFromQuery = (params.get('email') ?? '').trim()
@@ -95,6 +95,12 @@ export function PasswordResetPage() {
     setLoading(true)
     try {
       const recaptchaToken = await executeRecaptcha('password_reset')
+      if (isRecaptchaConfigured && !recaptchaToken) {
+        setError(
+          'Nie udało się zweryfikować zabezpieczenia reCAPTCHA. Jeśli korzystasz z blokera reklam (AdBlock), wyłącz go dla tej strony i spróbuj ponownie.',
+        )
+        return
+      }
       const detail = await requestPasswordReset(email.trim(), recaptchaToken)
       goToCodeStep(detail)
     } catch (err) {
@@ -116,6 +122,12 @@ export function PasswordResetPage() {
     setLoading(true)
     try {
       const recaptchaToken = await executeRecaptcha('password_reset_resend')
+      if (isRecaptchaConfigured && !recaptchaToken) {
+        setError(
+          'Nie udało się zweryfikować zabezpieczenia reCAPTCHA. Jeśli korzystasz z blokera reklam (AdBlock), wyłącz go dla tej strony i spróbuj ponownie.',
+        )
+        return
+      }
       const detail = await requestPasswordReset(email.trim(), recaptchaToken)
       setCode('')
       setResetToken('')

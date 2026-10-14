@@ -198,3 +198,57 @@ class TestRecaptchaVerification:
 
         mock_verify.assert_called_once()
         assert mock_verify.call_args.args[0] == 'login-token'
+
+    @pytest.mark.django_db
+    @override_settings(RECAPTCHA_ENABLED=True, RECAPTCHA_SECRET_KEY='secret_key_test')
+    def test_login_allows_mobile_client_without_recaptcha_token(
+        self,
+        api_client: object,
+    ) -> None:
+        """Klient mobile przy logowaniu nie jest odrzucany z błędem CAPTCHA przy braku tokena."""
+        response = api_client.post(
+            reverse('login'),
+            {
+                'email': 'nonexistent@example.com',
+                'password': 'Anything1!',
+                'recaptcha_client': 'mobile',
+            },
+            format='json',
+        )
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert 'CAPTCHA' not in str(response.data)
+
+    @pytest.mark.django_db
+    @override_settings(RECAPTCHA_ENABLED=True, RECAPTCHA_SECRET_KEY='secret_key_test')
+    def test_password_reset_request_rejects_missing_recaptcha_token_on_web(
+        self,
+        api_client: object,
+    ) -> None:
+        """Żądanie resetu hasła z web wymaga tokena CAPTCHA."""
+        response = api_client.post(
+            reverse('password-reset-request'),
+            {'email': 'test@example.com', 'client': 'web'},
+            format='json',
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert 'CAPTCHA' in str(response.data)
+
+    @pytest.mark.django_db
+    @override_settings(RECAPTCHA_ENABLED=True, RECAPTCHA_SECRET_KEY='secret_key_test')
+    def test_password_reset_request_allows_mobile_client_without_recaptcha_token(
+        self,
+        api_client: object,
+    ) -> None:
+        """Żądanie resetu hasła z mobile nie jest odrzucane z błędem CAPTCHA przy braku tokena."""
+        response = api_client.post(
+            reverse('password-reset-request'),
+            {'email': 'nonexistent@example.com', 'client': 'mobile'},
+            format='json',
+        )
+
+        # Powinno przejść walidację CAPTCHA i dotrzeć do sprawdzenia czy użytkownik istnieje (404)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert 'CAPTCHA' not in str(response.data)
+

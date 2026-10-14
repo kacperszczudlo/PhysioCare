@@ -41,8 +41,18 @@ export function useRecaptcha() {
    * @returns Obietnica zwracająca token reCAPTCHA lub undefined w przypadku braku konfiguracji.
    */
   const executeRecaptcha = useCallback(async (action: string): Promise<string | undefined> => {
-    if (!SITE_KEY || typeof window === 'undefined' || !window.grecaptcha) {
+    if (!SITE_KEY || typeof window === 'undefined') {
       return undefined
+    }
+
+    if (!window.grecaptcha) {
+      const start = Date.now()
+      while (!window.grecaptcha && Date.now() - start < 2500) {
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
+      if (!window.grecaptcha) {
+        return undefined
+      }
     }
 
     return new Promise((resolve) => {

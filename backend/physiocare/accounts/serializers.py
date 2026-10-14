@@ -926,10 +926,11 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
         recaptcha_token = attrs.pop('recaptcha_token', None)
         client_val = str(attrs.get('client')).strip() if attrs.get('client') in {'web', 'mobile'} else None
-        verify_recaptcha_token(
-            str(recaptcha_token) if recaptcha_token else None,
-            client=client_val,
-        )
+        if client_val != 'mobile' or recaptcha_token:
+            verify_recaptcha_token(
+                str(recaptcha_token) if recaptcha_token else None,
+                client=client_val,
+            )
         return attrs
 
     def validate_email(self, value: object) -> str:
