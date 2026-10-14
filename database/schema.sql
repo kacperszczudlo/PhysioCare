@@ -1277,6 +1277,14 @@ ALTER TABLE ONLY public.therapist_reviews
 
 
 --
+-- Name: therapist_reviews chk_review_rating_1_to_5; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.therapist_reviews
+    ADD CONSTRAINT chk_review_rating_1_to_5 CHECK (((rating >= 1) AND (rating <= 5)));
+
+
+--
 -- Name: user_mfa user_mfa_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2000,6 +2008,132 @@ CREATE INDEX visits_therapist_id_e012d30c ON public.visits USING btree (therapis
 --
 
 CREATE INDEX visits_therapy_type_id_c88843d3 ON public.visits USING btree (therapy_type_id);
+
+
+--
+-- Name: account_deletion_requests_created_at_5010d141; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX account_deletion_requests_created_at_5010d141 ON public.account_deletion_requests USING btree (created_at);
+
+
+--
+-- Name: device_tokens_created_at_81e335c0; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX device_tokens_created_at_81e335c0 ON public.device_tokens USING btree (created_at);
+
+
+--
+-- Name: diagnostic_recommendations_created_at_20247205; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX diagnostic_recommendations_created_at_20247205 ON public.diagnostic_recommendations USING btree (created_at);
+
+
+--
+-- Name: exercises_created_at_f322736b; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX exercises_created_at_f322736b ON public.exercises USING btree (created_at);
+
+
+--
+-- Name: medical_device_orders_created_at_5bc3f171; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX medical_device_orders_created_at_5bc3f171 ON public.medical_device_orders USING btree (created_at);
+
+
+--
+-- Name: medical_documents_created_at_f4f08226; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX medical_documents_created_at_f4f08226 ON public.medical_documents USING btree (created_at);
+
+
+--
+-- Name: notification_deliveries_created_at_a57c11c3; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX notification_deliveries_created_at_a57c11c3 ON public.notification_deliveries USING btree (created_at);
+
+
+--
+-- Name: patient_profiles_created_at_c8d88a16; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX patient_profiles_created_at_c8d88a16 ON public.patient_profiles USING btree (created_at);
+
+
+--
+-- Name: patient_therapist_links_created_at_8e8130f8; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX patient_therapist_links_created_at_8e8130f8 ON public.patient_therapist_links USING btree (created_at);
+
+
+--
+-- Name: physician_order_refusals_created_at_5693dceb; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX physician_order_refusals_created_at_5693dceb ON public.physician_order_refusals USING btree (created_at);
+
+
+--
+-- Name: recepta_na_ruch_referrals_created_at_5c00b8a7; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX recepta_na_ruch_referrals_created_at_5c00b8a7 ON public.recepta_na_ruch_referrals USING btree (created_at);
+
+
+--
+-- Name: therapist_availability_slots_created_at_5dabb446; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX therapist_availability_slots_created_at_5dabb446 ON public.therapist_availability_slots USING btree (created_at);
+
+
+--
+-- Name: therapist_profiles_created_at_bc7f3804; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX therapist_profiles_created_at_bc7f3804 ON public.therapist_profiles USING btree (created_at);
+
+
+--
+-- Name: therapist_reviews_created_at_b3ceb88e; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX therapist_reviews_created_at_b3ceb88e ON public.therapist_reviews USING btree (created_at);
+
+
+--
+-- Name: therapy_types_created_at_dbfd9598; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX therapy_types_created_at_dbfd9598 ON public.therapy_types USING btree (created_at);
+
+
+--
+-- Name: treatment_episodes_created_at_24a3369f; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX treatment_episodes_created_at_24a3369f ON public.treatment_episodes USING btree (created_at);
+
+
+--
+-- Name: visit_notes_created_at_8ed98ed5; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX visit_notes_created_at_8ed98ed5 ON public.visit_notes USING btree (created_at);
+
+
+--
+-- Name: visits_created_at_90ceb21f; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX visits_created_at_90ceb21f ON public.visits USING btree (created_at);
 
 
 --

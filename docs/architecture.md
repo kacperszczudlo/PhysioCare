@@ -47,14 +47,36 @@ Reguły dostępu obowiązują **tylko na serwerze**. Klient może ukryć przycis
 | `administration` | Analityka i KPI (`AdminDashboard`), zarządzanie użytkownikami, zbiorczy grafik, statystyki personelu, moderacja recenzji |
 | `patients` | PatientProfile, dane kontaktowe, powiązania z terapeutami |
 | `therapists` | TherapistProfile, weryfikacja PWZFz, biogram, kursy, statystyki ocen |
+| `reviews` | Review, oceny 1–5, moderacja, agregacja ocen i statystyk gabinetu (CQRS: Services & Selectors) |
 | `treatment` | TreatmentEpisode, BodyAreaPain, VisitNote, zlecenia wyrobów e-ZWM |
-| `scheduling` | Visit, TherapyType, dostępność personelu |
+| `scheduling` | Visit, TherapyType, dostępność personelu, sloty rezerwacyjne (CQRS: Services & Selectors) |
 | `exercises` | Exercise, kategorie, przypisania, compliance pacjenta |
 | `documents` | MedicalDocument, upload/download, walidacja MIME |
 | `privacy` | Consent, eksport danych, procedura prawa do bycia zapomnianym (RODO) |
 | `notifications` | NotificationPreference, DeviceToken, wysyłka Expo/e-mail; proces `run_notification_scheduler` (przypomnienia) |
 
 Zależności modułów: [diagrams/module-dependencies.drawio](diagrams/module-dependencies.drawio)
+
+## Wzorce architektoniczne backendu (CQRS: Services & Selectors)
+
+Backend PhysioCare wdraża architekturę zorientowaną na separację odpowiedzialności zgodnie z wytycznymi HackSoft Styleguide oraz zasadami CQRS (Command Query Responsibility Segregation):
+
+1. **Warstwa odczytu (Selectors):**
+   - Czyste funkcje Pythona zwracające obiekty `QuerySet`.
+   - Centralizują logikę prefetchingu (`select_related`, `prefetch_related`) w celu całkowitego wyeliminowania problemu $N+1$ zapytań.
+   - Przykłady: `reviews/selectors.py` (`review_list_for_therapist_selector`, `therapist_rating_summary_selector`), `scheduling/selectors.py` (`visit_list_for_therapist_selector`, `therapist_availability_slots_selector`).
+
+2. **Warstwa zapisu i mutacji biznesowych (Services):**
+   - Czyste funkcje Pythona reprezentujące komendy biznesowe, całkowicie odseparowane od obiektu `request`.
+   - Każda mutacja wykonywana jest w transakcji atomowej `@transaction.atomic` i wymusza jawną walidację modelu (`full_clean()`).
+   - Wyeliminowano niejawne sygnały bazodanowe Django (`signals.py`) na rzecz jawnych wywołań serwisów (np. `refresh_therapist_rating`).
+   - Przykłady: `reviews/services.py` (`review_create_service`, `review_edit_service`, `review_delete_service`), `scheduling/services.py` (`visit_create_service`, `visit_reschedule_service`, `visit_cancel_service`).
+
+3. **Odchudzona warstwa widoków (Thin Views):**
+   - Widoki DRF (APIView / generiki) odpowiadają wyłącznie za protokół HTTP: autentykację, autoryzację ról, parsowanie parametrów żądania i wywołanie odpowiedniego selektora lub serwisu.
+
+4. **Kontrakt API jako produkt (OpenAPI 3.0 / drf-spectacular):**
+   - Automatycznie generowana i weryfikowana specyfikacja OpenAPI 3.0 serwowana pod `/api/v1/schema/`, `/api/v1/docs/` (Swagger UI) i `/api/v1/redoc/`.
 
 ## Kluczowe koncepcje domenowe
 

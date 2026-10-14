@@ -18,6 +18,16 @@ Login, rejestracja i refresh zwracają `access` + `refresh` w JSON, gdy klient n
 | Paginacja | `?page=1&page_size=20` -> `{ "count", "next", "previous", "results" }` |
 | Role | `PATIENT` \| `THERAPIST` \| `ADMIN` - egzekwowane per endpoint |
 
+## Dokumentacja OpenAPI 3.0 / Swagger UI
+
+System automatycznie generuje i serwuje interaktywną specyfikację OpenAPI 3.0 za pośrednictwem biblioteki `drf-spectacular`:
+
+| Narzędzie | Ścieżka | Opis |
+|-----------|---------|------|
+| **Swagger UI** | `/api/v1/docs/` | Interaktywny interfejs graficzny do testowania i eksploracji endpointów API |
+| **ReDoc** | `/api/v1/redoc/` | Czytelna, trójkolumnowa dokumentacja techniczna |
+| **OpenAPI Schema** | `/api/v1/schema/` | Surowy plik schematu kontraktu w standardzie OpenAPI 3.0 (YAML / JSON) |
+
 ## Kody HTTP (wybrane)
 
 | Kod | Zastosowanie |
@@ -821,7 +831,7 @@ Paginowana lista recenzji pacjentów do moderacji.
 
 ### PATCH `/admin/reviews/{id}/visibility/`
 
-Ukrywa opinię (zmoderowana przez administratora) lub przywraca jej widoczność publiczną. Zmiana statusu widoczności automatycznie uruchamia sygnał rekalkulacji średniej ocen i liczby recenzji ocenianego fizjoterapeuty.
+Ukrywa opinię (zmoderowana przez administratora) lub przywraca jej widoczność publiczną. Zmiana statusu widoczności automatycznie uruchamia transakcyjny serwis domenowy rekalkulacji średniej ocen i liczby recenzji ocenianego fizjoterapeuty (`refresh_therapist_rating`).
 
 ```json
 {
@@ -847,3 +857,4 @@ Kontrakt REST API oraz Realtime SSE zostały w pełni zaimplementowane. Weryfika
 1. Kolekcję Postman: [`postman/PhysioCare.json`](postman/PhysioCare.json) (przewodnik [`postman-testing.md`](postman-testing.md)).
 2. Zintegrowany pakiet testów automatycznych `pytest` (`backend/tests/`).
 3. Zsynchronizowany skrypt weryfikacyjny: `python scripts/run_postman.py`.
+4. Automatyczną specyfikację OpenAPI 3.0 oraz Swagger UI pod adresem `/api/v1/docs/` (`drf-spectacular`).
