@@ -63,6 +63,14 @@ class Review(TimestampedModel):
         help_text='Czy opinia jest widoczna publicznie (może być ukryta przez admina).',
     )
 
+    def clean(self) -> None:
+        """Waliduje integralność encji opinii."""
+        super().clean()
+        if self.rating is not None and not (1 <= self.rating <= 5):
+            from django.core.exceptions import ValidationError
+
+            raise ValidationError({'rating': 'Ocena musi zawierać się w przedziale od 1 do 5.'})
+
     class Meta:
         """Metadane modelu Review."""
 
@@ -72,6 +80,10 @@ class Review(TimestampedModel):
             models.UniqueConstraint(
                 fields=['patient', 'visit'],
                 name='unique_review_per_visit',
+            ),
+            models.CheckConstraint(
+                condition=models.Q(rating__gte=1, rating__lte=5),
+                name='chk_review_rating_1_to_5',
             ),
         ]
         indexes = [

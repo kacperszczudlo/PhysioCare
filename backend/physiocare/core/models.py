@@ -15,7 +15,7 @@ class UUIDModel(models.Model):
 class TimestampedModel(UUIDModel):
     """Abstrakcyjny model bazowy rozszerzający UUIDModel o znacznik czasu utworzenia."""
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
         abstract = True
