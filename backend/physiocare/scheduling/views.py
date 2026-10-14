@@ -1,10 +1,7 @@
-import datetime
-
 from django.db import IntegrityError, transaction
 from django.db.models import Q, QuerySet
 from django.utils import timezone
 from rest_framework import generics, serializers, status
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,12 +11,18 @@ from core.permissions import IsPatient, IsTherapist, IsVisitParticipant
 from core.throttling import VisitBookingRateThrottle
 from notifications.events import (
     notify_visit_change,
-    publish_document_realtime,
     publish_visit_realtime,
 )
 
 from .holidays import get_polish_holidays, is_polish_holiday
 from .models import TherapistAvailabilitySlot, TherapyType, Visit, VisitStatus
+from .selectors import (
+    visit_list_for_patient_selector,
+    visit_list_for_therapist_selector,
+)
+from .selectors import (
+    visit_related_fields as _visit_related,
+)
 from .serializers import (
     PatientVisitRequestSerializer,
     TherapistAvailabilitySlotSerializer,
@@ -30,56 +33,13 @@ from .serializers import (
     VisitRescheduleSerializer,
     VisitSerializer,
 )
+from .services import (
+    maybe_publish_patient_summary as _maybe_publish_patient_summary,
+)
+from .services import (
+    translate_visit_integrity_error as _visit_integrity_error,
+)
 from .therapy_type_presets import ensure_therapy_type_presets, preset_payloads
-
-
-def _maybe_publish_patient_summary(visit: Visit, previous_summary: str) -> None:
-    """Publikuje w czasie rzeczywistym podsumowanie wizyty pacjenta, jeśli uległo ono zmianie.
-
-    Args:
-        visit (Visit): Obiekt wizyty.
-        previous_summary (str): Poprzednia treść podsumowania wizyty.
-
-    Raises:
-        TypeError: Gdy parametr visit nie jest instancją Visit lub previous_summary nie jest tekstem.
-    """
-    if not isinstance(visit, Visit):
-        raise TypeError('Parametr visit musi być instancją Visit.')
-    if not isinstance(previous_summary, str):
-        previous_summary = str(previous_summary) if previous_summary is not None else ''
-    summary = (visit.patient_summary or '').strip()
-    previous = (previous_summary or '').strip()
-    if summary and summary != previous:
-        publish_document_realtime(visit.patient, visit.id)
-
-
-def _visit_integrity_error(
-    exc: Exception,
-    *,
-    overlap_message: str = 'Termin koliduje z inną wizytą tego terapeuty.',
-) -> ValidationError:
-    """Przekształca błąd spójności bazy danych (IntegrityError) na ValidationError z odpowiednim komunikatem.
-
-    Args:
-        exc (Exception): Przechwycony wyjątek bazy danych.
-        overlap_message (str, optional): Komunikat błędu nakładania się terminów.
-
-    Returns:
-        ValidationError: Wyjątek walidacji DRF z opisem błędu.
-
-    Raises:
-        TypeError: Gdy parametr exc nie jest instancją Exception lub overlap_message nie jest ciągiem znaków.
-    """
-    if not isinstance(exc, Exception):
-        raise TypeError('Parametr exc musi być instancją Exception.')
-    if not isinstance(overlap_message, str):
-        raise TypeError('Parametr overlap_message musi być ciągiem znaków.')
-    message = str(exc).lower()
-    if 'exclude_overlapping_visits' in message:
-        return ValidationError({'start_at': overlap_message})
-    if 'chk_visits_end_after_start' in message:
-        return ValidationError({'end_at': 'Koniec wizyty musi być po rozpoczęciu.'})
-    return ValidationError({'detail': 'Nie udało się zapisać wizyty.'})
 
 
 def _save_visit(
@@ -111,23 +71,6 @@ def _save_visit(
         raise _visit_integrity_error(exc, overlap_message=overlap_message) from None
 
 
-def _visit_related() -> tuple[str, ...]:
-    """Zwraca listę relacji do wstępnego pobrania (select_related) dla wizyty.
-
-    Returns:
-        tuple[str, ...]: Nazwy relacji do dociągnięcia w zapytaniu SQL.
-    """
-    return (
-        'patient',
-        'patient__user',
-        'therapist',
-        'therapist__user',
-        'therapy_type',
-        'episode',
-        'review',
-    )
-
-
 class TherapistVisitListCreateView(generics.ListCreateAPIView):
     """Widok listy oraz tworzenia wizyt z poziomu fizjoterapeuty."""
 
@@ -153,41 +96,19 @@ class TherapistVisitListCreateView(generics.ListCreateAPIView):
         return min(value, 50)
 
     def get_queryset(self) -> QuerySet:
-        """Zwraca przefiltrowany zestaw wizyt należących do zalogowanego fizjoterapeuty.
+        """Zwraca przefiltrowany zestaw wizyt należących do zalogowanego fizjoterapeuty za pośrednictwem selektora.
 
         Returns:
-            QuerySet: Zbiór wizyt fizjoterapeuty.
+            QuerySet: Zbiór wizyt fizjoterapeuty z prewencją N+1.
         """
         therapist = self.request.user.therapist_profile
-        qs = Visit.objects.filter(therapist=therapist).select_related(*_visit_related())
-        date_param = self.request.query_params.get('date')
-        if date_param:
-            try:
-                parsed_date = datetime.date.fromisoformat(date_param)
-                tz = timezone.get_current_timezone()
-                day_start = timezone.make_aware(
-                    datetime.datetime.combine(parsed_date, datetime.time.min),
-                    tz,
-                )
-                day_end = timezone.make_aware(
-                    datetime.datetime.combine(parsed_date + datetime.timedelta(days=1), datetime.time.min),
-                    tz,
-                )
-                qs = qs.filter(start_at__gte=day_start, start_at__lt=day_end)
-            except (ValueError, TypeError):
-                qs = qs.filter(start_at__date=date_param)
-        if self.request.query_params.get('upcoming') == '1':
-            qs = qs.filter(
-                status=VisitStatus.SCHEDULED,
-                end_at__gte=timezone.now(),
-            )
-        if self.request.query_params.get('pending') == '1':
-            qs = qs.filter(status=VisitStatus.PENDING_APPROVAL)
-        qs = qs.order_by('start_at')
-        limit = self._upcoming_limit()
-        if limit is not None:
-            return qs[:limit]
-        return qs
+        return visit_list_for_therapist_selector(
+            therapist,
+            date_param=self.request.query_params.get('date'),
+            upcoming=(self.request.query_params.get('upcoming') == '1'),
+            pending=(self.request.query_params.get('pending') == '1'),
+            limit=self._upcoming_limit(),
+        )
 
     def paginate_queryset(self, queryset: object) -> list[object] | None:
         """Pojedyncza paginacja wyłączana w przypadku żądania limitu nadchodzących wizyt.
@@ -246,14 +167,12 @@ class TherapistVisitDetailView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, IsTherapist, IsVisitParticipant]
 
     def get_queryset(self) -> QuerySet:
-        """Zwraca zestaw wizyt powiązanych z zalogowanym fizjoterapeutą.
+        """Zwraca zestaw wizyt powiązanych z zalogowanym fizjoterapeutą za pośrednictwem selektora.
 
         Returns:
-            QuerySet: Zbiór wizyt fizjoterapeuty.
+            QuerySet: Zbiór wizyt fizjoterapeuty z prewencją N+1.
         """
-        return Visit.objects.filter(
-            therapist=self.request.user.therapist_profile,
-        ).select_related(*_visit_related())
+        return visit_list_for_therapist_selector(self.request.user.therapist_profile)
 
     def update(self, request: object, *args: object, **kwargs: object) -> Response:
         """Aktualizuje dane wizyty, powiadamia o zmianach oraz aktualizuje podsumowanie.
@@ -424,20 +343,15 @@ class MeVisitListCreateView(PatientSelfMixin, generics.ListCreateAPIView):
         return super().get_throttles()
 
     def get_queryset(self) -> QuerySet:
-        """Zwraca zestaw wizyt należących do zalogowanego pacjenta z filtrowaniem po statusie.
+        """Zwraca zestaw wizyt należących do zalogowanego pacjenta za pośrednictwem selektora.
 
         Returns:
             QuerySet: Przefiltrowany zbiór wizyt pacjenta.
         """
-        qs = (
-            Visit.objects.filter(
-                patient=self.get_patient_profile(),
-            )
-            .select_related(*_visit_related())
-            .order_by('start_at')
-        )
-
+        patient = self.get_patient_profile()
         status_filter = self.request.query_params.get('status')
+        qs = visit_list_for_patient_selector(patient)
+
         now = timezone.now()
         active_statuses = (VisitStatus.SCHEDULED, VisitStatus.PENDING_APPROVAL)
         if status_filter == 'upcoming':
@@ -516,6 +430,7 @@ class MeTherapyTypeListView(PatientSelfMixin, generics.ListAPIView):
         therapist = None
         if therapist_id:
             from therapists.models import TherapistProfile
+
             therapist = TherapistProfile.objects.filter(pk=therapist_id).first()
         if not therapist:
             therapist = patient.therapists.filter(patient_links__status='ACTIVE').first()
@@ -828,6 +743,7 @@ class PublicTherapistAvailableSlotsView(APIView):
         if request is None:
             raise TypeError('Parametr request nie może być None.')
         from therapists.models import TherapistProfile
+
         try:
             therapist = TherapistProfile.objects.get(pk=therapist_id)
         except TherapistProfile.DoesNotExist:
@@ -868,11 +784,13 @@ class PublicTherapistAvailableSlotsView(APIView):
                 )
 
         serializer = TherapistAvailabilitySlotSerializer(slots, many=True)
-        return Response({
-            'results': serializer.data,
-            'is_holiday': is_holiday,
-            'holiday_name': holiday_name,
-        })
+        return Response(
+            {
+                'results': serializer.data,
+                'is_holiday': is_holiday,
+                'holiday_name': holiday_name,
+            }
+        )
 
 
 class PolishHolidaysView(APIView):
