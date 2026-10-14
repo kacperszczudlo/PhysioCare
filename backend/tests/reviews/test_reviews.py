@@ -17,6 +17,7 @@ from rest_framework.test import APIClient
 
 from patients.models import PatientProfile
 from reviews.models import Review
+from reviews.services import review_create_service, review_delete_service
 from scheduling.models import TherapyType, Visit, VisitStatus
 from therapists.models import TherapistProfile
 
@@ -109,7 +110,7 @@ def no_show_visit(db: object, patient: PatientProfile, therapist: TherapistProfi
 @pytest.fixture
 def review(db: object, patient: PatientProfile, therapist: TherapistProfile, completed_visit: Visit) -> Review:
     """Tworzy opinię 5★ od pacjenta do zakończonej wizyty."""
-    return Review.objects.create(
+    return review_create_service(
         patient=patient,
         therapist=therapist,
         visit=completed_visit,
@@ -336,11 +337,11 @@ def test_patient_cannot_edit_other_patients_review(
 def test_rating_avg_updated_on_new_review(
     patient: PatientProfile, therapist: TherapistProfile, completed_visit: Visit
 ) -> None:
-    """Po dodaniu opinii rating_avg i rating_count są przeliczane przez sygnał."""
+    """Po dodaniu opinii rating_avg i rating_count są przeliczane przez serwis."""
     therapist.refresh_from_db()
     assert therapist.rating_count == 0
 
-    Review.objects.create(
+    review_create_service(
         patient=patient, therapist=therapist, visit=completed_visit, rating=5, comment='',
     )
 
@@ -354,10 +355,10 @@ def test_rating_avg_updated_on_delete(
     patient: PatientProfile, therapist: TherapistProfile, completed_visit: Visit
 ) -> None:
     """Po usunięciu jedynej opinii rating_avg wraca do 0."""
-    r = Review.objects.create(
+    r = review_create_service(
         patient=patient, therapist=therapist, visit=completed_visit, rating=4, comment='',
     )
-    r.delete()
+    review_delete_service(review=r)
 
     therapist.refresh_from_db()
     assert therapist.rating_count == 0
@@ -370,15 +371,13 @@ def test_rating_avg_excludes_hidden_reviews(
     therapist: TherapistProfile, completed_visit: Visit, completed_visit_b: Visit,
 ) -> None:
     """Ukryta opinia (is_visible=False) nie wlicza się do rating_avg."""
-    Review.objects.create(
+    review_create_service(
         patient=patient, therapist=therapist, visit=completed_visit, rating=5, comment='',
     )
-    hidden = Review.objects.create(
+    review_create_service(
         patient=patient_b, therapist=therapist, visit=completed_visit_b,
         rating=1, comment='', is_visible=False,
     )
-    # Ręcznie odpalamy sygnał przez save (is_visible=False → nie wliczane)
-    hidden.save()
 
     therapist.refresh_from_db()
     assert therapist.rating_count == 1
@@ -399,8 +398,8 @@ def test_rating_avg_multiple_reviews(
     therapist: TherapistProfile, completed_visit: Visit, completed_visit_b: Visit,
 ) -> None:
     """Średnia z 5★ i 3★ = 4.00."""
-    Review.objects.create(patient=patient, therapist=therapist, visit=completed_visit, rating=5)
-    Review.objects.create(patient=patient_b, therapist=therapist, visit=completed_visit_b, rating=3)
+    review_create_service(patient=patient, therapist=therapist, visit=completed_visit, rating=5)
+    review_create_service(patient=patient_b, therapist=therapist, visit=completed_visit_b, rating=3)
 
     therapist.refresh_from_db()
     assert therapist.rating_count == 2
@@ -456,8 +455,8 @@ def test_rating_summary_correct_breakdown(
     patient_b: PatientProfile, completed_visit_b: Visit,
 ) -> None:
     """GET /therapists/<id>/rating-summary/ zwraca poprawny breakdown."""
-    Review.objects.create(patient=patient, therapist=therapist, visit=completed_visit, rating=5)
-    Review.objects.create(patient=patient_b, therapist=therapist, visit=completed_visit_b, rating=3)
+    review_create_service(patient=patient, therapist=therapist, visit=completed_visit, rating=5)
+    review_create_service(patient=patient_b, therapist=therapist, visit=completed_visit_b, rating=3)
 
     therapist.refresh_from_db()
 

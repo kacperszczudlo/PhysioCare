@@ -33,6 +33,7 @@ def review_create_service(
     comment: str = '',
     is_anonymous: bool = False,
     visit: Visit | None = None,
+    is_visible: bool = True,
 ) -> Review:
     """Tworzy nową opinię, wymusza pełną walidację (full_clean) i odświeża statystyki terapeuty.
 
@@ -43,6 +44,7 @@ def review_create_service(
         comment: Opcjonalna treść opinii.
         is_anonymous: Czy opinia ma być anonimowa.
         visit: Opcjonalna zakończona wizyta (verified review).
+        is_visible: Czy opinia jest widoczna.
 
     Returns:
         Review: Nowo utworzona instancja opinii.
@@ -54,6 +56,7 @@ def review_create_service(
         rating=rating,
         comment=comment,
         is_anonymous=is_anonymous,
+        is_visible=is_visible,
     )
     review.full_clean()
     review.save()
