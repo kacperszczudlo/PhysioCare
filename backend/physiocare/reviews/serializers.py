@@ -125,7 +125,9 @@ class TherapistDirectReviewCreateSerializer(serializers.ModelSerializer):
         existing = Review.objects.filter(patient=patient, therapist=therapist).first()
         if existing:
             raise serializers.ValidationError(
-                {'non_field_errors': 'Dodałeś już opinię dla tego fizjoterapeuty. Możesz ją edytować.'}
+                {
+                    'non_field_errors': 'Dodałeś już opinię dla tego fizjoterapeuty. Możesz ją edytować.'
+                }
             )
 
         return data
@@ -202,7 +204,9 @@ class ReviewEditSerializer(serializers.ModelSerializer):
             delta = timezone.now() - instance.created_at
             if delta.days > 14:
                 raise serializers.ValidationError(
-                    {'non_field_errors': 'Edycja opinii jest możliwa tylko w ciągu 14 dni od jej wystawienia.'}
+                    {
+                        'non_field_errors': 'Edycja opinii jest możliwa tylko w ciągu 14 dni od jej wystawienia.'
+                    }
                 )
         return data
 
@@ -234,8 +238,17 @@ class ReviewReadSerializer(serializers.ModelSerializer):
 
         model = Review
         fields = [
-            'id', 'rating', 'comment', 'author_name', 'author_avatar_url', 'is_anonymous',
-            'is_verified', 'is_own', 'created_at', 'therapist_reply', 'therapist_replied_at',
+            'id',
+            'rating',
+            'comment',
+            'author_name',
+            'author_avatar_url',
+            'is_anonymous',
+            'is_verified',
+            'is_own',
+            'created_at',
+            'therapist_reply',
+            'therapist_replied_at',
         ]
 
     def get_is_own(self, obj: Review) -> bool:

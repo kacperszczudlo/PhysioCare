@@ -25,7 +25,9 @@ def test_patient_therapist_property_does_not_execute_uncached_query_if_prefetche
         last_name='Nowak',
     )
     therapist = TherapistProfile.objects.create(user=u2)
-    PatientTherapistLink.objects.create(patient=patient, therapist=therapist, status=LinkStatus.ACTIVE)
+    PatientTherapistLink.objects.create(
+        patient=patient, therapist=therapist, status=LinkStatus.ACTIVE
+    )
 
     # Pobieramy pacjenta z prefetch_related therapists
     p = PatientProfile.objects.prefetch_related('therapists').get(pk=patient.pk)

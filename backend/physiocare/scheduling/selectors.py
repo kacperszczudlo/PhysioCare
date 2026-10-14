@@ -53,7 +53,9 @@ def visit_list_for_therapist_selector(
                 tz,
             )
             day_end = timezone.make_aware(
-                datetime.datetime.combine(parsed_date + datetime.timedelta(days=1), datetime.time.min),
+                datetime.datetime.combine(
+                    parsed_date + datetime.timedelta(days=1), datetime.time.min
+                ),
                 tz,
             )
             qs = qs.filter(start_at__gte=day_start, start_at__lt=day_end)
