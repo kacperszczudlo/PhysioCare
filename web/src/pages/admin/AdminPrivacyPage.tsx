@@ -502,3 +502,4 @@ export function AdminPrivacyPage() {
     </div>
   )
 }
+
