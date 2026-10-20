@@ -42,6 +42,8 @@ PhysioCare/
 | [docs/topic-selection.md](docs/topic-selection.md) | Temat, cel, zakres, technologie |
 | [docs/architecture.md](docs/architecture.md) | Architektura systemu |
 | [docs/use-cases.md](docs/use-cases.md) | Przypadki użycia |
+| [docs/test-cases.md](docs/test-cases.md) | Przypadki testowe (specyfikacja i scenariusze) |
+| [docs/features.md](docs/features.md) | Przegląd funkcjonalności i interfejsu (Web & Mobile) |
 | [docs/api.md](docs/api.md) | Kontrakt REST API |
 | [docs/legal/polityka-prywatnosci.md](docs/legal/polityka-prywatnosci.md) | Polityka prywatności (RODO / PKE) |
 | [docs/legal/polityka-cookies.md](docs/legal/polityka-cookies.md) | Polityka cookies i technologie w urządzeniu |
@@ -262,6 +264,8 @@ python scripts/run_postman.py
 ```
 
 Raporty: `backend/reports/pytest-report.html`, `backend/reports/coverage/index.html`.
+
+Szczegółowa specyfikacja formalnych przypadków testowych (TC001-TC015) znajduje się w [docs/test-cases.md](docs/test-cases.md), natomiast kompletny przegląd modułów systemu ze zrzutami ekranu (Web & Mobile) w [docs/features.md](docs/features.md).
 
 **Postman** — import [docs/postman/PhysioCare.json](docs/postman/PhysioCare.json), `baseUrl=http://localhost:8000/api/v1`, Cookie Jar ON, URL-e ze slashami na końcu. Przewodnik: [docs/postman-testing.md](docs/postman-testing.md).
 
