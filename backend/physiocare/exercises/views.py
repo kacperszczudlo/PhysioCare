@@ -81,6 +81,17 @@ class TherapistExerciseListCreateView(generics.ListCreateAPIView):
             return ExerciseCreateSerializer
         return ExerciseSerializer
 
+    def get_serializer_context(self) -> dict[str, object]:
+        """Zwraca kontekst dla serializatora z profilem terapeuty.
+
+        Returns:
+            dict[str, object]: Kontekst serializatora.
+        """
+        context = super().get_serializer_context()
+        if hasattr(self.request.user, 'therapist_profile'):
+            context['therapist'] = self.request.user.therapist_profile
+        return context
+
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         """Obsługuje tworzenie nowego ćwiczenia wraz z wgrywaniem pliku media.
 
@@ -118,6 +129,8 @@ class TherapistExerciseListCreateView(generics.ListCreateAPIView):
         except DjangoValidationError as exc:
             messages = list(exc.messages) if hasattr(exc, 'messages') else [str(exc)]
             raise ValidationError({'file': messages}) from exc
+        serializer.context['file_url'] = file_url
+        serializer.context['therapist'] = request.user.therapist_profile
         exercise = serializer.save(
             therapist=request.user.therapist_profile,
             file_url=file_url,
