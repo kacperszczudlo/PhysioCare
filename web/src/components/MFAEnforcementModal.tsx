@@ -130,7 +130,17 @@ export function MFAEnforcementModal() {
         {backupCodes ? (
           <div className="mfa-enforce-step">
             <div className="mfa-enforce-badge mfa-enforce-badge--success">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
               <span>Aktywacja ukończona</span>
@@ -155,18 +165,10 @@ export function MFAEnforcementModal() {
             </div>
 
             <div className="mfa-enforce-actions">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleCopyCodes}
-              >
+              <Button type="button" variant="secondary" onClick={handleCopyCodes}>
                 {copiedCodes ? '✓ Skopiowano' : 'Kopiuj kody'}
               </Button>
-              <Button
-                type="button"
-                variant="primary"
-                onClick={handleComplete}
-              >
+              <Button type="button" variant="primary" onClick={handleComplete}>
                 Przejdź do systemu
               </Button>
             </div>
@@ -174,7 +176,17 @@ export function MFAEnforcementModal() {
         ) : (
           <div className="mfa-enforce-step">
             <div className="mfa-enforce-badge">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
               <span>Wymagane zabezpieczenie konta</span>
@@ -185,8 +197,8 @@ export function MFAEnforcementModal() {
             </h2>
 
             <p className="mfa-enforce-desc">
-              Dostęp do kartotek medycznych i harmonogramu w PhysioCare wymaga aktywnego uwierzytelniania
-              dwuetapowego. Zabezpiecza to wrażliwe dane pacjentów i Twoje konto.
+              Dostęp do kartotek medycznych i harmonogramu w PhysioCare wymaga aktywnego
+              uwierzytelniania dwuetapowego. Zabezpiecza to wrażliwe dane pacjentów i Twoje konto.
             </p>
 
             {loading ? (
@@ -197,11 +209,7 @@ export function MFAEnforcementModal() {
             ) : error && !setupData ? (
               <div className="mfa-enforce-error-box">
                 <p className="mfa-enforce-error-text">{error}</p>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => window.location.reload()}
-                >
+                <Button type="button" variant="secondary" onClick={() => window.location.reload()}>
                   Odśwież stronę
                 </Button>
               </div>
@@ -217,7 +225,10 @@ export function MFAEnforcementModal() {
                   </div>
                   <div className="mfa-enforce-qr-info">
                     <ol className="mfa-enforce-instructions">
-                      <li>Otwórz aplikację uwierzytelniającą (np. Google Authenticator, Microsoft Authenticator, 1Password).</li>
+                      <li>
+                        Otwórz aplikację uwierzytelniającą (np. Google Authenticator, Microsoft
+                        Authenticator, 1Password).
+                      </li>
                       <li>Zeskanuj powyższy kod QR aparatem w telefonie.</li>
                       <li>
                         Jeśli nie możesz zeskanować kodu, wprowadź poniższy klucz ręcznie:
@@ -258,11 +269,7 @@ export function MFAEnforcementModal() {
                   />
 
                   <div className="mfa-enforce-actions">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => void logout()}
-                    >
+                    <Button type="button" variant="ghost" onClick={() => void logout()}>
                       Wyloguj się
                     </Button>
                     <Button

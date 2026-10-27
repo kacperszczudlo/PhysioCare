@@ -139,7 +139,9 @@ describe('MFAEnforcementModal', () => {
 
     render(<MFAEnforcementModal />)
 
-    expect(await screen.findByText('Skonfiguruj uwierzytelnianie dwuskładnikowe (2FA)')).toBeInTheDocument()
+    expect(
+      await screen.findByText('Skonfiguruj uwierzytelnianie dwuskładnikowe (2FA)'),
+    ).toBeInTheDocument()
     expect(screen.getByText('JBSWY3DPEHPK3PXP')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /aktywuj i przejdź dalej/i })).toBeInTheDocument()
   })
