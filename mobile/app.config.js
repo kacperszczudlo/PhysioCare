@@ -53,6 +53,7 @@ const expoConfig = {
       'expo-image-picker',
       {
         photosPermission: 'PhysioCare potrzebuje dostępu do zdjęć, aby ustawić avatar profilu.',
+        cameraPermission: 'PhysioCare potrzebuje dostępu do aparatu, aby zrobić zdjęcie profilowe.',
       },
     ],
     'expo-video',

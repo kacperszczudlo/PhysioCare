@@ -129,6 +129,7 @@ export default function ProfileScreen() {
         pesel: pesel.trim() || null,
       })
       setProfile(updated)
+      setAvatarPreviewUri(null)
       setFirstName(updated.first_name ?? '')
       setLastName(updated.last_name ?? '')
       const parsedPhone = parseStoredPhone(updated.phone)
@@ -173,14 +174,22 @@ export default function ProfileScreen() {
     }
 
     const asset = result.assets[0]
-    const mime = asset.mimeType ?? 'image/jpeg'
-    const name = asset.fileName ?? `avatar.${mime === 'image/png' ? 'png' : 'jpg'}`
+    const rawMime = (asset.mimeType ?? '').toLowerCase()
+    const isPng = rawMime.includes('png') || asset.uri.toLowerCase().endsWith('.png')
+    const isWebp = rawMime.includes('webp') || asset.uri.toLowerCase().endsWith('.webp')
+    const mime = isPng ? 'image/png' : isWebp ? 'image/webp' : 'image/jpeg'
+    const ext = isPng ? 'png' : isWebp ? 'webp' : 'jpg'
+    const name =
+      asset.fileName && !asset.fileName.toLowerCase().endsWith('.heic')
+        ? asset.fileName
+        : `avatar.${ext}`
 
     setAvatarPreviewUri(asset.uri)
     setAvatarLoading(true)
     try {
       const updated = await patientApi.uploadAvatar(asset.uri, mime, name)
       setProfile(updated)
+      setAvatarPreviewUri(null)
       toast.success('Zdjęcie profilowe zostało zapisane.')
     } catch (err) {
       setAvatarPreviewUri(null)
