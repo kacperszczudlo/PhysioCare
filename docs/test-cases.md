@@ -23,6 +23,7 @@ Niniejszy dokument zawiera formalną specyfikację przypadków testowych dla pla
 | **TC013** | Wgląd administratora w pulpit wskaźników analitycznych kliniki (KPI) | UC-22 | Web / Admin | Administrator |
 | **TC014** | Blokada konta użytkownika naruszającego regulamin (Deaktywacja) | UC-23 | Web / Admin | Administrator |
 | **TC015** | Moderacja i ukrycie niecenzuralnej opinii pacjenta | UC-27 | Web / Admin | Administrator |
+| **TC016** | Wymuszenie konfiguracji 2FA (TOTP Onboarding) dla personelu medycznego | UC-01, UC-03 | Web / Auth / Security | Fizjoterapeuta / Administrator |
 
 ---
 
@@ -235,6 +236,20 @@ Niniejszy dokument zawiera formalną specyfikację przypadków testowych dla pla
 | **Warunki początkowe** | 1. Administrator zalogowany w panelu moderacji `/admin/reviews`.<br>2. W systemie istnieje publicznie widoczna opinia wystawiona fizjoterapeucie. |
 | **Kroki testowe** | 1. Odszukaj zgłoszoną opinię na liście recenzji.<br>2. Kliknij przełącznik widoczności opinii (**Ukryj recenzję**).<br>3. Sprawdź zaktualizowany status recenzji w panelu administracyjnym.<br>4. Otwórz publiczny profil ocenianego fizjoterapeuty jako pacjent. |
 | **Oczekiwany rezultat** | 1. Żądanie moderacyjne aktualizuje pole `is_visible=False`.<br>2. Transakcyjny serwis domenowy automatycznie przelicza średnią ocen fizjoterapeuty z wyłączeniem ukrytej opinii.<br>3. Opinia natychmiast znika z profilu fizjoterapeuty widocznego dla pacjentów. |
+
+---
+
+### TC016 - Wymuszenie konfiguracji 2FA (TOTP Onboarding) dla personelu medycznego i administracji
+
+| Pole | Wartość |
+|:---|:---|
+| **ID** | `TC016` |
+| **Tytuł** | Wymuszenie konfiguracji 2FA (TOTP Onboarding) dla personelu medycznego i administracji |
+| **Powiązany UC** | UC-01, UC-03 |
+| **Rola / Aktor** | Fizjoterapeuta (`THERAPIST`) / Administrator (`ADMIN`) |
+| **Warunki początkowe** | 1. Frontend webowy PhysioCare otwarty w przeglądarce.<br>2. Nowo zarejestrowany lub zalogowany użytkownik personelu medycznego bez aktywnego 2FA (`has_mfa = false`, `mfa_required = true`). |
+| **Kroki testowe** | 1. Zaloguj się na konto fizjoterapeuty lub administratora bez skonfigurowanego 2FA.<br>2. Zaobserwuj natychmiastowe wyświetlenie nieodrzucalnego okna modalnego `MFAEnforcementModal` blokującego dostęp do pulpitów medycznych.<br>3. Zeskanuj zaprezentowany kod QR w aplikacji Authenticator (lub skopiuj tajny klucz TOTP).<br>4. Wprowadź wygenerowany 6-cyfrowy kod weryfikacyjny i kliknij **Aktywuj i przejdź dalej**.<br>5. Zweryfikuj krok 2 z prezentacją 10 jednorazowych kodów zapasowych i kliknij **Przejdź do systemu**.<br>6. Wyloguj się i zaloguj ponownie. |
+| **Oczekiwany rezultat** | 1. Użytkownik nie może zamknąć okna konfiguracji 2FA klawiszem ESC ani kliknięciem w tło.<br>2. Endpoint `POST /api/v1/auth/2fa/enable/` zatwierdza kod i generuje kody ratunkowe.<br>3. Po zakończeniu konfiguracji stan sesji aktualizuje `has_mfa = true`, modal znika, a użytkownik uzyskuje pełny dostęp do systemu.<br>4. Przy kolejnym logowaniu system wymaga podania drugiego składnika (TOTP), zabezpieczając konto przed przejęciem. |
 
 ---
 

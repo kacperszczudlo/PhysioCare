@@ -145,6 +145,26 @@ def _clear_auth_cookies(response: Response) -> Response:
     return response
 
 
+def is_mfa_required_for_user(user: object | None) -> bool:
+    """Sprawdza, czy rola użytkownika obliguje do aktywnego posiadania 2FA (terapeuci i admini)."""
+    if not user:
+        return False
+    user_role = getattr(user, 'role', None)
+    is_staff = getattr(user, 'is_staff', False)
+    is_superuser = getattr(user, 'is_superuser', False)
+    return user_role in (RoleChoices.THERAPIST, RoleChoices.ADMIN) or is_staff or is_superuser
+
+
+def _has_mfa_enabled(user: object | None) -> bool:
+    """Zwraca True, jeśli użytkownik posiada skonfigurowane i aktywne 2FA."""
+    if not user:
+        return False
+    try:
+        return bool(hasattr(user, 'mfa') and user.mfa and user.mfa.is_enabled)
+    except Exception:
+        return False
+
+
 def _user_payload(user: object) -> dict[str, object]:
     """Tworzy słownik z podstawowymi danymi użytkownika dla odpowiedzi API.
 
@@ -172,6 +192,8 @@ def _user_payload(user: object) -> dict[str, object]:
         'role': role,
         'first_name': first_name,
         'last_name': last_name,
+        'has_mfa': _has_mfa_enabled(user),
+        'mfa_required': is_mfa_required_for_user(user),
     }
 
 
@@ -284,15 +306,6 @@ def _mark_email_verified(user: object) -> None:
         if hasattr(user, 'save'):
             user.save(update_fields=['email_verified_at', 'updated_at'])
 
-
-def is_mfa_required_for_user(user: object | None) -> bool:
-    """Sprawdza, czy rola użytkownika obliguje do aktywnego posiadania 2FA (terapeuci i admini)."""
-    if not user:
-        return False
-    user_role = getattr(user, 'role', None)
-    is_staff = getattr(user, 'is_staff', False)
-    is_superuser = getattr(user, 'is_superuser', False)
-    return user_role in (RoleChoices.THERAPIST, RoleChoices.ADMIN) or is_staff or is_superuser
 
 
 class LoginView(APIView):

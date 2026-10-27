@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 
 import { useAuth } from '@/auth/AuthContext'
 import { AuthMediaImg } from '@/components/AuthMedia'
+import { MFAEnforcementModal } from '@/components/MFAEnforcementModal'
 import { useTherapistRealtimeConnection } from '@/realtime/useTherapistRealtimeConnection'
 import './AppLayout.css'
 
@@ -54,6 +55,7 @@ export function AppLayout() {
 
   return (
     <div className="app-shell">
+      <MFAEnforcementModal />
       <aside className="app-shell__sidebar" aria-label="Nawigacja główna">
         <div className="app-shell__header-row">
           <Link

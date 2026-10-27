@@ -214,3 +214,12 @@ Ochrona prywatności pacjentów:
 * **Polityka retencji i anonimizacji:** wsparcie dla prawa do bycia zapomnianym z zachowaniem wymogów ustawowych przechowywania dokumentacji medycznej.
 
 ![Polityka Prywatności i RODO](screenshots/tc003_privacy_web.png)
+
+---
+
+### 4.4. Obligatoryjne Uwierzytelnianie Dwuskładnikowe (2FA/TOTP) i Onboarding
+Zgodnie z wytycznymi RODO, standardami ochrony danych medycznych oraz polityką zerowego zaufania (Zero Trust):
+* **Wymuszenie 2FA dla personelu:** każde konto o roli `THERAPIST` lub `ADMIN` ma obowiązkowo egzekwowaną aktywację uwierzytelniania dwuskładnikowego (TOTP) przed uzyskaniem dostępu do kartotek pacjentów.
+* **Nieodrzucalny modal onboardingowy (`MFAEnforcementModal`):** po pierwszej rejestracji lub zalogowaniu bez skonfigurowanego 2FA, system blokuje interakcję z widokami aplikacji i natychmiast wyświetla proces konfiguracji TOTP (kod QR do aplikacji Google Authenticator / Microsoft Authenticator / 1Password oraz klucz tekstowy do wprowadzenia ręcznego).
+* **Jednorazowe kody zapasowe:** po zatwierdzeniu 6-cyfrowego kodu TOTP użytkownik otrzymuje wygenerowaną pulę 10 jednorazowych kodów ratunkowych umożliwiających odzyskanie dostępu do konta w przypadku utraty urządzenia mobilnego.
+* **Ochrona przed blokadą konta (Anti-Lockout):** obligatoryjny onboarding eliminuje ryzyko sytuacji, w której personel opuściłby system bez 2FA i został zablokowany przy kolejnej próbie logowania. Pacjenci korzystający z aplikacji mobilnej nie podlegają blokadzie modalem webowym.

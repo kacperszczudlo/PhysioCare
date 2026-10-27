@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 
 import { useAuth } from '@/auth/AuthContext'
+import { MFAEnforcementModal } from '@/components/MFAEnforcementModal'
 import {
   IconCalendar,
   IconDashboard,
@@ -57,6 +58,7 @@ export function AdminLayout() {
 
   return (
     <div className="app-shell admin-shell">
+      <MFAEnforcementModal />
       <aside className="app-shell__sidebar" aria-label="Nawigacja administracyjna">
         <div className="app-shell__header-row">
           <Link

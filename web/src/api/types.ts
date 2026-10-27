@@ -14,6 +14,8 @@ export interface User {
   first_name: string
   last_name: string
   avatar_url?: string | null
+  has_mfa?: boolean
+  mfa_required?: boolean
 }
 
 export interface ApiErrorBody {

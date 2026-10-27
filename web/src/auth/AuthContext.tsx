@@ -50,11 +50,13 @@ interface AuthContextValue {
   verifyPasswordResetCode: (email: string, code: string) => Promise<string>
   /** Ustawia nowe hasło po pomyślnej weryfikacji tokena resetu. */
   confirmPasswordReset: (payload: PasswordResetConfirmPayload) => Promise<string>
+  /** Aktualizuje wybrane pola obiektu użytkownika w stanie sesji. */
+  updateUser: (partial: Partial<User>) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function profileToUser(profile: TherapistProfile): User {
+function profileToUser(profile: TherapistProfile, baseUser?: User | null): User {
   return {
     id: profile.id,
     email: profile.email,
@@ -62,12 +64,14 @@ function profileToUser(profile: TherapistProfile): User {
     first_name: profile.first_name,
     last_name: profile.last_name,
     avatar_url: profile.avatar_url,
+    has_mfa: baseUser?.has_mfa ?? false,
+    mfa_required: baseUser?.mfa_required ?? true,
   }
 }
 
-async function loadTherapistSession(): Promise<User> {
+async function loadTherapistSession(baseUser?: User): Promise<User> {
   const profile = await therapistApi.getProfile()
-  return profileToUser(profile)
+  return profileToUser(profile, baseUser)
 }
 
 async function loadUserSession(): Promise<User> {
@@ -75,7 +79,7 @@ async function loadUserSession(): Promise<User> {
   if (user.role === 'THERAPIST') {
     try {
       const profile = await therapistApi.getProfile()
-      return profileToUser(profile)
+      return profileToUser(profile, user)
     } catch {
       return user
     }
@@ -86,7 +90,7 @@ async function loadUserSession(): Promise<User> {
 async function establishSession(setUser: (user: User) => void, nextUser: User): Promise<void> {
   if (nextUser.role === 'THERAPIST') {
     try {
-      setUser(await loadTherapistSession())
+      setUser(await loadTherapistSession(nextUser))
     } catch {
       setUser({ ...nextUser, avatar_url: nextUser.avatar_url ?? null })
     }
@@ -211,6 +215,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return res.detail
   }, [])
 
+  const updateUser = useCallback((partial: Partial<User>) => {
+    setUser((prev) => (prev ? { ...prev, ...partial } : null))
+  }, [])
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -227,6 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       requestPasswordReset,
       verifyPasswordResetCode,
       confirmPasswordReset,
+      updateUser,
     }),
     [
       user,
@@ -242,6 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       requestPasswordReset,
       verifyPasswordResetCode,
       confirmPasswordReset,
+      updateUser,
     ],
   )
 

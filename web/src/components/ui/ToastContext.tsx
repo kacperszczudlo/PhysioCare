@@ -124,3 +124,11 @@ export function useToast(): ToastContextValue {
   }
   return context
 }
+
+/**
+ * Bezpieczny wariant useToast nie rzucający błędu poza drzewem ToastProvider.
+ */
+// eslint-disable-next-line react-refresh/only-export-components
+export function useOptionalToast(): ToastContextValue | null {
+  return useContext(ToastContext)
+}

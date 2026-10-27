@@ -111,7 +111,9 @@ Wymaga `GOOGLE_CLIENT_IDS` (lista audience). Serwer weryfikuje token (`google-au
 
 Zwraca lub częściowo aktualizuje dane zalogowanego użytkownika (imię, nazwisko). Dostępne dla każdej roli (`PATIENT`, `THERAPIST`, `ADMIN`).
 
-- **GET**: Zwraca `{ "user": { "id", "email", "role", "first_name", "last_name" } }`.
+- **GET**: Zwraca `{ "user": { "id", "email", "role", "first_name", "last_name", "has_mfa", "mfa_required" } }`.
+  - `has_mfa`: `bool` – flaga określająca, czy użytkownik ma aktywne 2FA TOTP.
+  - `mfa_required`: `bool` – flaga określająca, czy rola użytkownika obliguje do posiadania aktywnego 2FA (`THERAPIST`, `ADMIN`).
 - **PATCH**: Przyjmuje opcjonalne pola `{ "first_name": "...", "last_name": "..." }`, waliduje reguły i zwraca zaktualizowany obiekt `{ "user": { ... } }`.
 
 ### POST `/auth/logout`
