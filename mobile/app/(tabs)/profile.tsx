@@ -156,24 +156,7 @@ export default function ProfileScreen() {
     }
   }
 
-  async function pickAvatar() {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync()
-    if (!permission.granted) {
-      toast.error('Brak uprawnień do galerii zdjęć.')
-      return
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.85,
-    })
-    if (result.canceled || !result.assets[0]) {
-      return
-    }
-
-    const asset = result.assets[0]
+  async function processAndUploadAsset(asset: ImagePicker.ImagePickerAsset) {
     const rawMime = (asset.mimeType ?? '').toLowerCase()
     const isPng = rawMime.includes('png') || asset.uri.toLowerCase().endsWith('.png')
     const isWebp = rawMime.includes('webp') || asset.uri.toLowerCase().endsWith('.webp')
@@ -197,6 +180,62 @@ export default function ProfileScreen() {
     } finally {
       setAvatarLoading(false)
     }
+  }
+
+  async function captureAvatar() {
+    const permission = await ImagePicker.requestCameraPermissionsAsync()
+    if (!permission.granted) {
+      toast.error('Brak uprawnień do aparatu fotograficznego.')
+      return
+    }
+
+    let result: ImagePicker.ImagePickerResult
+    try {
+      result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+      })
+    } catch {
+      result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: false,
+        quality: 0.85,
+      })
+    }
+    if (result.canceled || !result.assets[0]) {
+      return
+    }
+    await processAndUploadAsset(result.assets[0])
+  }
+
+  async function pickAvatar() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (!permission.granted) {
+      toast.error('Brak uprawnień do galerii zdjęć.')
+      return
+    }
+
+    let result: ImagePicker.ImagePickerResult
+    try {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.85,
+      })
+    } catch {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: false,
+        quality: 0.85,
+      })
+    }
+    if (result.canceled || !result.assets[0]) {
+      return
+    }
+    await processAndUploadAsset(result.assets[0])
   }
 
   if (loading) {
@@ -245,12 +284,20 @@ export default function ProfileScreen() {
           )}
           <View style={{ flex: 1, gap: space.sm }}>
             <Text style={styles.muted}>JPEG, PNG lub WebP · max 5 MB</Text>
-            <Button
-              title="Wybierz z galerii"
-              variant="secondary"
-              loading={avatarLoading}
-              onPress={() => void pickAvatar()}
-            />
+            <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
+              <Button
+                title="Galeria"
+                variant="secondary"
+                loading={avatarLoading}
+                onPress={() => void pickAvatar()}
+              />
+              <Button
+                title="Aparat"
+                variant="secondary"
+                loading={avatarLoading}
+                onPress={() => void captureAvatar()}
+              />
+            </View>
           </View>
         </View>
       </SectionCard>

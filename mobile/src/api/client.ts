@@ -287,12 +287,28 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     }
   }
 
+  const isFormData =
+    body instanceof FormData ||
+    Boolean(
+      body &&
+        typeof body === 'object' &&
+        typeof (body as Record<string, unknown>).append === 'function',
+    )
+
+  const requestHeaders: Record<string, string> = {}
+  headers.forEach((val, key) => {
+    if (isFormData && key.toLowerCase() === 'content-type') {
+      return
+    }
+    requestHeaders[key] = val
+  })
+
   let payload: BodyInit | undefined
   if (body !== undefined && body !== null) {
-    if (body instanceof FormData) {
-      payload = body
+    if (isFormData) {
+      payload = body as BodyInit
     } else {
-      headers.set('Content-Type', 'application/json')
+      requestHeaders['Content-Type'] = 'application/json'
       payload = JSON.stringify(body)
     }
   }
@@ -309,7 +325,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   try {
     response = await fetchWithTimeout(url, {
       ...rest,
-      headers,
+      headers: requestHeaders,
       body: payload,
     })
   } catch (err) {

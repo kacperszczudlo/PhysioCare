@@ -3,8 +3,11 @@
  * @description Moduł API pacjenta – obsługa profilu, zgód, wizyt, ćwiczeń domowych, dokumentów medycznych oraz preferencji powiadomień Push.
  */
 
-import { api } from './client'
+import { Platform } from 'react-native'
+import { api, API_BASE_URL, ApiError } from './client'
+import { tokenStorage } from './tokenStorage'
 import type {
+  ApiErrorBody,
   ClinicalDocumentItem,
   ClinicalDocumentKind,
   Consent,
@@ -71,7 +74,51 @@ export const patientApi = {
    * @param fileName - Nazwa pliku (domyślnie 'avatar.jpg').
    * @returns Zaktualizowany profil z nowym adresem awatara.
    */
-  uploadAvatar(uri: string, mimeType = 'image/jpeg', fileName = 'avatar.jpg') {
+  async uploadAvatar(
+    uri: string,
+    mimeType = 'image/jpeg',
+    fileName = 'avatar.jpg',
+  ): Promise<PatientProfile> {
+    if (Platform.OS !== 'web') {
+      try {
+        const FileSystem = await import('expo-file-system/legacy')
+        if (typeof FileSystem.uploadAsync === 'function') {
+          const access = await tokenStorage.getAccess()
+          const url = `${API_BASE_URL}/me/profile/avatar/`
+          const result = await FileSystem.uploadAsync(url, uri, {
+            fieldName: 'file',
+            httpMethod: 'POST',
+            uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+            mimeType,
+            headers: {
+              Accept: 'application/json',
+              ...(access ? { Authorization: `Bearer ${access}` } : {}),
+            },
+          })
+          if (result.status >= 200 && result.status < 300) {
+            return JSON.parse(result.body) as PatientProfile
+          }
+          let parsed: ApiErrorBody | null = null
+          try {
+            parsed = JSON.parse(result.body) as ApiErrorBody
+          } catch {}
+          throw new ApiError(
+            result.status,
+            parsed?.error?.message ?? 'Nie udało się przesłać avatara.',
+            {
+              code: parsed?.error?.code ?? 'AVATAR_UPLOAD_ERROR',
+              details: parsed?.error?.details ?? {},
+              body: parsed,
+            },
+          )
+        }
+      } catch (err) {
+        if (err instanceof ApiError) {
+          throw err
+        }
+      }
+    }
+
     const body = new FormData()
     body.append('file', {
       uri,
