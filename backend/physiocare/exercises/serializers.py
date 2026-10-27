@@ -159,8 +159,8 @@ class ExerciseCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Nieprawidłowe dane wejściowe.')
         categories = validated_data.pop('categories', [])
         exercise = Exercise.objects.create(
-            therapist=self.context['therapist'],
-            file_url=self.context['file_url'],
+            therapist=validated_data.pop('therapist', None) or self.context.get('therapist'),
+            file_url=validated_data.pop('file_url', None) or self.context.get('file_url', ''),
             **validated_data,
         )
         if categories:
