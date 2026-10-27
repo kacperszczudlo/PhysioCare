@@ -291,8 +291,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     body instanceof FormData ||
     Boolean(
       body &&
-        typeof body === 'object' &&
-        typeof (body as Record<string, unknown>).append === 'function',
+      typeof body === 'object' &&
+      typeof (body as Record<string, unknown>).append === 'function',
     )
 
   const requestHeaders: Record<string, string> = {}
