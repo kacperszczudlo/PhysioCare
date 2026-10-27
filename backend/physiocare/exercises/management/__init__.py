@@ -1,0 +1,1 @@
+"""Zarządzanie komendami aplikacji exercises."""

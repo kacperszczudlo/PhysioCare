@@ -33,6 +33,11 @@ CATEGORY_SEED: list[tuple[str, str, str]] = [
     (KIND_MUSCLE, 'scm', 'Mostkowo-obojczykowo-sutkowy'),
     (KIND_MUSCLE, 'trapezius', 'Czworoboczny'),
     (KIND_MUSCLE, 'levator_scapulae', 'Dźwigacz łopatki'),
+    (KIND_MUSCLE, 'deltoid', 'Mięsień naramienny'),
+    (KIND_MUSCLE, 'latissimus_dorsi', 'Najszerszy grzbietu'),
+    (KIND_MUSCLE, 'rhomboids', 'Równoległoboczne'),
+    (KIND_MUSCLE, 'biceps', 'Dwugłowy ramienia / biceps'),
+    (KIND_MUSCLE, 'triceps', 'Trójgłowy ramienia / triceps'),
     (KIND_MUSCLE, 'rotator_cuff', 'Rotatory barku'),
     (KIND_MUSCLE, 'pectoralis', 'Piersiowe'),
     (KIND_MUSCLE, 'erector_spinae', 'Prostownik grzbietu'),
@@ -59,6 +64,10 @@ CATEGORY_SEED: list[tuple[str, str, str]] = [
     (KIND_INJURY, 'sciatica', 'Rwa kulszowa / objawy korzeniowe'),
     (KIND_INJURY, 'piriformis_syndrome', 'Zespół gruszkowatego'),
     (KIND_INJURY, 'tmj', 'Staw skroniowo-żuchwowy'),
+    (KIND_INJURY, 'frozen_shoulder', 'Zamrożony bark / torebka stawowa'),
+    (KIND_INJURY, 'carpal_tunnel', 'Zespół cieśni nadgarstka'),
+    (KIND_INJURY, 'meniscus_tear', 'Uszkodzenie łąkotki'),
+    (KIND_INJURY, 'plantar_fasciitis', 'Zapalenie rozcięgna podeszwowego'),
 ]
 
 

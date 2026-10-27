@@ -1,4 +1,5 @@
 from django.core.cache import cache
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import QuerySet
 from django.utils import timezone
@@ -112,7 +113,11 @@ class TherapistExerciseListCreateView(generics.ListCreateAPIView):
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        file_url = save_upload(uploaded, subfolder='exercises')
+        try:
+            file_url, _sniffed = save_upload(uploaded, subdir='exercises')
+        except DjangoValidationError as exc:
+            messages = list(exc.messages) if hasattr(exc, 'messages') else [str(exc)]
+            raise ValidationError({'file': messages}) from exc
         exercise = serializer.save(
             therapist=request.user.therapist_profile,
             file_url=file_url,
@@ -169,7 +174,11 @@ class TherapistExerciseDetailView(generics.RetrieveUpdateDestroyAPIView):
         previous_url = instance.file_url
         file_url = None
         if uploaded is not None:
-            file_url, _sniffed = save_upload(uploaded, subdir='exercises')
+            try:
+                file_url, _sniffed = save_upload(uploaded, subdir='exercises')
+            except DjangoValidationError as exc:
+                messages = list(exc.messages) if hasattr(exc, 'messages') else [str(exc)]
+                raise ValidationError({'file': messages}) from exc
 
         context = {'therapist': request.user.therapist_profile}
         if file_url:
