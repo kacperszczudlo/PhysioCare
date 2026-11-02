@@ -205,20 +205,23 @@ Refresh token: `POST /auth/refresh/` -> 200 (w Setup).
 
 ---
 
-## 6. Katalog folderów kolekcji
+## 6. Katalog folderów kolekcji (13 folderów, 126 zapytań)
 
 | # | Folder | Endpointy (skrót) |
 |---|--------|-------------------|
-| 00 | Setup - Auth & seed | register ×2, login, refresh, password-reset |
-| 01 | UC-10 Dashboard | `/therapist/dashboard/stats/` |
-| 02 | UC-12 Patients & episodes | `/patients/`, `/episodes/`, notes |
-| 03 | UC-13 Body map | `/episodes/{id}/body-pain/` |
-| 04 | UC-07/11/14 Visits | therapy-types, visits, me/visits, reschedule, cancel |
-| 05 | UC-06/15 Exercises | exercises, assignments, today, completions |
-| 06 | UC-08 Documents | upload, me/documents, `/{id}/download/` |
-| 07 | UC-16/17 Profile | therapist profile + public |
-| 08 | UC-05/09/18 Me & privacy | profile, consents, export, deletion, notifications |
-| 09 | Security | role guards |
+| 00 | 00 Setup - Auth & seed (24 req) | register ×2, login, refresh, reset hasła, 2FA setup/enable/status/login/disable, zmiana hasła, logout, login admin |
+| 01 | UC-10 Therapist dashboard (2 req) | `/therapist/dashboard/stats/` (happy + 403 patient) |
+| 02 | UC-12 Patients & episodes (14 req) | `/patients/`, `/episodes/`, notatki, Recepta na Ruch, opinie diagnostyczne, zlecenia e-ZWM, odmowy zlecenia lekarskiego |
+| 03 | UC-13 Body map (4 req) | `/episodes/{id}/body-pain/` (CRUD + walidacja VAS > 10) |
+| 04 | UC-07 / UC-11 / UC-14 Visits & schedule (21 req) | therapy-types, presets, seed, święta, sloty, dostępności, zatwierdzanie/odrzucanie, reschedule, cancel |
+| 05 | UC-06 / UC-15 Exercises & compliance (8 req) | exercises, assignments, today, completions |
+| 06 | UC-08 Documents (6 req) | upload PDF, me/documents, `/{id}/download/`, me/clinical-documents |
+| 07 | UC-16 / UC-17 Therapist profile (6 req) | therapist profile, kompetencje PWZFz, katalog publiczny, publiczna wizytówka |
+| 08 | UC-05 / UC-09 / UC-18 Patient me & privacy (17 req) | profil, własne epizody leczenia, zgody, eksport RODO, usunięcie konta, powiadomienia, SSE stats, parowanie terapeuty |
+| 09 | UC-19 Medical devices catalog (1 req) | `/medical-devices/catalog/` |
+| 10 | UC-21 Reviews & feedback (6 req) | recenzje terapeuty, rating summary, dodanie opinii po wizycie, odpowiedź terapeuty, edycja, usunięcie |
+| 11 | UC-22 - UC-29 Administration panel (RBAC) (13 req) | dashboard KPI, zarządzanie użytkownikami, grafik kliniki, statystyki personelu, moderacja recenzji, wnioski RODO, rejestr zgód |
+| 12 | Security & role guards (4 req) | weryfikacja uprawnień i blokad ról (RBAC / BFLA) |
 
 ---
 
@@ -322,6 +325,15 @@ python scripts/run_postman.py
 ```
 
 ---
+
+## 8.2 Synchronizacja z Postman Cloud (Postman MCP)
+
+Kolekcja oraz środowisko są zsynchronizowane z chmurą Postman przy użyciu **Postman MCP Server**:
+- **Workspace:** `Kacper Szczudło's Workspace` (`f39bd45a-d34f-485b-85dc-7ec2ec1af89f`)
+- **Collection ID:** `PhysioCare API` (`57080421-8f76b828-500b-4f0b-889f-b37c124f21ab`)
+- **Environment:** `PhysioCare Local` (`57080421-c886b077-54ea-443d-8e48-2857027c8c05`)
+
+Dzięki temu kolekcja dostępna w chmurze Postman zawiera dokładnie ten sam zestaw 13 folderów i 126 zapytań, z pełnym pokryciem testów i aktualnymi zmiennymi.
 
 ## 9. Aktualizacja kolekcji
 

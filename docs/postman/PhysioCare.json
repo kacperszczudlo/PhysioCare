@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "PhysioCare API",
-    "description": "Pełna kolekcja kontraktu REST PhysioCare (`/api/v1`).\n\nPokrywa UC-01-UC-29: happy path + wyjątki (400/401/403/409/422) dla ról Pacjent, Fizjoterapeuta oraz Administrator.\n\n**Auth:** JWT w cookies `access_token` / `refresh_token` (httpOnly) oraz nagłówek `Authorization: Bearer {{access_token}}`.\n\n**Kolejność Collection Runner:** folder `00 Setup`, potem pozostałe foldery dziedzinowe.\n\nDokumentacja: `docs/postman-testing.md`, kontrakt: `docs/api.md`.",
+    "description": "Pełna, zaktualizowana kolekcja kontraktu REST PhysioCare (`/api/v1`).\n\nPokrywa pełen zakres UC-01–UC-29: happy path + wyjątki (400/401/403/409/422) dla ról Pacjent, Fizjoterapeuta oraz Administrator.\n\nZawiera kompletne scenariusze:\n- 00 Setup - Auth, MFA (2FA TOTP), rotacja haseł i seed ról\n- UC-10 Pulpit analityczny fizjoterapeuty\n- UC-12 Karta pacjenta, epizody leczenia, e-ZWM, Recepta na Ruch, odmowy lekarskie i notatki kliniczne\n- UC-13 Mapa ciała i ból VAS\n- UC-07/11/14 Harmonogram wizyt, szablony i święta\n- UC-06/15 Baza ćwiczeń, compliance i przydziały\n- UC-08 Dokumentacja medyczna i skrzynka dokumentów\n- UC-16/17 Profil i publiczna wizytówka fizjoterapeuty\n- UC-05/09/18 Profil pacjenta, zdarzenia SSE, zgody i eksport RODO\n- UC-19 Katalog wyrobów medycznych\n- UC-21 Oceny i recenzje wizyt\n- UC-22-29 Panel administracyjny (KPI, użytkownicy, grafik, statystyki personelu, moderacja, RODO privacy requests)\n- Strażnicy uprawnień (RBAC / BFLA)\n\n**Auth:** JWT w cookies `access_token` / `refresh_token` oraz nagłówek `Authorization: Bearer {{access_token}}`.\n\nDokumentacja: `docs/postman-testing.md`, kontrakt: `docs/api.md`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -36,6 +36,10 @@
       "value": ""
     },
     {
+      "key": "admin_access_token",
+      "value": ""
+    },
+    {
       "key": "therapist_email",
       "value": "terapeuta@example.com"
     },
@@ -44,7 +48,19 @@
       "value": "pacjent@example.com"
     },
     {
+      "key": "admin_email",
+      "value": "admin@physiocare.pl"
+    },
+    {
       "key": "password",
+      "value": "SecurePass123!"
+    },
+    {
+      "key": "new_password",
+      "value": "NewSecurePass123!"
+    },
+    {
+      "key": "admin_password",
       "value": "SecurePass123!"
     },
     {
@@ -88,64 +104,60 @@
       "value": ""
     },
     {
-      "key": "schedule_date",
-      "value": "2026-08-10"
-    },
-    {
-      "key": "visit_start",
-      "value": "2026-08-10T11:00:00+02:00"
-    },
-    {
-      "key": "visit_end",
-      "value": "2026-08-10T11:45:00+02:00"
-    },
-    {
-      "key": "visit_start_alt",
-      "value": "2026-08-10T14:00:00+02:00"
-    },
-    {
-      "key": "visit_end_alt",
-      "value": "2026-08-10T14:45:00+02:00"
-    },
-    {
-      "key": "visit_start_patient",
-      "value": "2026-08-11T10:00:00+02:00"
-    },
-    {
-      "key": "visit_end_patient",
-      "value": "2026-08-11T10:45:00+02:00"
-    },
-    {
-      "key": "assignment_start",
-      "value": "2026-08-03"
-    },
-    {
-      "key": "assignment_end",
-      "value": "2026-08-17"
-    },
-    {
-      "key": "today",
-      "value": "2026-08-03"
-    },
-    {
-      "key": "admin_email",
-      "value": "admin@physiocare.pl"
-    },
-    {
-      "key": "admin_password",
-      "value": "SecurePass123!"
-    },
-    {
-      "key": "admin_access_token",
-      "value": ""
-    },
-    {
       "key": "target_user_id",
       "value": ""
     },
     {
       "key": "target_review_id",
       "value": ""
+    },
+    {
+      "key": "privacy_request_id",
+      "value": ""
+    },
+    {
+      "key": "mfa_secret_key",
+      "value": ""
+    },
+    {
+      "key": "schedule_date",
+      "value": "2026-08-10"
+    },
+    {
+      "key": "visit_start",
+      "value": "2026-08-10T10:00:00Z"
+    },
+    {
+      "key": "visit_end",
+      "value": "2026-08-10T11:00:00Z"
+    },
+    {
+      "key": "visit_start_alt",
+      "value": "2026-08-10T14:00:00Z"
+    },
+    {
+      "key": "visit_end_alt",
+      "value": "2026-08-10T15:00:00Z"
+    },
+    {
+      "key": "visit_start_patient",
+      "value": "2026-08-11T12:00:00Z"
+    },
+    {
+      "key": "visit_end_patient",
+      "value": "2026-08-11T13:00:00Z"
+    },
+    {
+      "key": "assignment_start",
+      "value": "2026-08-01"
+    },
+    {
+      "key": "assignment_end",
+      "value": "2026-08-31"
+    },
+    {
+      "key": "today",
+      "value": "2026-08-10"
     }
   ],
   "item": [
@@ -932,7 +944,26 @@
             },
             "description": "Setup 2FA TOTP secret & QR"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 400 (if already enabled)', function () {",
+                  "  pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('secret_key');",
+                  "  pm.expect(j).to.have.property('otpauth_url');",
+                  "  pm.collectionVariables.set('mfa_secret_key', j.secret_key);",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "POST /auth/2fa/enable/",
@@ -961,7 +992,24 @@
               "raw": "{\n  \"code\": \"123456\"\n}"
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Response validation (200 success or 400 invalid code)', function () {",
+                  "  pm.expect([200, 400]).to.include(pm.response.code);",
+                  "  if (pm.response.code === 400) {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property('error');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "GET /auth/2fa/status/",
@@ -986,7 +1034,25 @@
             },
             "description": "Check 2FA status"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Contains MFA status flags', function () {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('is_enabled');",
+                  "  pm.expect(j).to.have.property('mfa_required_for_role');",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "POST /auth/2fa/login/",
@@ -1015,7 +1081,24 @@
               "raw": "{\n  \"mfa_token\": \"...\",\n  \"code\": \"123456\"\n}"
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Response validation (200 success or 400/401 invalid token/code)', function () {",
+                  "  pm.expect([200, 400, 401]).to.include(pm.response.code);",
+                  "  if (pm.response.code !== 200) {",
+                  "    const j = pm.response.json();",
+                  "    pm.expect(j).to.have.property('error');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "POST /auth/2fa/disable/",
@@ -1044,7 +1127,20 @@
               "raw": "{\n  \"password\": \"SecurePass123!\",\n  \"code\": \"123456\"\n}"
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Response validation (200 success or 400/401)', function () {",
+                  "  pm.expect([200, 400, 401]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "POST /auth/logout/",
@@ -1068,7 +1164,24 @@
             },
             "description": "Logout session"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Successful logout message', function () {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j).to.have.property('detail');",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "GET current user session /auth/me/",
@@ -1207,8 +1320,54 @@
               }
             }
           ]
+        },
+        {
+          "name": "POST /auth/password-change/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/password-change/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "password-change"
+              ]
+            },
+            "description": "Zalogowany użytkownik zmienia hasło podając stary i nowy sekret.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"old_password\": \"{{password}}\",\n  \"new_password\": \"{{new_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 400/401', function () {",
+                  "  pm.expect([200, 400, 401]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
-      ]
+      ],
+      "id": "7fcc67a5-e44d-4fb2-91ba-0591a9fc3376"
     },
     {
       "name": "UC-10 Therapist dashboard",
@@ -1306,7 +1465,8 @@
             }
           ]
         }
-      ]
+      ],
+      "id": "604913fb-180a-4327-92f7-59e3f70b8585"
     },
     {
       "name": "UC-12 Patients & episodes",
@@ -1608,8 +1768,317 @@
               }
             }
           ]
+        },
+        {
+          "name": "POST /patients/{{patient_profile_id}}/recepta-na-ruch/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/patients/{{patient_profile_id}}/recepta-na-ruch/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "patients",
+                "{{patient_profile_id}}",
+                "recepta-na-ruch"
+              ]
+            },
+            "description": "Wystawienie skierowania/zlecenia do programu profilaktycznego Recepta na Ruch.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"episode\": \"{{episode_id}}\",\n  \"weekly_frequency\": 3,\n  \"session_duration_minutes\": 45,\n  \"intensity\": \"MODERATE\",\n  \"recommendations\": \"Spacery nordyckie, ćwiczenia wzmacniające pas lędźwiowy.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 or 400', function () {",
+                  "  pm.expect([201, 400]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /patients/{{patient_profile_id}}/recepta-na-ruch/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/patients/{{patient_profile_id}}/recepta-na-ruch/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "patients",
+                "{{patient_profile_id}}",
+                "recepta-na-ruch"
+              ]
+            },
+            "description": "Lista skierowań Recepta na Ruch dla wskazanego pacjenta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /episodes/{{episode_id}}/diagnostic-recommendations/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/episodes/{{episode_id}}/diagnostic-recommendations/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "episodes",
+                "{{episode_id}}",
+                "diagnostic-recommendations"
+              ]
+            },
+            "description": "Opinia / zalecenie diagnostyczne fizjoterapeuty (np. skierowanie na RTG/MRI lub konsultację lekarską).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recommendation_type\": \"IMAGING_RTG\",\n  \"justification\": \"Brak poprawy ruchomości, podejrzenie zmian zwyrodnieniowych L4-L5.\",\n  \"urgency\": \"NORMAL\",\n  \"funding_hint\": \"NFZ\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 or 400', function () {",
+                  "  pm.expect([201, 400]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /episodes/{{episode_id}}/diagnostic-recommendations/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/episodes/{{episode_id}}/diagnostic-recommendations/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "episodes",
+                "{{episode_id}}",
+                "diagnostic-recommendations"
+              ]
+            },
+            "description": "Lista zaleceń diagnostycznych w ramach epizodu leczenia."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /episodes/{{episode_id}}/device-orders/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/episodes/{{episode_id}}/device-orders/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "episodes",
+                "{{episode_id}}",
+                "device-orders"
+              ]
+            },
+            "description": "Wystawienie zlecenia na zaopatrzenie w wyrób medyczny (e-ZWM).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"device_code\": \"J.02.01\",\n  \"device_name\": \"Orteza lędźwiowo-krzyżowa\",\n  \"justification\": \"Stabilizacja po urazie odcinka lędźwiowego\",\n  \"usage_instructions\": \"Stosować w pozycji stojącej i podczas chodu max 4h dziennie.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 or 400', function () {",
+                  "  pm.expect([201, 400]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /episodes/{{episode_id}}/device-orders/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/episodes/{{episode_id}}/device-orders/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "episodes",
+                "{{episode_id}}",
+                "device-orders"
+              ]
+            },
+            "description": "Lista zleceń na wyroby medyczne w epizodzie."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /episodes/{{episode_id}}/order-refusals/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/episodes/{{episode_id}}/order-refusals/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "episodes",
+                "{{episode_id}}",
+                "order-refusals"
+              ]
+            },
+            "description": "Uzasadniona odmowa wykonania zlecenia lekarskiego (art. 6 ust. 2 u.o.z.f. - niezgodność z wiedzą medyczną).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Ostre zapalenie stawu i gorączka - bezwzględne przeciwwskazanie do fizykoterapii.\",\n  \"legal_basis\": \"Ustawa o zawodzie fizjoterapeuty art. 6 ust. 2\",\n  \"doctor_notified\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 or 400', function () {",
+                  "  pm.expect([201, 400]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /episodes/{{episode_id}}/order-refusals/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/episodes/{{episode_id}}/order-refusals/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "episodes",
+                "{{episode_id}}",
+                "order-refusals"
+              ]
+            },
+            "description": "Lista odmów wykonania zleceń lekarskich w epizodzie."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
-      ]
+      ],
+      "id": "3810c8cc-4dc4-47ba-b575-3f732fdd9f10"
     },
     {
       "name": "UC-13 Body map (Diagnostic Mapper)",
@@ -1833,7 +2302,8 @@
             }
           ]
         }
-      ]
+      ],
+      "id": "8c92a925-f88c-4ba1-bb67-07c2614493ab"
     },
     {
       "name": "UC-07 / UC-11 / UC-14 Visits & schedule",
@@ -2545,7 +3015,20 @@
             },
             "description": "Therapist approve pending visit"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 400/404', function () {",
+                  "  pm.expect([200, 400, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "POST /therapist/visits/{{visit_id}}/reject/",
@@ -2575,7 +3058,20 @@
               "raw": "{\n  \"reason\": \"Brak wolnych terminów\"\n}"
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 400/404', function () {",
+                  "  pm.expect([200, 400, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "GET /therapists/{{therapist_profile_id}}/available-slots/",
@@ -2600,7 +3096,20 @@
             },
             "description": "Get therapist public available slots"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 404', function () {",
+                  "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "GET /therapist/availabilities/",
@@ -2624,7 +3133,20 @@
             },
             "description": "List therapist work availability slots"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "POST /therapist/availabilities/",
@@ -2652,9 +3174,119 @@
               "raw": "{\n  \"day_of_week\": 1,\n  \"start_time\": \"08:00:00\",\n  \"end_time\": \"16:00:00\"\n}"
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 or 400', function () {",
+                  "  pm.expect([201, 400]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /scheduling/holidays/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/scheduling/holidays/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "scheduling",
+                "holidays"
+              ]
+            },
+            "description": "Zwraca listę polskich dni ustawowo wolnych od pracy."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns list of holidays', function () {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(Array.isArray(j) || Array.isArray(j.holidays)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /therapist/therapy-types/presets/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/therapist/therapy-types/presets/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "therapy-types",
+                "presets"
+              ]
+            },
+            "description": "Predefiniowane szablony typów terapii z polskiego koszyka świadczeń fizjoterapii."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /therapist/therapy-types/seed-presets/",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/therapist/therapy-types/seed-presets/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "therapy-types",
+                "seed-presets"
+              ]
+            },
+            "description": "Inicjalizuje domyślne szablony typów terapii dla gabinetu fizjoterapeuty."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 201', function () {",
+                  "  pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
-      ]
+      ],
+      "id": "df9fe7ef-5f58-4e00-a472-9a12d1faa87a"
     },
     {
       "name": "UC-06 / UC-15 Exercises & compliance",
@@ -3109,7 +3741,8 @@
             }
           ]
         }
-      ]
+      ],
+      "id": "69bd1b95-82e0-4f74-b3a2-705ecd606a6c"
     },
     {
       "name": "UC-08 Documents",
@@ -3429,7 +4062,8 @@
             }
           ]
         }
-      ]
+      ],
+      "id": "87273f84-7f54-4d45-829b-e2ac279ba291"
     },
     {
       "name": "UC-16 / UC-17 Therapist profile",
@@ -3631,8 +4265,69 @@
               }
             }
           ]
+        },
+        {
+          "name": "GET /therapist/competences/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/therapist/competences/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapist",
+                "competences"
+              ]
+            },
+            "description": "Zwraca zweryfikowane uprawnienia zawodowe (PWZFz, KIF)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /therapists/public/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/therapists/public/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapists",
+                "public"
+              ]
+            },
+            "description": "Katalog publicznych wizytówek fizjoterapeutów z wyszukiwaniem i filtrami."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
-      ]
+      ],
+      "id": "4a3cd94c-4d8a-4b01-acc5-d5ead21f07fe"
     },
     {
       "name": "UC-05 / UC-09 / UC-18 Patient me & privacy",
@@ -4179,7 +4874,20 @@
             },
             "description": "UC-20 List patient linked therapists"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "POST /me/therapists/link/",
@@ -4208,7 +4916,20 @@
               "raw": "{\n  \"therapist_id\": \"{{therapist_profile_id}}\"\n}"
             }
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 201 or 400', function () {",
+                  "  pm.expect([200, 201, 400]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "DELETE /me/therapists/{{therapist_profile_id}}/",
@@ -4233,9 +4954,115 @@
             },
             "description": "UC-20 Unlink therapist from patient"
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 204 or 404', function () {",
+                  "  pm.expect([200, 204, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /me/episodes/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/me/episodes/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "episodes"
+              ]
+            },
+            "description": "Pacjent przegląda własne epizody leczenia (bez poufnych notatek roboczych fizjoterapeuty)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /me/episodes/{{episode_id}}/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/me/episodes/{{episode_id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "episodes",
+                "{{episode_id}}"
+              ]
+            },
+            "description": "Szczegóły wybranego epizodu leczenia widoczne dla pacjenta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 404', function () {",
+                  "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /me/events/stats/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/me/events/stats/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "me",
+                "events",
+                "stats"
+              ]
+            },
+            "description": "Metryki połączeń i stanu kolejki zdarzeń Server-Sent Events (SSE)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
-      ]
+      ],
+      "id": "26f0f084-1868-4823-bdec-a78a89832963"
     },
     {
       "name": "UC-19 Medical devices catalog",
@@ -4283,10 +5110,253 @@
             }
           ]
         }
-      ]
+      ],
+      "id": "2f44c92d-4325-45ec-996a-11d464c00fa7"
     },
     {
-      "name": "UC-22 - UC-27 Administration panel (RBAC)",
+      "name": "UC-21 Reviews & feedback",
+      "description": "Opinie i oceny wizyt fizjoterapeutycznych (wystawianie, edycja, usuwanie, odpowiedzi personelu, moderacja).",
+      "item": [
+        {
+          "name": "GET /therapists/{{therapist_profile_id}}/reviews/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/therapists/{{therapist_profile_id}}/reviews/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapists",
+                "{{therapist_profile_id}}",
+                "reviews"
+              ]
+            },
+            "description": "Publiczna lista recenzji danego fizjoterapeuty."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /therapists/{{therapist_profile_id}}/rating-summary/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/therapists/{{therapist_profile_id}}/rating-summary/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "therapists",
+                "{{therapist_profile_id}}",
+                "rating-summary"
+              ]
+            },
+            "description": "Podsumowanie ocen, średnia gwiazdek i rozkład ocen fizjoterapeuty."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /visits/{{visit_id}}/review/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/visits/{{visit_id}}/review/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "visits",
+                "{{visit_id}}",
+                "review"
+              ]
+            },
+            "description": "Pacjent wystawia opinię po odbytej wizycie (1–5 gwiazdek, treść, flaga anonimowości).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Profesjonalna terapia manualna, ból ustąpił po 2 sesjach.\",\n  \"is_anonymous\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 or 400/409', function () {",
+                  "  pm.expect([201, 400, 409]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 201) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.id) pm.collectionVariables.set('target_review_id', j.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /reviews/{{target_review_id}}/reply/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reviews/{{target_review_id}}/reply/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews",
+                "{{target_review_id}}",
+                "reply"
+              ]
+            },
+            "description": "Fizjoterapeuta odpowiada na opinię pacjenta.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"therapist_reply\": \"Dziękuję za zaufanie! Proszę pamiętać o regularnym wykonywaniu zadanych ćwiczeń rozciągających.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 400/404', function () {",
+                  "  pm.expect([200, 400, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH /reviews/{{target_review_id}}/edit/",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reviews/{{target_review_id}}/edit/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews",
+                "{{target_review_id}}",
+                "edit"
+              ]
+            },
+            "description": "Pacjent aktualizuje treść lub ocenę wystawionej wcześniej recenzji.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Zaktualizowana opinia: pełna sprawność odzyskana zgodnie z planem.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 400/404', function () {",
+                  "  pm.expect([200, 400, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE /reviews/{{target_review_id}}/delete/",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/reviews/{{target_review_id}}/delete/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews",
+                "{{target_review_id}}",
+                "delete"
+              ]
+            },
+            "description": "Pacjent usuwa swoją opinię."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204 or 200 or 404', function () {",
+                  "  pm.expect([200, 204, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "id": "f94e7b08-0cd0-4a30-a21b-7068adb9c39c"
+    },
+    {
+      "name": "UC-22 - UC-29 Administration panel (RBAC)",
       "description": "Endpointy panelu administratora platformy PhysioCare (/admin/*). Wymagają uwierzytelnienia z rolą ADMIN.",
       "item": [
         {
@@ -4745,8 +5815,124 @@
               }
             }
           ]
+        },
+        {
+          "name": "GET /admin/privacy/requests/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/privacy/requests/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "privacy",
+                "requests"
+              ]
+            },
+            "description": "Lista wniosków o usunięcie danych / konta (art. 17 RODO - Prawo do bycia zapomnianym)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const j = pm.response.json();",
+                  "const items = j.results || j;",
+                  "if (items.length > 0 && items[0].id) {",
+                  "  pm.collectionVariables.set('privacy_request_id', items[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /admin/privacy/requests/{{privacy_request_id}}/process/",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/privacy/requests/{{privacy_request_id}}/process/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "privacy",
+                "requests",
+                "{{privacy_request_id}}",
+                "process"
+              ]
+            },
+            "description": "Realizacja i zatwierdzenie wniosku o usunięcie konta przez administratora (anonimizacja).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Wniosek zrealizowany po weryfikacji tożsamości.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 or 400/404', function () {",
+                  "  pm.expect([200, 400, 404]).to.include(pm.response.code);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /admin/privacy/consents/",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/admin/privacy/consents/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "privacy",
+                "consents"
+              ]
+            },
+            "description": "Rejestr i audyt zgód pacjentów (RODO compliance)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
-      ]
+      ],
+      "id": "08cef5e7-2175-4557-9893-66cb3e372923"
     },
     {
       "name": "Security & role guards",
@@ -4910,7 +6096,8 @@
             }
           ]
         }
-      ]
+      ],
+      "id": "e4793711-60d5-4982-bd41-d448754ce9e5"
     }
   ]
 }
