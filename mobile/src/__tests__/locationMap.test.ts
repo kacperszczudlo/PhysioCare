@@ -1,32 +1,37 @@
 /**
  * @file locationMap.test.ts
- * @description Testy jednostkowe logiki budowania adresów statycznej mapy OpenStreetMap.
+ * @description Testy jednostkowe logiki kafelków OpenStreetMap oraz normalizacji adresów dla karty lokalizacji.
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
+import { buildOsmTileGrid, latLonToTileCoords, stripPolishPostalCode } from '../lib/osmMap'
 
 describe('mobile locationMap logic', () => {
-  it('poprawnie buduje adres URL statycznej mapy na podstawie współrzędnych', () => {
-    // Arrange
-    const lat = 52.2297
-    const lon = 21.0122
+  it('computes Web Mercator tile coordinates and pixel offsets for Suwałki', () => {
+    const { tileX, tileY, pixelX, pixelY } = latLonToTileCoords(54.1115, 22.9308, 15)
 
-    // Act
-    const staticMapUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lon}&zoom=15&size=600x300&markers=${lat},${lon},ol-marker`
-
-    // Assert
-    expect(staticMapUrl).toContain('52.2297,21.0122')
-    expect(staticMapUrl).toContain('zoom=15')
+    expect(tileX).toBe(18471)
+    expect(tileY).toBe(10503)
+    expect(pixelX).toBeGreaterThanOrEqual(0)
+    expect(pixelX).toBeLessThan(256)
+    expect(pixelY).toBeGreaterThanOrEqual(0)
+    expect(pixelY).toBeLessThan(256)
   })
 
-  it('bezpiecznie obsługuje pusty adres geograficzny', () => {
-    // Arrange
-    const address = '  '
+  it('builds a 3x3 OpenStreetMap tile grid centered on the target coordinates', () => {
+    const tiles = buildOsmTileGrid(54.1115, 22.9308, 15)
 
-    // Act
-    const trimmed = address.trim()
+    expect(tiles).toHaveLength(9)
+    expect(tiles[0]?.url).toMatch(/^https:\/\/tile\.openstreetmap\.org\/15\/\d+\/\d+\.png$/)
+    const centerTile = tiles[4]!
+    expect(centerTile.offsetLeft).toBeGreaterThan(-256)
+    expect(centerTile.offsetLeft).toBeLessThanOrEqual(0)
+    expect(centerTile.offsetTop).toBeGreaterThan(-256)
+    expect(centerTile.offsetTop).toBeLessThanOrEqual(0)
+  })
 
-    // Assert
-    expect(trimmed).toBe('')
+  it('strips Polish postal code for fallback Nominatim geocoding', () => {
+    expect(stripPolishPostalCode('Szpitalna 60, 16-400 Suwałki')).toBe('Szpitalna 60, Suwałki')
+    expect(stripPolishPostalCode('  ')).toBe('')
   })
 })
