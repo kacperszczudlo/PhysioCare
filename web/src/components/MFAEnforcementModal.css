@@ -213,7 +213,7 @@
   gap: var(--space-4, 1rem);
 }
 
-.mfa-enforce-code-input {
+.mfa-enforce-code-input .ui-field__input {
   width: 100%;
   font-family: var(--font-mono, monospace);
   font-size: 1.5rem;
@@ -221,15 +221,13 @@
   letter-spacing: 0.3em;
   text-align: center;
   padding: 0.5rem;
-  border: 2px solid var(--color-border, #cbd5e1);
-  border-radius: var(--radius-md, 0.5rem);
-  outline: none;
   transition:
     border-color 150ms ease,
     box-shadow 150ms ease;
 }
 
-.mfa-enforce-code-input:focus {
+.mfa-enforce-code-input .ui-field__input:focus,
+.mfa-enforce-code-input .ui-field__input:focus-visible {
   border-color: var(--color-primary, #0d9488);
   box-shadow: 0 0 0 3px oklch(0.55 0.15 180 / 0.18);
 }
