@@ -28,3 +28,14 @@ class TimestampedUpdatedModel(TimestampedModel):
 
     class Meta:
         abstract = True
+
+
+class StoredMedia(TimestampedModel):
+    """Trwały magazyn plików multimedialnych (awatary, PDF, wideo) w bazie danych."""
+
+    path = models.CharField(max_length=500, unique=True, db_index=True)
+    content_type = models.CharField(max_length=120, default='application/octet-stream')
+    data = models.BinaryField()
+
+    class Meta:
+        db_table = 'stored_media'

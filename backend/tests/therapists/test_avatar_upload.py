@@ -152,3 +152,31 @@ def test_avatar_requires_file(therapist: 'TherapistProfile') -> None:
     assert response.status_code == 400
     assert response.data['error']['code'] == 'FILE_REQUIRED'
 
+
+@pytest.mark.django_db
+def test_uploaded_avatar_survives_ephemeral_disk_wipe_via_database(
+    therapist: 'TherapistProfile',
+    settings: 'SettingsWrapper',
+    tmp_path: Path,
+) -> None:
+    """Sprawdza, czy wgrany plik jest serwowany z bazy danych nawet po usunięciu kopii z dysku."""
+    settings.MEDIA_ROOT = tmp_path
+    client: APIClient = APIClient()
+    client.force_authenticate(user=therapist.user)
+
+    raw_png = _png_bytes()
+    upload = SimpleUploadedFile('avatar.png', raw_png, content_type='image/png')
+    upload_res = client.post('/api/v1/therapist/profile/avatar/', {'file': upload}, format='multipart')
+    assert upload_res.status_code == 200
+    avatar_url = upload_res.data['avatar_url']
+
+    # Symulacja czyszczenia tymczasowego dysku Rendera po redeployu
+    local_file = tmp_path / avatar_url.removeprefix('/media/')
+    assert local_file.is_file()
+    local_file.unlink()
+    assert not local_file.exists()
+
+    fetch_res = client.get(avatar_url)
+    assert fetch_res.status_code == 200
+    assert b''.join(fetch_res.streaming_content) == raw_png
+

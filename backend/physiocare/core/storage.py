@@ -134,20 +134,32 @@ def save_upload(
             ext = MIME_EXTENSIONS.get(sniffed, '.bin')
 
     filename = f'{uuid.uuid4()}{ext}'
+    relative_path = f'{subdir}/{filename}'
     target_dir = os.path.join(str(media_root), subdir)
     os.makedirs(target_dir, exist_ok=True)
     target_path = os.path.join(target_dir, filename)
 
     chunks = uploaded_file.chunks() if hasattr(uploaded_file, 'chunks') else []
-    with open(target_path, 'wb+') as destination:
-        for chunk in chunks:
-            destination.write(chunk)
+    raw_bytes = b''.join(chunks)
 
-    return f'/media/{subdir}/{filename}', sniffed
+    from core.models import StoredMedia
+
+    StoredMedia.objects.update_or_create(
+        path=relative_path,
+        defaults={
+            'content_type': sniffed,
+            'data': raw_bytes,
+        },
+    )
+
+    with open(target_path, 'wb+') as destination:
+        destination.write(raw_bytes)
+
+    return f'/media/{relative_path}', sniffed
 
 
 def delete_media_url(file_url: str | None) -> None:
-    """Usuwa lokalny plik multimedialny wskazywany przez adres URL `/media/...`.
+    """Usuwa plik multimedialny z bazy oraz lokalnego katalogu dla adresu `/media/...`.
 
     Args:
         file_url (str | None): Względny adres URL pliku do usunięcia.
@@ -161,6 +173,11 @@ def delete_media_url(file_url: str | None) -> None:
     if not file_url or not file_url.startswith('/media/'):
         return
     relative = file_url.removeprefix('/media/')
+
+    from core.models import StoredMedia
+
+    StoredMedia.objects.filter(path=relative).delete()
+
     media_root = settings.MEDIA_ROOT if hasattr(settings, 'MEDIA_ROOT') else ''
     path = os.path.join(str(media_root), relative)
     try:

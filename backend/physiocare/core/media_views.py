@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import mimetypes
 import os
 
@@ -184,16 +185,28 @@ class ProtectedMediaServeView(APIView):
         if not relative or '..' in relative.split('/'):
             raise Http404
 
+        user = request.user if hasattr(request, 'user') else None
+        if not user_may_access_media_path(user, relative):
+            raise Http404
+
+        from core.models import StoredMedia
+
+        stored = StoredMedia.objects.filter(path=relative).first()
+        if stored is not None:
+            response = FileResponse(
+                io.BytesIO(bytes(stored.data)),
+                content_type=stored.content_type or 'application/octet-stream',
+            )
+            response['X-Content-Type-Options'] = 'nosniff'
+            response['Cache-Control'] = 'private, no-store'
+            return response
+
         try:
             absolute = safe_join(str(settings.MEDIA_ROOT), relative)
         except ValueError as exc:
             raise Http404 from exc
 
         if not absolute or not os.path.isfile(absolute):
-            raise Http404
-
-        user = request.user if hasattr(request, 'user') else None
-        if not user_may_access_media_path(user, relative):
             raise Http404
 
         content_type, _encoding = mimetypes.guess_type(absolute)
