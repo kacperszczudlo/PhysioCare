@@ -28,6 +28,19 @@ describe('Web Carousel Components', () => {
 
       expect(handleChange).toHaveBeenCalledWith('10:15')
     })
+
+    it('ignores scroll events when wheel is hidden (clientHeight === 0) so initial time is preserved', () => {
+      const handleChange = vi.fn()
+      render(<TimeCarousel value="10:15" onChange={handleChange} label="Start" />)
+
+      const hourWheel = screen.getByRole('listbox', { name: 'Godzina' })
+      Object.defineProperty(hourWheel, 'clientHeight', { value: 0, configurable: true })
+      fireEvent.scroll(hourWheel, { target: { scrollTop: 0 } })
+      fireEvent(hourWheel, new Event('scrollend'))
+
+      expect(handleChange).not.toHaveBeenCalled()
+      expect(screen.getByText('10:15')).toBeInTheDocument()
+    })
   })
 
   describe('DayCarousel', () => {

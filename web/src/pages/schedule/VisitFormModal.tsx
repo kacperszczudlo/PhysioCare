@@ -72,7 +72,11 @@ export function VisitFormModal({
   const [patientId, setPatientId] = useState('')
   const [therapyTypeId, setTherapyTypeId] = useState('')
   const [formDay, setFormDay] = useState(() => startOfDay(day))
-  const [startLocal, setStartLocal] = useState('')
+  const [startLocal, setStartLocal] = useState(() =>
+    visit
+      ? timeLocalFromDate(new Date(visit.start_at))
+      : timeLocalFromDate(dateFromDayMinutes(day, initialMinutes)),
+  )
   const [prep, setPrep] = useState('')
   const [patientSummary, setPatientSummary] = useState('')
   const [location, setLocation] = useState('')
@@ -342,7 +346,7 @@ export function VisitFormModal({
         </p>
       ) : null}
 
-      {!loadingMeta && showForm ? (
+      {open && !loadingMeta && showForm ? (
         <form className="ui-modal__form" onSubmit={(e) => void onSubmit(e)}>
           {isEdit ? (
             <label className="ui-field">

@@ -126,7 +126,30 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
       return
     }
     scrollToIndex(selectedIndex)
+    if (ref.current && ref.current.clientHeight === 0) {
+      const raf = window.requestAnimationFrame(() => {
+        scrollToIndex(selectedIndexRef.current)
+      })
+      return () => window.cancelAnimationFrame(raf)
+    }
   }, [selectedIndex, items.length, scrollToIndex])
+
+  useEffect(() => {
+    const node = ref.current
+    if (!node || typeof ResizeObserver === 'undefined') {
+      return
+    }
+    let lastHeight = node.clientHeight
+    const observer = new ResizeObserver(() => {
+      const nextHeight = node.clientHeight
+      if (nextHeight > 0 && lastHeight === 0 && !dragging.current) {
+        scrollToIndex(selectedIndexRef.current)
+      }
+      lastHeight = nextHeight
+    })
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [scrollToIndex])
 
   useEffect(() => {
     const node = ref.current
@@ -135,7 +158,7 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
     }
 
     function onScrollEnd() {
-      if (ignoreScroll.current || !ref.current) {
+      if (ignoreScroll.current || !ref.current || ref.current.clientHeight === 0) {
         return
       }
       commit(ref.current.scrollTop)
@@ -158,7 +181,7 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
         aria-label={ariaLabel}
         tabIndex={0}
         onScroll={(event) => {
-          if (ignoreScroll.current) {
+          if (ignoreScroll.current || event.currentTarget.clientHeight === 0) {
             return
           }
           const scrollTop = event.currentTarget.scrollTop
