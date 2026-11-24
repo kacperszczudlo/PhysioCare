@@ -106,16 +106,25 @@ export function PatientsPage() {
               <li key={patient.id}>
                 <Link className="patients-row" to={`/patients/${patient.id}`}>
                   <span className="patients-row__identity">
-                    {patient.avatar_url ? (
-                      <AuthMediaImg path={patient.avatar_url} className="patients-row__avatar" />
-                    ) : (
-                      <span
-                        className="patients-row__avatar patients-row__avatar--placeholder"
-                        aria-hidden
-                      >
-                        {(patient.first_name?.[0] ?? '') + (patient.last_name?.[0] ?? '')}
-                      </span>
-                    )}
+                    {(() => {
+                      const placeholder = (
+                        <span
+                          className="patients-row__avatar patients-row__avatar--placeholder"
+                          aria-hidden
+                        >
+                          {(patient.first_name?.[0] ?? '') + (patient.last_name?.[0] ?? '')}
+                        </span>
+                      )
+                      return patient.avatar_url ? (
+                        <AuthMediaImg
+                          path={patient.avatar_url}
+                          className="patients-row__avatar"
+                          fallback={placeholder}
+                        />
+                      ) : (
+                        placeholder
+                      )
+                    })()}
                     <span className="patients-row__name">
                       {patient.first_name} {patient.last_name}
                     </span>

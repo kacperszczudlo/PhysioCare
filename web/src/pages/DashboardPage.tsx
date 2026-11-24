@@ -457,16 +457,22 @@ export function DashboardPage() {
                             } as CSSProperties
                           }
                         >
-                          {visit.patient_avatar_url ? (
-                            <AuthMediaImg
-                              path={visit.patient_avatar_url}
-                              className="dash-visit__avatar"
-                            />
-                          ) : (
-                            <span className="dash-visit__avatar" aria-hidden="true">
-                              {initials(visit.patient_first_name, visit.patient_last_name)}
-                            </span>
-                          )}
+                          {(() => {
+                            const placeholder = (
+                              <span className="dash-visit__avatar" aria-hidden="true">
+                                {initials(visit.patient_first_name, visit.patient_last_name)}
+                              </span>
+                            )
+                            return visit.patient_avatar_url ? (
+                              <AuthMediaImg
+                                path={visit.patient_avatar_url}
+                                className="dash-visit__avatar"
+                                fallback={placeholder}
+                              />
+                            ) : (
+                              placeholder
+                            )
+                          })()}
                           <span className="dash-visit__main">
                             <span className="dash-visit__name">{name}</span>
                             <span className="dash-visit__type">{visit.therapy_type_name}</span>

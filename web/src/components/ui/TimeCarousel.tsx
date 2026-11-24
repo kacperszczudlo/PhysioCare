@@ -73,6 +73,7 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
 
   function withIgnoredScroll(action: () => void) {
     ignoreScroll.current = true
+    moved.current = false
     action()
     window.requestAnimationFrame(() => {
       ignoreScroll.current = false
@@ -105,6 +106,7 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
     (scrollTop: number) => {
       clearSettle()
       dragging.current = false
+      moved.current = false
       const next = indexFromScroll(scrollTop, itemsLengthRef.current)
       emitIndex(next)
     },
@@ -158,7 +160,12 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
     }
 
     function onScrollEnd() {
-      if (ignoreScroll.current || !ref.current || ref.current.clientHeight === 0) {
+      if (
+        !moved.current ||
+        ignoreScroll.current ||
+        !ref.current ||
+        ref.current.clientHeight === 0
+      ) {
         return
       }
       commit(ref.current.scrollTop)

@@ -139,13 +139,25 @@ export function AppLayout() {
               aria-label={`Profil: ${displayName}`}
               onClick={() => setIsMenuOpen(false)}
             >
-              {user?.avatar_url ? (
-                <AuthMediaImg path={user.avatar_url} className="app-shell__avatar" />
-              ) : (
-                <span className="app-shell__avatar app-shell__avatar--fallback" aria-hidden="true">
-                  {initials(user?.first_name, user?.last_name)}
-                </span>
-              )}
+              {(() => {
+                const placeholder = (
+                  <span
+                    className="app-shell__avatar app-shell__avatar--fallback"
+                    aria-hidden="true"
+                  >
+                    {initials(user?.first_name, user?.last_name)}
+                  </span>
+                )
+                return user?.avatar_url ? (
+                  <AuthMediaImg
+                    path={user.avatar_url}
+                    className="app-shell__avatar"
+                    fallback={placeholder}
+                  />
+                ) : (
+                  placeholder
+                )
+              })()}
               <span className="app-shell__identity-text">
                 <span className="app-shell__user">{displayName}</span>
                 <span className="app-shell__role">Fizjoterapeuta</span>

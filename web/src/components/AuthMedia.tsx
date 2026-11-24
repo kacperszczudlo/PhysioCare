@@ -6,15 +6,16 @@ type AuthMediaImgProps = {
   path: string | null | undefined
   alt?: string
   className?: string
+  fallback?: ReactNode
 }
 
 /**
  * Renders an image element using an authenticated Blob URL fetched securely from the backend storage.
  */
-export function AuthMediaImg({ path, alt = '', className }: AuthMediaImgProps) {
+export function AuthMediaImg({ path, alt = '', className, fallback = null }: AuthMediaImgProps) {
   const { url } = useAuthenticatedMediaUrl(path)
   if (!url) {
-    return null
+    return <>{fallback}</>
   }
   return <img src={url} alt={alt} className={className} />
 }
