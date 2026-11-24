@@ -41,6 +41,29 @@ describe('Web Carousel Components', () => {
       expect(handleChange).not.toHaveBeenCalled()
       expect(screen.getByText('10:15')).toBeInTheDocument()
     })
+
+    it('preserves 09:30 against phantom browser scroll events on mount and allows switching to 00/15/30/45', () => {
+      const handleChange = vi.fn()
+      render(<TimeCarousel value="09:30" onChange={handleChange} label="Start" />)
+
+      const hourWheel = screen.getByRole('listbox', { name: 'Godzina' })
+      const minuteWheel = screen.getByRole('listbox', { name: 'Minuta' })
+      Object.defineProperty(hourWheel, 'clientHeight', { value: 220, configurable: true })
+      Object.defineProperty(minuteWheel, 'clientHeight', { value: 220, configurable: true })
+
+      // Phantom browser layout/snap scroll events without user interaction
+      fireEvent.scroll(hourWheel, { target: { scrollTop: 0 } })
+      fireEvent.scroll(minuteWheel, { target: { scrollTop: 0 } })
+      fireEvent(hourWheel, new Event('scrollend'))
+      fireEvent(minuteWheel, new Event('scrollend'))
+
+      expect(handleChange).not.toHaveBeenCalled()
+      expect(screen.getByText('09:30')).toBeInTheDocument()
+
+      // Clicking 45 updates to 09:45
+      fireEvent.click(screen.getByRole('option', { name: '45' }))
+      expect(handleChange).toHaveBeenCalledWith('09:45')
+    })
   })
 
   describe('DayCarousel', () => {

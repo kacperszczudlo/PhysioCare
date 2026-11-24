@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 
 import { DAY_END_HOUR, DAY_START_HOUR, SNAP_MINUTES } from '@/lib/scheduleTime'
 
@@ -53,6 +53,7 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
   const [activeIndex, setActiveIndex] = useState(selectedIndex)
   const dragging = useRef(false)
   const moved = useRef(false)
+  const hasUserScrolled = useRef(false)
   const ignoreScroll = useRef(false)
   const settleTimer = useRef<number | null>(null)
   const isCommittedLocally = useRef(false)
@@ -73,6 +74,7 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
 
   function withIgnoredScroll(action: () => void) {
     ignoreScroll.current = true
+    hasUserScrolled.current = false
     moved.current = false
     action()
     window.requestAnimationFrame(() => {
@@ -106,6 +108,7 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
     (scrollTop: number) => {
       clearSettle()
       dragging.current = false
+      hasUserScrolled.current = false
       moved.current = false
       const next = indexFromScroll(scrollTop, itemsLengthRef.current)
       emitIndex(next)
@@ -118,7 +121,7 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
     settleTimer.current = window.setTimeout(() => commit(scrollTop), SETTLE_MS)
   }
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setActiveIndex(selectedIndex)
     if (dragging.current) {
       return
@@ -128,12 +131,10 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
       return
     }
     scrollToIndex(selectedIndex)
-    if (ref.current && ref.current.clientHeight === 0) {
-      const raf = window.requestAnimationFrame(() => {
-        scrollToIndex(selectedIndexRef.current)
-      })
-      return () => window.cancelAnimationFrame(raf)
-    }
+    const raf = window.requestAnimationFrame(() => {
+      scrollToIndex(selectedIndexRef.current)
+    })
+    return () => window.cancelAnimationFrame(raf)
   }, [selectedIndex, items.length, scrollToIndex])
 
   useEffect(() => {
@@ -161,6 +162,7 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
 
     function onScrollEnd() {
       if (
+        !hasUserScrolled.current ||
         !moved.current ||
         ignoreScroll.current ||
         !ref.current ||
@@ -188,7 +190,11 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
         aria-label={ariaLabel}
         tabIndex={0}
         onScroll={(event) => {
-          if (ignoreScroll.current || event.currentTarget.clientHeight === 0) {
+          if (
+            ignoreScroll.current ||
+            !hasUserScrolled.current ||
+            event.currentTarget.clientHeight === 0
+          ) {
             return
           }
           const scrollTop = event.currentTarget.scrollTop
@@ -196,8 +202,18 @@ function ScrollWheel({ items, selectedIndex, onChangeIndex, ariaLabel }: WheelPr
           setActiveIndex(indexFromScroll(scrollTop, items.length))
           scheduleCommit(scrollTop)
         }}
+        onWheel={() => {
+          hasUserScrolled.current = true
+          ignoreScroll.current = false
+        }}
+        onTouchStart={() => {
+          hasUserScrolled.current = true
+          ignoreScroll.current = false
+        }}
         onPointerDown={() => {
           dragging.current = true
+          hasUserScrolled.current = true
+          ignoreScroll.current = false
           moved.current = false
         }}
         onPointerUp={() => {
