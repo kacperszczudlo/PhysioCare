@@ -101,22 +101,8 @@ def user_can_access_avatar(user: object, media_url: str) -> bool:
     if therapist is None:
         return False
 
-    user_role = user.role if hasattr(user, 'role') else ''
-    if user_role == 'THERAPIST':
-        therapist_profile = user.therapist_profile if hasattr(user, 'therapist_profile') else None
-        return (
-            therapist_profile is not None
-            and therapist_profile.id == therapist.id
-        )
-    if user_role == 'PATIENT':
-        from core.mixins import patient_belongs_to_therapist
-
-        patient_profile = user.patient_profile if hasattr(user, 'patient_profile') else None
-        return (
-            patient_profile is not None
-            and patient_belongs_to_therapist(patient_profile, therapist)
-        )
-    return False
+    # Wizytówka specjalisty (katalog i podgląd) jest dostępna dla każdego zalogowanego użytkownika.
+    return bool(getattr(user, 'is_authenticated', False))
 
 
 def user_may_access_media_path(user: object, relative: str) -> bool:

@@ -22,6 +22,7 @@ import { EmptyState, ErrorBanner, LoadingBlock } from '@/components/AsyncState'
 import { MobileTherapistsSkeleton } from '@/components/skeletons/MobileSkeletons'
 import { Button } from '@/components/Button'
 import { ScreenHeader, SectionCard } from '@/components/ScreenHeader'
+import { TherapistAvatar } from '@/components/TherapistAvatar'
 import { useToast } from '@/components/ToastContext'
 import { colors, controlSize, radius, space, typography } from '@/theme/tokens'
 
@@ -208,11 +209,12 @@ export default function TherapistsTabScreen() {
                         accessibilityLabel={`Fizjoterapeuta: ${item.first_name} ${item.last_name}${item.qualification_label ? `, ${item.qualification_label}` : ''}${item.location_address ? `, ${item.location_address}` : ''}`}
                         accessibilityHint="Dotknij dwukrotnie, aby otworzyć profil specjalisty"
                       >
-                        <View style={styles.resultAvatar}>
-                          <Text style={styles.avatarInitials}>
-                            {(item.first_name?.[0] ?? '') + (item.last_name?.[0] ?? '')}
-                          </Text>
-                        </View>
+                        <TherapistAvatar
+                          avatarUrl={item.avatar_url}
+                          firstName={item.first_name}
+                          lastName={item.last_name}
+                          size={40}
+                        />
 
                         <View style={styles.therapistInfo}>
                           <Text style={styles.therapistName}>
@@ -275,11 +277,12 @@ export default function TherapistsTabScreen() {
         >
           <SectionCard style={styles.therapistCard}>
             <View style={styles.cardMainRow}>
-              <View style={styles.cardAvatar}>
-                <Text style={styles.avatarInitialsLarge}>
-                  {(item.first_name?.[0] ?? '') + (item.last_name?.[0] ?? '')}
-                </Text>
-              </View>
+              <TherapistAvatar
+                avatarUrl={item.avatar_url}
+                firstName={item.first_name}
+                lastName={item.last_name}
+                size={48}
+              />
               <View style={styles.cardDetails}>
                 <Text style={styles.therapistCardName}>
                   {item.first_name} {item.last_name}

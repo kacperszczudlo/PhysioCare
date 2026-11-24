@@ -18,6 +18,7 @@ import { DateTimePickerField } from '@/components/DateTimePickerField'
 import { Field } from '@/components/Field'
 import { KeyboardAwareForm } from '@/components/KeyboardAwareForm'
 import { SectionCard } from '@/components/ScreenHeader'
+import { TherapistAvatar } from '@/components/TherapistAvatar'
 import { useToast } from '@/components/ToastContext'
 import { useNetwork } from '@/network/NetworkContext'
 import { addMinutesISO } from '@/lib/format'
@@ -27,6 +28,7 @@ interface Therapist {
   id: string
   first_name: string
   last_name: string
+  avatar_url?: string | null
   qualification_label?: string
   location_address?: string
 }
@@ -235,11 +237,12 @@ export default function VisitRequestScreen() {
                       accessibilityRole="radio"
                       accessibilityState={{ selected }}
                     >
-                      <View style={styles.therapistAvatar}>
-                        <Text style={styles.avatarInitials}>
-                          {(t.first_name?.[0] ?? '') + (t.last_name?.[0] ?? '')}
-                        </Text>
-                      </View>
+                      <TherapistAvatar
+                        avatarUrl={t.avatar_url}
+                        firstName={t.first_name}
+                        lastName={t.last_name}
+                        size={40}
+                      />
                       <View style={styles.therapistTileInfo}>
                         <Text style={styles.therapistTileName}>
                           {t.first_name} {t.last_name}

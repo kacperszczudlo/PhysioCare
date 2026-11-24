@@ -221,6 +221,19 @@ def test_media_therapist_avatar_linked_patient_can_access(
 
 
 @pytest.mark.django_db
+def test_media_therapist_avatar_unlinked_patient_can_access_for_directory_preview(
+    api_client: object, tmp_path: object, settings: object, therapist_b: object, patient: object,
+) -> None:
+    """Sprawdza, czy zalogowany pacjent może podejrzeć awatar specjalisty w katalogu przed powiązaniem."""
+    settings.MEDIA_ROOT = tmp_path
+    therapist_b.avatar_url = _write_avatar(tmp_path, 'therapist-public.png')
+    therapist_b.save(update_fields=['avatar_url'])
+
+    _auth(api_client, patient.user)
+    assert api_client.get(therapist_b.avatar_url).status_code == status.HTTP_200_OK
+
+
+@pytest.mark.django_db
 def test_media_orphan_avatar_denied(api_client: object, tmp_path: object, settings: object, therapist: object) -> None:
     """Sprawdza odrzucenie próby dostępu do niepowiązanego/sierocego pliku awatara."""
     # Arrange
