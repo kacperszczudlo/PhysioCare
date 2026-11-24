@@ -88,6 +88,55 @@ export interface MFAStatusResponse {
   mfa_required_for_role: boolean
 }
 
+type RawLoginPayload =
+  | AuthResponse
+  | {
+      mfa_required?: boolean
+      mfa_setup_token?: string
+      mfa_token?: string
+      email?: string
+    }
+
+function parseLoginPayload(data: RawLoginPayload, fallbackEmail = ''): LoginResult {
+  if (data && 'mfa_required' in data && data.mfa_required) {
+    if (
+      'mfa_setup_token' in data &&
+      typeof data.mfa_setup_token === 'string' &&
+      data.mfa_setup_token
+    ) {
+      return {
+        kind: 'mfa_setup_required',
+        mfa_setup_token: data.mfa_setup_token,
+        email: typeof data.email === 'string' ? data.email : fallbackEmail,
+      }
+    }
+    return {
+      kind: 'mfa_required',
+      mfa_token: typeof data.mfa_token === 'string' ? data.mfa_token : '',
+      email: typeof data.email === 'string' ? data.email : fallbackEmail,
+    }
+  }
+  if (data && 'user' in data && data.user) {
+    return { kind: 'authenticated', user: data.user }
+  }
+  throw new Error('Nieoczekiwana odpowiedź logowania.')
+}
+
+function extractMfaSetupError(error: unknown, fallbackEmail = ''): LoginResult | null {
+  if (
+    error instanceof ApiError &&
+    error.code === 'AUTH_MFA_SETUP_REQUIRED' &&
+    typeof error.details.mfa_setup_token === 'string'
+  ) {
+    return {
+      kind: 'mfa_setup_required',
+      mfa_setup_token: error.details.mfa_setup_token,
+      email: typeof error.details.email === 'string' ? error.details.email : fallbackEmail,
+    }
+  }
+  return null
+}
+
 /** Usługi API uwierzytelniania, rejestracji, resetu hasła oraz 2FA/MFA. */
 export const authApi = {
   /** Pobiera profil i dane sesji aktualnie zalogowanego użytkownika. */
@@ -101,64 +150,19 @@ export const authApi = {
   },
 
   async login(email: string, password: string, recaptcha_token?: string): Promise<LoginResult> {
-    let data:
-      | AuthResponse
-      | {
-          mfa_required?: boolean
-          mfa_setup_token?: string
-          mfa_token?: string
-          email?: string
-        }
+    let data: RawLoginPayload
     try {
-      data = await api.post<
-        | AuthResponse
-        | {
-            mfa_required?: boolean
-            mfa_setup_token?: string
-            mfa_token?: string
-            email?: string
-          }
-      >(
+      data = await api.post<RawLoginPayload>(
         '/auth/login/',
         { email, password, recaptcha_token, recaptcha_client: 'web', token_delivery: 'cookie' },
         { skipAuthRefresh: true },
       )
     } catch (error) {
-      if (
-        error instanceof ApiError &&
-        error.code === 'AUTH_MFA_SETUP_REQUIRED' &&
-        typeof error.details.mfa_setup_token === 'string'
-      ) {
-        return {
-          kind: 'mfa_setup_required',
-          mfa_setup_token: error.details.mfa_setup_token,
-          email: typeof error.details.email === 'string' ? error.details.email : email,
-        }
-      }
+      const mfaSetup = extractMfaSetupError(error, email)
+      if (mfaSetup) return mfaSetup
       throw error
     }
-    if (data && 'mfa_required' in data && data.mfa_required) {
-      if (
-        'mfa_setup_token' in data &&
-        typeof data.mfa_setup_token === 'string' &&
-        data.mfa_setup_token
-      ) {
-        return {
-          kind: 'mfa_setup_required',
-          mfa_setup_token: data.mfa_setup_token,
-          email: typeof data.email === 'string' ? data.email : email,
-        }
-      }
-      return {
-        kind: 'mfa_required',
-        mfa_token: typeof data.mfa_token === 'string' ? data.mfa_token : '',
-        email: typeof data.email === 'string' ? data.email : email,
-      }
-    }
-    if (data && 'user' in data && data.user) {
-      return { kind: 'authenticated', user: data.user }
-    }
-    throw new Error('Nieoczekiwana odpowiedź logowania.')
+    return parseLoginPayload(data, email)
   },
 
   loginMFA(mfa_token: string, code: string) {
@@ -191,12 +195,20 @@ export const authApi = {
     return api.get<MFAStatusResponse>('/auth/2fa/status/')
   },
 
-  loginWithGoogle(credential: string) {
-    return api.post<AuthResponse>(
-      '/auth/google/',
-      { credential, token_delivery: 'cookie' },
-      { skipAuthRefresh: true },
-    )
+  async loginWithGoogle(credential: string): Promise<LoginResult> {
+    let data: RawLoginPayload
+    try {
+      data = await api.post<RawLoginPayload>(
+        '/auth/google/',
+        { credential, token_delivery: 'cookie' },
+        { skipAuthRefresh: true },
+      )
+    } catch (error) {
+      const mfaSetup = extractMfaSetupError(error)
+      if (mfaSetup) return mfaSetup
+      throw error
+    }
+    return parseLoginPayload(data)
   },
 
   async registerTherapist(payload: TherapistRegisterPayload): Promise<RegisterResult> {

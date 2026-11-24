@@ -177,7 +177,15 @@ export function LoginPage() {
     setError(null)
     setLoading(true)
     try {
-      await loginWithGoogle(credential)
+      const result = await loginWithGoogle(credential)
+      if (result.kind === 'mfa_required') {
+        setMfaStep({ mfa_token: result.mfa_token, email: result.email })
+        return
+      }
+      if (result.kind === 'mfa_setup_required') {
+        setMfaSetupPending({ token: result.mfa_setup_token, email: result.email })
+        return
+      }
       navigate(from, { replace: true })
     } catch (err: unknown) {
       const errObj = err as Record<string, unknown> | null | undefined

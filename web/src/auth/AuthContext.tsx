@@ -33,7 +33,7 @@ interface AuthContextValue {
   /** Loguje użytkownika drugim składnikiem 2FA/TOTP. */
   loginMFA: (mfa_token: string, code: string) => Promise<void>
   /** Loguje użytkownika tokenem Google ID Token. */
-  loginWithGoogle: (credential: string) => Promise<void>
+  loginWithGoogle: (credential: string) => Promise<LoginResult>
   /** Rejestruje nowego fizjoterapeutę w systemie. */
   register: (payload: TherapistRegisterPayload) => Promise<RegisterResult>
   /** Weryfikuje kod z e-maila aktywujący nowe konto. */
@@ -154,9 +154,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await establishSession(setUser, nextUser)
   }, [])
 
-  const loginWithGoogle = useCallback(async (credential: string) => {
-    const { user: nextUser } = await authApi.loginWithGoogle(credential)
-    await establishSession(setUser, nextUser)
+  const loginWithGoogle = useCallback(async (credential: string): Promise<LoginResult> => {
+    const result = await authApi.loginWithGoogle(credential)
+    if (result.kind === 'authenticated') {
+      await establishSession(setUser, result.user)
+    }
+    return result
   }, [])
 
   const register = useCallback(async (payload: TherapistRegisterPayload) => {
