@@ -4,7 +4,7 @@
  */
 
 import { Platform } from 'react-native'
-import { api, API_BASE_URL, ApiError } from './client'
+import { api, API_BASE_URL, ApiError, NetworkError, refreshAccessToken } from './client'
 import { tokenStorage } from './tokenStorage'
 import type {
   ApiErrorBody,
@@ -39,6 +39,78 @@ import type {
  */
 function unwrapList<T>(data: T[] | Paginated<T>): T[] {
   return Array.isArray(data) ? data : data.results
+}
+
+function parseAvatarUploadResponse(status: number, bodyText: string): PatientProfile {
+  if (status >= 200 && status < 300) {
+    return JSON.parse(bodyText) as PatientProfile
+  }
+  let parsed: ApiErrorBody | null = null
+  try {
+    parsed = JSON.parse(bodyText) as ApiErrorBody
+  } catch {}
+  throw new ApiError(status, parsed?.error?.message ?? 'Nie udało się przesłać avatara.', {
+    code: parsed?.error?.code ?? 'AVATAR_UPLOAD_ERROR',
+    details: parsed?.error?.details ?? {},
+    body: parsed,
+  })
+}
+
+async function uploadAvatarWithXhr(
+  url: string,
+  uri: string,
+  mimeType: string,
+  fileName: string,
+  skipAuthRefresh = false,
+): Promise<PatientProfile> {
+  const access = await tokenStorage.getAccess()
+  const formData = new FormData()
+  formData.append('file', {
+    uri,
+    type: mimeType,
+    name: fileName,
+  } as unknown as Blob)
+
+  const { status, responseText } = await new Promise<{ status: number; responseText: string }>(
+    (resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', url)
+      xhr.timeout = 30000
+      xhr.setRequestHeader('Accept', 'application/json')
+      if (access) {
+        xhr.setRequestHeader('Authorization', `Bearer ${access}`)
+      }
+      xhr.onload = () => {
+        resolve({ status: xhr.status, responseText: xhr.responseText ?? '' })
+      }
+      xhr.onerror = () => {
+        reject(
+          new NetworkError(
+            'unreachable',
+            'Nie udało się połączyć z serwerem. Sprawdź połączenie internetowe i spróbuj ponownie.',
+          ),
+        )
+      }
+      xhr.ontimeout = () => {
+        reject(
+          new NetworkError(
+            'unreachable',
+            'Nie udało się połączyć z serwerem. Sprawdź połączenie internetowe i spróbuj ponownie.',
+          ),
+        )
+      }
+      xhr.send(formData as unknown as Document)
+    },
+  )
+
+  if (status === 401 && !skipAuthRefresh) {
+    const refreshed = await refreshAccessToken()
+    if (refreshed) {
+      return uploadAvatarWithXhr(url, uri, mimeType, fileName, true)
+    }
+  }
+
+  return parseAvatarUploadResponse(status, responseText)
 }
 
 /**
@@ -80,41 +152,64 @@ export const patientApi = {
     fileName = 'avatar.jpg',
   ): Promise<PatientProfile> {
     if (Platform.OS !== 'web') {
+      const url = `${API_BASE_URL}/me/profile/avatar/`
+      let uploadUri = uri
+      let tempUri: string | null = null
+      let FileSystem: typeof import('expo-file-system/legacy') | null = null
+
       try {
-        const FileSystem = await import('expo-file-system/legacy')
-        if (typeof FileSystem.uploadAsync === 'function') {
-          const access = await tokenStorage.getAccess()
-          const url = `${API_BASE_URL}/me/profile/avatar/`
-          const result = await FileSystem.uploadAsync(url, uri, {
-            fieldName: 'file',
-            httpMethod: 'POST',
-            uploadType: FileSystem.FileSystemUploadType.MULTIPART,
-            mimeType,
-            headers: {
-              Accept: 'application/json',
-              ...(access ? { Authorization: `Bearer ${access}` } : {}),
-            },
-          })
-          if (result.status >= 200 && result.status < 300) {
-            return JSON.parse(result.body) as PatientProfile
-          }
-          let parsed: ApiErrorBody | null = null
-          try {
-            parsed = JSON.parse(result.body) as ApiErrorBody
-          } catch {}
-          throw new ApiError(
-            result.status,
-            parsed?.error?.message ?? 'Nie udało się przesłać avatara.',
-            {
-              code: parsed?.error?.code ?? 'AVATAR_UPLOAD_ERROR',
-              details: parsed?.error?.details ?? {},
-              body: parsed,
-            },
-          )
+        FileSystem = await import('expo-file-system/legacy')
+        if (
+          !uri.startsWith('file://') &&
+          FileSystem.cacheDirectory &&
+          typeof FileSystem.copyAsync === 'function'
+        ) {
+          const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_')
+          const candidate = `${FileSystem.cacheDirectory}avatar_upload_${Date.now()}_${safeName}`
+          await FileSystem.copyAsync({ from: uri, to: candidate })
+          uploadUri = candidate
+          tempUri = candidate
         }
-      } catch (err) {
-        if (err instanceof ApiError) {
-          throw err
+      } catch {
+        // Jeśli skopiowanie do cache się nie powiedzie, próbujemy użyć oryginalnego URI.
+      }
+
+      try {
+        if (FileSystem && typeof FileSystem.uploadAsync === 'function') {
+          try {
+            const runNativeUpload = async (token: string | null) =>
+              FileSystem!.uploadAsync(url, uploadUri, {
+                fieldName: 'file',
+                httpMethod: 'POST',
+                uploadType: FileSystem!.FileSystemUploadType.MULTIPART,
+                mimeType,
+                headers: {
+                  Accept: 'application/json',
+                  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+              })
+
+            const access = await tokenStorage.getAccess()
+            let result = await runNativeUpload(access)
+            if (result.status === 401) {
+              const refreshed = await refreshAccessToken()
+              if (refreshed) {
+                const nextAccess = await tokenStorage.getAccess()
+                result = await runNativeUpload(nextAccess)
+              }
+            }
+            return parseAvatarUploadResponse(result.status, result.body)
+          } catch (err) {
+            if (err instanceof ApiError) {
+              throw err
+            }
+          }
+        }
+
+        return await uploadAvatarWithXhr(url, uploadUri, mimeType, fileName)
+      } finally {
+        if (tempUri && FileSystem && typeof FileSystem.deleteAsync === 'function') {
+          await FileSystem.deleteAsync(tempUri, { idempotent: true }).catch(() => {})
         }
       }
     }
