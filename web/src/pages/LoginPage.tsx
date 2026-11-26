@@ -36,7 +36,7 @@ export function LoginPage() {
       : null
 
   const { toast } = useToast()
-  const { executeRecaptcha } = useRecaptcha()
+  const { executeRecaptcha, isRecaptchaConfigured } = useRecaptcha()
   const [email, setEmail] = useState(
     typeof locationState?.email === 'string' ? locationState.email : '',
   )
@@ -77,6 +77,12 @@ export function LoginPage() {
     setLoading(true)
     try {
       const recaptchaToken = await executeRecaptcha('login')
+      if (isRecaptchaConfigured && !recaptchaToken) {
+        setError(
+          'Nie udało się zweryfikować zabezpieczenia reCAPTCHA. Jeśli korzystasz z blokera reklam (AdBlock), wyłącz go dla tej strony i spróbuj ponownie.',
+        )
+        return
+      }
       const result = await login(trimmedEmail, password, recaptchaToken)
       if (result.kind === 'mfa_required') {
         setMfaStep({ mfa_token: result.mfa_token, email: result.email })
@@ -123,6 +129,12 @@ export function LoginPage() {
     let mfaEnabled = false
     try {
       const recaptchaToken = await executeRecaptcha('login')
+      if (isRecaptchaConfigured && !recaptchaToken) {
+        setError(
+          'Nie udało się zweryfikować zabezpieczenia reCAPTCHA. Jeśli korzystasz z blokera reklam (AdBlock), wyłącz go dla tej strony i spróbuj ponownie.',
+        )
+        return
+      }
       await authApi.enableMFA(mfaCode.trim(), mfaSetup.token)
       mfaEnabled = true
       const result = await login(email.trim(), password, recaptchaToken)

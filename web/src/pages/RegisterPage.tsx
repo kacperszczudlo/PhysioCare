@@ -62,7 +62,7 @@ const QUALIFICATION_TILES: ReadonlyArray<{
  */
 export function RegisterPage() {
   const { register } = useAuth()
-  const { executeRecaptcha } = useRecaptcha()
+  const { executeRecaptcha, isRecaptchaConfigured } = useRecaptcha()
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -238,6 +238,12 @@ export function RegisterPage() {
     setLoading(true)
     try {
       const recaptcha_token = await executeRecaptcha('register_google')
+      if (isRecaptchaConfigured && !recaptcha_token) {
+        setError(
+          'Nie udało się zweryfikować zabezpieczenia reCAPTCHA. Jeśli korzystasz z blokera reklam (AdBlock), wyłącz go dla tej strony i spróbuj ponownie.',
+        )
+        return
+      }
       const result = await register({
         google_credential: credential,
         recaptcha_token,
@@ -296,6 +302,12 @@ export function RegisterPage() {
     setLoading(true)
     try {
       const recaptcha_token = await executeRecaptcha('register')
+      if (isRecaptchaConfigured && !recaptcha_token) {
+        setError(
+          'Nie udało się zweryfikować zabezpieczenia reCAPTCHA. Jeśli korzystasz z blokera reklam (AdBlock), wyłącz go dla tej strony i spróbuj ponownie.',
+        )
+        return
+      }
       const result = await register({
         email: email.trim(),
         password,

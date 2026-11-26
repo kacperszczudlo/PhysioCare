@@ -178,8 +178,8 @@ export default function LoginScreen() {
           ref={recaptchaRef}
           siteKey={recaptchaSiteKey}
           baseUrl={process.env.EXPO_PUBLIC_RECAPTCHA_BASE_URL ?? 'http://localhost'}
-          size="invisible"
-          action="login"
+          size="normal"
+          lang="pl"
           onVerify={(token) => void completeLogin(token)}
           onExpire={() => setError('Weryfikacja CAPTCHA wygasła. Spróbuj ponownie.')}
           onError={() => {
